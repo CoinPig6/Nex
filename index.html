@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex Pro V30</title>
+    <title>Crownex Pro V30 - Timer Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -52,13 +52,13 @@
             overflow-x: auto; 
             display: flex;
             align-items: center;
-            justify-content: center; /* Căn giữa */
+            justify-content: center;
         }
         .history-container {
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
-            gap: 6px; /* Khoảng cách giữa các khối nhỏ lại */
+            gap: 6px;
             padding: 0 5px;
         }
         .history-block {
@@ -66,16 +66,16 @@
             grid-template-columns: repeat(4, 1fr); 
             grid-template-rows: repeat(5, 1fr);    
             grid-auto-flow: column; 
-            gap: 2px; /* Khoảng cách giữa các bóng cực nhỏ */
+            gap: 2px;
             flex-shrink: 0; 
-            width: 65px; /* Thu nhỏ chiều rộng khối */
+            width: 65px;
             background: rgba(255,255,255,0.03);
             padding: 3px;
             border-radius: 4px;
             border: 1px solid #1f2430;
         }
         .dot { 
-            width: 10px; height: 10px; /* Bóng nhỏ lại */
+            width: 10px; height: 10px;
             border-radius: 50%; 
             background-color: #232836; 
         }
@@ -86,6 +86,7 @@
         #lockLine {
             position: absolute; left: 0; right: 0; height: 1px;
             border-top: 1px dashed #FCD535; z-index: 5; pointer-events: none;
+            display: none; /* Mặc định ẩn */
         }
         #lockLabel {
             position: absolute; left: 10px; z-index: 6;
@@ -94,6 +95,7 @@
             padding: 2px 6px; border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
             transform: translateY(-50%);
+            display: none; /* Mặc định ẩn */
         }
 
         #confirmBar { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -111,7 +113,7 @@
                 <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none">C</div>
                 <div class="flex flex-col">
                     <span class="font-bold text-lg text-white leading-none tracking-tight">CROWNEX</span>
-                    <span class="text-[9px] text-[#6b7280] font-bold uppercase tracking-[0.15em] mt-0.5">V30 Compact</span>
+                    <span class="text-[9px] text-[#6b7280] font-bold uppercase tracking-[0.15em] mt-0.5">V30 Timer Fix</span>
                 </div>
             </div>
             <button onclick="toggleMenu()" class="ml-auto text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -119,14 +121,13 @@
         
         <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             <div class="px-3 py-2 text-[10px] font-bold text-[#4b5563] uppercase tracking-wider">Menu</div>
-            <a href="index.html" class="flex items-center gap-4 px-4 py-3 bg-[#1e232e] rounded-lg text-[#FCD535] border border-[#2d3442]"><i class="fa-solid fa-chart-line w-5 text-center"></i> <span class="font-medium">Giao dịch</span></a>
-            <a href="taikhoan.html" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-user w-5 text-center"></i> <span class="font-medium">Tài khoản</span></a>
-            <a href="#" onclick="window.location.href='vi.html'" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-wallet w-5 text-center"></i> <span class="font-medium">Ví của tôi</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-[#1e232e] rounded-lg text-[#FCD535] border border-[#2d3442]"><i class="fa-solid fa-chart-line w-5 text-center"></i> <span class="font-medium">Giao dịch</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-user w-5 text-center"></i> <span class="font-medium">Tài khoản</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-wallet w-5 text-center"></i> <span class="font-medium">Ví của tôi</span></a>
             <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-trophy w-5 text-center text-orange-400"></i> <span class="font-medium">Thành tựu VIP</span></a>
-            <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-newspaper w-5 text-center text-purple-400"></i> <span class="font-medium">Tin tức</span></a>
             
             <div class="my-4 border-t border-[#232836] mx-2"></div>
-            <a href="admin.html" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-shield-halved w-5 text-center text-red-500"></i> <span class="font-medium">Admin Panel</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-shield-halved w-5 text-center text-red-500"></i> <span class="font-medium">Admin Panel</span></a>
              <a href="#" onclick="alert('Kết nối CSKH...')" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-headset w-5 text-center text-blue-500"></i> <span class="font-medium">Hỗ trợ 24/7</span></a>
              <a href="#" onclick="location.reload()" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> <span class="font-medium">Đăng xuất</span></a>
         </div>
@@ -156,7 +157,7 @@
                 <span class="text-[9px] text-[#6b7280] font-mono mt-[1px]">ID: <span id="sessionID">...</span></span>
             </div>
         </div>
-        <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3 cursor-pointer active:bg-[#252b38] transition" onclick="window.location.href='vi.html'">
+        <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3 cursor-pointer active:bg-[#252b38] transition" onclick="resetBalance()">
             <div class="text-right leading-tight">
                 <div class="text-[9px] text-[#6b7280] font-bold uppercase">Demo Balance</div>
                 <div class="font-mono font-bold text-[#EAECEF] text-sm" id="balanceDisplay">---</div>
@@ -180,9 +181,9 @@
         </div>
         <canvas id="chartCanvas" class="w-full h-full block"></canvas>
         
-        <!-- LOCK PRICE (Hiển thị khi chờ kết quả) -->
-        <div id="lockLine" class="hidden"></div>
-        <div id="lockLabel" class="hidden">
+        <!-- LOCK PRICE LINE -->
+        <div id="lockLine"></div>
+        <div id="lockLabel">
             <i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span>
         </div>
         
@@ -191,7 +192,7 @@
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div class="flex flex-col items-center justify-center gap-1 mb-4 relative z-10">
                     <div class="w-10 h-10 rounded-full bg-[#232836] flex items-center justify-center mb-2 shadow-inner"><i class="fa-solid fa-crown text-[#FCD535]"></i></div>
-                    <span class="font-bold text-[#6b7280] text-xs tracking-[0.2em]">COINBIGNEX</span>
+                    <span class="font-bold text-[#6b7280] text-xs tracking-[0.2em]">CROWNEX</span>
                 </div>
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase tracking-tight relative z-10">HÚP RỒI</div>
                 <div id="popupAmount" class="font-mono font-bold text-4xl drop-shadow-xl relative z-10">+$0.00</div>
@@ -252,10 +253,10 @@
     <script>
         // --- CONFIG ---
         const CONFIG = {
-            basePrice: 90000,
+            basePrice: 98100, 
             chartPaddingRight: 60,
             smoothingFactor: 0.15,
-            gridStep: 5,
+            gridStep: 20, 
             dotsPerBlock: 20
         };
 
@@ -265,8 +266,8 @@
             pendingBet: { type: null, amount: 0 },
             history: new Array(60).fill(null),
             candles: [],
-            visualPrice: 90000,
-            targetPrice: 90000,
+            visualPrice: CONFIG.basePrice,
+            targetPrice: CONFIG.basePrice,
             serverSeconds: 0,
             currentPhase: 'order', 
             lockPrice: 0,
@@ -287,7 +288,7 @@
             return { open, close, high, low, startTime };
         }
         
-        function getRoundResult(timestamp) {
+        function getFakeHistoryResult(timestamp) {
             const idx = Math.floor(timestamp / 30000);
             const r = getSeededRandom(idx + 3); 
             const minIdx = Math.floor(timestamp / 60000);
@@ -303,15 +304,16 @@
         function init() {
             const savedHist = localStorage.getItem('crownex_history_v30');
             if (savedHist) state.history = JSON.parse(savedHist);
-            // Time sync history
+            
             const now = Date.now();
             const startOfHour = now - (now % 3600000);
             const currentMinuteIdx = new Date().getMinutes();
             if(!state.history || state.history.length !== 60) state.history = new Array(60).fill(null);
+            
             for(let i=0; i<currentMinuteIdx; i++) {
                 if(!state.history[i]) {
                     const t = startOfHour + (i * 60000);
-                    state.history[i] = getRoundResult(t);
+                    state.history[i] = getFakeHistoryResult(t);
                 }
             }
             for(let i=currentMinuteIdx; i<60; i++) state.history[i] = null;
@@ -350,7 +352,6 @@
             document.getElementById('count-up').innerText = up;
             document.getElementById('count-down').innerText = down;
 
-            // Render 3 Blocks
             for(let b=0; b < 3; b++) {
                 const blockDiv = document.createElement('div');
                 blockDiv.className = 'history-block';
@@ -380,20 +381,7 @@
         function checkOfflineBet() {
             const savedBet = localStorage.getItem('crownex_active_bet');
             if(savedBet) {
-                const bet = JSON.parse(savedBet);
-                const now = Date.now();
-                if (now > bet.resultTime) {
-                    const res = getRoundResult(bet.timestamp - (bet.timestamp % 60000));
-                    if (bet.type === res) {
-                        const profit = bet.amount * 1.95;
-                        state.balance += profit;
-                        saveBalance();
-                        alert(`Phiên ${bet.sessionId} Thắng: +$${profit}`);
-                    } else {
-                        alert(`Phiên ${bet.sessionId} Thua: -$${bet.amount}`);
-                    }
-                    localStorage.removeItem('crownex_active_bet');
-                }
+                localStorage.removeItem('crownex_active_bet');
             }
         }
 
@@ -403,27 +391,38 @@
             const ts = now.getTime();
             state.serverSeconds = sec;
             const isOrder = sec < 30; 
+            
+            // --- FIX TIME LOGIC: 30s Countdown (30->1, 30->1) ---
             const timeLeft = isOrder ? (30 - sec) : (60 - sec);
+            // ----------------------------------------------------
+
             state.sessionID = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
             document.getElementById('sessionID').innerText = state.sessionID;
+            
             if (isOrder && state.currentPhase === 'result') startOrderPhase(); 
             else if (!isOrder && state.currentPhase === 'order') startResultPhase(ts); 
-            const candleTime = 15 - (sec % 15);
-            elTimer.innerText = candleTime < 10 ? "0"+candleTime : candleTime;
+            
+            // Render Seconds
+            elTimer.innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
+            
+            // Render Progress Bar
             const pct = (timeLeft / 30) * 100;
             elProgress.style.width = pct + "%";
         }
 
         function startOrderPhase() {
-            state.currentPhase = 'order';
             finalizeRound();
+            
+            state.currentPhase = 'order';
             document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
             document.getElementById('phaseText').className = "text-[9px] text-[#9ca3af] font-bold uppercase z-10 tracking-wider";
             elProgress.className = "absolute bottom-0 left-0 h-1 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "ORDERING";
             document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-[#FCD535]/10 text-[#FCD535] border border-[#FCD535]/30";
-            document.getElementById('lockLabel').classList.add('hidden');
-            document.getElementById('lockLine').classList.add('hidden');
+            
+            document.getElementById('lockLabel').style.display = 'none';
+            document.getElementById('lockLine').style.display = 'none';
+            
             cancelSelection();
             state.currentBet = null;
             localStorage.removeItem('crownex_active_bet');
@@ -436,29 +435,35 @@
 
         function startResultPhase(ts) {
             state.currentPhase = 'result';
-            const blockMinute = ts - (ts % 60000);
-            const lockTime = blockMinute + 30000;
-            state.lockPrice = getPriceAtTime(lockTime);
+            
+            state.lockPrice = state.visualPrice; 
+            
             cancelSelection();
             document.getElementById('phaseText').innerText = "CHỜ KẾT QUẢ";
             document.getElementById('phaseText').className = "text-[9px] text-blue-400 font-bold uppercase z-10 tracking-wider";
             elProgress.className = "absolute bottom-0 left-0 h-1 bg-blue-500 w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "WAITING";
             document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 animate-pulse";
-            document.getElementById('lockLabel').classList.remove('hidden');
-            document.getElementById('lockLine').classList.remove('hidden');
+            
+            document.getElementById('lockLabel').style.display = 'block';
+            document.getElementById('lockLine').style.display = 'block';
+            
             document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
             document.getElementById('btnBuy').classList.add('dimmed');
             document.getElementById('btnSell').classList.add('dimmed');
         }
 
         function finalizeRound() {
+            let result;
+            if (state.visualPrice >= state.lockPrice) {
+                result = 'up';
+            } else {
+                result = 'down';
+            }
+
             const now = new Date();
             const minIdx = now.getMinutes();
-            if (minIdx === 0) state.history = new Array(60).fill(null); // Reset new hour
-            
-            const prevMinTime = now.getTime() - 60000;
-            const result = getRoundResult(prevMinTime);
+            if (minIdx === 0) state.history = new Array(60).fill(null); 
             
             let prevMinIdx = minIdx - 1;
             if (prevMinIdx < 0) prevMinIdx = 59;
@@ -493,6 +498,7 @@
             const now = Date.now();
             const rawPrice = getPriceAtTime(now);
             let cheatOffset = 0;
+            
             if (state.currentPhase === 'result') {
                 const cheat = localStorage.getItem('admin_command');
                 if (cheat === 'up') cheatOffset = 30;
@@ -502,21 +508,38 @@
                      if (cheat === 'lose') cheatOffset = (state.currentBet.type === 'up') ? -30 : 30;
                 }
             }
+            
             state.targetPrice = rawPrice + cheatOffset;
             state.visualPrice += (state.targetPrice - state.visualPrice) * CONFIG.smoothingFactor;
+            
             const block30s = now - (now % 30000); 
             let currentCandle = state.candles[state.candles.length - 1];
+            
             if (currentCandle && currentCandle.startTime !== block30s) {
                 currentCandle.close = state.visualPrice; 
-                const newOpen = currentCandle.close;
+                let newOpen = currentCandle.close;
+                
+                if (state.currentPhase === 'result') {
+                    newOpen = state.lockPrice;
+                }
+
                 const newC = { open: newOpen, close: newOpen, high: newOpen, low: newOpen, startTime: block30s };
                 state.candles.push(newC);
                 if(state.candles.length > 40) state.candles.shift();
                 currentCandle = newC;
             }
+
+            if (state.currentPhase === 'result' && state.lockPrice !== 0) {
+                currentCandle.open = state.lockPrice;
+            }
+
             currentCandle.close = state.visualPrice;
+            
             if (state.visualPrice > currentCandle.high) currentCandle.high = state.visualPrice;
             if (state.visualPrice < currentCandle.low) currentCandle.low = state.visualPrice;
+            
+            if (currentCandle.open > currentCandle.high) currentCandle.high = currentCandle.open;
+            if (currentCandle.open < currentCandle.low) currentCandle.low = currentCandle.open;
         }
 
         function drawLoop() {
@@ -524,7 +547,9 @@
             const chartW = cvs.width - paddingRight;
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             const centerPrice = state.visualPrice;
-            const range = 60; let min = centerPrice - (range / 2); let max = centerPrice + (range / 2);
+            const range = 120; 
+            
+            let min = centerPrice - (range / 2); let max = centerPrice + (range / 2);
             ctx.lineWidth = 1; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'left';
             const step = CONFIG.gridStep;
             const startGrid = Math.floor(min / step) * step;
@@ -536,15 +561,28 @@
                 }
             }
             const w = chartW / 21; const spacing = 3;
+            
             if (state.currentPhase === 'result') {
                 const yLock = cvs.height - ((state.lockPrice - min) / range * cvs.height);
+                
                 if (yLock >= 0 && yLock <= cvs.height) {
-                    ctx.strokeStyle = '#FCD535'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-                    ctx.beginPath(); ctx.moveTo(0, yLock); ctx.lineTo(chartW, yLock); ctx.stroke(); ctx.setLineDash([]);
-                    document.getElementById('lockLabel').style.top = yLock + 'px';
-                    document.getElementById('lockLine').style.top = yLock + 'px';
+                    const lockLineEl = document.getElementById('lockLine');
+                    const lockLabelEl = document.getElementById('lockLabel');
+                    
+                    lockLineEl.style.top = yLock + 'px';
+                    lockLabelEl.style.top = yLock + 'px';
+                    
+                    ctx.strokeStyle = '#FCD535'; 
+                    ctx.setLineDash([4, 4]); 
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); 
+                    ctx.moveTo(0, yLock); 
+                    ctx.lineTo(chartW, yLock); 
+                    ctx.stroke(); 
+                    ctx.setLineDash([]);
                 }
             }
+
             state.candles.forEach((c, i) => {
                 const offset = Math.max(0, state.candles.length - 21);
                 if (i < offset) return;
@@ -581,7 +619,8 @@
         function adjustBet(val) { const inp = document.getElementById('betInput'); let v = parseFloat(inp.value) + val; if (v < 1) v = 1; inp.value = v; updateProfit(); }
         function updateProfit() { const val = parseFloat(document.getElementById('betInput').value); document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2); }
         function resizeCanvas() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
-        function showPopup(win, amount) { const popup = document.getElementById('resultPopup'); const border = document.getElementById('popupBorder'); const title = document.getElementById('popupTitle'); const amt = document.getElementById('popupAmount'); popup.classList.remove('hidden', 'scale-0', 'opacity-0'); popup.classList.add('scale-100'); if (win) { border.className = 'tech-border p-6 relative bg-[#13161f] win'; title.innerText = "COINBIGNEX Húp Rồi"; title.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase tracking-wide"; amt.innerText = "+$" + amount.toFixed(2); amt.className = "font-mono font-bold text-4xl drop-shadow-md text-[#0ECB81]"; } else { border.className = 'tech-border p-6 relative bg-[#13161f] lose'; title.innerText = "COINBIGNEX Gãy Rồi"; title.className = "text-[#F6465D] font-black text-xl mb-2 uppercase tracking-wide"; amt.innerText = "-$" + amount.toFixed(2); amt.className = "font-mono font-bold text-4xl drop-shadow-md text-[#F6465D]"; } setTimeout(() => { document.getElementById('resultPopup').classList.add('scale-90', 'opacity-0'); setTimeout(() => { document.getElementById('resultPopup').classList.add('hidden'); document.getElementById('resultPopup').classList.remove('scale-100'); }, 300); }, 3000); }
+        function closePopup() { document.getElementById('resultPopup').classList.add('scale-90', 'opacity-0'); setTimeout(() => { document.getElementById('resultPopup').classList.add('hidden'); document.getElementById('resultPopup').classList.remove('scale-100'); }, 300); }
+        function showPopup(win, amount) { const popup = document.getElementById('resultPopup'); const border = document.getElementById('popupBorder'); const title = document.getElementById('popupTitle'); const amt = document.getElementById('popupAmount'); popup.classList.remove('hidden', 'scale-0', 'opacity-0'); popup.classList.add('scale-100'); if (win) { border.className = 'tech-border p-6 relative bg-[#13161f] win'; title.innerText = "COINBIGNEX Húp Rồi"; title.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase tracking-wide"; amt.innerText = "+$" + amount.toFixed(2); amt.className = "font-mono font-bold text-4xl drop-shadow-md text-[#0ECB81]"; } else { border.className = 'tech-border p-6 relative bg-[#13161f] lose'; title.innerText = "COINBIGNEX Gãy Rồi"; title.className = "text-[#F6465D] font-black text-xl mb-2 uppercase tracking-wide"; amt.innerText = "-$" + amount.toFixed(2); amt.className = "font-mono font-bold text-4xl drop-shadow-md text-[#F6465D]"; } setTimeout(() => { closePopup(); }, 3000); }
 
         init();
     </script>
