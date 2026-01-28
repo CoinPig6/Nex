@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Crownex Pro - Tài khoản</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- CORE STYLES --- */
+        body { 
+            background-color: #0b0f19; color: #d1d5db; font-family: 'Roboto', sans-serif; 
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        
+        /* Sidebar Transitions */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .sidebar-overlay { transition: opacity 0.3s ease; }
+
+        .tech-panel {
+            background: #13161f; border: 1px solid #2a2e39; 
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .menu-item {
+            transition: all 0.2s; border-bottom: 1px solid #1f2430; cursor: pointer;
+        }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background-color: #1e232e; }
+
+        /* Switch Toggle */
+        .switch-container {
+            background: #0b0f19; border: 1px solid #2d3442; padding: 4px; border-radius: 8px; display: flex;
+        }
+        .switch-btn {
+            flex: 1; padding: 10px; text-align: center; border-radius: 6px; font-size: 12px; font-weight: bold; transition: all 0.2s;
+        }
+        .switch-btn.active {
+            background: #2d3442; color: #FCD535; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .switch-btn.inactive { color: #6b7280; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR MENU (Copy from Index) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 sidebar-overlay backdrop-blur-sm" onclick="toggleMenu()"></div>
+    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none">C</div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-lg text-white leading-none tracking-tight">CROWNEX</span>
+                    <span class="text-[9px] text-[#6b7280] font-bold uppercase tracking-[0.15em] mt-0.5">Profile</span>
+                </div>
+            </div>
+            <button onclick="toggleMenu()" class="ml-auto text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <div class="px-3 py-2 text-[10px] font-bold text-[#4b5563] uppercase tracking-wider">Menu</div>
+            <a href="index.html" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-chart-line w-5 text-center"></i> <span class="font-medium">Giao dịch</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 bg-[#1e232e] rounded-lg text-[#FCD535] border border-[#2d3442]"><i class="fa-solid fa-user w-5 text-center"></i> <span class="font-medium">Tài khoản</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-wallet w-5 text-center"></i> <span class="font-medium">Ví của tôi</span></a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-trophy w-5 text-center text-orange-400"></i> <span class="font-medium">Thành tựu VIP</span></a>
+            <div class="my-4 border-t border-[#232836] mx-2"></div>
+            <a href="#" onclick="alert('Đang kết nối CSKH...')" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-headset w-5 text-center text-blue-500"></i> <span class="font-medium">Hỗ trợ 24/7</span></a>
+             <a href="index.html" class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e232e] rounded-lg transition"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> <span class="font-medium">Quay lại sàn</span></a>
+        </div>
+        
+        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg">U</div>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-white">User_Demo</span>
+                    <span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER (3 Gạch) -->
+    <div class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] sticky top-0 z-30 shadow-lg">
+        <button onclick="toggleMenu()" class="active:scale-90 transition w-10 h-10 flex items-center justify-start">
+            <i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i>
+        </button>
+        <span class="font-bold text-sm text-white tracking-wide">THÔNG TIN TÀI KHOẢN</span>
+        <div class="w-10 flex justify-end">
+            <i class="fa-solid fa-gear text-gray-500"></i>
+        </div> 
+    </div>
+
+    <div class="p-4 space-y-5 max-w-md mx-auto flex-1">
+        
+        <!-- PROFILE INFO (Simplified) -->
+        <div class="flex flex-col items-center justify-center pt-4 pb-2">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-[#FCD535] to-[#F7931A] p-[2px] shadow-[0_0_20px_rgba(252,213,53,0.2)] mb-3">
+                <div class="w-full h-full rounded-full bg-[#13161f] flex items-center justify-center overflow-hidden">
+                    <span class="text-3xl font-bold text-white">D</span>
+                </div>
+            </div>
+            <h2 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                User_Demo 
+                <i class="fa-solid fa-circle-check text-[#0ECB81] text-sm" title="Đã xác minh"></i>
+            </h2>
+            <div class="flex items-center gap-2 mt-2">
+                <span class="text-[10px] bg-[#2d3442] px-2 py-0.5 rounded text-gray-400 border border-[#374151]">UID: <span id="uidDisplay" class="font-mono text-white">...</span> <i class="fa-regular fa-copy ml-1 cursor-pointer hover:text-[#FCD535]" onclick="copyUID()"></i></span>
+                <span class="text-[10px] bg-[#FCD535]/10 px-2 py-0.5 rounded text-[#FCD535] border border-[#FCD535]/30 font-bold">VIP 1</span>
+            </div>
+        </div>
+
+        <!-- WALLET CARD (Central Info) -->
+        <div class="tech-panel p-5">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Tổng tài sản</span>
+                </div>
+                <i id="eyeIcon" class="fa-solid fa-eye text-gray-500 cursor-pointer p-2 hover:text-white transition" onclick="toggleBalance()"></i>
+            </div>
+            
+            <div class="flex flex-col gap-1 mb-5">
+                <div class="text-3xl font-mono font-bold text-white tracking-tight flex items-baseline gap-1">
+                    <span class="text-lg text-gray-500">$</span>
+                    <span id="displayBalance">---</span>
+                </div>
+                <span class="text-xs text-gray-600 font-mono">≈ 0 VND</span>
+            </div>
+
+            <!-- Account Switcher -->
+            <div class="switch-container mb-4">
+                <button onclick="switchTab('demo')" id="tab-demo" class="switch-btn active">
+                    TÀI KHOẢN DEMO
+                </button>
+                <button onclick="switchTab('real')" id="tab-real" class="switch-btn inactive">
+                    TÀI KHOẢN THỰC
+                </button>
+            </div>
+
+            <div id="demo-controls" class="border-t border-[#232836] pt-3 text-center">
+                <button onclick="resetDemoBalance()" class="text-xs text-[#FCD535] font-bold hover:underline flex items-center justify-center gap-2 w-full py-2">
+                    <i class="fa-solid fa-rotate-right"></i> Đặt lại số dư Demo ($1,000)
+                </button>
+            </div>
+        </div>
+
+        <!-- SETTINGS LIST -->
+        <div class="tech-panel flex flex-col">
+            <div onclick="alert('Chưa cấu hình')" class="menu-item p-4 flex items-center justify-between group">
+                <span class="text-sm font-medium text-gray-300">Xác thực bảo mật (2FA)</span>
+                <span class="text-[10px] text-[#F6465D] font-bold bg-[#F6465D]/10 px-2 py-0.5 rounded border border-[#F6465D]/30">Chưa bật</span>
+            </div>
+            
+            <div onclick="alert('Đã xác minh')" class="menu-item p-4 flex items-center justify-between group">
+                <span class="text-sm font-medium text-gray-300">Xác minh danh tính (KYC)</span>
+                <span class="text-[10px] text-[#0ECB81] font-bold bg-[#0ECB81]/10 px-2 py-0.5 rounded border border-[#0ECB81]/30">Level 1</span>
+            </div>
+            
+             <div class="menu-item p-4 flex items-center justify-between group">
+                <span class="text-sm font-medium text-gray-300">Quản lý mật khẩu</span>
+                <i class="fa-solid fa-chevron-right text-xs text-gray-600"></i>
+            </div>
+
+            <div class="menu-item p-4 flex items-center justify-between group">
+                <span class="text-sm font-medium text-gray-300">Ngôn ngữ</span>
+                <span class="text-xs text-gray-500 font-bold">Tiếng Việt</span>
+            </div>
+        </div>
+
+        <button onclick="handleLogout()" class="w-full py-3.5 rounded-xl bg-[#1e232e] border border-[#2d3442] text-[#F6465D] font-bold text-sm hover:bg-[#252b38] transition active:scale-[0.98]">
+            Đăng xuất
+        </button>
+
+    </div>
+
+    <script>
+        // --- LOGIC ---
+        const STORAGE_KEY = 'crownex_balance';
+        const UID_KEY = 'crownex_uid';
+        
+        let showBal = true;
+        let currentTab = 'demo'; 
+
+        function init() {
+            // Generate UID
+            let uid = localStorage.getItem(UID_KEY);
+            if (!uid) {
+                uid = Math.floor(1000000 + Math.random() * 9000000);
+                localStorage.setItem(UID_KEY, uid);
+            }
+            document.getElementById('uidDisplay').innerText = uid;
+            updateUI();
+        }
+
+        function getBalance() {
+            return parseFloat(localStorage.getItem(STORAGE_KEY)) || 1000.00;
+        }
+
+        function updateUI() {
+            const bal = getBalance();
+            const formatted = bal.toLocaleString('en-US', {minimumFractionDigits: 2});
+            const displayEl = document.getElementById('displayBalance');
+            
+            if (showBal) {
+                if(currentTab === 'demo') {
+                    displayEl.innerText = formatted;
+                    displayEl.className = 'text-white';
+                } else {
+                    displayEl.innerText = "0.00";
+                    displayEl.className = 'text-[#F6465D]';
+                }
+                document.getElementById('eyeIcon').className = "fa-solid fa-eye text-gray-500 cursor-pointer p-2 hover:text-white transition";
+            } else {
+                displayEl.innerText = "*****";
+                document.getElementById('eyeIcon').className = "fa-solid fa-eye-slash text-gray-500 cursor-pointer p-2 hover:text-white transition";
+            }
+        }
+
+        function toggleBalance() {
+            showBal = !showBal;
+            updateUI();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const btnDemo = document.getElementById('tab-demo');
+            const btnReal = document.getElementById('tab-real');
+            const demoControls = document.getElementById('demo-controls');
+
+            if (tab === 'demo') {
+                btnDemo.className = "switch-btn active";
+                btnReal.className = "switch-btn inactive";
+                demoControls.style.display = 'block';
+            } else {
+                btnReal.className = "switch-btn active";
+                btnDemo.className = "switch-btn inactive";
+                demoControls.style.display = 'none';
+            }
+            updateUI();
+        }
+
+        function resetDemoBalance() {
+            if(confirm("Khôi phục số dư Demo về $1,000?")) {
+                localStorage.setItem(STORAGE_KEY, 1000.00);
+                updateUI();
+                alert("Đã khôi phục thành công!");
+            }
+        }
+        
+        function copyUID() {
+            const uid = document.getElementById('uidDisplay').innerText;
+            navigator.clipboard.writeText(uid);
+            alert("Đã sao chép UID: " + uid);
+        }
+
+        function handleLogout() {
+            if(confirm("Đăng xuất tài khoản?")) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.getElementById('sidebarOverlay'); 
+            if (sidebar.classList.contains('-translate-x-full')) { 
+                sidebar.classList.remove('-translate-x-full'); 
+                overlay.classList.remove('hidden'); 
+                setTimeout(()=>overlay.classList.remove('opacity-0'),10); 
+            } else { 
+                sidebar.classList.add('-translate-x-full'); 
+                overlay.classList.add('opacity-0'); 
+                setTimeout(()=>overlay.classList.add('hidden'),300); 
+            } 
+        }
+
+        init();
+    </script>
+</body>
+</html>
+
+
