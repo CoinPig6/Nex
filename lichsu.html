@@ -8,7 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS CORE (GIỐNG GAME.HTML) */
+        /* CSS CORE */
         html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
@@ -44,7 +44,7 @@
 </head>
 <body>
 
-    <!-- SIDEBAR MENU (ĐỒNG BỘ) -->
+    <!-- SIDEBAR MENU -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
@@ -81,22 +81,25 @@
         </div>
     </header>
 
-    <!-- THỐNG KÊ 24H -->
-    <div class="p-4 grid grid-cols-2 gap-3 shrink-0 bg-[#0b0f19]">
-        <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex flex-col items-center shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 p-1 opacity-10"><i class="fa-solid fa-arrow-trend-up text-4xl text-[#0ECB81]"></i></div>
-            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider z-10">Lãi 24h</span>
-            <span class="font-mono font-bold text-[#0ECB81] text-lg z-10" id="totalWin">$0.00</span>
+    <!-- THỐNG KÊ LỢI NHUẬN RÒNG -->
+    <div class="p-4 pb-0 shrink-0 bg-[#0b0f19]">
+        <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] flex flex-col items-center shadow-lg relative overflow-hidden">
+            <div class="absolute right-0 top-0 p-2 opacity-10"><i class="fa-solid fa-coins text-5xl text-white"></i></div>
+            <span class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1 z-10">Tổng lợi nhuận (24h)</span>
+            <span class="font-mono font-bold text-3xl z-10" id="netProfitDisplay">Loading...</span>
         </div>
-        <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex flex-col items-center shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 p-1 opacity-10"><i class="fa-solid fa-arrow-trend-down text-4xl text-[#F6465D]"></i></div>
-            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider z-10">Lỗ 24h</span>
-            <span class="font-mono font-bold text-[#F6465D] text-lg z-10" id="totalLose">$0.00</span>
+        
+        <!-- DÒNG LƯU Ý -->
+        <div class="mt-3 flex items-start gap-2 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+            <i class="fa-solid fa-circle-info text-[#FCD535] text-xs mt-0.5"></i>
+            <p class="text-[10px] text-gray-400 leading-tight">
+                <span class="text-[#FCD535] font-bold">Lưu ý:</span> Hệ thống chỉ hiển thị lịch sử giao dịch trong vòng 24h gần nhất. Các giao dịch cũ hơn hoặc hết ngày sẽ tự động được xóa khỏi danh sách.
+            </p>
         </div>
     </div>
 
     <!-- LIST CONTAINER -->
-    <div class="flex-1 overflow-y-auto px-4 pb-6" id="historyList">
+    <div class="flex-1 overflow-y-auto px-4 py-4" id="historyList">
         <div class="loading-spinner"></div>
     </div>
 
@@ -134,13 +137,11 @@
             });
         };
 
-        // Render User Info in Sidebar
         const localUser = JSON.parse(localStorage.getItem('crownex_user_info'));
         if(localUser) {
             document.getElementById('sidebarUsername').innerText = localUser.fullName || localUser.username;
         }
 
-        // Firebase Logic
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 loadHistory(user.uid);
@@ -151,8 +152,7 @@
 
         async function loadHistory(uid) {
             const listEl = document.getElementById('historyList');
-            const winEl = document.getElementById('totalWin');
-            const loseEl = document.getElementById('totalLose');
+            const netEl = document.getElementById('netProfitDisplay');
             const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
 
             try {
@@ -160,8 +160,10 @@
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
+                    netEl.innerText = "$0.00";
+                    netEl.className = "font-mono font-bold text-3xl z-10 text-white";
                     listEl.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-40 opacity-40 mt-10">
+                        <div class="flex flex-col items-center justify-center h-40 opacity-40 mt-4">
                             <i class="fa-regular fa-folder-open text-4xl mb-2 text-gray-500"></i>
                             <span class="text-xs text-gray-500">Chưa có giao dịch nào</span>
                         </div>`;
@@ -169,20 +171,28 @@
                 }
 
                 let html = '';
-                let totalWin = 0;
-                let totalLose = 0;
+                let netProfit = 0;
                 let hasData24h = false;
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
+                    
+                    // LỌC 24H
                     if (data.timestamp < oneDayAgo) return; 
                     
                     hasData24h = true;
                     const isWin = data.result === 'win';
                     const amount = parseFloat(data.amount);
-                    const profit = parseFloat(data.profit);
+                    const profit = parseFloat(data.profit); // Tiền lãi nhận được (không tính gốc)
 
-                    if(isWin) totalWin += profit; else totalLose += amount;
+                    // Tính Lợi nhuận ròng:
+                    // Thắng: + Tiền lãi (profit)
+                    // Thua: - Tiền cược (amount)
+                    if(isWin) {
+                        netProfit += profit;
+                    } else {
+                        netProfit -= amount;
+                    }
 
                     const date = new Date(data.timestamp);
                     const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)} ${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
@@ -206,7 +216,7 @@
                                 <div class="font-mono font-bold text-base ${isWin ? 'text-up' : 'text-down'}">
                                     ${isWin ? '+' : '-'}$${isWin ? profit.toFixed(2) : amount.toFixed(2)}
                                 </div>
-                                <div class="text-[10px] text-gray-400">Cược: $${amount}</div>
+                                <div class="text-[9px] text-gray-400">Cược: $${amount}</div>
                             </div>
                         </div>
                     `;
@@ -214,12 +224,23 @@
 
                 if (!hasData24h) {
                     listEl.innerHTML = `<div class="text-center text-gray-500 text-xs mt-10">Không có giao dịch trong 24h qua</div>`;
+                    netProfit = 0;
                 } else {
                     listEl.innerHTML = html;
                 }
 
-                winEl.innerText = "+$" + totalWin.toFixed(2);
-                loseEl.innerText = "-$" + totalLose.toFixed(2);
+                // HIỂN THỊ LỢI NHUẬN RÒNG
+                const sign = netProfit > 0 ? "+" : "";
+                netEl.innerText = sign + "$" + netProfit.toFixed(2);
+                
+                // Đổi màu theo lãi/lỗ
+                if(netProfit > 0) {
+                    netEl.className = "font-mono font-bold text-3xl z-10 text-up";
+                } else if (netProfit < 0) {
+                    netEl.className = "font-mono font-bold text-3xl z-10 text-down";
+                } else {
+                    netEl.className = "font-mono font-bold text-3xl z-10 text-gray-400";
+                }
 
             } catch (error) {
                 console.error("Lỗi:", error);
