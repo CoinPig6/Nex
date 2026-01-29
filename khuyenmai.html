@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Crownex - Khuyến Mãi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* CSS CORE */
+        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; background-color: #0b0f19; }
+        body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+        /* SIDEBAR */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
+        .menu-item:active { background: #1e232e; color: white; }
+        .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* PROMO CARDS */
+        .promo-card { 
+            background: linear-gradient(145deg, #13161f, #171b26); 
+            border: 1px solid #2d3442; border-radius: 12px; 
+            overflow: hidden; margin-bottom: 16px; position: relative; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn-claim { 
+            background: #0ECB81; color: white; border-radius: 6px; 
+            padding: 6px 12px; font-size: 11px; font-weight: bold; 
+            text-transform: uppercase; transition: 0.2s; 
+        }
+        .btn-claim:active { transform: scale(0.95); }
+        .btn-claim:disabled { background: #2d3442; color: #6b7280; cursor: not-allowed; }
+
+        /* GIFTCODE INPUT */
+        .input-code { 
+            width: 100%; background: #0b0f19; border: 1px solid #2d3442; color: #FCD535; 
+            padding: 12px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; 
+            text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: center;
+        }
+        .input-code:focus { border-color: #FCD535; outline: none; box-shadow: 0 0 0 2px rgba(252, 213, 53, 0.2); }
+        .btn-redeem { 
+            width: 100%; background: #FCD535; color: #111; font-weight: bold; 
+            padding: 12px; border-radius: 8px; margin-top: 10px; 
+            box-shadow: 0 4px 15px rgba(252, 213, 53, 0.2); transition: 0.2s; 
+        }
+        .btn-redeem:active { transform: scale(0.98); }
+
+        /* ATTENDANCE STEPS */
+        .step-container { display: flex; justify-content: space-between; margin-top: 10px; position: relative; }
+        .step-line { position: absolute; top: 12px; left: 0; right: 0; height: 2px; background: #2d3442; z-index: 0; }
+        .step-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .step-circle { width: 24px; height: 24px; rounded-full; background: #1e232e; border: 2px solid #2d3442; color: #6b7280; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
+        .step-item.active .step-circle { background: #FCD535; border-color: #FCD535; color: #111; box-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
+        .step-item.checked .step-circle { background: #0ECB81; border-color: #0ECB81; color: white; }
+        
+        /* COMING SOON */
+        .coming-soon { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
+        .badge-soon { position: absolute; top: 10px; right: 10px; background: #4b5563; color: #fff; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
+    </style>
+</head>
+<body>
+
+    <!-- TOAST -->
+    <div id="toast"><i class="fa-solid fa-circle-check text-lg"></i><span class="text-sm font-bold text-white" id="toastMsg">...</span></div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
+    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
+            <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
+            <span class="font-bold text-lg text-white">CROWNEX</span>
+            <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
+            <a href="naprut.html" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
+            <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
+            <a href="khuyenmai.html" class="menu-item active"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
+            <div class="border-t border-[#232836] my-2 mx-2"></div>
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
+            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        </nav>
+        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
+                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="flex items-center px-4 h-14 bg-[#13161f] border-b border-[#232836] sticky top-0 z-20">
+        <button onclick="toggleMenu()" class="mr-4"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
+        <h1 class="flex-1 text-center font-bold text-white text-lg tracking-wide">TRUNG TÂM SỰ KIỆN</h1>
+        <div class="w-8"></div>
+    </header>
+
+    <div class="p-4 flex-1 overflow-y-auto pb-10">
+        
+        <!-- === [MỚI] PHẦN NHẬP GIFTCODE === -->
+        <div class="bg-[#1e232e] p-5 rounded-xl border border-[#FCD535] border-dashed mb-6 relative overflow-hidden shadow-lg">
+            <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
+            <h3 class="text-sm font-bold text-[#FCD535] mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-ticket"></i> NHẬP GIFTCODE
+            </h3>
+            <input type="text" id="giftcodeInput" class="input-code" placeholder="MÃ NHẬN THƯỞNG">
+            <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">ĐỔI QUÀ NGAY</button>
+            <p class="text-[10px] text-gray-500 mt-2 italic text-center">Theo dõi Telegram để săn mã code giới hạn.</p>
+        </div>
+
+        <!-- 1. QUÀ TÂN THỦ -->
+        <div class="promo-card p-4 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
+            <div class="flex justify-between items-center">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-[#FCD535]/10 rounded-full flex items-center justify-center text-[#FCD535] text-xl">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Quà Tân Thủ</h3>
+                        <p class="text-[10px] text-gray-400">Tặng miễn phí trải nghiệm.</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-[#FCD535] font-black font-mono text-lg">+$10.00</span>
+                    <button id="btnNewbie" onclick="claimNewbie()" class="btn-claim mt-1">NHẬN NGAY</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. HOÀN TRẢ VIP -->
+        <div class="promo-card p-4">
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 text-xl">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Hoàn Trả Mỗi Ngày</h3>
+                        <p class="text-[10px] text-gray-400">Tỷ lệ <span class="text-white font-bold">0.15%</span> trên tổng cược.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-[#0b0f19] p-3 rounded-lg border border-[#2d3442] mb-3">
+                <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>Tổng cược tích lũy</span>
+                    <span class="text-white font-mono" id="refundTurnover">$0.00</span>
+                </div>
+                <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>Hoàn trả khả dụng</span>
+                    <span class="text-[#0ECB81] font-mono font-bold" id="refundAmount">$0.00</span>
+                </div>
+                <div class="text-[9px] text-gray-500 italic mt-1 text-right">* Yêu cầu tối thiểu $1 để rút.</div>
+            </div>
+            
+            <button id="btnRefund" onclick="claimRefund()" class="w-full btn-claim py-3" disabled>RÚT HOÀN TRẢ</button>
+        </div>
+
+        <!-- 3. ĐIỂM DANH HÀNG NGÀY -->
+        <div class="promo-card p-4">
+            <div class="flex gap-3 mb-3">
+                <div class="w-10 h-10 bg-[#0ECB81]/10 rounded-full flex items-center justify-center text-[#0ECB81] text-xl">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-sm">Điểm Danh Nhận Quà</h3>
+                    <p class="text-[10px] text-gray-400">Nạp $50 & Cược $200 mỗi ngày.</p>
+                </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="step-container mb-4">
+                <div class="step-line"></div>
+                <!-- 5 Mốc điểm danh -->
+                <div class="step-item" id="day1"><div class="step-circle">1</div><span class="text-[9px] text-gray-500">$1</span></div>
+                <div class="step-item" id="day2"><div class="step-circle">2</div><span class="text-[9px] text-gray-500">$2</span></div>
+                <div class="step-item" id="day3"><div class="step-circle">3</div><span class="text-[9px] text-gray-500">$5</span></div>
+                <div class="step-item" id="day4"><div class="step-circle">4</div><span class="text-[9px] text-gray-500">$10</span></div>
+                <div class="step-item" id="day5"><div class="step-circle"><i class="fa-solid fa-crown"></i></div><span class="text-[9px] text-yellow-500 font-bold">$20</span></div>
+            </div>
+
+            <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-2">
+                <span>Nạp: <b id="progressDep" class="text-white">0</b>/50</span>
+                <span>Cược: <b id="progressBet" class="text-white">0</b>/200</span>
+            </div>
+
+            <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐIỂM DANH</button>
+        </div>
+
+        <!-- 4. NẠP ĐẦU (COMING SOON) -->
+        <div class="promo-card p-4 coming-soon">
+            <div class="badge-soon">SẮP RA MẮT</div>
+            <div class="flex gap-3">
+                <div class="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 text-xl">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-sm">Thưởng Nạp Đầu</h3>
+                    <p class="text-[10px] text-gray-400">Nhận 100% giá trị nạp lần đầu.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664",
+            measurementId: "G-7Q1GBFNQ37"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null;
+        let userData = null;
+
+        // --- Sidebar ---
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
+            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
+        };
+        window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
+
+        // --- Auth & Data ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
+                if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
+
+                // Listen to User Data
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        userData = docSnap.data();
+                        renderPromo(userData);
+                    }
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // --- RENDER LOGIC ---
+        function renderPromo(data) {
+            // 1. Newbie
+            const btnNewbie = document.getElementById('btnNewbie');
+            if (data.isNewbieClaimed) {
+                btnNewbie.innerText = "ĐÃ NHẬN";
+                btnNewbie.disabled = true;
+                btnNewbie.classList.add('opacity-50');
+            } else {
+                btnNewbie.disabled = false;
+            }
+
+            // 2. Refund (0.15%)
+            const lastTurnover = data.lastRefundTurnover || 0; 
+            const currentTurnover = data.betTurnover || 0;     
+            const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
+            const refundAmt = pendingTurnover * 0.0015;
+
+            document.getElementById('refundTurnover').innerText = "$" + currentTurnover.toLocaleString();
+            document.getElementById('refundAmount').innerText = "$" + refundAmt.toFixed(4);
+
+            const btnRefund = document.getElementById('btnRefund');
+            if (refundAmt >= 1) {
+                btnRefund.disabled = false;
+                btnRefund.innerText = `NHẬN $${refundAmt.toFixed(2)}`;
+            } else {
+                btnRefund.disabled = true;
+                btnRefund.innerText = "CHƯA ĐẠT MỐC $1";
+            }
+
+            // 3. Attendance
+            const depToday = data.depositToday || 0;
+            const betToday = data.betToday || 0; // Cần update biến này ở game.html
+            
+            document.getElementById('progressDep').innerText = depToday;
+            document.getElementById('progressDep').className = depToday >= 50 ? "text-[#0ECB81]" : "text-white";
+            document.getElementById('progressBet').innerText = betToday;
+            document.getElementById('progressBet').className = betToday >= 200 ? "text-[#0ECB81]" : "text-white";
+
+            const streak = data.attendanceStreak || 0;
+            for(let i=1; i<=5; i++) {
+                const el = document.getElementById(`day${i}`);
+                el.className = 'step-item'; 
+                if (i <= streak) el.classList.add('checked'); 
+                else if (i === streak + 1) el.classList.add('active'); 
+            }
+
+            const btnAtt = document.getElementById('btnAttendance');
+            const lastAttDate = data.lastAttendance ? new Date(data.lastAttendance).toDateString() : "";
+            const todayStr = new Date().toDateString();
+
+            if (lastAttDate === todayStr) {
+                btnAtt.disabled = true;
+                btnAtt.innerText = "ĐÃ ĐIỂM DANH HÔM NAY";
+            } else {
+                if (depToday >= 50 && betToday >= 200) {
+                    btnAtt.disabled = false;
+                    btnAtt.innerText = "ĐIỂM DANH NGAY";
+                } else {
+                    btnAtt.disabled = true;
+                    btnAtt.innerText = "CHƯA ĐỦ ĐIỀU KIỆN";
+                }
+            }
+        }
+
+        // --- ACTIONS ---
+        
+        // --- 1. NHẬP CODE ---
+        window.redeemCode = async () => {
+            if (!currentUser) return;
+            const codeInput = document.getElementById('giftcodeInput');
+            const code = codeInput.value.trim().toUpperCase();
+            const btn = document.getElementById('btnRedeem');
+
+            if (!code) return showToast("Vui lòng nhập mã!", "error");
+
+            btn.disabled = true; btn.innerText = "ĐANG KIỂM TRA...";
+
+            try {
+                // Mã cứng (Demo) - Bạn có thể tạo collection giftcode trên Firebase nếu muốn động
+                let reward = 0;
+                if (code === "VIP99") reward = 99;
+                else if (code === "TANTHU") reward = 10;
+                else if (code === "TEST") reward = 50;
+                else {
+                    throw new Error("Mã không tồn tại hoặc hết hạn!");
+                }
+
+                // Cộng tiền
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: (userData.balance || 0) + reward
+                });
+
+                // Lưu lịch sử
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'giftcode', amount: reward, code: code, status: 'success', timestamp: Date.now()
+                });
+
+                showToast(`Nhận thành công $${reward}!`, "success");
+                codeInput.value = "";
+
+            } catch (e) {
+                showToast(e.message, "error");
+            } finally {
+                btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY";
+            }
+        };
+
+        // --- 2. NHẬN TÂN THỦ ---
+        window.claimNewbie = async () => {
+            if (!currentUser) return;
+            try {
+                const btn = document.getElementById('btnNewbie');
+                btn.disabled = true; btn.innerText = "...";
+                
+                const bonus = 10;
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: (userData.balance || 0) + bonus,
+                    isNewbieClaimed: true
+                });
+                
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'bonus', amount: bonus, note: 'Quà tân thủ', status: 'success', timestamp: Date.now()
+                });
+                
+                showToast("Nhận thành công $10!", "success");
+            } catch (e) {
+                console.error(e); showToast("Lỗi hệ thống", "error");
+            }
+        };
+
+        // --- 3. NHẬN HOÀN TRẢ ---
+        window.claimRefund = async () => {
+            if (!currentUser) return;
+            try {
+                const btn = document.getElementById('btnRefund');
+                btn.disabled = true;
+                
+                const currentTurnover = userData.betTurnover || 0;
+                const lastTurnover = userData.lastRefundTurnover || 0;
+                const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
+                const refundAmt = pendingTurnover * 0.0015;
+
+                if (refundAmt < 1) return;
+
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: (userData.balance || 0) + refundAmt,
+                    lastRefundTurnover: currentTurnover // Update mốc mới
+                });
+
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'refund', amount: refundAmt, note: 'Hoàn trả cược', status: 'success', timestamp: Date.now()
+                });
+
+                showToast(`Đã nhận hoàn trả $${refundAmt.toFixed(2)}`, "success");
+            } catch (e) { console.error(e); }
+        };
+
+        // --- 4. ĐIỂM DANH ---
+        window.claimAttendance = async () => {
+            if (!currentUser) return;
+            try {
+                const btn = document.getElementById('btnAttendance');
+                btn.disabled = true;
+
+                const rewards = [1, 2, 5, 10, 20];
+                const streak = userData.attendanceStreak || 0;
+                
+                let nextStreak = streak + 1;
+                let reward = rewards[streak] || 1; 
+                if (streak >= 5) { nextStreak = 1; reward = rewards[0]; } // Reset vòng
+
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: (userData.balance || 0) + reward,
+                    attendanceStreak: nextStreak,
+                    lastAttendance: Date.now()
+                });
+
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'attendance', amount: reward, note: `Điểm danh ngày ${nextStreak}`, status: 'success', timestamp: Date.now()
+                });
+
+                showToast(`Điểm danh thành công! Nhận $${reward}`, "success");
+            } catch (e) { console.error(e); }
+        };
+
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            const i = t.querySelector('i');
+            if(type === 'error') { i.className = 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]'; t.style.borderColor = '#F6465D'; }
+            else { i.className = 'fa-solid fa-circle-check text-lg text-[#0ECB81]'; t.style.borderColor = '#0ECB81'; }
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
+
+
