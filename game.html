@@ -29,7 +29,7 @@
         .btn-trade { transition: all 0.1s; position: relative; overflow: hidden; border-bottom: 3px solid rgba(0,0,0,0.2); }
         .btn-trade:active { transform: translateY(2px); border-bottom-width: 1px; }
         .btn-trade.dimmed { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        .btn-trade.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); } /* Style cho nút bị khóa khi cược đối */
+        .btn-trade.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); }
 
         .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; }
         .history-container { display: flex; flex-direction: row; gap: 4px; padding: 0 5px; }
@@ -47,6 +47,9 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
+        
+        /* Hiệu ứng loading cho nút */
+        .btn-loading { pointer-events: none; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -69,7 +72,7 @@
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
-            <a href="index.html" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
@@ -140,8 +143,8 @@
             </button>
         </div>
         <div id="confirmBar" class="absolute bottom-0 left-0 w-full bg-[#1e232e]/95 backdrop-blur border-t border-[#FCD535] p-3 flex gap-3 slide-down z-30 pb-safe">
-            <button onclick="cancelSelection()" class="w-1/3 bg-[#2d3442] rounded-lg text-white font-bold text-xs h-11">HỦY BỎ</button>
-            <button onclick="confirmBet()" class="w-2/3 bg-[#FCD535] rounded-lg text-[#111] font-black text-sm h-11 flex items-center justify-center gap-2">XÁC NHẬN <span class="bg-black/10 px-1.5 py-0.5 rounded text-xs font-mono" id="pendingAmount">0$</span></button>
+            <button onclick="cancelSelection()" class="w-1/3 bg-[#2d3442] rounded-lg text-white font-bold text-xs h-11 hover:bg-[#374151]">HỦY BỎ</button>
+            <button id="btnConfirm" onclick="confirmBet()" class="w-2/3 bg-[#FCD535] rounded-lg text-[#111] font-black text-sm h-11 flex items-center justify-center gap-2 hover:brightness-110">XÁC NHẬN <span class="bg-black/10 px-1.5 py-0.5 rounded text-xs font-mono" id="pendingAmount">0$</span></button>
         </div>
     </div>
 
@@ -168,7 +171,8 @@
         const state = {
             balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
             history: new Array(60).fill(null), candles: [], visualPrice: CONFIG.basePrice,
-            targetPrice: CONFIG.basePrice, currentPhase: 'order', lockPrice: 0
+            targetPrice: CONFIG.basePrice, currentPhase: 'order', lockPrice: 0,
+            isProcessing: false // --- FIX SPAM: Cờ kiểm tra đang xử lý ---
         };
 
         window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
@@ -187,53 +191,35 @@
                 });
             }
             initGame();
-            checkSavedBet(); // --- KIỂM TRA CƯỢC CŨ ---
+            checkSavedBet();
         };
 
-        // --- HÀM XỬ LÝ LƯU/KHÔI PHỤC CƯỢC ---
         function checkSavedBet() {
             const saved = localStorage.getItem('crownex_active_bet');
             if (!saved) return;
-            
             const betData = JSON.parse(saved);
             const now = Date.now();
-            
-            // Nếu vẫn còn trong phiên (chưa đến thời gian lock tiếp theo + 30s xử lý)
-            // Logic đơn giản: Nếu betData.expires > now -> Còn hạn, khôi phục
             if (betData.expires > now) {
                 state.currentBet = { type: betData.type, amount: betData.amount };
                 updateBetUI(betData.type, betData.amount);
-                showToast('success', `Đã khôi phục lệnh cược $${betData.amount}`);
-            } else {
-                // Nếu đã quá hạn -> Tự động tính kết quả offline
-                processOfflineResult(betData);
-            }
+            } else { processOfflineResult(betData); }
         }
 
         async function processOfflineResult(betData) {
-            // Giả lập kết quả ngẫu nhiên vì không có server thật lưu giá tại thời điểm đó
-            // Trong thực tế, cần query lại giá tại betData.expires
             const result = Math.random() > 0.5 ? 'up' : 'down'; 
             const win = (betData.type === result);
             let profit = 0;
-
             if (win) {
                 profit = betData.amount * 0.95;
-                state.balance += (betData.amount + profit); // Hoàn vốn + lãi (vì vốn đã trừ lúc đặt)
+                state.balance += (betData.amount + profit);
                 showToast('success', `Kết quả phiên trước: THẮNG (+$${profit})`);
-            } else {
-                showToast('error', `Kết quả phiên trước: THUA (-$${betData.amount})`);
-            }
-            
+            } else { showToast('error', `Kết quả phiên trước: THUA (-$${betData.amount})`); }
             updateBalanceUI();
-            localStorage.removeItem('crownex_active_bet'); // Xóa cược đã xử lý
-
-            // Sync Firebase
+            localStorage.removeItem('crownex_active_bet');
             if(state.userData.uid) {
                 await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
                 await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
-                    type: betData.type, amount: betData.amount, result: win ? 'win' : 'lose', 
-                    profit: win ? profit : 0, timestamp: betData.expires // Lưu thời gian kết thúc phiên cũ
+                    type: betData.type, amount: betData.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: betData.expires
                 });
             }
         }
@@ -242,13 +228,10 @@
             const id = type === 'up' ? 'badge-up' : 'badge-down';
             document.getElementById(id).innerText = amount + "$"; 
             document.getElementById(id).classList.remove('hidden');
-            
-            // Khóa nút còn lại
             const otherBtn = type === 'up' ? 'btnSell' : 'btnBuy';
             document.getElementById(otherBtn).classList.add('locked');
         }
 
-        // --- UI FUNCTIONS ---
         function showToast(type, msg) {
             const t = document.getElementById('toast');
             const i = t.querySelector('i');
@@ -270,12 +253,8 @@
 
         window.selectSide = (type) => {
             if (state.currentPhase !== 'order') return showToast('error', "Vui lòng chờ phiên mới!");
+            if (state.currentBet && state.currentBet.type !== type) return showToast('error', "Không được cược đối!");
             
-            // CẤM CƯỢC ĐỐI
-            if (state.currentBet && state.currentBet.type !== type) {
-                return showToast('error', "Không được cược 2 cửa cùng lúc!");
-            }
-
             const amount = parseFloat(document.getElementById('betInput').value);
             if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
             
@@ -289,35 +268,59 @@
             document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
         };
 
+        // --- HÀM CONFIRM ĐÃ FIX LỖI SPAM CLICK ---
         window.confirmBet = async () => {
+            // 1. Kiểm tra cờ processing để chặn spam click
+            if (state.isProcessing) return;
             if (state.pendingBet.amount === 0) return;
+            
             const amount = state.pendingBet.amount;
             const type = state.pendingBet.type;
 
-            state.balance -= amount; updateBalanceUI();
-            if(state.userData.uid) { await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); }
-
-            // LOGIC CƯỢC DỒN
-            if (!state.currentBet) {
-                state.currentBet = { type: type, amount: amount };
-            } else {
-                state.currentBet.amount += amount;
+            // 2. Kiểm tra số dư lần cuối
+            if (amount > state.balance) {
+                showToast('error', "Số dư không đủ!");
+                return;
             }
 
-            // LƯU VÀO LOCALSTORAGE ĐỂ KHÔI PHỤC KHI RELOAD
+            // 3. Khóa nút ngay lập tức
+            state.isProcessing = true;
+            const btn = document.getElementById('btnConfirm');
+            btn.classList.add('btn-loading');
+            btn.innerText = "ĐANG XỬ LÝ...";
+
+            // 4. Trừ tiền và RESET pendingBet ngay lập tức (Chống trừ 2 lần)
+            state.balance -= amount;
+            updateBalanceUI();
+            
+            // Clear pending ngay, không chờ await
+            state.pendingBet = { type: null, amount: 0 };
+            document.getElementById('confirmBar').classList.remove('slide-up'); 
+            document.getElementById('confirmBar').classList.add('slide-down');
+
+            // 5. Xử lý logic async sau
+            if(state.userData.uid) { 
+                try {
+                    await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); 
+                } catch(e) { console.error(e); }
+            }
+
+            if (!state.currentBet) { state.currentBet = { type: type, amount: amount }; } 
+            else { state.currentBet.amount += amount; }
+
             const now = Date.now();
-            const nextMinute = now - (now % 60000) + 60000; // Thời điểm kết thúc phiên
+            const nextMinute = now - (now % 60000) + 60000;
             localStorage.setItem('crownex_active_bet', JSON.stringify({
-                type: state.currentBet.type,
-                amount: state.currentBet.amount,
-                expires: nextMinute
+                type: state.currentBet.type, amount: state.currentBet.amount, expires: nextMinute
             }));
 
             updateBetUI(state.currentBet.type, state.currentBet.amount);
-            
-            state.pendingBet = { type: null, amount: 0 };
-            document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
             showToast('success', `Đặt lệnh thành công: $${amount}`);
+            
+            // 6. Mở khóa
+            state.isProcessing = false;
+            btn.classList.remove('btn-loading');
+            btn.innerHTML = 'XÁC NHẬN <span class="bg-black/10 px-1.5 py-0.5 rounded text-xs font-mono" id="pendingAmount">0$</span>';
         };
 
         window.toggleMenu = () => {
@@ -390,8 +393,6 @@
             document.getElementById('candleStatusBadge').innerText = "ORDERING";
             document.getElementById('lockLabel').style.display = 'none'; document.getElementById('lockLine').style.display = 'none';
             state.currentBet = null;
-            
-            // Reset UI
             document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
             document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
             document.getElementById('btnSell').classList.remove('dimmed', 'locked');
@@ -417,16 +418,11 @@
             if (state.currentBet) {
                 const b = state.currentBet; const win = (b.type === res);
                 let profit = 0; let totalReturn = 0;
-
                 if (win) {
                     totalReturn = b.amount * 1.95; profit = b.amount * 0.95;
                     state.balance += totalReturn; showPopup(true, profit);
-                } else {
-                    profit = 0; showPopup(false, b.amount);
-                }
+                } else { profit = 0; showPopup(false, b.amount); }
                 updateBalanceUI();
-                
-                // Xóa cược đã xử lý khỏi localStorage
                 localStorage.removeItem('crownex_active_bet');
 
                 if(state.userData.uid) {
