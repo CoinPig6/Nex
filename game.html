@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <!-- CHẶN ZOOM TUYỆT ĐỐI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Crownex Pro - Giao dịch</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -48,7 +49,6 @@
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
         
-        /* Hiệu ứng loading cho nút */
         .btn-loading { pointer-events: none; opacity: 0.7; }
     </style>
 </head>
@@ -70,6 +70,10 @@
             <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
             <a href="naprut.html" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
+            
+            <!-- THÊM MỤC KHUYẾN MÃI TẠI ĐÂY -->
+            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi</a>
+            
             <div class="border-t border-[#232836] my-2 mx-2"></div>
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
@@ -86,7 +90,9 @@
     <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
         <div class="flex items-center gap-4">
             <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
-            <div class="flex items-center gap-2"><span class="text-white font-bold text-sm">BTC/USDT</span><span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646]">LIVE</span></div>
+            <div>
+                <div class="flex items-center gap-2"><span class="text-white font-bold text-sm">BTC/USDT</span><span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646]">LIVE</span></div>
+            </div>
         </div>
         <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3">
             <div class="text-right leading-tight"><div class="text-[9px] text-[#6b7280] font-bold uppercase">Thực: <span id="balanceDisplay" class="text-[#EAECEF] font-mono text-sm">---</span></div></div>
@@ -172,7 +178,7 @@
             balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
             history: new Array(60).fill(null), candles: [], visualPrice: CONFIG.basePrice,
             targetPrice: CONFIG.basePrice, currentPhase: 'order', lockPrice: 0,
-            isProcessing: false // --- FIX SPAM: Cờ kiểm tra đang xử lý ---
+            isProcessing: false // FIX SPAM CLICK
         };
 
         window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
@@ -268,41 +274,30 @@
             document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
         };
 
-        // --- HÀM CONFIRM ĐÃ FIX LỖI SPAM CLICK ---
         window.confirmBet = async () => {
-            // 1. Kiểm tra cờ processing để chặn spam click
-            if (state.isProcessing) return;
+            if (state.isProcessing) return; // Chặn click liên tục
             if (state.pendingBet.amount === 0) return;
             
             const amount = state.pendingBet.amount;
             const type = state.pendingBet.type;
 
-            // 2. Kiểm tra số dư lần cuối
-            if (amount > state.balance) {
-                showToast('error', "Số dư không đủ!");
-                return;
-            }
+            if (amount > state.balance) { showToast('error', "Số dư không đủ!"); return; }
 
-            // 3. Khóa nút ngay lập tức
             state.isProcessing = true;
             const btn = document.getElementById('btnConfirm');
             btn.classList.add('btn-loading');
             btn.innerText = "ĐANG XỬ LÝ...";
 
-            // 4. Trừ tiền và RESET pendingBet ngay lập tức (Chống trừ 2 lần)
             state.balance -= amount;
             updateBalanceUI();
             
-            // Clear pending ngay, không chờ await
             state.pendingBet = { type: null, amount: 0 };
             document.getElementById('confirmBar').classList.remove('slide-up'); 
             document.getElementById('confirmBar').classList.add('slide-down');
 
-            // 5. Xử lý logic async sau
             if(state.userData.uid) { 
-                try {
-                    await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); 
-                } catch(e) { console.error(e); }
+                try { await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); } 
+                catch(e) { console.error(e); }
             }
 
             if (!state.currentBet) { state.currentBet = { type: type, amount: amount }; } 
@@ -317,7 +312,6 @@
             updateBetUI(state.currentBet.type, state.currentBet.amount);
             showToast('success', `Đặt lệnh thành công: $${amount}`);
             
-            // 6. Mở khóa
             state.isProcessing = false;
             btn.classList.remove('btn-loading');
             btn.innerHTML = 'XÁC NHẬN <span class="bg-black/10 px-1.5 py-0.5 rounded text-xs font-mono" id="pendingAmount">0$</span>';
@@ -495,5 +489,4 @@
     </script>
 </body>
 </html>
-
 
