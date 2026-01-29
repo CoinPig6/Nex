@@ -4,32 +4,43 @@
     <meta charset="UTF-8">
     <!-- CHẶN ZOOM TUYỆT ĐỐI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex Pro V30 - Game</title>
+    <title>Crownex Pro - Giao dịch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS CHẶN ZOOM */
-        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; }
-        body { 
-            background-color: #0b0f19; color: #d1d5db; font-family: 'Roboto', sans-serif; 
-            display: flex; flex-direction: column; height: 100dvh;
-        }
+        /* CSS CORE */
+        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
+        body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
         .text-up { color: #0ECB81; } .bg-up { background-color: #0ECB81; }
         .text-down { color: #F6465D; } .bg-down { background-color: #F6465D; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+        /* SIDEBAR STYLES */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .menu-item {
+            display: flex; items-center; gap: 12px; padding: 12px 16px; 
+            border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px;
+            transition: all 0.2s;
+        }
+        .menu-item:active { background: #1e232e; color: white; }
+        .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* GAME UI */
         .tech-border { position: relative; background: #13161f; border: 1px solid #2a2e39; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border-radius: 16px; overflow: hidden; }
         .tech-border.win { border: 1px solid #0ECB81; box-shadow: 0 0 30px rgba(14, 203, 129, 0.15); }
         .tech-border.lose { border: 1px solid #F6465D; box-shadow: 0 0 30px rgba(246, 70, 93, 0.15); }
         .btn-trade { transition: all 0.1s; position: relative; overflow: hidden; border-bottom: 3px solid rgba(0,0,0,0.2); }
         .btn-trade:active { transform: translateY(2px); border-bottom-width: 1px; }
         .btn-trade.dimmed { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        
         .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; }
         .history-container { display: flex; flex-direction: row; gap: 4px; padding: 0 5px; }
         .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 68px; height: 85px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 6px; border: 1px solid #1f2430; }
         .dot { width: 10px; height: 10px; border-radius: 50%; background-color: #232836; margin: auto; }
         .dot.up { background-color: #0ECB81; } .dot.down { background-color: #F6465D; }
+        
         #lockLine { position: absolute; left: 0; right: 0; height: 1px; border-top: 1px dashed #FCD535; z-index: 5; pointer-events: none; display: none; }
         #lockLabel { position: absolute; left: 10px; z-index: 6; background: #FCD535; color: #111; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; transform: translateY(-50%); display: none; }
         #confirmBar { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -39,21 +50,50 @@
     </style>
 </head>
 <body>
-    <!-- SIDEBAR -->
+
+    <!-- SIDEBAR MENU (ĐÃ SỬA: ĐẦY ĐỦ CÁC MỤC) -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
+            <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
             <span class="font-bold text-lg text-white">CROWNEX</span>
             <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        <div class="flex-1 p-4 space-y-1">
-            <div class="text-[10px] font-bold text-[#4b5563] uppercase mb-2">Tài khoản</div>
-            <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] mb-4">
-                <div class="text-xs text-gray-400">ID người chơi</div>
-                <div class="font-bold text-white text-sm" id="sidebarUsername">...</div>
-                <div class="text-xs text-[#0ECB81] mt-1">● Online</div>
+        
+        <!-- MENU LIST -->
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <a href="game.html" class="menu-item active">
+                <i class="fa-solid fa-chart-line"></i> Giao dịch
+            </a>
+            <a href="taikhoan.html" class="menu-item">
+                <i class="fa-solid fa-user-gear"></i> Tài khoản
+            </a>
+            <a href="naprut.html" class="menu-item">
+                <i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền
+            </a>
+            <a href="lichsu.html" class="menu-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược
+            </a>
+            
+            <div class="border-t border-[#232836] my-2 mx-2"></div>
+            
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400">
+                <i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)
+            </a>
+            
+            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-white" id="sidebarUsername">User...</span>
+                    <span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span>
+                </div>
             </div>
-            <a href="login.html" class="flex items-center gap-4 px-4 py-3 text-red-400 bg-red-500/10 rounded-lg"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </div>
     </div>
 
@@ -74,14 +114,14 @@
         </div>
     </header>
 
-    <!-- CHART -->
+    <!-- CHART AREA -->
     <div class="flex-1 relative bg-[#0b0f19] overflow-hidden" id="chart-wrapper">
         <div class="absolute top-3 right-[70px] z-10"><span id="candleStatusBadge" class="text-[10px] font-bold px-3 py-1 rounded-full bg-[#232836] text-[#9ca3af] border border-[#374151]">WAITING</span></div>
         <canvas id="chartCanvas" class="w-full h-full block"></canvas>
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
         
-        <!-- POPUP -->
+        <!-- POPUP RESULT -->
         <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase">HÚP RỒI</div>
@@ -90,7 +130,7 @@
         </div>
     </div>
 
-    <!-- HISTORY -->
+    <!-- HISTORY BAR -->
     <div class="glass-panel z-20 shrink-0 h-28 flex flex-col shadow-[0_-5px_20px_rgba(0,0,0,0.5)] bg-[#13161f]">
         <div class="flex items-center justify-between px-4 py-1.5 border-b border-[#232836] bg-[#171b26]">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#6b7280] text-xs"></i><span class="text-[#9ca3af] text-[10px] font-bold uppercase">Kết quả</span></div>
@@ -104,7 +144,7 @@
         </div>
     </div>
 
-    <!-- CONTROLS -->
+    <!-- CONTROL PANEL -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex justify-between items-end mb-4">
             <div class="text-center w-full">
@@ -135,10 +175,12 @@
         </div>
     </div>
 
-    <!-- MAIN GAME SCRIPT (MODULE TYPE FOR FIREBASE) -->
+    <!-- MAIN LOGIC -->
     <script type="module">
+        // IMPORT ĐẦY ĐỦ (ĐÃ THÊM addDoc, collection ĐỂ GHI LỊCH SỬ)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, updateDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -151,8 +193,9 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // --- GLOBAL STATE ---
+        // --- GLOBAL VARIABLES ---
         const CONFIG = { basePrice: 98100, chartPaddingRight: 60, smoothingFactor: 0.15, gridStep: 20 };
         const state = {
             balance: 0,
@@ -168,6 +211,14 @@
             sessionID: ''
         };
 
+        // --- LOGOUT FUNCTION ---
+        window.logout = () => {
+            signOut(auth).then(() => {
+                localStorage.removeItem('crownex_user_info');
+                window.location.href = "login.html";
+            });
+        };
+
         // --- AUTH CHECK & INIT ---
         window.onload = async () => {
             const userStr = localStorage.getItem('crownex_user_info');
@@ -179,11 +230,11 @@
             state.userData = JSON.parse(userStr);
             state.balance = state.userData.balance || 0;
             
-            // Render User Info
+            // Render User Info in Sidebar
             document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username;
             updateBalanceUI();
 
-            // Listen to Balance Realtime from Firestore
+            // Listen to Balance Realtime
             if(state.userData.uid) {
                  onSnapshot(doc(db, "users", state.userData.uid), (doc) => {
                     if(doc.exists()) {
@@ -194,171 +245,104 @@
                 });
             }
 
-            // Start Game Loop
             initGame();
         };
 
-        // --- GAME LOGIC FUNCTIONS ATTACHED TO WINDOW (For HTML buttons) ---
+        // --- UI FUNCTIONS ---
         window.adjustBet = (val) => {
             const inp = document.getElementById('betInput');
-            let v = parseFloat(inp.value) + val;
-            if (v < 1) v = 1;
-            inp.value = v;
-            window.updateProfit();
+            let v = parseFloat(inp.value) + val; if (v < 1) v = 1; inp.value = v; window.updateProfit();
         };
-
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value);
             document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
         };
-
         window.selectSide = (type) => {
             if (state.currentPhase !== 'order') return alert("Đợi phiên sau!");
             const amount = parseFloat(document.getElementById('betInput').value);
             if (amount + state.pendingBet.amount > state.balance) return alert("Không đủ tiền!");
-            
-            state.pendingBet.type = type;
-            state.pendingBet.amount += amount;
+            state.pendingBet.type = type; state.pendingBet.amount += amount;
             document.getElementById('pendingAmount').innerText = state.pendingBet.amount + "$";
-            document.getElementById('confirmBar').classList.remove('slide-down');
-            document.getElementById('confirmBar').classList.add('slide-up');
+            document.getElementById('confirmBar').classList.remove('slide-down'); document.getElementById('confirmBar').classList.add('slide-up');
         };
-
         window.cancelSelection = () => {
             state.pendingBet = { type: null, amount: 0 };
-            document.getElementById('confirmBar').classList.remove('slide-up');
-            document.getElementById('confirmBar').classList.add('slide-down');
+            document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
         };
-
         window.confirmBet = async () => {
             if (state.pendingBet.amount === 0) return;
-            
-            // Trừ tiền ngay lập tức (UI)
-            state.balance -= state.pendingBet.amount;
-            updateBalanceUI();
-            
-            // Sync trừ tiền lên Firebase
-            if(state.userData.uid) {
-                await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
-            }
-
+            state.balance -= state.pendingBet.amount; updateBalanceUI();
+            if(state.userData.uid) { await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); }
             state.currentBet = { type: state.pendingBet.type, amount: state.pendingBet.amount };
-            
-            const badgeId = state.currentBet.type === 'up' ? 'badge-up' : 'badge-down';
-            document.getElementById(badgeId).innerText = state.currentBet.amount + "$";
-            document.getElementById(badgeId).classList.remove('hidden');
-            
+            const id = state.currentBet.type === 'up' ? 'badge-up' : 'badge-down';
+            document.getElementById(id).innerText = state.currentBet.amount + "$"; document.getElementById(id).classList.remove('hidden');
             state.pendingBet = { type: null, amount: 0 };
-            document.getElementById('confirmBar').classList.remove('slide-up');
-            document.getElementById('confirmBar').classList.add('slide-down');
+            document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
         };
-
         window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar');
-            const ov = document.getElementById('sidebarOverlay');
+            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
             if (sb.classList.contains('-translate-x-full')) {
-                sb.classList.remove('-translate-x-full');
-                ov.classList.remove('hidden', 'opacity-0');
+                sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0');
             } else {
-                sb.classList.add('-translate-x-full');
-                ov.classList.add('opacity-0');
-                setTimeout(()=>ov.classList.add('hidden'),300);
+                sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300);
             }
         };
 
-        // --- INTERNAL GAME FUNCTIONS ---
-        function updateBalanceUI() {
-            document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
-        }
-
+        // --- CORE GAME ENGINE ---
+        function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
+        
         function initGame() {
-            // Restore History
-            const savedHist = localStorage.getItem('crownex_history_v30');
-            if (savedHist) state.history = JSON.parse(savedHist);
-            
+            const h = localStorage.getItem('crownex_history_v30');
+            if (h) state.history = JSON.parse(h);
             const now = Date.now();
-            const currentMinuteIdx = new Date().getMinutes();
+            const m = new Date().getMinutes();
             if(!state.history || state.history.length !== 60) state.history = new Array(60).fill(null);
-            
-            // Fill past history
-            for(let i=0; i<currentMinuteIdx; i++) {
-                if(!state.history[i]) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
-            }
-            for(let i=currentMinuteIdx; i<60; i++) state.history[i] = null;
+            for(let i=0; i<m; i++) if(!state.history[i]) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
+            for(let i=m; i<60; i++) state.history[i] = null;
 
-            resizeCanvas();
-            renderHistoryBlocks();
-            window.addEventListener('resize', resizeCanvas);
-            
-            // Generate Initial Candles
-            const block30s = now - (now % 30000); 
-            state.candles = [];
-            let price = CONFIG.basePrice;
-            const startBlock = block30s - (30 * 30000);
+            resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
+            const b = now - (now % 30000); state.candles = []; let p = CONFIG.basePrice;
+            const s = b - (30 * 30000);
             for(let i=0; i<30; i++) {
-                const t = startBlock + (i * 30000);
-                const c = getCandleData(t, price);
-                state.candles.push(c);
-                price = c.close; 
+                const t = s + (i * 30000); const c = getCandleData(t, p);
+                state.candles.push(c); p = c.close;
             }
-            state.visualPrice = price; 
-            
-            // Loops
-            marketLoop();
-            drawLoop();
-            setInterval(syncLoop, 1000); 
-            setInterval(marketLoop, 30); 
+            state.visualPrice = p;
+            marketLoop(); drawLoop(); setInterval(syncLoop, 1000); setInterval(marketLoop, 30);
         }
 
-        // --- MATH & DRAWING (Simplified from previous turn) ---
-        function getSeededRandom(seed) { var x = Math.sin(seed++) * 10000; return x - Math.floor(x); }
-        function getCandleData(startTime, prevClose) {
-            const r1 = getSeededRandom(startTime);
-            const open = prevClose !== undefined ? prevClose : CONFIG.basePrice;
-            const move = (r1 - 0.5) * 60; 
-            const close = open + move;
-            const high = Math.max(open, close) + 10; 
-            const low = Math.min(open, close) - 10;
-            return { open, close, high, low, startTime };
+        function getSeededRandom(s) { var x = Math.sin(s++) * 10000; return x - Math.floor(x); }
+        function getCandleData(s, p) {
+            const r1 = getSeededRandom(s); const o = p !== undefined ? p : CONFIG.basePrice;
+            const m = (r1 - 0.5) * 60; const c = o + m;
+            return { open: o, close: c, high: Math.max(o, c) + 10, low: Math.min(o, c) - 10, startTime: s };
         }
 
-        const cvs = document.getElementById('chartCanvas');
-        const ctx = cvs.getContext('2d');
+        const cvs = document.getElementById('chartCanvas'); const ctx = cvs.getContext('2d');
 
         function renderHistoryBlocks() {
-            const container = document.getElementById('historyContainer');
-            container.innerHTML = '';
-            let up = 0, down = 0;
-            state.history.forEach(res => { if(res === 'up') up++; if(res === 'down') down++; });
-            document.getElementById('count-up').innerText = up;
-            document.getElementById('count-down').innerText = down;
-
+            const c = document.getElementById('historyContainer'); c.innerHTML = '';
+            let u = 0, d = 0; state.history.forEach(r => { if(r === 'up') u++; if(r === 'down') d++; });
+            document.getElementById('count-up').innerText = u; document.getElementById('count-down').innerText = d;
             for(let b=0; b < 3; b++) {
-                const blockDiv = document.createElement('div');
-                blockDiv.className = 'history-block';
-                const startIdx = b * 20;
-                for(let i=startIdx; i<startIdx+20; i++) {
-                    const res = state.history[i];
-                    const d = document.createElement('div');
-                    d.className = res === 'up' ? 'dot up' : (res === 'down' ? 'dot down' : 'dot');
+                const div = document.createElement('div'); div.className = 'history-block';
+                const s = b * 20;
+                for(let i=s; i<s+20; i++) {
+                    const r = state.history[i];
+                    const d = document.createElement('div'); d.className = r === 'up' ? 'dot up' : (r === 'down' ? 'dot down' : 'dot');
                     if(i === (new Date().getMinutes() - 1)) d.classList.add('new');
-                    blockDiv.appendChild(d);
+                    div.appendChild(d);
                 }
-                container.appendChild(blockDiv);
+                c.appendChild(div);
             }
         }
 
         function syncLoop() {
-            const now = new Date();
-            const sec = now.getSeconds();
-            const isOrder = sec < 30; 
-            const timeLeft = isOrder ? (30 - sec) : (60 - sec);
-
-            if (isOrder && state.currentPhase === 'result') startOrderPhase(); 
-            else if (!isOrder && state.currentPhase === 'order') startResultPhase(); 
-            
-            document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
-            document.getElementById('timerProgress').style.width = ((timeLeft / 30) * 100) + "%";
+            const n = new Date(); const s = n.getSeconds(); const isOrder = s < 30; const t = isOrder ? (30 - s) : (60 - s);
+            if (isOrder && state.currentPhase === 'result') startOrderPhase();
+            else if (!isOrder && state.currentPhase === 'order') startResultPhase();
+            document.getElementById('timerText').innerText = t < 10 ? "0" + t : t;
+            document.getElementById('timerProgress').style.width = ((t / 30) * 100) + "%";
         }
 
         function startOrderPhase() {
@@ -367,157 +351,121 @@
             document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
             document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "ORDERING";
-            
-            document.getElementById('lockLabel').style.display = 'none';
-            document.getElementById('lockLine').style.display = 'none';
-            
+            document.getElementById('lockLabel').style.display = 'none'; document.getElementById('lockLine').style.display = 'none';
             state.currentBet = null;
-            document.getElementById('badge-up').classList.add('hidden');
-            document.getElementById('badge-down').classList.add('hidden');
-            document.getElementById('btnBuy').classList.remove('dimmed');
-            document.getElementById('btnSell').classList.remove('dimmed');
+            document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
+            document.getElementById('btnBuy').classList.remove('dimmed'); document.getElementById('btnSell').classList.remove('dimmed');
         }
 
         function startResultPhase() {
-            state.currentPhase = 'result';
-            state.lockPrice = state.visualPrice; 
-            window.cancelSelection();
-            
+            state.currentPhase = 'result'; state.lockPrice = state.visualPrice; window.cancelSelection();
             document.getElementById('phaseText').innerText = "CHỜ KẾT QUẢ";
             document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-blue-500 w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "WAITING";
-            
-            document.getElementById('lockLabel').style.display = 'block';
-            document.getElementById('lockLine').style.display = 'block';
+            document.getElementById('lockLabel').style.display = 'block'; document.getElementById('lockLine').style.display = 'block';
             document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
-            document.getElementById('btnBuy').classList.add('dimmed');
-            document.getElementById('btnSell').classList.add('dimmed');
+            document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
         }
 
+        // --- ĐÃ SỬA: XỬ LÝ KẾT QUẢ VÀ LƯU VÀO BẢNG LỊCH SỬ ---
         async function finalizeRound() {
-            let result = state.visualPrice >= state.lockPrice ? 'up' : 'down';
-            
-            // Ghi lịch sử
-            const minIdx = new Date().getMinutes();
-            let prevMin = minIdx - 1; if(prevMin < 0) prevMin = 59;
-            if(minIdx === 0) state.history.fill(null);
-            state.history[prevMin] = result;
+            let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
+            const m = new Date().getMinutes(); let pm = m - 1; if(pm < 0) pm = 59;
+            if(m === 0) state.history.fill(null); state.history[pm] = res;
             localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
             renderHistoryBlocks();
 
-            // Xử lý thắng thua
             if (state.currentBet) {
-                const bet = state.currentBet;
-                const win = (bet.type === result);
+                const b = state.currentBet; const win = (b.type === res);
+                let profit = 0; let totalReturn = 0;
+
                 if (win) {
-                    const profit = bet.amount * 1.95;
-                    state.balance += profit;
-                    showPopup(true, profit);
-                    // UPDATE FIREBASE WIN
-                    if(state.userData.uid) {
-                        await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
-                    }
-                } else { 
-                    showPopup(false, bet.amount); 
-                    // Lose: Tiền đã trừ lúc đặt lệnh, không cần trừ lại, chỉ cần sync nếu cần thiết (đã sync lúc đặt)
+                    totalReturn = b.amount * 1.95; profit = b.amount * 0.95;
+                    state.balance += totalReturn; showPopup(true, profit);
+                } else {
+                    profit = 0; showPopup(false, b.amount);
                 }
                 updateBalanceUI();
+
+                if(state.userData.uid) {
+                    try {
+                        // 1. Update số dư
+                        await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
+                        
+                        // 2. LƯU LỊCH SỬ VÀO SUB-COLLECTION 'betHistory' (Để lichsu.html hiển thị)
+                        await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
+                            type: b.type,
+                            amount: b.amount,
+                            result: win ? 'win' : 'lose',
+                            profit: win ? profit : 0,
+                            timestamp: Date.now()
+                        });
+                    } catch (e) { console.error(e); }
+                }
             }
         }
 
-        function showPopup(win, amount) {
-            const popup = document.getElementById('resultPopup');
-            const border = document.getElementById('popupBorder');
-            const title = document.getElementById('popupTitle');
-            const amt = document.getElementById('popupAmount');
-            
-            popup.classList.remove('hidden', 'scale-90', 'opacity-0');
-            popup.classList.add('scale-100', 'opacity-100');
-            
-            if (win) {
-                border.className = 'tech-border p-6 relative bg-[#13161f] win';
-                title.innerText = "HÚP RỒI"; title.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase";
-                amt.innerText = "+$" + amount.toFixed(2); amt.className = "font-mono font-bold text-4xl text-[#0ECB81]";
+        function showPopup(w, a) {
+            const p = document.getElementById('resultPopup'); const b = document.getElementById('popupBorder');
+            const t = document.getElementById('popupTitle'); const m = document.getElementById('popupAmount');
+            p.classList.remove('hidden', 'scale-90', 'opacity-0'); p.classList.add('scale-100', 'opacity-100');
+            if (w) {
+                b.className = 'tech-border p-6 relative bg-[#13161f] win'; t.innerText = "HÚP RỒI"; t.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase";
+                m.innerText = "+$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#0ECB81]";
             } else {
-                border.className = 'tech-border p-6 relative bg-[#13161f] lose';
-                title.innerText = "GÃY RỒI"; title.className = "text-[#F6465D] font-black text-xl mb-2 uppercase";
-                amt.innerText = "-$" + amount.toFixed(2); amt.className = "font-mono font-bold text-4xl text-[#F6465D]";
+                b.className = 'tech-border p-6 relative bg-[#13161f] lose'; t.innerText = "GÃY RỒI"; t.className = "text-[#F6465D] font-black text-xl mb-2 uppercase";
+                m.innerText = "-$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#F6465D]";
             }
-            setTimeout(() => { 
-                popup.classList.add('scale-90', 'opacity-0');
-                setTimeout(() => popup.classList.add('hidden'), 300);
-            }, 3000);
+            setTimeout(() => { p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
         }
 
-        // --- MARKET SIMULATION ---
         function marketLoop() {
-            state.targetPrice = CONFIG.basePrice + Math.sin(Date.now() / 1000) * 20 + (Math.random()-0.5)*10;
+            state.targetPrice = CONFIG.basePrice + Math.sin(Date.now() / 1000) * 20 + (Math.random() - 0.5) * 10;
             state.visualPrice += (state.targetPrice - state.visualPrice) * CONFIG.smoothingFactor;
-            
-            const block30s = Date.now() - (Date.now() % 30000); 
-            let cur = state.candles[state.candles.length - 1];
-            
-            if (cur && cur.startTime !== block30s) {
-                let newOpen = cur.close;
-                if (state.currentPhase === 'result') newOpen = state.lockPrice;
-                const newC = { open: newOpen, close: newOpen, high: newOpen, low: newOpen, startTime: block30s };
-                state.candles.push(newC);
-                if(state.candles.length > 40) state.candles.shift();
-                cur = newC;
+            const b = Date.now() - (Date.now() % 30000); let c = state.candles[state.candles.length - 1];
+            if (c && c.startTime !== b) {
+                let no = c.close; if (state.currentPhase === 'result') no = state.lockPrice;
+                const nc = { open: no, close: no, high: no, low: no, startTime: b };
+                state.candles.push(nc); if(state.candles.length > 40) state.candles.shift(); c = nc;
             }
-            if (state.currentPhase === 'result' && state.lockPrice !== 0) cur.open = state.lockPrice;
-            cur.close = state.visualPrice;
-            if (state.visualPrice > cur.high) cur.high = state.visualPrice;
-            if (state.visualPrice < cur.low) cur.low = state.visualPrice;
+            if (state.currentPhase === 'result' && state.lockPrice !== 0) c.open = state.lockPrice;
+            c.close = state.visualPrice; if (state.visualPrice > c.high) c.high = state.visualPrice; if (state.visualPrice < c.low) c.low = state.visualPrice;
         }
 
-        // --- DRAW CHART ---
         function resizeCanvas() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
         function drawLoop() {
-            const w = (cvs.width - 60) / 21; 
-            const range = 100; const min = state.visualPrice - range/2;
-            ctx.clearRect(0,0,cvs.width,cvs.height);
-            
-            // Grid
-            for(let p = Math.floor(min/20)*20; p < min+range; p+=20) {
-                const y = cvs.height - ((p-min)/range*cvs.height);
-                ctx.strokeStyle = '#1e232e'; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cvs.width-60,y); ctx.stroke();
-                ctx.fillStyle = '#4b5563'; ctx.font='10px IBM Plex Mono'; ctx.fillText(p, cvs.width-55, y+4);
+            const w = (cvs.width - 60) / 21; const r = 100; const min = state.visualPrice - r / 2;
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            for(let p = Math.floor(min / 20) * 20; p < min + r; p += 20) {
+                const y = cvs.height - ((p - min) / r * cvs.height);
+                ctx.strokeStyle = '#1e232e'; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width - 60, y); ctx.stroke();
+                ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 55, y + 4);
             }
-
-            // Lock Line
             if (state.currentPhase === 'result') {
-                const yLock = cvs.height - ((state.lockPrice - min) / range * cvs.height);
-                document.getElementById('lockLine').style.top = yLock+'px';
-                document.getElementById('lockLabel').style.top = yLock+'px';
-                ctx.strokeStyle='#FCD535'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(0,yLock); ctx.lineTo(cvs.width-60,yLock); ctx.stroke(); ctx.setLineDash([]);
+                const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
+                document.getElementById('lockLine').style.top = yl + 'px'; document.getElementById('lockLabel').style.top = yl + 'px';
+                ctx.strokeStyle = '#FCD535'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(cvs.width - 60, yl); ctx.stroke(); ctx.setLineDash([]);
             }
-
-            // Candles
             state.candles.forEach((c, i) => {
                 if (i < state.candles.length - 21) return;
                 const x = (i - (state.candles.length - 21)) * w;
-                const yO = cvs.height - ((c.open - min) / range * cvs.height);
-                const yC = cvs.height - ((c.close - min) / range * cvs.height);
-                const yH = cvs.height - ((c.high - min) / range * cvs.height);
-                const yL = cvs.height - ((c.low - min) / range * cvs.height);
-                
-                ctx.fillStyle = c.close >= c.open ? '#0ECB81' : '#F6465D';
-                ctx.strokeStyle = ctx.fillStyle;
-                ctx.beginPath(); ctx.moveTo(x+w/2, yH); ctx.lineTo(x+w/2, yL); ctx.stroke();
-                ctx.fillRect(x+2, Math.min(yO,yC), w-4, Math.max(Math.abs(yC-yO), 1));
+                const yO = cvs.height - ((c.open - min) / r * cvs.height); const yC = cvs.height - ((c.close - min) / r * cvs.height);
+                const yH = cvs.height - ((c.high - min) / r * cvs.height); const yL = cvs.height - ((c.low - min) / r * cvs.height);
+                ctx.fillStyle = c.close >= c.open ? '#0ECB81' : '#F6465D'; ctx.strokeStyle = ctx.fillStyle;
+                ctx.beginPath(); ctx.moveTo(x + w / 2, yH); ctx.lineTo(x + w / 2, yL); ctx.stroke();
+                ctx.fillRect(x + 2, Math.min(yO, yC), w - 4, Math.max(Math.abs(yC - yO), 1));
             });
-            
-            // Current Price Line
-            const yCur = cvs.height - ((state.visualPrice - min) / range * cvs.height);
-            ctx.strokeStyle='#fff'; ctx.setLineDash([2,2]); ctx.beginPath(); ctx.moveTo(0,yCur); ctx.lineTo(cvs.width-60,yCur); ctx.stroke(); ctx.setLineDash([]);
-            ctx.fillStyle = state.visualPrice >= state.candles[state.candles.length-1].open ? '#0ECB81' : '#F6465D';
-            ctx.fillRect(cvs.width-60, yCur-10, 60, 20);
-            ctx.fillStyle='#000'; ctx.fillText(state.visualPrice.toFixed(2), cvs.width-55, yCur+4);
-            
+            const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
+            ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(0, yc); ctx.lineTo(cvs.width - 60, yc); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = state.visualPrice >= state.candles[state.candles.length - 1].open ? '#0ECB81' : '#F6465D';
+            ctx.fillRect(cvs.width - 60, yc - 10, 60, 20); ctx.fillStyle = '#000'; ctx.fillText(state.visualPrice.toFixed(2), cvs.width - 55, yc + 4);
             requestAnimationFrame(drawLoop);
         }
     </script>
 </body>
 </html>
+
+
+
+
 
