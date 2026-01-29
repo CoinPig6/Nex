@@ -65,19 +65,22 @@
             <span class="font-bold text-lg text-white">CROWNEX</span>
             <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
+        
+        <!-- MENU ĐẦY ĐỦ -->
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             <a href="game.html" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
             <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
             <a href="naprut.html" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
             
-            <!-- THÊM MỤC KHUYẾN MÃI TẠI ĐÂY -->
-            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi</a>
+            <!-- MỤC KHUYẾN MÃI -->
+            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
             
             <div class="border-t border-[#232836] my-2 mx-2"></div>
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
+
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
@@ -90,9 +93,7 @@
     <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
         <div class="flex items-center gap-4">
             <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
-            <div>
-                <div class="flex items-center gap-2"><span class="text-white font-bold text-sm">BTC/USDT</span><span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646]">LIVE</span></div>
-            </div>
+            <div class="flex items-center gap-2"><span class="text-white font-bold text-sm">BTC/USDT</span><span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646]">LIVE</span></div>
         </div>
         <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3">
             <div class="text-right leading-tight"><div class="text-[9px] text-[#6b7280] font-bold uppercase">Thực: <span id="balanceDisplay" class="text-[#EAECEF] font-mono text-sm">---</span></div></div>
@@ -154,7 +155,7 @@
         </div>
     </div>
 
-    <!-- MAIN LOGIC -->
+    <!-- MAIN LOGIC (FULL FEATURES) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -197,7 +198,7 @@
                 });
             }
             initGame();
-            checkSavedBet();
+            checkSavedBet(); // --- KHÔI PHỤC CƯỢC NẾU CÓ ---
         };
 
         function checkSavedBet() {
@@ -274,8 +275,9 @@
             document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
         };
 
+        // --- HÀM CONFIRM ĐÃ FIX LỖI SPAM CLICK ---
         window.confirmBet = async () => {
-            if (state.isProcessing) return; // Chặn click liên tục
+            if (state.isProcessing) return;
             if (state.pendingBet.amount === 0) return;
             
             const amount = state.pendingBet.amount;
@@ -489,4 +491,5 @@
     </script>
 </body>
 </html>
+
 
