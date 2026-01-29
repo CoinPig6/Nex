@@ -186,11 +186,11 @@
             totalDown: 0
         };
 
-        window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
+        window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "index.html"; }); };
 
         window.onload = async () => {
             const userStr = localStorage.getItem('crownex_user_info');
-            if(!userStr) { window.location.href = "login.html"; return; }
+            if(!userStr) { window.location.href = "index.html"; return; }
             state.userData = JSON.parse(userStr);
             state.balance = state.userData.balance || 0;
             document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username;
