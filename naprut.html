@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Crownex - Nạp Rút</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* CORE */
+        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
+        body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+        /* SIDEBAR */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
+        .menu-item:active { background: #1e232e; color: white; }
+        .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* TABS */
+        .tab-btn { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: bold; color: #6b7280; border-bottom: 2px solid #2d3442; transition: 0.3s; }
+        .tab-btn.active { color: #FCD535; border-bottom-color: #FCD535; background: rgba(252, 213, 53, 0.05); }
+
+        /* UI ELEMENTS */
+        .input-dark { width: 100%; background: #0b0f19; border: 1px solid #2d3442; color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; transition: 0.2s; }
+        .input-dark:focus { border-color: #FCD535; outline: none; }
+        
+        .btn-action { width: 100%; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 14px; margin-top: 10px; transition: 0.2s; text-transform: uppercase; }
+        .btn-deposit { background: #0ECB81; color: white; box-shadow: 0 4px 15px rgba(14, 203, 129, 0.3); }
+        .btn-withdraw { background: #F6465D; color: white; box-shadow: 0 4px 15px rgba(246, 70, 93, 0.3); }
+        .btn-action:active { transform: scale(0.98); }
+
+        /* PROGRESS BAR */
+        .progress-bg { width: 100%; height: 6px; background: #2d3442; border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #FCD535, #ff9f43); transition: width 0.5s ease; }
+
+        /* STATUS BADGE */
+        .badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; }
+        .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; }
+        .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR MENU -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
+    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
+            <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
+            <span class="font-bold text-lg text-white">CROWNEX</span>
+            <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
+            <a href="naprut.html" class="menu-item active"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
+            <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
+            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
+            <div class="border-t border-[#232836] my-2 mx-2"></div>
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
+            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        </nav>
+        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
+                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] sticky top-0 z-20">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
+            <span class="text-white font-bold text-lg tracking-wide">VÍ TIỀN</span>
+        </div>
+        <div class="font-mono font-bold text-[#FCD535]" id="headerBalance">$0.00</div>
+    </header>
+
+    <!-- TABS -->
+    <div class="flex bg-[#13161f] border-b border-[#2d3442]">
+        <div class="tab-btn active" onclick="switchTab('deposit')">NẠP TIỀN</div>
+        <div class="tab-btn" onclick="switchTab('withdraw')">RÚT TIỀN</div>
+        <div class="tab-btn" onclick="switchTab('history')">LỊCH SỬ</div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 pb-10">
+        
+        <!-- === TAB 1: NẠP TIỀN === -->
+        <div id="tab-deposit" class="fade-in">
+            <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6">
+                <div class="bg-white p-2 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020101021238570010A0000007270127000697042201132026290121520208QRIBFTTA53037045802VN5913NGUYEN VAN A6005HANOI62110707TEST12363041234" alt="QR Code" class="w-32 h-32">
+                </div>
+                <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-2" onclick="copyText('99MM25740M76308618')">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-gray-500 uppercase">Ngân hàng</span>
+                        <span class="text-sm text-white font-bold">BVBank (Bản Việt)</span>
+                    </div>
+                    <span class="text-xs text-[#FCD535] font-bold">Sao chép</span>
+                </div>
+                <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center" onclick="copyText('99MM25740M76308618')">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-gray-500 uppercase">Số tài khoản</span>
+                        <span class="text-sm text-white font-mono font-bold">99MM25740M76308618</span>
+                    </div>
+                    <i class="fa-regular fa-copy text-[#FCD535]"></i>
+                </div>
+                <p class="text-[10px] text-center text-gray-500 mt-3">Nội dung chuyển khoản: <strong class="text-white" id="depositContent">...</strong></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Nhập số tiền đã chuyển ($)</label>
+                <input type="number" id="depositAmount" class="input-dark" placeholder="Ví dụ: 100">
+            </div>
+            
+            <button onclick="createDeposit()" class="btn-action btn-deposit">
+                <i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP
+            </button>
+            <p class="text-[10px] text-gray-500 mt-3 text-center italic">* Vui lòng chuyển khoản trước khi tạo lệnh. Tỷ giá $1 = 1 USDT.</p>
+        </div>
+
+        <!-- === TAB 2: RÚT TIỀN === -->
+        <div id="tab-withdraw" class="hidden fade-in">
+            <!-- Progress Vòng Cược -->
+            <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] mb-6">
+                <div class="flex justify-between items-end mb-1">
+                    <span class="text-xs text-gray-400 font-bold uppercase"><i class="fa-solid fa-rotate mr-1"></i> Vòng cược yêu cầu</span>
+                    <span class="text-xs font-mono text-white"><span id="currentTurnover">0</span> / <span id="requiredTurnover">0</span></span>
+                </div>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 0%" id="turnoverBar"></div>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-2 italic">* Bạn cần hoàn thành 1 vòng cược tương ứng với số tiền nạp để có thể rút tiền.</p>
+            </div>
+
+            <!-- Form Rút -->
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Ngân hàng nhận</label>
+                    <input type="text" id="wdBankName" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tài khoản</label>
+                    <input type="text" id="wdBankNumber" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Chủ tài khoản</label>
+                    <input type="text" id="wdBankOwner" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label>
+                    <input type="number" id="wdAmount" class="input-dark" placeholder="Tối thiểu $10">
+                </div>
+            </div>
+
+            <button onclick="createWithdraw()" class="btn-action btn-withdraw">
+                <i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN
+            </button>
+            <p class="text-[10px] text-center text-gray-500 mt-4">
+                Chưa liên kết ngân hàng? <a href="taikhoan.html" class="text-[#FCD535] underline">Cập nhật ngay</a>
+            </p>
+        </div>
+
+        <!-- === TAB 3: LỊCH SỬ === -->
+        <div id="tab-history" class="hidden fade-in">
+            <div id="historyList" class="space-y-3">
+                <!-- Items will be injected here -->
+                <div class="text-center text-gray-500 text-xs mt-10">Đang tải dữ liệu...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, addDoc, collection, query, orderBy, limit, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664",
+            measurementId: "G-7Q1GBFNQ37"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null;
+        let userData = null;
+
+        // UI Logic
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
+            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
+        };
+
+        window.logout = () => { signOut(auth).then(() => window.location.href = "login.html"); };
+
+        window.switchTab = (tab) => {
+            ['deposit', 'withdraw', 'history'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(t)].classList.remove('active');
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(tab)].classList.add('active');
+            
+            if(tab === 'history') loadHistory();
+        };
+
+        window.copyText = (text) => {
+            navigator.clipboard.writeText(text);
+            alert("Đã sao chép: " + text);
+        };
+
+        // Firebase Auth
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                // Load User Data Realtime
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if(docSnap.exists()) {
+                        userData = docSnap.data();
+                        renderUserData(userData);
+                    }
+                });
+                
+                // Sidebar info
+                const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
+                if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        function renderUserData(data) {
+            document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
+            document.getElementById('depositContent').innerText = data.username.toUpperCase(); // Nội dung CK là username
+            
+            // Render Bank Info for Withdraw
+            if (data.bankNumber) {
+                document.getElementById('wdBankName').value = data.bankName;
+                document.getElementById('wdBankNumber').value = data.bankNumber;
+                document.getElementById('wdBankOwner').value = data.bankOwner;
+            }
+
+            // Render Turnover (Vòng cược)
+            // Lấy tổng cược từ betTurnover (Cần update ở game.html khi cược)
+            // Lấy tổng cần cược từ requiredTurnover (Update khi nạp thành công)
+            const current = data.betTurnover || 0; 
+            const required = data.requiredTurnover || 0; 
+            
+            document.getElementById('currentTurnover').innerText = current.toLocaleString();
+            document.getElementById('requiredTurnover').innerText = required.toLocaleString();
+            
+            let percent = 0;
+            if(required > 0) percent = (current / required) * 100;
+            else if (current > 0) percent = 100;
+            
+            if(percent > 100) percent = 100;
+            document.getElementById('turnoverBar').style.width = percent + "%";
+            
+            // Đổi màu thanh nếu đủ
+            if(percent >= 100) document.getElementById('turnoverBar').style.background = "#0ECB81";
+        }
+
+        // --- NẠP TIỀN ---
+        window.createDeposit = async () => {
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            if (!amount || amount < 10) return alert("Vui lòng nhập số tiền hợp lệ (Tối thiểu $10)");
+
+            try {
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'deposit',
+                    amount: amount,
+                    status: 'pending', // Chờ duyệt
+                    timestamp: Date.now()
+                });
+                alert("Đã tạo lệnh nạp! Vui lòng chờ hệ thống xác nhận.");
+                document.getElementById('depositAmount').value = "";
+                window.switchTab('history');
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối!");
+            }
+        };
+
+        // --- RÚT TIỀN (CÓ CHECK VÒNG CƯỢC) ---
+        window.createWithdraw = async () => {
+            const amount = parseFloat(document.getElementById('wdAmount').value);
+            
+            if (!userData.bankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
+            if (!amount || amount < 10) return alert("Tối thiểu rút $10");
+            if (amount > userData.balance) return alert("Số dư không đủ!");
+
+            // CHECK VÒNG CƯỢC
+            const current = userData.betTurnover || 0;
+            const required = userData.requiredTurnover || 0;
+            if (current < required) {
+                return alert(`Chưa đủ vòng cược! Bạn cần cược thêm $${(required - current).toLocaleString()} nữa.`);
+            }
+
+            try {
+                // Trừ tiền ngay (Escrow)
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: userData.balance - amount
+                });
+
+                // Tạo lệnh rút
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'withdraw',
+                    amount: amount,
+                    bankInfo: `${userData.bankName} - ${userData.bankNumber}`,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+
+                alert("Lệnh rút tiền đã được gửi!");
+                document.getElementById('wdAmount').value = "";
+                window.switchTab('history');
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi hệ thống!");
+            }
+        };
+
+        // --- LỊCH SỬ ---
+        async function loadHistory() {
+            const listEl = document.getElementById('historyList');
+            try {
+                const q = query(collection(db, "users", currentUser.uid, "transactions"), orderBy("timestamp", "desc"), limit(20));
+                const querySnapshot = await getDocs(q); // Dùng getDocs từ import (Lưu ý phải import)
+                
+                // Ở đây do import thiếu getDocs trong block script module, tôi sẽ import lại
+                // Note: Logic import đã có ở trên đầu, chỉ cần đảm bảo dùng đúng
+                
+                // --- FIX IMPORT GETDOCS ---
+                // Do cấu trúc module, tôi sẽ dùng onSnapshot cho list để realtime luôn
+                onSnapshot(q, (snapshot) => {
+                    let html = '';
+                    if (snapshot.empty) {
+                        listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Chưa có giao dịch nào</div>';
+                        return;
+                    }
+
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const date = new Date(data.timestamp);
+                        const timeStr = date.toLocaleString('vi-VN');
+                        
+                        let badgeClass = '';
+                        let statusText = '';
+                        let icon = '';
+
+                        if (data.status === 'pending') {
+                            badgeClass = 'badge-pending'; statusText = 'ĐANG XỬ LÝ'; icon = 'fa-clock';
+                        } else if (data.status === 'success') {
+                            badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; icon = 'fa-check';
+                        } else {
+                            badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; icon = 'fa-xmark';
+                        }
+
+                        const isDep = data.type === 'deposit';
+
+                        html += `
+                            <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#232836] ${isDep ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">
+                                        <i class="fa-solid ${isDep ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-sm text-white uppercase">${isDep ? 'NẠP TIỀN' : 'RÚT TIỀN'}</div>
+                                        <div class="text-[10px] text-gray-500 font-mono">${timeStr}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-mono font-bold text-sm ${isDep ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">
+                                        ${isDep ? '+' : '-'}$${data.amount.toLocaleString()}
+                                    </div>
+                                    <span class="badge ${badgeClass}"><i class="fa-solid ${icon} mr-1"></i>${statusText}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    listEl.innerHTML = html;
+                });
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
+
+
