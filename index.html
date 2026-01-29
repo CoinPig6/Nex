@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- CHẶN ZOOM TUYỆT ĐỐI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Crownex ID - Đăng nhập</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -62,10 +61,11 @@
     </style>
 </head>
 <body>
-    <!-- LOADING OVERLAY: Hiển thị khi đang kiểm tra đăng nhập cũ -->
+    <!-- LOADING OVERLAY -->
     <div id="authCheckingOverlay">
         <div class="w-16 h-16 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-3xl mb-4 animate-bounce rounded-bl-none">C</div>
-        <div class="text-[#FCD535] font-bold tracking-widest text-sm"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>ĐANG KẾT NỐI...</div>
+        <div class="text-[#FCD535] font-bold tracking-widest text-sm" id="loadingText"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>ĐANG ĐỒNG BỘ...</div>
+        <button onclick="forceLogout()" class="mt-8 text-gray-500 text-xs underline hover:text-white">Thoát tài khoản bị kẹt</button>
     </div>
 
     <div id="toast"><i class="fa-solid fa-circle-exclamation"></i><span id="toastMsg" class="text-sm font-bold text-white"></span></div>
@@ -106,27 +106,22 @@
 
             <!-- REGISTER FORM -->
             <form id="formRegister" class="hidden fade-in">
-                <!-- 1. Tên đăng nhập -->
                 <div class="input-group">
                     <input type="text" id="regUser" class="input-field" placeholder="Tên đăng nhập (viết liền)" required autocomplete="off">
                     <i class="fa-solid fa-user-tag input-icon"></i>
                 </div>
-                <!-- 2. Số điện thoại -->
                 <div class="input-group">
                     <input type="tel" id="regPhone" class="input-field" placeholder="Số điện thoại" required pattern="[0-9]*" autocomplete="off">
                     <i class="fa-solid fa-phone input-icon"></i>
                 </div>
-                <!-- 3. Mật khẩu -->
                 <div class="input-group">
                     <input type="password" id="regPass" class="input-field" placeholder="Mật khẩu (6+ ký tự)" required minlength="6">
                     <i class="fa-solid fa-lock input-icon"></i>
                 </div>
-                <!-- 4. Họ và tên -->
                 <div class="input-group">
                     <input type="text" id="regName" class="input-field" placeholder="Họ và tên hiển thị" required autocomplete="off">
                     <i class="fa-solid fa-id-card input-icon"></i>
                 </div>
-                <!-- 5. Mã xác nhận -->
                 <div class="input-group grid grid-cols-3 gap-2">
                     <div class="col-span-2 relative">
                         <input type="text" id="regCaptcha" class="input-field" placeholder="Mã xác nhận" required maxlength="4" autocomplete="off">
@@ -143,10 +138,10 @@
     <!-- FIREBASE & LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Cấu hình Firebase - KHỚP VỚI GAME.HTML
+        // Cấu hình Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -161,53 +156,82 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // Hậu tố giả lập email để đăng nhập bằng Username
         const EMAIL_PREFIX = "@crownex.com"; 
+        const overlay = document.getElementById('authCheckingOverlay');
 
+        // HÀM FORCE LOGOUT (Dùng khi bị kẹt)
+        window.forceLogout = () => {
+            signOut(auth).then(() => {
+                localStorage.clear();
+                window.location.reload();
+            });
+        };
+
+        // --- QUAN TRỌNG: LOGIC CHỐNG VÒNG LẶP ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // ĐÃ ĐĂNG NHẬP FIREBASE
+                console.log("Phát hiện phiên đăng nhập cũ: ", user.uid);
+                document.getElementById('loadingText').innerText = "KHÔI PHỤC DỮ LIỆU...";
+                
+                // Kiểm tra LocalStorage có dữ liệu chưa
+                const localData = localStorage.getItem('crownex_user_info');
+                
+                if (localData) {
+                    // Nếu có rồi -> Vào game ngay
+                    window.location.href = "game.html";
+                } else {
+                    // Nếu chưa có (Nguyên nhân gây lỗi) -> Tải lại từ Server
+                    try {
+                        const docRef = doc(db, "users", user.uid);
+                        const docSnap = await getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            // Tìm thấy dữ liệu -> Lưu vào máy -> Vào game
+                            const userData = docSnap.data();
+                            userData.uid = user.uid;
+                            localStorage.setItem('crownex_user_info', JSON.stringify(userData));
+                            window.location.href = "game.html";
+                        } else {
+                            // Không tìm thấy dữ liệu trên server (Lỗi lạ) -> Đăng xuất
+                            console.error("Không tìm thấy user trên DB");
+                            await signOut(auth);
+                            hideOverlay();
+                        }
+                    } catch (error) {
+                        console.error("Lỗi đồng bộ:", error);
+                        // Lỗi mạng hoặc lỗi khác -> Cho phép đăng nhập lại
+                        await signOut(auth);
+                        hideOverlay();
+                    }
+                }
+            } else {
+                // CHƯA ĐĂNG NHẬP
+                hideOverlay();
+            }
+        });
+
+        function hideOverlay() {
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 300);
+            }, 500);
+        }
+
+        // --- SETUP FORM & UI ---
         const formLogin = document.getElementById('formLogin');
         const formReg = document.getElementById('formRegister');
         const btnLogin = document.getElementById('btnLogin');
         const btnReg = document.getElementById('btnReg');
-        const overlay = document.getElementById('authCheckingOverlay');
-
-        // --- 1. TỰ ĐỘNG KIỂM TRA ĐĂNG NHẬP & SỬA LỖI LOOP ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Đã có phiên đăng nhập -> Cập nhật LocalStorage trước khi redirect
-                // Bước này cực kỳ quan trọng để tránh game.html đá ngược lại đây
-                try {
-                    const docSnap = await getDoc(doc(db, "users", user.uid));
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        userData.uid = user.uid;
-                        localStorage.setItem('crownex_user_info', JSON.stringify(userData));
-                        console.log("Data synced successfully");
-                    }
-                } catch (e) {
-                    console.error("Sync data error:", e);
-                }
-                
-                // Chuyển hướng
-                window.location.href = "game.html";
-            } else {
-                // Chưa đăng nhập -> Hiện form
-                setTimeout(() => {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => { overlay.style.display = 'none'; }, 300);
-                }, 500);
-            }
-        });
 
         let captchaLoginCode = "";
         let captchaRegCode = "";
 
-        // --- INIT CAPTCHA ---
         drawCaptcha('login');
         drawCaptcha('reg');
         document.getElementById('captchaCanvasLogin').onclick = () => drawCaptcha('login');
         document.getElementById('captchaCanvasReg').onclick = () => drawCaptcha('reg');
 
-        // TAB SWITCH
         document.getElementById('tabLoginBtn').onclick = () => {
             document.getElementById('tabLoginBtn').classList.add('active');
             document.getElementById('tabRegBtn').classList.remove('active');
@@ -223,8 +247,7 @@
         document.getElementById('eyeLogin').onclick = function() {
             const el = document.getElementById('loginPass');
             el.type = el.type === 'password' ? 'text' : 'password';
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
+            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
         };
 
         // --- LOGIN LOGIC ---
@@ -234,7 +257,6 @@
             const pass = document.getElementById('loginPass').value;
             const captcha = document.getElementById('loginCaptcha').value.toUpperCase();
 
-            // Check Captcha
             if(captcha !== captchaLoginCode) {
                 showToast('error', 'Mã xác nhận không đúng!');
                 drawCaptcha('login');
@@ -246,30 +268,23 @@
             btnLogin.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG VÀO...';
 
             try {
-                // Giả lập email từ username
                 const email = username + EMAIL_PREFIX;
                 const userCredential = await signInWithEmailAndPassword(auth, email, pass);
                 const user = userCredential.user;
                 
-                // Lấy thông tin & Lưu LocalStorage
+                // Tải dữ liệu mới nhất
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     userData.uid = user.uid;
                     localStorage.setItem('crownex_user_info', JSON.stringify(userData));
                 }
-
-                showToast('success', 'Đăng nhập thành công!');
-                // onAuthStateChanged sẽ tự handle redirect
-
+                // onAuthStateChanged sẽ tự chuyển hướng
             } catch (error) {
                 console.error(error);
                 let msg = 'Đăng nhập thất bại!';
-                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    msg = 'Sai tài khoản hoặc mật khẩu!';
-                } else if (error.code === 'auth/too-many-requests') {
-                    msg = 'Quá nhiều lần thử sai, vui lòng chờ!';
-                }
+                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') msg = 'Sai tài khoản hoặc mật khẩu!';
+                else if (error.code === 'auth/too-many-requests') msg = 'Quá nhiều lần thử sai, vui lòng chờ!';
                 showToast('error', msg);
                 btnLogin.disabled = false;
                 btnLogin.innerHTML = 'ĐĂNG NHẬP <i class="fa-solid fa-arrow-right ml-2"></i>';
@@ -286,7 +301,6 @@
             const fullname = document.getElementById('regName').value.trim();
             const captcha = document.getElementById('regCaptcha').value.toUpperCase();
 
-            // Check Captcha
             if(captcha !== captchaRegCode) {
                 showToast('error', 'Mã xác nhận không đúng!');
                 drawCaptcha('reg');
@@ -303,26 +317,12 @@
                 const user = userCredential.user;
 
                 await updateProfile(user, { displayName: fullname });
-                
-                // Lưu dữ liệu khởi tạo
-                const userData = {
-                    username: username,
-                    phone: phone,
-                    fullName: fullname,
-                    balance: 0, 
-                    createdAt: new Date().toISOString(),
-                    role: 'user'
-                };
-
+                const userData = { username: username, phone: phone, fullName: fullname, balance: 0, createdAt: new Date().toISOString(), role: 'user' };
                 await setDoc(doc(db, "users", user.uid), userData);
                 
-                // Lưu luôn vào storage để login luôn
                 userData.uid = user.uid;
                 localStorage.setItem('crownex_user_info', JSON.stringify(userData));
-
-                showToast('success', 'Đăng ký thành công! Đang vào game...');
-                // onAuthStateChanged sẽ tự handle redirect
-
+                // onAuthStateChanged sẽ tự chuyển hướng
             } catch (error) {
                 console.error(error);
                 let msg = "Lỗi đăng ký!";
@@ -351,44 +351,19 @@
             const canvas = document.getElementById(canvasId);
             if(!canvas) return;
             const ctx = canvas.getContext('2d');
-            
-            // Random Code
             const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-            let code = '';
-            for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-
+            let code = ''; for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
             if(type === 'login') captchaLoginCode = code; else captchaRegCode = code;
-
-            // Background
-            ctx.fillStyle = '#1e232e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Noise Lines
+            ctx.fillStyle = '#1e232e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             for(let i=0; i<7; i++) {
-                ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
-                ctx.beginPath();
+                ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`; ctx.beginPath();
                 ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
-                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
-                ctx.stroke();
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height); ctx.stroke();
             }
-
-            // Text
-            ctx.font = 'bold 24px "IBM Plex Mono"';
-            ctx.textBaseline = 'middle';
-            ctx.textAlign = 'center';
-            
-            const charWidth = canvas.width / 4;
+            ctx.font = 'bold 24px "IBM Plex Mono"'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; const charWidth = canvas.width / 4;
             for(let i=0; i<4; i++) {
-                ctx.save();
-                const x = (i * charWidth) + (charWidth/2);
-                const y = canvas.height / 2;
-                // Random Rotation
-                const angle = (Math.random() - 0.5) * 0.5;
-                ctx.translate(x, y);
-                ctx.rotate(angle);
-                ctx.fillStyle = '#FCD535';
-                ctx.fillText(code[i], 0, 0);
-                ctx.restore();
+                ctx.save(); const x = (i * charWidth) + (charWidth/2); const y = canvas.height / 2; const angle = (Math.random() - 0.5) * 0.5;
+                ctx.translate(x, y); ctx.rotate(angle); ctx.fillStyle = '#FCD535'; ctx.fillText(code[i], 0, 0); ctx.restore();
             }
         }
     </script>
