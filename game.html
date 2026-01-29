@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- CHẶN ZOOM TUYỆT ĐỐI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Crownex Pro - Giao dịch</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -85,7 +84,7 @@
         </div>
     </div>
 
-    <!-- HEADER (CÓ MÃ PHIÊN) -->
+    <!-- HEADER -->
     <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
         <div class="flex items-center gap-4">
             <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
@@ -94,8 +93,8 @@
                     <span class="text-white font-bold text-sm">BTC/USDT</span>
                     <span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646] flex items-center gap-1">LIVE</span>
                 </div>
-                <!-- MÃ PHIÊN HIỂN THỊ TẠI ĐÂY -->
-                <div class="text-[10px] text-[#6b7280] font-mono leading-none mt-0.5">Phiên: <span id="sessionID" class="text-gray-400">Loading...</span></div>
+                <!-- MÃ PHIÊN -->
+                <div class="text-[10px] text-[#6b7280] font-mono leading-none mt-0.5">Phiên: <span id="sessionID" class="text-gray-400">...</span></div>
             </div>
         </div>
         <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3">
@@ -252,10 +251,20 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
 
+        // --- SỬA LOGIC CỘNG TRỪ TIỀN (1 <-> 5) ---
         window.adjustBet = (val) => {
             const inp = document.getElementById('betInput');
-            let v = parseFloat(inp.value) + val; if (v < 1) v = 1; inp.value = v; window.updateProfit();
+            let current = parseFloat(inp.value) || 0;
+            let nextVal = current + val;
+
+            if (val > 0 && current < 5) nextVal = 5;
+            if (val < 0 && current <= 5) nextVal = 1;
+
+            if (nextVal < 1) nextVal = 1;
+            inp.value = nextVal;
+            window.updateProfit();
         };
+
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value);
             document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
@@ -339,10 +348,11 @@
             for(let i=m; i<60; i++) state.history[i] = null;
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
-            const b = now - (now % 30000); state.candles = []; let p = CONFIG.basePrice;
-            const s = b - (30 * 30000);
+            const b = now - (now % 60000); // 60s Candle
+            state.candles = []; let p = CONFIG.basePrice;
+            const s = b - (30 * 60000);
             for(let i=0; i<30; i++) {
-                const t = s + (i * 30000); const c = getCandleData(t, p);
+                const t = s + (i * 60000); const c = getCandleData(t, p);
                 state.candles.push(c); p = c.close;
             }
             state.visualPrice = p;
@@ -375,16 +385,12 @@
             }
         }
 
-        // --- UPDATE MÃ PHIÊN TỰ ĐỘNG ---
         function syncLoop() {
             const n = new Date(); const s = n.getSeconds(); const isOrder = s < 30; const t = isOrder ? (30 - s) : (60 - s);
             
-            // Generate Session ID: YYYY DD MM HH MM (User Format)
-            const y = n.getFullYear();
-            const mo = ('0' + (n.getMonth() + 1)).slice(-2);
-            const d = ('0' + n.getDate()).slice(-2);
-            const h = ('0' + n.getHours()).slice(-2);
-            const mi = ('0' + n.getMinutes()).slice(-2);
+            const y = n.getFullYear(); const mo = ('0'+(n.getMonth()+1)).slice(-2);
+            const d = ('0'+n.getDate()).slice(-2); const h = ('0'+n.getHours()).slice(-2);
+            const mi = ('0'+n.getMinutes()).slice(-2);
             document.getElementById('sessionID').innerText = `${y}${d}${mo}${h}${mi}`;
 
             if (isOrder && state.currentPhase === 'result') startOrderPhase();
@@ -461,7 +467,7 @@
         function marketLoop() {
             state.targetPrice = CONFIG.basePrice + Math.sin(Date.now() / 1000) * 20 + (Math.random() - 0.5) * 10;
             state.visualPrice += (state.targetPrice - state.visualPrice) * CONFIG.smoothingFactor;
-            const b = Date.now() - (Date.now() % 30000); let c = state.candles[state.candles.length - 1];
+            const b = Date.now() - (Date.now() % 60000); let c = state.candles[state.candles.length - 1];
             if (c && c.startTime !== b) {
                 let no = c.close; if (state.currentPhase === 'result') no = state.lockPrice;
                 const nc = { open: no, close: no, high: no, low: no, startTime: b };
