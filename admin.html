@@ -12,7 +12,7 @@
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
         
         /* LOGIN OVERLAY */
-        #login-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        #login-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
         .pin-input { background: #1e293b; border: 1px solid #334155; color: #FCD535; font-size: 24px; letter-spacing: 8px; text-align: center; width: 200px; padding: 10px; border-radius: 8px; outline: none; }
         
         /* SIDEBAR */
@@ -82,9 +82,9 @@
         </div>
         <div class="flex flex-col gap-3">
             <input type="password" id="adminPin" class="pin-input" placeholder="••••" maxlength="4">
-            <button onclick="checkPin()" class="bg-[#FCD535] text-black font-bold py-3 rounded-lg hover:bg-yellow-400 transition w-full">TRUY CẬP</button>
+            <button id="btnLogin" onclick="checkPin()" class="bg-[#FCD535] text-black font-bold py-3 rounded-lg hover:bg-yellow-400 transition w-full">TRUY CẬP</button>
         </div>
-        <p class="text-red-500 text-xs mt-4 hidden" id="pinError">Mã PIN không đúng!</p>
+        <p class="text-red-500 text-xs mt-4 font-bold hidden" id="pinError">Mã PIN không đúng!</p>
     </div>
 
     <!-- 2. GIAO DIỆN CHÍNH (Ẩn mặc định) -->
@@ -340,7 +340,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -358,21 +358,49 @@
         
         let allUsers = [];
         let balMode = 'add';
-        const ADMIN_PIN = "9999"; // MÃ PIN ĐỂ VÀO ADMIN (Bạn có thể đổi)
+        let currentUser = null;
+        const ADMIN_PIN = "9999"; // MÃ PIN ĐỂ VÀO ADMIN
 
-        // --- AUTH & PIN CHECK ---
-        window.checkPin = () => {
+        // --- AUTH CHECK ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+            }
+        });
+
+        // --- PIN CHECK & AUTO LOGIN ---
+        window.checkPin = async () => {
             const pin = document.getElementById('adminPin').value;
+            const btn = document.getElementById('btnLogin');
+            const errorMsg = document.getElementById('pinError');
+
             if(pin === ADMIN_PIN) {
-                document.getElementById('login-overlay').classList.add('hidden');
+                btn.innerText = "ĐANG VÀO...";
+                btn.disabled = true;
+
+                // Nếu chưa đăng nhập, tự động đăng nhập ẩn danh để có quyền truy cập
+                if (!auth.currentUser) {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (e) {
+                        errorMsg.innerText = "Lỗi kết nối Firebase: " + e.message;
+                        errorMsg.classList.remove('hidden');
+                        btn.innerText = "TRUY CẬP";
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+
+                // Thành công
+                document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('admin-panel').classList.remove('hidden');
                 initAdmin();
             } else {
-                document.getElementById('pinError').classList.remove('hidden');
+                errorMsg.innerText = "Mã PIN không đúng!";
+                errorMsg.classList.remove('hidden');
             }
         };
 
-        onAuthStateChanged(auth, (user) => { if(!user) window.location.href = "login.html"; });
         window.logout = () => signOut(auth).then(()=>window.location.href="login.html");
 
         // --- UI ---
@@ -607,6 +635,10 @@
             alert("Đã lưu!");
         };
 
+        // EXPORT FOR HTML ONCLICK
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+        window.db = db;
     </script>
 </body>
 </html>
