@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- CHẶN ZOOM TUYỆT ĐỐI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Crownex Pro - Giao dịch</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,25 +15,22 @@
         .text-up { color: #0ECB81; } .bg-up { background-color: #0ECB81; }
         .text-down { color: #F6465D; } .bg-down { background-color: #F6465D; }
 
-        /* SIDEBAR STYLES */
+        /* SIDEBAR & UI */
         #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .menu-item {
-            display: flex; items-center; gap: 12px; padding: 12px 16px; 
-            border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px;
-            transition: all 0.2s;
-        }
+        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
         .menu-item i { width: 20px; text-align: center; }
 
-        /* GAME UI */
         .tech-border { position: relative; background: #13161f; border: 1px solid #2a2e39; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border-radius: 16px; overflow: hidden; }
         .tech-border.win { border: 1px solid #0ECB81; box-shadow: 0 0 30px rgba(14, 203, 129, 0.15); }
         .tech-border.lose { border: 1px solid #F6465D; box-shadow: 0 0 30px rgba(246, 70, 93, 0.15); }
+        
         .btn-trade { transition: all 0.1s; position: relative; overflow: hidden; border-bottom: 3px solid rgba(0,0,0,0.2); }
         .btn-trade:active { transform: translateY(2px); border-bottom-width: 1px; }
         .btn-trade.dimmed { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        
+        .btn-trade.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); } /* Style cho nút bị khóa khi cược đối */
+
         .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; }
         .history-container { display: flex; flex-direction: row; gap: 4px; padding: 0 5px; }
         .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 68px; height: 85px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 6px; border: 1px solid #1f2430; }
@@ -47,11 +43,18 @@
         .slide-up { transform: translateY(0); } .slide-down { transform: translateY(120%); }
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .dot.new { animation: popIn 0.3s; }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR MENU (ĐÃ SỬA: ĐẦY ĐỦ CÁC MỤC) -->
+    <!-- TOAST -->
+    <div id="toast"><i class="fa-solid fa-circle-check text-lg"></i><span class="text-sm font-bold text-white" id="toastMsg">...</span></div>
+
+    <!-- SIDEBAR -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
@@ -59,40 +62,19 @@
             <span class="font-bold text-lg text-white">CROWNEX</span>
             <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        
-        <!-- MENU LIST -->
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="game.html" class="menu-item active">
-                <i class="fa-solid fa-chart-line"></i> Giao dịch
-            </a>
-            <a href="taikhoan.html" class="menu-item">
-                <i class="fa-solid fa-user-gear"></i> Tài khoản
-            </a>
-            <a href="naprut.html" class="menu-item">
-                <i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền
-            </a>
-            <a href="lichsu.html" class="menu-item">
-                <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược
-            </a>
-            
+            <a href="game.html" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
+            <a href="naprut.html" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
+            <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
-            
-            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400">
-                <i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)
-            </a>
-            
-            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4">
-                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-            </a>
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
+            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
-
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
-                <div class="flex flex-col">
-                    <span class="text-xs font-bold text-white" id="sidebarUsername">User...</span>
-                    <span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span>
-                </div>
+                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
             </div>
         </div>
     </div>
@@ -101,15 +83,10 @@
     <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
         <div class="flex items-center gap-4">
             <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
-            <div>
-                <div class="flex items-center gap-2"><span class="text-white font-bold text-sm">BTC/USDT</span><span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646]">LIVE</span></div>
-            </div>
+            <div class="flex items-center gap-2"><span class="text-white font-bold text-sm">BTC/USDT</span><span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646]">LIVE</span></div>
         </div>
         <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3">
-            <div class="text-right leading-tight">
-                <div class="text-[9px] text-[#6b7280] font-bold uppercase">Tài khoản thực</div>
-                <div class="font-mono font-bold text-[#EAECEF] text-sm" id="balanceDisplay">---</div>
-            </div>
+            <div class="text-right leading-tight"><div class="text-[9px] text-[#6b7280] font-bold uppercase">Thực: <span id="balanceDisplay" class="text-[#EAECEF] font-mono text-sm">---</span></div></div>
             <div class="w-7 h-7 bg-[#FCD535] rounded-full flex items-center justify-center text-xs text-[#111]"><i class="fa-solid fa-wallet"></i></div>
         </div>
     </header>
@@ -120,8 +97,6 @@
         <canvas id="chartCanvas" class="w-full h-full block"></canvas>
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
-        
-        <!-- POPUP RESULT -->
         <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase">HÚP RỒI</div>
@@ -134,14 +109,9 @@
     <div class="glass-panel z-20 shrink-0 h-28 flex flex-col shadow-[0_-5px_20px_rgba(0,0,0,0.5)] bg-[#13161f]">
         <div class="flex items-center justify-between px-4 py-1.5 border-b border-[#232836] bg-[#171b26]">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#6b7280] text-xs"></i><span class="text-[#9ca3af] text-[10px] font-bold uppercase">Kết quả</span></div>
-            <div class="flex gap-4 text-[10px] font-mono font-bold">
-                <span class="text-[#0ECB81]">Xanh: <span id="count-up">0</span></span>
-                <span class="text-[#F6465D]">Đỏ: <span id="count-down">0</span></span>
-            </div>
+            <div class="flex gap-4 text-[10px] font-mono font-bold"><span class="text-[#0ECB81]">Xanh: <span id="count-up">0</span></span><span class="text-[#F6465D]">Đỏ: <span id="count-down">0</span></span></div>
         </div>
-        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center">
-            <div class="history-wrapper"><div class="history-container" id="historyContainer"></div></div>
-        </div>
+        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper"><div class="history-container" id="historyContainer"></div></div></div>
     </div>
 
     <!-- CONTROL PANEL -->
@@ -177,7 +147,6 @@
 
     <!-- MAIN LOGIC -->
     <script type="module">
-        // IMPORT ĐẦY ĐỦ (ĐÃ THÊM addDoc, collection ĐỂ GHI LỊCH SỬ)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -195,60 +164,101 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- GLOBAL VARIABLES ---
         const CONFIG = { basePrice: 98100, chartPaddingRight: 60, smoothingFactor: 0.15, gridStep: 20 };
         const state = {
-            balance: 0,
-            userData: null,
-            currentBet: null, 
-            pendingBet: { type: null, amount: 0 },
-            history: new Array(60).fill(null),
-            candles: [],
-            visualPrice: CONFIG.basePrice,
-            targetPrice: CONFIG.basePrice,
-            currentPhase: 'order', 
-            lockPrice: 0,
-            sessionID: ''
+            balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
+            history: new Array(60).fill(null), candles: [], visualPrice: CONFIG.basePrice,
+            targetPrice: CONFIG.basePrice, currentPhase: 'order', lockPrice: 0
         };
 
-        // --- LOGOUT FUNCTION ---
-        window.logout = () => {
-            signOut(auth).then(() => {
-                localStorage.removeItem('crownex_user_info');
-                window.location.href = "login.html";
-            });
-        };
+        window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
 
-        // --- AUTH CHECK & INIT ---
         window.onload = async () => {
             const userStr = localStorage.getItem('crownex_user_info');
-            if(!userStr) {
-                alert("Vui lòng đăng nhập!");
-                window.location.href = "login.html";
-                return;
-            }
+            if(!userStr) { window.location.href = "login.html"; return; }
             state.userData = JSON.parse(userStr);
             state.balance = state.userData.balance || 0;
-            
-            // Render User Info in Sidebar
             document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username;
             updateBalanceUI();
 
-            // Listen to Balance Realtime
             if(state.userData.uid) {
                  onSnapshot(doc(db, "users", state.userData.uid), (doc) => {
-                    if(doc.exists()) {
-                        const data = doc.data();
-                        state.balance = data.balance;
-                        updateBalanceUI();
-                    }
+                    if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
                 });
             }
-
             initGame();
+            checkSavedBet(); // --- KIỂM TRA CƯỢC CŨ ---
         };
 
+        // --- HÀM XỬ LÝ LƯU/KHÔI PHỤC CƯỢC ---
+        function checkSavedBet() {
+            const saved = localStorage.getItem('crownex_active_bet');
+            if (!saved) return;
+            
+            const betData = JSON.parse(saved);
+            const now = Date.now();
+            
+            // Nếu vẫn còn trong phiên (chưa đến thời gian lock tiếp theo + 30s xử lý)
+            // Logic đơn giản: Nếu betData.expires > now -> Còn hạn, khôi phục
+            if (betData.expires > now) {
+                state.currentBet = { type: betData.type, amount: betData.amount };
+                updateBetUI(betData.type, betData.amount);
+                showToast('success', `Đã khôi phục lệnh cược $${betData.amount}`);
+            } else {
+                // Nếu đã quá hạn -> Tự động tính kết quả offline
+                processOfflineResult(betData);
+            }
+        }
+
+        async function processOfflineResult(betData) {
+            // Giả lập kết quả ngẫu nhiên vì không có server thật lưu giá tại thời điểm đó
+            // Trong thực tế, cần query lại giá tại betData.expires
+            const result = Math.random() > 0.5 ? 'up' : 'down'; 
+            const win = (betData.type === result);
+            let profit = 0;
+
+            if (win) {
+                profit = betData.amount * 0.95;
+                state.balance += (betData.amount + profit); // Hoàn vốn + lãi (vì vốn đã trừ lúc đặt)
+                showToast('success', `Kết quả phiên trước: THẮNG (+$${profit})`);
+            } else {
+                showToast('error', `Kết quả phiên trước: THUA (-$${betData.amount})`);
+            }
+            
+            updateBalanceUI();
+            localStorage.removeItem('crownex_active_bet'); // Xóa cược đã xử lý
+
+            // Sync Firebase
+            if(state.userData.uid) {
+                await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
+                await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
+                    type: betData.type, amount: betData.amount, result: win ? 'win' : 'lose', 
+                    profit: win ? profit : 0, timestamp: betData.expires // Lưu thời gian kết thúc phiên cũ
+                });
+            }
+        }
+
+        function updateBetUI(type, amount) {
+            const id = type === 'up' ? 'badge-up' : 'badge-down';
+            document.getElementById(id).innerText = amount + "$"; 
+            document.getElementById(id).classList.remove('hidden');
+            
+            // Khóa nút còn lại
+            const otherBtn = type === 'up' ? 'btnSell' : 'btnBuy';
+            document.getElementById(otherBtn).classList.add('locked');
+        }
+
         // --- UI FUNCTIONS ---
+        function showToast(type, msg) {
+            const t = document.getElementById('toast');
+            const i = t.querySelector('i');
+            document.getElementById('toastMsg').innerText = msg;
+            t.className = ''; 
+            if(type === 'error') { i.className = 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]'; t.style.borderColor = '#F6465D'; }
+            else { i.className = 'fa-solid fa-circle-check text-lg text-[#0ECB81]'; t.style.borderColor = '#0ECB81'; }
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
         window.adjustBet = (val) => {
             const inp = document.getElementById('betInput');
             let v = parseFloat(inp.value) + val; if (v < 1) v = 1; inp.value = v; window.updateProfit();
@@ -257,38 +267,65 @@
             const val = parseFloat(document.getElementById('betInput').value);
             document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
         };
+
         window.selectSide = (type) => {
-            if (state.currentPhase !== 'order') return alert("Đợi phiên sau!");
+            if (state.currentPhase !== 'order') return showToast('error', "Vui lòng chờ phiên mới!");
+            
+            // CẤM CƯỢC ĐỐI
+            if (state.currentBet && state.currentBet.type !== type) {
+                return showToast('error', "Không được cược 2 cửa cùng lúc!");
+            }
+
             const amount = parseFloat(document.getElementById('betInput').value);
-            if (amount + state.pendingBet.amount > state.balance) return alert("Không đủ tiền!");
+            if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
+            
             state.pendingBet.type = type; state.pendingBet.amount += amount;
             document.getElementById('pendingAmount').innerText = state.pendingBet.amount + "$";
             document.getElementById('confirmBar').classList.remove('slide-down'); document.getElementById('confirmBar').classList.add('slide-up');
         };
+
         window.cancelSelection = () => {
             state.pendingBet = { type: null, amount: 0 };
             document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
         };
+
         window.confirmBet = async () => {
             if (state.pendingBet.amount === 0) return;
-            state.balance -= state.pendingBet.amount; updateBalanceUI();
+            const amount = state.pendingBet.amount;
+            const type = state.pendingBet.type;
+
+            state.balance -= amount; updateBalanceUI();
             if(state.userData.uid) { await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance }); }
-            state.currentBet = { type: state.pendingBet.type, amount: state.pendingBet.amount };
-            const id = state.currentBet.type === 'up' ? 'badge-up' : 'badge-down';
-            document.getElementById(id).innerText = state.currentBet.amount + "$"; document.getElementById(id).classList.remove('hidden');
+
+            // LOGIC CƯỢC DỒN
+            if (!state.currentBet) {
+                state.currentBet = { type: type, amount: amount };
+            } else {
+                state.currentBet.amount += amount;
+            }
+
+            // LƯU VÀO LOCALSTORAGE ĐỂ KHÔI PHỤC KHI RELOAD
+            const now = Date.now();
+            const nextMinute = now - (now % 60000) + 60000; // Thời điểm kết thúc phiên
+            localStorage.setItem('crownex_active_bet', JSON.stringify({
+                type: state.currentBet.type,
+                amount: state.currentBet.amount,
+                expires: nextMinute
+            }));
+
+            updateBetUI(state.currentBet.type, state.currentBet.amount);
+            
             state.pendingBet = { type: null, amount: 0 };
             document.getElementById('confirmBar').classList.remove('slide-up'); document.getElementById('confirmBar').classList.add('slide-down');
-        };
-        window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
-            if (sb.classList.contains('-translate-x-full')) {
-                sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0');
-            } else {
-                sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300);
-            }
+            showToast('success', `Đặt lệnh thành công: $${amount}`);
         };
 
-        // --- CORE GAME ENGINE ---
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
+            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
+        };
+
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
         function initGame() {
@@ -353,8 +390,11 @@
             document.getElementById('candleStatusBadge').innerText = "ORDERING";
             document.getElementById('lockLabel').style.display = 'none'; document.getElementById('lockLine').style.display = 'none';
             state.currentBet = null;
+            
+            // Reset UI
             document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
-            document.getElementById('btnBuy').classList.remove('dimmed'); document.getElementById('btnSell').classList.remove('dimmed');
+            document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
+            document.getElementById('btnSell').classList.remove('dimmed', 'locked');
         }
 
         function startResultPhase() {
@@ -367,7 +407,6 @@
             document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
         }
 
-        // --- ĐÃ SỬA: XỬ LÝ KẾT QUẢ VÀ LƯU VÀO BẢNG LỊCH SỬ ---
         async function finalizeRound() {
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
             const m = new Date().getMinutes(); let pm = m - 1; if(pm < 0) pm = 59;
@@ -386,19 +425,15 @@
                     profit = 0; showPopup(false, b.amount);
                 }
                 updateBalanceUI();
+                
+                // Xóa cược đã xử lý khỏi localStorage
+                localStorage.removeItem('crownex_active_bet');
 
                 if(state.userData.uid) {
                     try {
-                        // 1. Update số dư
                         await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
-                        
-                        // 2. LƯU LỊCH SỬ VÀO SUB-COLLECTION 'betHistory' (Để lichsu.html hiển thị)
                         await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
-                            type: b.type,
-                            amount: b.amount,
-                            result: win ? 'win' : 'lose',
-                            profit: win ? profit : 0,
-                            timestamp: Date.now()
+                            type: b.type, amount: b.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: Date.now()
                         });
                     } catch (e) { console.error(e); }
                 }
@@ -464,8 +499,5 @@
     </script>
 </body>
 </html>
-
-
-
 
 
