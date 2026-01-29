@@ -64,8 +64,9 @@
     <!-- LOADING OVERLAY -->
     <div id="authCheckingOverlay">
         <div class="w-16 h-16 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-3xl mb-4 animate-bounce rounded-bl-none">C</div>
-        <div class="text-[#FCD535] font-bold tracking-widest text-sm" id="loadingText"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>ĐANG ĐỒNG BỘ...</div>
-        <button onclick="forceLogout()" class="mt-8 text-gray-500 text-xs underline hover:text-white">Thoát tài khoản bị kẹt</button>
+        <div class="text-[#FCD535] font-bold tracking-widest text-sm" id="loadingText"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>ĐANG KẾT NỐI...</div>
+        <div id="errorDetails" class="mt-4 text-red-500 text-xs font-mono hidden text-center px-4"></div>
+        <button onclick="forceLogout()" class="mt-8 bg-red-900/30 border border-red-900 text-red-400 px-4 py-2 rounded text-xs hover:bg-red-900/50 transition-colors">THOÁT TÀI KHOẢN BỊ KẸT</button>
     </div>
 
     <div id="toast"><i class="fa-solid fa-circle-exclamation"></i><span id="toastMsg" class="text-sm font-bold text-white"></span></div>
@@ -158,6 +159,8 @@
         
         const EMAIL_PREFIX = "@crownex.com"; 
         const overlay = document.getElementById('authCheckingOverlay');
+        const errorDetails = document.getElementById('errorDetails');
+        const loadingText = document.getElementById('loadingText');
 
         // HÀM FORCE LOGOUT (Dùng khi bị kẹt)
         window.forceLogout = () => {
@@ -167,46 +170,59 @@
             });
         };
 
-        // --- QUAN TRỌNG: LOGIC CHỐNG VÒNG LẶP ---
+        // --- CƠ CHẾ TỰ ĐỘNG SỬA LỖI (AUTO-REPAIR) ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // ĐÃ ĐĂNG NHẬP FIREBASE
-                console.log("Phát hiện phiên đăng nhập cũ: ", user.uid);
-                document.getElementById('loadingText').innerText = "KHÔI PHỤC DỮ LIỆU...";
+                console.log("Tìm thấy user: ", user.uid);
+                loadingText.innerText = "ĐANG ĐỒNG BỘ DỮ LIỆU...";
                 
-                // Kiểm tra LocalStorage có dữ liệu chưa
-                const localData = localStorage.getItem('crownex_user_info');
-                
-                if (localData) {
-                    // Nếu có rồi -> Vào game ngay
-                    window.location.href = "game.html";
-                } else {
-                    // Nếu chưa có (Nguyên nhân gây lỗi) -> Tải lại từ Server
-                    try {
-                        const docRef = doc(db, "users", user.uid);
-                        const docSnap = await getDoc(docRef);
+                try {
+                    const docRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (docSnap.exists()) {
+                        // 1. Dữ liệu OK -> Lưu & Vào Game
+                        const userData = docSnap.data();
+                        userData.uid = user.uid;
+                        localStorage.setItem('crownex_user_info', JSON.stringify(userData));
+                        window.location.href = "game.html";
+                    } else {
+                        // 2. LỖI: Có User nhưng không có Data (Tài khoản ảo)
+                        // -> TIẾN HÀNH TỰ SỬA (Tạo lại dữ liệu)
+                        loadingText.innerText = "PHÁT HIỆN LỖI, ĐANG SỬA...";
+                        console.log("User missing in DB, repairing...");
+
+                        const fixedData = {
+                            username: user.email.split('@')[0],
+                            phone: "Đang cập nhật",
+                            fullName: user.displayName || "Thành viên mới",
+                            balance: 0,
+                            createdAt: new Date().toISOString(),
+                            role: 'user',
+                            repaired: true
+                        };
+
+                        await setDoc(docRef, fixedData);
                         
-                        if (docSnap.exists()) {
-                            // Tìm thấy dữ liệu -> Lưu vào máy -> Vào game
-                            const userData = docSnap.data();
-                            userData.uid = user.uid;
-                            localStorage.setItem('crownex_user_info', JSON.stringify(userData));
-                            window.location.href = "game.html";
-                        } else {
-                            // Không tìm thấy dữ liệu trên server (Lỗi lạ) -> Đăng xuất
-                            console.error("Không tìm thấy user trên DB");
-                            await signOut(auth);
-                            hideOverlay();
-                        }
-                    } catch (error) {
-                        console.error("Lỗi đồng bộ:", error);
-                        // Lỗi mạng hoặc lỗi khác -> Cho phép đăng nhập lại
-                        await signOut(auth);
-                        hideOverlay();
+                        // Lưu xong thì vào game
+                        fixedData.uid = user.uid;
+                        localStorage.setItem('crownex_user_info', JSON.stringify(fixedData));
+                        window.location.href = "game.html";
+                    }
+                } catch (error) {
+                    // 3. Lỗi Quyền (Permission) hoặc Mạng
+                    console.error("Critical Error:", error);
+                    loadingText.innerText = "LỖI KẾT NỐI DATABASE!";
+                    loadingText.classList.add('text-red-500');
+                    errorDetails.innerText = "Code: " + error.code + "\nMess: " + error.message;
+                    errorDetails.classList.remove('hidden');
+                    
+                    // Nếu lỗi quyền, bắt buộc phải đăng xuất để không bị kẹt
+                    if (error.code && error.code.includes("permission-denied")) {
+                         setTimeout(() => window.forceLogout(), 3000);
                     }
                 }
             } else {
-                // CHƯA ĐĂNG NHẬP
                 hideOverlay();
             }
         });
@@ -218,7 +234,7 @@
             }, 500);
         }
 
-        // --- SETUP FORM & UI ---
+        // --- SETUP UI ---
         const formLogin = document.getElementById('formLogin');
         const formReg = document.getElementById('formRegister');
         const btnLogin = document.getElementById('btnLogin');
@@ -270,16 +286,7 @@
             try {
                 const email = username + EMAIL_PREFIX;
                 const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-                const user = userCredential.user;
-                
-                // Tải dữ liệu mới nhất
-                const docSnap = await getDoc(doc(db, "users", user.uid));
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    userData.uid = user.uid;
-                    localStorage.setItem('crownex_user_info', JSON.stringify(userData));
-                }
-                // onAuthStateChanged sẽ tự chuyển hướng
+                // onAuthStateChanged sẽ tự xử lý tiếp
             } catch (error) {
                 console.error(error);
                 let msg = 'Đăng nhập thất bại!';
@@ -320,8 +327,6 @@
                 const userData = { username: username, phone: phone, fullName: fullname, balance: 0, createdAt: new Date().toISOString(), role: 'user' };
                 await setDoc(doc(db, "users", user.uid), userData);
                 
-                userData.uid = user.uid;
-                localStorage.setItem('crownex_user_info', JSON.stringify(userData));
                 // onAuthStateChanged sẽ tự chuyển hướng
             } catch (error) {
                 console.error(error);
