@@ -201,35 +201,6 @@
         </div>
     </div>
 
-    <!-- CONFIRMATION BOTTOM SHEET -->
-    <div id="confirmBar" class="pb-safe">
-        <div class="flex items-center justify-center p-2 pt-3">
-            <div class="w-10 h-1 bg-[#2d3442] rounded-full"></div>
-        </div>
-        <div class="px-5 pb-2">
-            <div class="flex justify-between items-center mb-4 text-xs font-bold text-gray-400">
-                <span>Xác nhận lệnh <span id="confirmType" class="uppercase">--</span></span>
-                <span>Số dư: <span id="confirmBalance" class="text-white">--</span></span>
-            </div>
-            <div class="flex items-center justify-between bg-[#0b0f19] p-3 rounded-lg border border-[#2d3442] mb-4">
-                <div class="flex flex-col">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase">Số tiền cược</span>
-                    <span class="text-xl font-mono font-bold text-white" id="confirmAmount">$0.00</span>
-                </div>
-                <div class="flex flex-col items-end">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase">Thắng nhận về</span>
-                    <span class="text-xl font-mono font-bold text-[#0ECB81]" id="confirmWin">$0.00</span>
-                </div>
-            </div>
-            <div class="flex gap-3 mb-3">
-                <button onclick="cancelSelection()" class="w-1/3 bg-[#2d3442] rounded-lg text-white font-bold text-sm h-12 hover:bg-[#374151]">Hủy</button>
-                <button id="btnConfirm" onclick="confirmBet()" class="w-2/3 bg-[#FCD535] rounded-lg text-[#111] font-black text-sm h-12 flex items-center justify-center gap-2 hover:brightness-110 shadow-[0_4px_15px_rgba(252,213,53,0.3)]">
-                    XÁC NHẬN NGAY
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- MAIN LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -499,40 +470,42 @@
             
             if (savedData) {
                 try {
-                    const parsed = JSON.parse(savedData);
-                    // Chỉ lấy nến nếu nó không quá cũ (ví dụ: trong vòng 1 tiếng = 120 nến)
-                    if (parsed.length > 0 && (currentEpoch30 - parsed[parsed.length-1].epoch) < 120) {
-                        state.candles = parsed;
-                        // Lấy giá đóng cửa của nến cuối cùng để làm giá khởi điểm tiếp theo
-                        p = state.candles[state.candles.length - 1].close;
+                    state.candles = JSON.parse(savedData);
+                    // Kiểm tra và lấp đầy khoảng trống (Backfill)
+                    if (state.candles.length > 0) {
+                        const lastSavedEpoch = state.candles[state.candles.length - 1].epoch;
+                        const missingCount = currentEpoch30 - lastSavedEpoch;
+
+                        if (missingCount > 0 && missingCount < 1000) { // Giới hạn backfill tránh treo
+                            let lastClose = state.candles[state.candles.length - 1].close;
+                            for (let i = 1; i < missingCount; i++) { // Chạy đến trước epoch hiện tại
+                                const epoch = lastSavedEpoch + i;
+                                const c = generateStaticCandle(epoch, lastClose);
+                                state.candles.push(c);
+                                lastClose = c.close;
+                            }
+                            // Cập nhật giá bắt đầu cho vòng lặp hiện tại
+                            p = lastClose;
+                        } else if (missingCount >= 1000) {
+                             // Quá lâu, reset lại từ đầu
+                             state.candles = [];
+                        } else {
+                             p = state.candles[state.candles.length - 1].close;
+                        }
                     }
                 } catch (e) {
                     console.log("Lỗi đọc cache nến, tạo mới.");
+                    state.candles = [];
                 }
             }
 
-            // Nếu không có nến nào (lần đầu chơi hoặc đã xóa cache), tạo mới 40 nến giả lập
+            // Nếu không có nến nào (lần đầu chơi hoặc đã reset), tạo mới 40 nến giả lập
             if (state.candles.length === 0) {
                 for(let i = 40; i > 0; i--) {
                     const epoch = currentEpoch30 - i;
                     const c = generateStaticCandle(epoch, p);
                     state.candles.push(c);
                     p = c.close;
-                }
-            } else {
-                // Nếu ĐÃ CÓ nến cũ, ta cần "vẽ bù" những nến bị thiếu trong lúc tắt trang
-                const lastSavedEpoch = state.candles[state.candles.length - 1].epoch;
-                const missingCount = currentEpoch30 - lastSavedEpoch;
-
-                if (missingCount > 0) {
-                    // Tạo bù các nến còn thiếu từ lúc tắt đến bây giờ
-                    for (let i = 1; i <= missingCount; i++) {
-                        const epoch = lastSavedEpoch + i;
-                        // Nến quá khứ (đã đóng) thì high/low biến động mạnh hơn chút cho đẹp
-                        const c = generateStaticCandle(epoch, p);
-                        state.candles.push(c);
-                        p = c.close;
-                    }
                 }
             }
             
@@ -568,11 +541,11 @@
                     const res = state.history[minuteIdx];
                     if (res === 'up') {
                         // Bắt buộc nến Xanh (Close > Open)
-                        if (change <= 0) change = Math.abs(change) + 2;
+                        if (change <= 0) change = Math.abs(change) + 5;
                         if (change < 2) change = 5; // Độ lớn tối thiểu
                     } else if (res === 'down') {
                         // Bắt buộc nến Đỏ (Close < Open)
-                        if (change >= 0) change = -Math.abs(change) - 2;
+                        if (change >= 0) change = -Math.abs(change) - 5;
                         if (change > -2) change = -5; // Độ lớn tối thiểu
                     }
                 }
