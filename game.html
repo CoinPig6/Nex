@@ -472,34 +472,78 @@
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
-        // --- GAME CORE LOGIC ---
+        // --- GAME CORE LOGIC (UPDATED WITH PERSISTENCE) ---
         function initGame() {
+            // 1. Load History (Kết quả thắng thua)
             const h = localStorage.getItem('crownex_history_v30');
             if (h) state.history = JSON.parse(h);
             
             const now = Date.now();
+            const currentEpoch30 = Math.floor(now / 30000); // Epoch hiện tại
+            
+            // Xử lý lịch sử bóng (History Blocks)
             const m = new Date().getMinutes();
             if(!state.history || state.history.length !== 60) state.history = new Array(60).fill(null);
-            
-            // Reset history logic for display
+            // Reset hiển thị history nếu cần
             for(let i=0; i<m; i++) if(!state.history[i]) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
             for(let i=m; i<60; i++) state.history[i] = null;
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
             
-            // Generate initial candles (Backfill)
-            // Mỗi nến 30s. Ta cần khoảng 40 nến để vẽ full màn hình
+            // 2. XỬ LÝ NẾN (CANDLES) - PHẦN QUAN TRỌNG ĐỂ LƯU NẾN
             state.candles = [];
-            const currentEpoch30 = Math.floor(now / 30000);
             let p = CONFIG.basePrice;
+
+            // Kiểm tra xem có dữ liệu cũ đã lưu không
+            const savedData = localStorage.getItem('crownex_chart_data');
             
-            for(let i = 40; i > 0; i--) {
-                const epoch = currentEpoch30 - i;
-                const c = generateStaticCandle(epoch, p);
-                state.candles.push(c);
-                p = c.close;
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    // Chỉ lấy nến nếu nó không quá cũ (ví dụ: trong vòng 1 tiếng = 120 nến)
+                    if (parsed.length > 0 && (currentEpoch30 - parsed[parsed.length-1].epoch) < 120) {
+                        state.candles = parsed;
+                        // Lấy giá đóng cửa của nến cuối cùng để làm giá khởi điểm tiếp theo
+                        p = state.candles[state.candles.length - 1].close;
+                    }
+                } catch (e) {
+                    console.log("Lỗi đọc cache nến, tạo mới.");
+                }
             }
+
+            // Nếu không có nến nào (lần đầu chơi hoặc đã xóa cache), tạo mới 40 nến giả lập
+            if (state.candles.length === 0) {
+                for(let i = 40; i > 0; i--) {
+                    const epoch = currentEpoch30 - i;
+                    const c = generateStaticCandle(epoch, p);
+                    state.candles.push(c);
+                    p = c.close;
+                }
+            } else {
+                // Nếu ĐÃ CÓ nến cũ, ta cần "vẽ bù" những nến bị thiếu trong lúc tắt trang
+                const lastSavedEpoch = state.candles[state.candles.length - 1].epoch;
+                const missingCount = currentEpoch30 - lastSavedEpoch;
+
+                if (missingCount > 0) {
+                    // Tạo bù các nến còn thiếu từ lúc tắt đến bây giờ
+                    for (let i = 1; i <= missingCount; i++) {
+                        const epoch = lastSavedEpoch + i;
+                        // Nến quá khứ (đã đóng) thì high/low biến động mạnh hơn chút cho đẹp
+                        const c = generateStaticCandle(epoch, p);
+                        state.candles.push(c);
+                        p = c.close;
+                    }
+                }
+            }
+            
+            // Cắt bớt mảng nếu quá dài (giữ lại 60 nến gần nhất để nhẹ máy)
+            if (state.candles.length > 60) {
+                state.candles = state.candles.slice(state.candles.length - 60);
+            }
+
+            // Cập nhật giá hiển thị hiện tại khớp với nến cuối cùng
             state.visualPrice = p;
+            state.targetPrice = p;
 
             marketLoop(); drawLoop(); 
             setInterval(syncLoop, 1000); 
@@ -672,7 +716,7 @@
             setTimeout(() => { p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
         }
 
-        // --- MARKET & DRAW LOOP ---
+        // --- MARKET & DRAW LOOP (UPDATED WITH PERSISTENCE) ---
         function marketLoop() {
             // 1. Calculate Target Price
             const now = Date.now();
@@ -689,7 +733,12 @@
             }
 
             // 2. Smooth Price Movement
-            state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1; // Smooth factor
+            // Fix: Nếu chênh lệch quá lớn (do mới load lại trang), nhảy giá luôn để tránh trượt
+            if (Math.abs(state.targetPrice - state.visualPrice) > 100) {
+                state.visualPrice = state.targetPrice;
+            } else {
+                state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1;
+            }
 
             // 3. Candle Logic (SNAP TO GRID 30s)
             // epoch30 là định danh của nến 30s hiện tại.
@@ -701,15 +750,17 @@
                 // KHI CHUYỂN NẾN MỚI
                 let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
                 
+                // --- UPDATE: LƯU NẾN VÀO BỘ NHỚ ---
+                if (state.candles.length > 0) {
+                    localStorage.setItem('crownex_chart_data', JSON.stringify(state.candles));
+                }
+
                 // --- QUAN TRỌNG: LOGIC CHỐT GIÁ CHUẨN ---
                 // Nếu đây là nến Result (thời điểm giây 30), Lock giá ngay tại đây
-                // currentEpoch30 % 2 !== 0 là giây 30-59 (giả sử bắt đầu từ 00)
                 const isResultCandle = (currentEpoch30 % 2 !== 0); 
                 
                 if (isResultCandle) {
-                     // Bắt đầu nến Kết Quả: LOCK GIÁ CHÍNH XÁC
                      state.lockPrice = openPrice;
-                     // Cập nhật UI ngay lập tức
                      document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
                 }
                 
@@ -721,7 +772,7 @@
                     low: openPrice
                 };
                 state.candles.push(newCandle);
-                if(state.candles.length > 50) state.candles.shift(); // Giữ lại 50 nến
+                if(state.candles.length > 60) state.candles.shift(); // Giữ lại 60 nến
                 lastCandle = newCandle;
             }
 
@@ -801,5 +852,4 @@
     </script>
 </body>
 </html>
-
 
