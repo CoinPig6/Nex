@@ -13,28 +13,37 @@
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
 
-        /* SIDEBAR & UI ELEMENTS (Giữ nguyên style cũ) */
+        /* SIDEBAR */
         #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* TABS */
         .tab-btn { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: bold; color: #6b7280; border-bottom: 2px solid #2d3442; transition: 0.3s; }
         .tab-btn.active { color: #FCD535; border-bottom-color: #FCD535; background: rgba(252, 213, 53, 0.05); }
+
+        /* UI ELEMENTS */
         .input-dark { width: 100%; background: #0b0f19; border: 1px solid #2d3442; color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; transition: 0.2s; }
         .input-dark:focus { border-color: #FCD535; outline: none; }
+        
         .btn-action { width: 100%; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 14px; margin-top: 10px; transition: 0.2s; text-transform: uppercase; }
         .btn-deposit { background: #0ECB81; color: white; }
         .btn-withdraw { background: #F6465D; color: white; }
+        .btn-action:active { transform: scale(0.98); }
+
+        /* PROGRESS BAR */
         .progress-bg { width: 100%; height: 6px; background: #2d3442; border-radius: 3px; overflow: hidden; margin-top: 5px; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, #FCD535, #ff9f43); transition: width 0.5s ease; }
-        
+
         /* STATUS BADGE */
         .badge { padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
         .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; }
         .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; }
         .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; }
 
-        /* SKELETON LOADING (Mới) */
+        /* SKELETON LOADING */
         .skeleton { background: linear-gradient(90deg, #1e232e 25%, #2a303c 50%, #1e232e 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-item { height: 60px; margin-bottom: 12px; width: 100%; }
@@ -42,10 +51,42 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
+
+    <!-- UI SCRIPT -->
+    <script>
+        function toggleMenu() {
+            const sb = document.getElementById('sidebar'); 
+            const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { 
+                sb.classList.remove('-translate-x-full'); 
+                ov.classList.remove('hidden', 'opacity-0'); 
+            } else { 
+                sb.classList.add('-translate-x-full'); 
+                ov.classList.add('opacity-0'); 
+                setTimeout(()=>ov.classList.add('hidden'),300); 
+            }
+        }
+
+        function switchTab(tab) {
+            ['deposit', 'withdraw', 'history'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(t)];
+                if(btn) btn.classList.remove('active');
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            const targetBtn = document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(tab)];
+            if(targetBtn) targetBtn.classList.add('active');
+        }
+
+        function copyText(text) { 
+            navigator.clipboard.writeText(text); 
+            alert("Đã sao chép: " + text); 
+        }
+    </script>
 </head>
 <body>
 
-    <!-- SIDEBAR & HEADER (Giữ nguyên cấu trúc) -->
+    <!-- SIDEBAR -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
@@ -59,8 +100,12 @@
             <a href="naprut.html" class="menu-item active"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
             <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi</a>
+            
+            <!-- ĐÃ THÊM LẠI PHẦN CSKH -->
             <div class="border-t border-[#232836] my-2 mx-2"></div>
-            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
+            
+            <a href="#" onclick="window.logoutModule()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
@@ -105,7 +150,7 @@
                     <i class="fa-regular fa-copy text-[#FCD535]"></i>
                 </div>
 
-                <div class="w-full bg-[#2a2f3d] p-4 rounded-xl border-2 border-[#FCD535] flex justify-between items-center cursor-pointer relative overflow-hidden" id="depositContentBox">
+                <div class="w-full bg-[#2a2f3d] p-4 rounded-xl border-2 border-[#FCD535] flex justify-between items-center cursor-pointer relative overflow-hidden active:scale-95 transition-transform" onclick="copyText(document.getElementById('depositContent').innerText)">
                     <div class="absolute top-0 right-0 bg-[#FCD535] text-black text-[9px] font-bold px-2 py-0.5 rounded-bl">BẮT BUỘC</div>
                     <div class="flex flex-col z-10">
                         <span class="text-[10px] text-[#FCD535] uppercase font-bold mb-1">Nội dung chuyển khoản</span>
@@ -121,7 +166,7 @@
                 <input type="number" id="depositAmount" class="input-dark" placeholder="Ví dụ: 100">
             </div>
             
-            <button onclick="createDeposit()" class="btn-action btn-deposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
+            <button onclick="window.createDeposit()" class="btn-action btn-deposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
         </div>
 
         <!-- TAB RÚT TIỀN -->
@@ -142,14 +187,13 @@
                 <div><label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label><input type="number" id="wdAmount" class="input-dark" placeholder="Tối thiểu $5"></div>
             </div>
 
-            <button onclick="createWithdraw()" class="btn-action btn-withdraw"><i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN</button>
+            <button onclick="window.createWithdraw()" class="btn-action btn-withdraw"><i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN</button>
             <p class="text-[10px] text-center text-gray-500 mt-4">Chưa liên kết ngân hàng? <a href="taikhoan.html" class="text-[#FCD535] underline">Cập nhật ngay</a></p>
         </div>
 
         <!-- TAB LỊCH SỬ -->
         <div id="tab-history" class="hidden fade-in">
             <div id="historyList" class="space-y-3">
-                <!-- Skeleton Loader mặc định -->
                 <div class="skeleton skeleton-item"></div>
                 <div class="skeleton skeleton-item"></div>
                 <div class="skeleton skeleton-item"></div>
@@ -184,32 +228,62 @@
         let unsubscribeHistory = null;
         let realBankNumber = ""; 
 
-        // UI Helpers
-        window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
-            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
-            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
-        };
-        window.logout = () => { signOut(auth).then(() => window.location.href = "login.html"); };
-        window.copyText = (text) => { navigator.clipboard.writeText(text); alert("Đã sao chép: " + text); };
-        document.getElementById('depositContentBox').addEventListener('click', () => { const txt = document.getElementById('depositContent').innerText; if(txt && txt !== '...') copyText(txt); });
+        // Gắn hàm module vào window để HTML gọi được
+        window.logoutModule = () => { signOut(auth).then(() => window.location.href = "login.html"); };
 
-        window.switchTab = (tab) => {
-            ['deposit', 'withdraw', 'history'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(t)].classList.remove('active');
-            });
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(tab)].classList.add('active');
-            
-            // XÓA setupHistoryListener Ở ĐÂY để tránh gọi lại nhiều lần
+        window.createDeposit = async () => {
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            if (!amount || amount < 10) return alert("Tối thiểu nạp $10");
+            const btn = document.querySelector('.btn-deposit');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            try {
+                const payload = {
+                    type: 'deposit', amount: amount, status: 'pending',
+                    userId: currentUser.uid, username: userData.username || 'Unknown',
+                    content: userData.username ? userData.username.toUpperCase() : '',
+                    timestamp: serverTimestamp()
+                };
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
+                await addDoc(collection(db, "admin_requests"), payload);
+                alert("Đã tạo lệnh nạp!");
+                document.getElementById('depositAmount').value = "";
+                switchTab('history');
+            } catch (e) { alert("Lỗi: " + e.message); } 
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP'; }
+        };
+
+        window.createWithdraw = async () => {
+            const amount = parseFloat(document.getElementById('wdAmount').value);
+            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
+            if (!amount || amount < 5) return alert("Tối thiểu rút $5");
+            if (amount > userData.balance) return alert("Số dư không đủ!");
+            if ((userData.requiredTurnover || 0) > 0) return alert("Chưa đủ vòng cược!");
+
+            const btn = document.querySelector('.btn-withdraw');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            try {
+                const payload = {
+                    type: 'withdraw', amount: amount, status: 'pending',
+                    bankInfo: `${userData.bankName} - ${realBankNumber} - ${userData.bankOwner}`,
+                    userId: currentUser.uid, username: userData.username || 'Unknown',
+                    timestamp: serverTimestamp()
+                };
+                await updateDoc(doc(db, "users", currentUser.uid), { balance: userData.balance - amount });
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
+                await addDoc(collection(db, "admin_requests"), payload);
+                alert("Đã gửi yêu cầu rút tiền!");
+                document.getElementById('wdAmount').value = "";
+                switchTab('history');
+            } catch (e) { alert("Lỗi: " + e.message); } 
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN'; }
         };
 
         // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Listener User Info
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if(docSnap.exists()) {
                         userData = docSnap.data();
@@ -217,7 +291,7 @@
                         checkAutoResetTurnover(userData);
                     }
                 });
-                // GỌI LISTENER LỊCH SỬ DUY NHẤT 1 LẦN TẠI ĐÂY
+                // Gọi 1 lần duy nhất
                 setupHistoryListener(user.uid);
             } else {
                 window.location.href = "login.html";
@@ -260,14 +334,11 @@
             }
         }
 
-        // --- CORE FIX: SETUP HISTORY LISTENER ---
+        // --- HISTORY LISTENER (FIXED) ---
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
             
-            // Query đơn giản, KHÔNG orderBy, KHÔNG where phức tạp -> Tránh lỗi Index
             const q = query(collection(db, "users", uid, "transactions"), limit(50));
-
-            console.log("Starting history listener for:", uid);
 
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('historyList');
@@ -278,13 +349,10 @@
                     return;
                 }
 
-                // Chuyển sang mảng
                 let items = [];
                 snapshot.forEach(doc => items.push(doc.data()));
 
-                // --- SẮP XẾP AN TOÀN TUYỆT ĐỐI (FIX SERVER TIMESTAMP NULL) ---
                 items.sort((a, b) => {
-                    // Nếu timestamp null (mới tạo) => dùng Date.now() để nó lên đầu
                     const tA = a.timestamp ? (a.timestamp.seconds ? a.timestamp.seconds * 1000 : Date.now()) : Date.now();
                     const tB = b.timestamp ? (b.timestamp.seconds ? b.timestamp.seconds * 1000 : Date.now()) : Date.now();
                     return tB - tA;
@@ -292,48 +360,27 @@
 
                 let html = '';
                 items.forEach((data) => {
-                    // Xử lý hiển thị thời gian
                     let timeStr = "Vừa xong";
                     if (data.timestamp && data.timestamp.seconds) {
                         timeStr = new Date(data.timestamp.seconds * 1000).toLocaleString('vi-VN');
                     }
                     
-                    // Logic hiển thị Icon & Màu sắc
-                    let typeText = 'GIAO DỊCH';
-                    let typeIcon = 'fa-circle';
-                    let colorClass = 'text-white';
-                    let amountSign = '+';
-                    let bgIcon = 'bg-[#232836]';
+                    let typeText = 'GIAO DỊCH'; let typeIcon = 'fa-circle'; let colorClass = 'text-white'; let amountSign = '+';
+                    if (data.type === 'deposit') { typeText = 'NẠP TIỀN'; typeIcon = 'fa-arrow-down'; colorClass = 'text-[#0ECB81]'; amountSign = '+'; }
+                    else if (data.type === 'withdraw') { typeText = 'RÚT TIỀN'; typeIcon = 'fa-arrow-up'; colorClass = 'text-[#F6465D]'; amountSign = '-'; }
+                    else if (data.type === 'giftcode') { typeText = 'GIFTCODE'; typeIcon = 'fa-ticket'; colorClass = 'text-[#FCD535]'; amountSign = '+'; }
+                    else if (data.type === 'attendance') { typeText = 'ĐIỂM DANH'; typeIcon = 'fa-calendar-check'; colorClass = 'text-blue-400'; amountSign = '+'; }
+                    else if (data.type === 'refund') { typeText = 'HOÀN TRẢ'; typeIcon = 'fa-rotate-left'; colorClass = 'text-purple-400'; amountSign = '+'; }
+                    else if (data.type === 'bonus' || data.type === 'newbie') { typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; amountSign = '+'; }
 
-                    if (data.type === 'deposit') {
-                        typeText = 'NẠP TIỀN'; typeIcon = 'fa-arrow-down'; colorClass = 'text-[#0ECB81]'; amountSign = '+';
-                    } else if (data.type === 'withdraw') {
-                        typeText = 'RÚT TIỀN'; typeIcon = 'fa-arrow-up'; colorClass = 'text-[#F6465D]'; amountSign = '-';
-                    } else if (data.type === 'giftcode') {
-                        typeText = 'GIFTCODE'; typeIcon = 'fa-ticket'; colorClass = 'text-[#FCD535]'; amountSign = '+';
-                    } else if (data.type === 'attendance') {
-                        typeText = 'ĐIỂM DANH'; typeIcon = 'fa-calendar-check'; colorClass = 'text-blue-400'; amountSign = '+';
-                    } else if (data.type === 'refund') {
-                        typeText = 'HOÀN TRẢ'; typeIcon = 'fa-rotate-left'; colorClass = 'text-purple-400'; amountSign = '+';
-                    } else if (data.type === 'bonus' || data.type === 'newbie') {
-                        typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; amountSign = '+';
-                    }
-
-                    // Badge trạng thái
-                    let badgeClass = 'badge-pending';
-                    let statusText = 'ĐANG XỬ LÝ';
-                    let statusIcon = 'fa-clock';
-
-                    if (data.status === 'success') {
-                        badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; statusIcon = 'fa-check';
-                    } else if (data.status === 'rejected' || data.status === 'failed') {
-                        badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; statusIcon = 'fa-xmark';
-                    }
+                    let badgeClass = 'badge-pending'; let statusText = 'ĐANG XỬ LÝ'; let statusIcon = 'fa-clock';
+                    if (data.status === 'success') { badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; statusIcon = 'fa-check'; }
+                    else if (data.status === 'rejected' || data.status === 'failed') { badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; statusIcon = 'fa-xmark'; }
 
                     html += `
                         <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center animate-fade-in-up">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${bgIcon} ${colorClass} bg-opacity-10 border border-white/5">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#232836] ${colorClass} bg-opacity-10 border border-white/5">
                                     <i class="fa-solid ${typeIcon}"></i>
                                 </div>
                                 <div>
@@ -351,64 +398,13 @@
                     `;
                 });
                 listEl.innerHTML = html;
-
             }, (error) => {
                 console.error("Lỗi History:", error);
                 document.getElementById('historyList').innerHTML = '';
                 document.getElementById('historyError').classList.remove('hidden');
-                document.getElementById('historyError').innerText = "Lỗi tải dữ liệu: " + error.message;
+                document.getElementById('historyError').innerText = "Lỗi tải: " + error.message;
             });
         }
-
-        // Actions
-        window.createDeposit = async () => {
-            const amount = parseFloat(document.getElementById('depositAmount').value);
-            if (!amount || amount < 10) return alert("Tối thiểu nạp $10");
-            const btn = document.querySelector('.btn-deposit');
-            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-            try {
-                const payload = {
-                    type: 'deposit', amount: amount, status: 'pending',
-                    userId: currentUser.uid, username: userData.username || 'Unknown',
-                    content: userData.username ? userData.username.toUpperCase() : '',
-                    timestamp: serverTimestamp()
-                };
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
-                await addDoc(collection(db, "admin_requests"), payload);
-                alert("Đã tạo lệnh nạp!");
-                document.getElementById('depositAmount').value = "";
-                window.switchTab('history');
-            } catch (e) { alert("Lỗi: " + e.message); } 
-            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP'; }
-        };
-
-        window.createWithdraw = async () => {
-            const amount = parseFloat(document.getElementById('wdAmount').value);
-            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
-            if (!amount || amount < 5) return alert("Tối thiểu rút $5");
-            if (amount > userData.balance) return alert("Số dư không đủ!");
-            if ((userData.requiredTurnover || 0) > 0) return alert("Chưa đủ vòng cược!");
-
-            const btn = document.querySelector('.btn-withdraw');
-            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-            try {
-                const payload = {
-                    type: 'withdraw', amount: amount, status: 'pending',
-                    bankInfo: `${userData.bankName} - ${realBankNumber} - ${userData.bankOwner}`,
-                    userId: currentUser.uid, username: userData.username || 'Unknown',
-                    timestamp: serverTimestamp()
-                };
-                await updateDoc(doc(db, "users", currentUser.uid), { balance: userData.balance - amount });
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
-                await addDoc(collection(db, "admin_requests"), payload);
-                alert("Đã gửi yêu cầu rút tiền!");
-                document.getElementById('wdAmount').value = "";
-                window.switchTab('history');
-            } catch (e) { alert("Lỗi: " + e.message); } 
-            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN'; }
-        };
     </script>
 </body>
 </html>
