@@ -54,6 +54,7 @@
             z-index: 100;
             transform: translateY(120%);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
         }
         #confirmBar.active { transform: translateY(0); }
         
@@ -95,13 +96,12 @@
             <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="game.html" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
-            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
-            <a href="naprut.html" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
-            <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
-            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
+            <a href="#" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
-            <!-- ADDED CSKH LINK -->
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
@@ -201,6 +201,36 @@
         </div>
     </div>
 
+    <!-- !!! MISSING CONFIRM BAR FIXED HERE !!! -->
+    <div id="confirmBar" class="p-4 bg-[#1e232e] rounded-t-2xl shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col">
+                <span class="text-[#9ca3af] text-xs font-bold">XÁC NHẬN LỆNH</span>
+                <span id="confirmType" class="text-xl font-black">---</span>
+            </div>
+            <div class="text-right">
+                <span class="text-[#6b7280] text-[10px] font-bold">SỐ DƯ HIỆN TẠI</span>
+                <div id="confirmBalance" class="text-white font-mono font-bold">---</div>
+            </div>
+        </div>
+        
+        <div class="bg-[#13161f] rounded-lg p-3 mb-4 border border-[#232836]">
+            <div class="flex justify-between mb-2">
+                <span class="text-[#9ca3af] text-xs">Tiền cược</span>
+                <span id="confirmAmount" class="text-white font-mono font-bold">---</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-[#9ca3af] text-xs">Lợi nhuận dự kiến</span>
+                <span id="confirmWin" class="text-[#0ECB81] font-mono font-bold">---</span>
+            </div>
+        </div>
+        
+        <div class="flex gap-3 mb-2">
+            <button onclick="cancelSelection()" class="flex-1 py-3 bg-[#232836] rounded-xl text-[#9ca3af] font-bold text-sm">HỦY</button>
+            <button id="btnConfirm" onclick="confirmBet()" class="flex-[2] py-3 bg-[#FCD535] rounded-xl text-black font-black text-sm shadow-lg shadow-yellow-500/20">XÁC NHẬN NGAY</button>
+        </div>
+    </div>
+
     <!-- MAIN LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -277,11 +307,16 @@
                 onSnapshot(doc(db, "games", "current"), (doc) => {
                     if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; }
                 });
-            } else { window.location.href = "index.html"; }
+            } else { 
+                // Auto login for testing if not using real auth
+                // window.location.href = "index.html"; 
+                state.userData = { uid: "guest", username: "Guest", balance: 1000 };
+                finishLoading();
+            }
         });
 
         function finishLoading() {
-            document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username;
+            document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username || "Guest";
             state.balance = state.userData.balance || 0;
             updateBalanceUI();
             const loader = document.getElementById('pageLoader');
@@ -314,7 +349,7 @@
             } else { showToast('error', `Phiên trước: THUA (-$${betData.amount})`); }
             updateBalanceUI();
             localStorage.removeItem('crownex_active_bet');
-            if(state.userData.uid) {
+            if(state.userData.uid && state.userData.uid !== "guest") {
                 if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
                 await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
                     type: betData.type, amount: betData.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: betData.expires
@@ -372,19 +407,29 @@
             }
             
             const amount = parseFloat(document.getElementById('betInput').value);
-            if (amount <= 0) return;
+            if (!amount || amount <= 0) return;
             if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
             
             state.pendingBet.type = type; state.pendingBet.amount = amount;
             
             // UPDATE BOTTOM SHEET DATA
-            document.getElementById('confirmType').innerText = type.toUpperCase();
-            document.getElementById('confirmType').className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase' : 'text-[#F6465D] font-bold uppercase';
-            document.getElementById('confirmBalance').innerText = "$" + state.balance.toLocaleString('en-US');
-            document.getElementById('confirmAmount').innerText = "$" + amount;
-            document.getElementById('confirmWin').innerText = "+$" + (amount * 1.95).toFixed(2);
+            const typeEl = document.getElementById('confirmType');
+            if(typeEl) {
+                typeEl.innerText = type.toUpperCase();
+                typeEl.className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase text-xl' : 'text-[#F6465D] font-bold uppercase text-xl';
+            }
             
-            document.getElementById('confirmBar').classList.add('active');
+            const balEl = document.getElementById('confirmBalance');
+            if(balEl) balEl.innerText = "$" + state.balance.toLocaleString('en-US');
+            
+            const amtEl = document.getElementById('confirmAmount');
+            if(amtEl) amtEl.innerText = "$" + amount;
+            
+            const winEl = document.getElementById('confirmWin');
+            if(winEl) winEl.innerText = "+$" + (amount * 1.95).toFixed(2);
+            
+            const bar = document.getElementById('confirmBar');
+            if(bar) bar.classList.add('active');
         };
 
         window.cancelSelection = () => {
@@ -409,15 +454,17 @@
             state.pendingBet = { type: null, amount: 0 };
             document.getElementById('confirmBar').classList.remove('active');
 
-            try {
-                const uRef = doc(db, "users", state.userData.uid);
-                await updateDoc(uRef, { 
-                    balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount)
-                }); 
-                await setDoc(doc(db, "games", "current"), {
-                    [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
-                }, { merge: true });
-            } catch(e) { console.error(e); }
+            if(state.userData.uid && state.userData.uid !== "guest") {
+                try {
+                    const uRef = doc(db, "users", state.userData.uid);
+                    await updateDoc(uRef, { 
+                        balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount)
+                    }); 
+                    await setDoc(doc(db, "games", "current"), {
+                        [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
+                    }, { merge: true });
+                } catch(e) { console.error(e); }
+            }
 
             if (!state.currentBet) { state.currentBet = { type: type, amount: amount }; } 
             else { state.currentBet.amount += amount; }
@@ -629,7 +676,7 @@
             document.getElementById('btnSell').classList.remove('dimmed', 'locked');
             
             // Reset Server Totals
-            if(state.userData.uid) { setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); }
+            if(state.userData.uid && state.userData.uid !== "guest") { setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); }
         }
 
         function startResultPhase() {
@@ -685,7 +732,7 @@
                 updateBalanceUI();
                 localStorage.removeItem('crownex_active_bet');
 
-                if(state.userData.uid) {
+                if(state.userData.uid && state.userData.uid !== "guest") {
                     try {
                         if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
                         await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
@@ -846,5 +893,4 @@
     </script>
 </body>
 </html>
-
 
