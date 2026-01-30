@@ -13,44 +13,39 @@
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
 
-        /* SIDEBAR */
+        /* SIDEBAR & UI ELEMENTS (Giữ nguyên style cũ) */
         #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
-        .menu-item i { width: 20px; text-align: center; }
-
-        /* TABS */
         .tab-btn { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: bold; color: #6b7280; border-bottom: 2px solid #2d3442; transition: 0.3s; }
         .tab-btn.active { color: #FCD535; border-bottom-color: #FCD535; background: rgba(252, 213, 53, 0.05); }
-
-        /* UI ELEMENTS */
         .input-dark { width: 100%; background: #0b0f19; border: 1px solid #2d3442; color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; transition: 0.2s; }
         .input-dark:focus { border-color: #FCD535; outline: none; }
-        
         .btn-action { width: 100%; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 14px; margin-top: 10px; transition: 0.2s; text-transform: uppercase; }
-        .btn-deposit { background: #0ECB81; color: white; box-shadow: 0 4px 15px rgba(14, 203, 129, 0.3); }
-        .btn-withdraw { background: #F6465D; color: white; box-shadow: 0 4px 15px rgba(246, 70, 93, 0.3); }
-        .btn-action:active { transform: scale(0.98); }
-
-        /* PROGRESS BAR */
+        .btn-deposit { background: #0ECB81; color: white; }
+        .btn-withdraw { background: #F6465D; color: white; }
         .progress-bg { width: 100%; height: 6px; background: #2d3442; border-radius: 3px; overflow: hidden; margin-top: 5px; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, #FCD535, #ff9f43); transition: width 0.5s ease; }
-
+        
         /* STATUS BADGE */
         .badge { padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
         .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; }
         .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; }
         .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; }
 
-        /* ANIMATION */
+        /* SKELETON LOADING (Mới) */
+        .skeleton { background: linear-gradient(90deg, #1e232e 25%, #2a303c 50%, #1e232e 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton-item { height: 60px; margin-bottom: 12px; width: 100%; }
+
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR MENU -->
+    <!-- SIDEBAR & HEADER (Giữ nguyên cấu trúc) -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
@@ -63,9 +58,8 @@
             <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
             <a href="naprut.html" class="menu-item active"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
-            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
+            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi</a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
-            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
@@ -94,7 +88,7 @@
 
     <div class="flex-1 overflow-y-auto p-4 pb-10">
         
-        <!-- === TAB 1: NẠP TIỀN === -->
+        <!-- TAB NẠP TIỀN -->
         <div id="tab-deposit" class="fade-in">
             <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6 shadow-lg">
                 <div class="bg-white p-2 rounded-lg mb-4">
@@ -102,23 +96,16 @@
                 </div>
                 
                 <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-2" onclick="copyText('BVBank (Bản Việt)')">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-gray-500 uppercase">Ngân hàng</span>
-                        <span class="text-sm text-white font-bold">BVBank (Bản Việt)</span>
-                    </div>
+                    <div class="flex flex-col"><span class="text-[10px] text-gray-500 uppercase">Ngân hàng</span><span class="text-sm text-white font-bold">BVBank (Bản Việt)</span></div>
                     <span class="text-xs text-[#FCD535] font-bold">Sao chép</span>
                 </div>
                 
                 <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-4" onclick="copyText('99MM25740M76308618')">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-gray-500 uppercase">Số tài khoản</span>
-                        <span class="text-sm text-white font-mono font-bold tracking-wider">99MM25740M76308618</span>
-                    </div>
+                    <div class="flex flex-col"><span class="text-[10px] text-gray-500 uppercase">Số tài khoản</span><span class="text-sm text-white font-mono font-bold tracking-wider">99MM25740M76308618</span></div>
                     <i class="fa-regular fa-copy text-[#FCD535]"></i>
                 </div>
 
-                <!-- NỘI DUNG CHUYỂN KHOẢN -->
-                <div class="w-full bg-[#2a2f3d] p-4 rounded-xl border-2 border-[#FCD535] flex justify-between items-center cursor-pointer shadow-[0_0_15px_rgba(252,213,53,0.1)] relative overflow-hidden" id="depositContentBox">
+                <div class="w-full bg-[#2a2f3d] p-4 rounded-xl border-2 border-[#FCD535] flex justify-between items-center cursor-pointer relative overflow-hidden" id="depositContentBox">
                     <div class="absolute top-0 right-0 bg-[#FCD535] text-black text-[9px] font-bold px-2 py-0.5 rounded-bl">BẮT BUỘC</div>
                     <div class="flex flex-col z-10">
                         <span class="text-[10px] text-[#FCD535] uppercase font-bold mb-1">Nội dung chuyển khoản</span>
@@ -134,65 +121,40 @@
                 <input type="number" id="depositAmount" class="input-dark" placeholder="Ví dụ: 100">
             </div>
             
-            <button onclick="createDeposit()" class="btn-action btn-deposit">
-                <i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP
-            </button>
+            <button onclick="createDeposit()" class="btn-action btn-deposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
         </div>
 
-        <!-- === TAB 2: RÚT TIỀN === -->
+        <!-- TAB RÚT TIỀN -->
         <div id="tab-withdraw" class="hidden fade-in">
-            <!-- Progress Vòng Cược -->
             <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] mb-6">
                 <div class="flex justify-between items-end mb-1">
                     <span class="text-xs text-gray-400 font-bold uppercase"><i class="fa-solid fa-rotate mr-1"></i> Vòng cược yêu cầu</span>
                     <span class="text-xs font-mono text-white"><span id="currentTurnover">0</span> / <span id="requiredTurnover">0</span></span>
                 </div>
-                <div class="progress-bg">
-                    <div class="progress-fill" style="width: 0%" id="turnoverBar"></div>
-                </div>
+                <div class="progress-bg"><div class="progress-fill" style="width: 0%" id="turnoverBar"></div></div>
                 <p class="text-[10px] text-gray-500 mt-2 italic" id="turnoverNote">* Bạn cần hoàn thành vòng cược để rút tiền.</p>
             </div>
 
-            <!-- Form Rút -->
             <div class="space-y-4">
-                <div>
-                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Ngân hàng nhận</label>
-                    <input type="text" id="wdBankName" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tài khoản</label>
-                    <input type="text" id="wdBankNumber" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Chủ tài khoản</label>
-                    <input type="text" id="wdBankOwner" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label>
-                    <input type="number" id="wdAmount" class="input-dark" placeholder="Tối thiểu $5">
-                </div>
+                <div><label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Ngân hàng nhận</label><input type="text" id="wdBankName" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết"></div>
+                <div><label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tài khoản</label><input type="text" id="wdBankNumber" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết"></div>
+                <div><label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Chủ tài khoản</label><input type="text" id="wdBankOwner" class="input-dark bg-[#171b26] text-gray-400 cursor-not-allowed" readonly placeholder="Chưa liên kết"></div>
+                <div><label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label><input type="number" id="wdAmount" class="input-dark" placeholder="Tối thiểu $5"></div>
             </div>
 
-            <button onclick="createWithdraw()" class="btn-action btn-withdraw">
-                <i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN
-            </button>
-            <p class="text-[10px] text-center text-gray-500 mt-4">
-                Chưa liên kết ngân hàng? <a href="taikhoan.html" class="text-[#FCD535] underline">Cập nhật ngay</a>
-            </p>
+            <button onclick="createWithdraw()" class="btn-action btn-withdraw"><i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN</button>
+            <p class="text-[10px] text-center text-gray-500 mt-4">Chưa liên kết ngân hàng? <a href="taikhoan.html" class="text-[#FCD535] underline">Cập nhật ngay</a></p>
         </div>
 
-        <!-- === TAB 3: LỊCH SỬ === -->
+        <!-- TAB LỊCH SỬ -->
         <div id="tab-history" class="hidden fade-in">
             <div id="historyList" class="space-y-3">
-                <div class="text-center text-gray-500 text-xs mt-10">
-                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>
-                    Đang tải dữ liệu...
-                </div>
+                <!-- Skeleton Loader mặc định -->
+                <div class="skeleton skeleton-item"></div>
+                <div class="skeleton skeleton-item"></div>
+                <div class="skeleton skeleton-item"></div>
             </div>
-            <!-- Báo lỗi nếu có -->
-            <div id="historyError" class="hidden text-center text-red-500 text-[10px] mt-4">
-                Lỗi tải dữ liệu. Vui lòng thử lại.
-            </div>
+            <div id="historyError" class="hidden text-center text-red-500 text-[10px] mt-4">Lỗi tải dữ liệu.</div>
         </div>
 
     </div>
@@ -240,16 +202,14 @@
             document.getElementById(`tab-${tab}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(tab)].classList.add('active');
             
-            // Nếu chuyển sang tab history, refresh lại
-            if(tab === 'history' && currentUser) {
-                setupHistoryListener(currentUser.uid);
-            }
+            // XÓA setupHistoryListener Ở ĐÂY để tránh gọi lại nhiều lần
         };
 
         // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                // Listener User Info
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if(docSnap.exists()) {
                         userData = docSnap.data();
@@ -257,13 +217,13 @@
                         checkAutoResetTurnover(userData);
                     }
                 });
+                // GỌI LISTENER LỊCH SỬ DUY NHẤT 1 LẦN TẠI ĐÂY
                 setupHistoryListener(user.uid);
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // Auto Reset Turnover
         function checkAutoResetTurnover(data) {
             const cur = data.betTurnover || 0;
             const req = data.requiredTurnover || 0;
@@ -275,7 +235,6 @@
         function renderUserData(data) {
             document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
             document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
-            
             if (data.bankNumber) {
                 realBankNumber = data.bankNumber;
                 document.getElementById('wdBankName').value = data.bankName || "";
@@ -284,7 +243,6 @@
                 document.getElementById('wdBankNumber').value = maskedBn;
                 document.getElementById('wdBankOwner').value = data.bankOwner || "";
             }
-
             const current = data.betTurnover || 0; 
             const required = data.requiredTurnover || 0; 
             document.getElementById('currentTurnover').innerText = current.toLocaleString();
@@ -302,12 +260,14 @@
             }
         }
 
-        // --- FIXED HISTORY LOADING (Client-side Sort) ---
+        // --- CORE FIX: SETUP HISTORY LISTENER ---
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
             
-            // Query đơn giản nhất có thể để tránh lỗi Index
+            // Query đơn giản, KHÔNG orderBy, KHÔNG where phức tạp -> Tránh lỗi Index
             const q = query(collection(db, "users", uid, "transactions"), limit(50));
+
+            console.log("Starting history listener for:", uid);
 
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('historyList');
@@ -322,25 +282,29 @@
                 let items = [];
                 snapshot.forEach(doc => items.push(doc.data()));
 
-                // Sắp xếp Client-side (An toàn tuyệt đối)
+                // --- SẮP XẾP AN TOÀN TUYỆT ĐỐI (FIX SERVER TIMESTAMP NULL) ---
                 items.sort((a, b) => {
-                    const tA = a.timestamp ? a.timestamp.toDate() : new Date();
-                    const tB = b.timestamp ? b.timestamp.toDate() : new Date();
+                    // Nếu timestamp null (mới tạo) => dùng Date.now() để nó lên đầu
+                    const tA = a.timestamp ? (a.timestamp.seconds ? a.timestamp.seconds * 1000 : Date.now()) : Date.now();
+                    const tB = b.timestamp ? (b.timestamp.seconds ? b.timestamp.seconds * 1000 : Date.now()) : Date.now();
                     return tB - tA;
                 });
 
                 let html = '';
                 items.forEach((data) => {
-                    let timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString('vi-VN') : "Đang xử lý...";
+                    // Xử lý hiển thị thời gian
+                    let timeStr = "Vừa xong";
+                    if (data.timestamp && data.timestamp.seconds) {
+                        timeStr = new Date(data.timestamp.seconds * 1000).toLocaleString('vi-VN');
+                    }
                     
-                    // Logic hiển thị Icon & Màu sắc cho từng loại
+                    // Logic hiển thị Icon & Màu sắc
                     let typeText = 'GIAO DỊCH';
                     let typeIcon = 'fa-circle';
                     let colorClass = 'text-white';
                     let amountSign = '+';
                     let bgIcon = 'bg-[#232836]';
 
-                    // Mapping loại giao dịch
                     if (data.type === 'deposit') {
                         typeText = 'NẠP TIỀN'; typeIcon = 'fa-arrow-down'; colorClass = 'text-[#0ECB81]'; amountSign = '+';
                     } else if (data.type === 'withdraw') {
