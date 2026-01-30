@@ -38,7 +38,7 @@
         .progress-fill { height: 100%; background: linear-gradient(90deg, #FCD535, #ff9f43); transition: width 0.5s ease; }
 
         /* STATUS BADGE */
-        .badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .badge { padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
         .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; }
         .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; }
         .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; }
@@ -98,11 +98,9 @@
         <div id="tab-deposit" class="fade-in">
             <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6 shadow-lg">
                 <div class="bg-white p-2 rounded-lg mb-4">
-                    <!-- Ảnh QR tĩnh -->
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020101021238570010A0000007270127000697042201132026290121520208QRIBFTTA53037045802VN5913NGUYEN VAN A6005HANOI62110707TEST12363041234" alt="QR Code" class="w-32 h-32">
                 </div>
                 
-                <!-- Ngân hàng -->
                 <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-2" onclick="copyText('BVBank (Bản Việt)')">
                     <div class="flex flex-col">
                         <span class="text-[10px] text-gray-500 uppercase">Ngân hàng</span>
@@ -111,7 +109,6 @@
                     <span class="text-xs text-[#FCD535] font-bold">Sao chép</span>
                 </div>
                 
-                <!-- Số tài khoản -->
                 <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-4" onclick="copyText('99MM25740M76308618')">
                     <div class="flex flex-col">
                         <span class="text-[10px] text-gray-500 uppercase">Số tài khoản</span>
@@ -120,7 +117,7 @@
                     <i class="fa-regular fa-copy text-[#FCD535]"></i>
                 </div>
 
-                <!-- NỘI DUNG CHUYỂN KHOẢN (LÀM NỔI BẬT) -->
+                <!-- NỘI DUNG CHUYỂN KHOẢN -->
                 <div class="w-full bg-[#2a2f3d] p-4 rounded-xl border-2 border-[#FCD535] flex justify-between items-center cursor-pointer shadow-[0_0_15px_rgba(252,213,53,0.1)] relative overflow-hidden" id="depositContentBox">
                     <div class="absolute top-0 right-0 bg-[#FCD535] text-black text-[9px] font-bold px-2 py-0.5 rounded-bl">BẮT BUỘC</div>
                     <div class="flex flex-col z-10">
@@ -187,11 +184,14 @@
         <!-- === TAB 3: LỊCH SỬ === -->
         <div id="tab-history" class="hidden fade-in">
             <div id="historyList" class="space-y-3">
-                <!-- Items injected here -->
                 <div class="text-center text-gray-500 text-xs mt-10">
                     <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>
                     Đang tải dữ liệu...
                 </div>
+            </div>
+            <!-- Báo lỗi nếu có -->
+            <div id="historyError" class="hidden text-center text-red-500 text-[10px] mt-4">
+                Lỗi tải dữ liệu. Vui lòng thử lại.
             </div>
         </div>
 
@@ -201,7 +201,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, updateDoc, addDoc, collection, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // CONFIG FIREBASE
         const firebaseConfig = {
@@ -222,14 +222,15 @@
         let unsubscribeHistory = null;
         let realBankNumber = ""; 
 
-        // === UI LOGIC ===
+        // UI Helpers
         window.toggleMenu = () => {
             const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
             if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
             else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
         };
-
         window.logout = () => { signOut(auth).then(() => window.location.href = "login.html"); };
+        window.copyText = (text) => { navigator.clipboard.writeText(text); alert("Đã sao chép: " + text); };
+        document.getElementById('depositContentBox').addEventListener('click', () => { const txt = document.getElementById('depositContent').innerText; if(txt && txt !== '...') copyText(txt); });
 
         window.switchTab = (tab) => {
             ['deposit', 'withdraw', 'history'].forEach(t => {
@@ -238,55 +239,36 @@
             });
             document.getElementById(`tab-${tab}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn')[['deposit', 'withdraw', 'history'].indexOf(tab)].classList.add('active');
+            
+            // Nếu chuyển sang tab history, refresh lại
+            if(tab === 'history' && currentUser) {
+                setupHistoryListener(currentUser.uid);
+            }
         };
 
-        window.copyText = (text) => {
-            navigator.clipboard.writeText(text);
-            alert("Đã sao chép: " + text);
-        };
-
-        // COPY RIÊNG CHO BOX NỘI DUNG
-        document.getElementById('depositContentBox').addEventListener('click', () => {
-            const txt = document.getElementById('depositContent').innerText;
-            if(txt && txt !== '...') copyText(txt);
-        });
-
-        // === FIREBASE ===
+        // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                
-                // Load User Data
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if(docSnap.exists()) {
                         userData = docSnap.data();
                         renderUserData(userData);
-                        checkAutoResetTurnover(userData); // CHECK VÒNG CƯỢC
+                        checkAutoResetTurnover(userData);
                     }
                 });
-
-                // Load History (Client-side sorting fix)
                 setupHistoryListener(user.uid);
-
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // 1. TỰ ĐỘNG RESET VÒNG CƯỢC KHI ĐỦ MỐC
+        // Auto Reset Turnover
         function checkAutoResetTurnover(data) {
             const cur = data.betTurnover || 0;
             const req = data.requiredTurnover || 0;
-
-            // Nếu vòng cược hiện tại >= yêu cầu VÀ yêu cầu > 0 (đang bị khóa)
             if (req > 0 && cur >= req) {
-                // Tự động cập nhật về 0
-                updateDoc(doc(db, "users", currentUser.uid), {
-                    betTurnover: 0,
-                    requiredTurnover: 0
-                }).then(() => {
-                    console.log("Auto reset turnover success");
-                });
+                updateDoc(doc(db, "users", currentUser.uid), { betTurnover: 0, requiredTurnover: 0 });
             }
         }
 
@@ -294,7 +276,6 @@
             document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
             document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
             
-            // Bank Info
             if (data.bankNumber) {
                 realBankNumber = data.bankNumber;
                 document.getElementById('wdBankName').value = data.bankName || "";
@@ -304,180 +285,165 @@
                 document.getElementById('wdBankOwner').value = data.bankOwner || "";
             }
 
-            // Turnover Display
             const current = data.betTurnover || 0; 
             const required = data.requiredTurnover || 0; 
-            
             document.getElementById('currentTurnover').innerText = current.toLocaleString();
             document.getElementById('requiredTurnover').innerText = required.toLocaleString();
-            
-            let percent = 0;
-            if(required > 0) percent = (current / required) * 100;
-            else percent = 100; // Đã về 0 thì là 100%
-            
+            let percent = required > 0 ? (current / required) * 100 : 100;
             if(percent > 100) percent = 100;
             document.getElementById('turnoverBar').style.width = percent + "%";
             
-            const noteEl = document.getElementById('turnoverNote');
             if (required === 0) {
                 document.getElementById('turnoverBar').style.background = "#0ECB81"; 
-                noteEl.innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check-circle"></i> Đủ điều kiện rút tiền</span>';
+                document.getElementById('turnoverNote').innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check-circle"></i> Đủ điều kiện rút tiền</span>';
             } else {
                 document.getElementById('turnoverBar').style.background = "linear-gradient(90deg, #FCD535, #ff9f43)";
-                noteEl.innerText = "* Bạn cần hoàn thành vòng cược để rút tiền.";
+                document.getElementById('turnoverNote').innerText = "* Bạn cần hoàn thành vòng cược để rút tiền.";
             }
         }
 
-        // 2. SỬA LỖI KHÔNG HIỆN LỊCH SỬ (Dùng Client-side Sorting)
+        // --- FIXED HISTORY LOADING (Client-side Sort) ---
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
-
-            // Bỏ orderBy("timestamp") để tránh lỗi Index
+            
+            // Query đơn giản nhất có thể để tránh lỗi Index
             const q = query(collection(db, "users", uid, "transactions"), limit(50));
 
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('historyList');
+                document.getElementById('historyError').classList.add('hidden');
+
                 if (snapshot.empty) {
                     listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Chưa có giao dịch nào</div>';
                     return;
                 }
 
-                // Chuyển sang mảng và sắp xếp bằng JS
-                let historyItems = [];
-                snapshot.forEach(doc => {
-                    historyItems.push(doc.data());
-                });
+                // Chuyển sang mảng
+                let items = [];
+                snapshot.forEach(doc => items.push(doc.data()));
 
-                // Sắp xếp Mới nhất lên đầu
-                historyItems.sort((a, b) => {
-                    // Xử lý an toàn nếu timestamp null (vừa tạo xong)
-                    const tA = a.timestamp ? a.timestamp.toDate().getTime() : Date.now();
-                    const tB = b.timestamp ? b.timestamp.toDate().getTime() : Date.now();
+                // Sắp xếp Client-side (An toàn tuyệt đối)
+                items.sort((a, b) => {
+                    const tA = a.timestamp ? a.timestamp.toDate() : new Date();
+                    const tB = b.timestamp ? b.timestamp.toDate() : new Date();
                     return tB - tA;
                 });
 
                 let html = '';
-                historyItems.forEach((data) => {
-                    let timeStr = "Đang xử lý...";
-                    if (data.timestamp) timeStr = new Date(data.timestamp.toDate()).toLocaleString('vi-VN');
+                items.forEach((data) => {
+                    let timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString('vi-VN') : "Đang xử lý...";
                     
-                    let badgeClass = '', statusText = '', icon = '';
-                    if (data.status === 'pending') {
-                        badgeClass = 'badge-pending'; statusText = 'ĐANG XỬ LÝ'; icon = 'fa-clock';
-                    } else if (data.status === 'success') {
-                        badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; icon = 'fa-check';
-                    } else {
-                        badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; icon = 'fa-xmark';
+                    // Logic hiển thị Icon & Màu sắc cho từng loại
+                    let typeText = 'GIAO DỊCH';
+                    let typeIcon = 'fa-circle';
+                    let colorClass = 'text-white';
+                    let amountSign = '+';
+                    let bgIcon = 'bg-[#232836]';
+
+                    // Mapping loại giao dịch
+                    if (data.type === 'deposit') {
+                        typeText = 'NẠP TIỀN'; typeIcon = 'fa-arrow-down'; colorClass = 'text-[#0ECB81]'; amountSign = '+';
+                    } else if (data.type === 'withdraw') {
+                        typeText = 'RÚT TIỀN'; typeIcon = 'fa-arrow-up'; colorClass = 'text-[#F6465D]'; amountSign = '-';
+                    } else if (data.type === 'giftcode') {
+                        typeText = 'GIFTCODE'; typeIcon = 'fa-ticket'; colorClass = 'text-[#FCD535]'; amountSign = '+';
+                    } else if (data.type === 'attendance') {
+                        typeText = 'ĐIỂM DANH'; typeIcon = 'fa-calendar-check'; colorClass = 'text-blue-400'; amountSign = '+';
+                    } else if (data.type === 'refund') {
+                        typeText = 'HOÀN TRẢ'; typeIcon = 'fa-rotate-left'; colorClass = 'text-purple-400'; amountSign = '+';
+                    } else if (data.type === 'bonus' || data.type === 'newbie') {
+                        typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; amountSign = '+';
                     }
 
-                    const isDep = data.type === 'deposit';
+                    // Badge trạng thái
+                    let badgeClass = 'badge-pending';
+                    let statusText = 'ĐANG XỬ LÝ';
+                    let statusIcon = 'fa-clock';
+
+                    if (data.status === 'success') {
+                        badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; statusIcon = 'fa-check';
+                    } else if (data.status === 'rejected' || data.status === 'failed') {
+                        badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; statusIcon = 'fa-xmark';
+                    }
 
                     html += `
                         <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center animate-fade-in-up">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#232836] ${isDep ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">
-                                    <i class="fa-solid ${isDep ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${bgIcon} ${colorClass} bg-opacity-10 border border-white/5">
+                                    <i class="fa-solid ${typeIcon}"></i>
                                 </div>
                                 <div>
-                                    <div class="font-bold text-sm text-white uppercase">${isDep ? 'NẠP TIỀN' : 'RÚT TIỀN'}</div>
+                                    <div class="font-bold text-sm text-white uppercase">${typeText}</div>
                                     <div class="text-[10px] text-gray-500 font-mono">${timeStr}</div>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="font-mono font-bold text-sm ${isDep ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">
-                                    ${isDep ? '+' : '-'}$${parseFloat(data.amount).toLocaleString()}
+                                <div class="font-mono font-bold text-sm ${colorClass}">
+                                    ${amountSign}$${parseFloat(data.amount).toLocaleString()}
                                 </div>
-                                <span class="badge ${badgeClass}"><i class="fa-solid ${icon} mr-1"></i>${statusText}</span>
+                                <span class="badge ${badgeClass} mt-1 inline-block"><i class="fa-solid ${statusIcon} mr-1"></i>${statusText}</span>
                             </div>
                         </div>
                     `;
                 });
                 listEl.innerHTML = html;
+
+            }, (error) => {
+                console.error("Lỗi History:", error);
+                document.getElementById('historyList').innerHTML = '';
+                document.getElementById('historyError').classList.remove('hidden');
+                document.getElementById('historyError').innerText = "Lỗi tải dữ liệu: " + error.message;
             });
         }
 
-        // === TAB 1: NẠP TIỀN ===
+        // Actions
         window.createDeposit = async () => {
             const amount = parseFloat(document.getElementById('depositAmount').value);
-            if (!amount || amount < 10) return alert("Vui lòng nhập số tiền hợp lệ (Tối thiểu $10)");
-            
+            if (!amount || amount < 10) return alert("Tối thiểu nạp $10");
             const btn = document.querySelector('.btn-deposit');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
-            btn.disabled = true;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-                const transData = {
-                    type: 'deposit',
-                    amount: amount,
-                    status: 'pending',
-                    userId: currentUser.uid,
-                    username: userData.username || 'Unknown',
+                const payload = {
+                    type: 'deposit', amount: amount, status: 'pending',
+                    userId: currentUser.uid, username: userData.username || 'Unknown',
                     content: userData.username ? userData.username.toUpperCase() : '',
                     timestamp: serverTimestamp()
                 };
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), transData);
-                await addDoc(collection(db, "admin_requests"), transData);
-
-                alert("Đã tạo lệnh nạp! Vui lòng chờ hệ thống xác nhận.");
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
+                await addDoc(collection(db, "admin_requests"), payload);
+                alert("Đã tạo lệnh nạp!");
                 document.getElementById('depositAmount').value = "";
                 window.switchTab('history');
-            } catch (e) {
-                alert("Lỗi kết nối! Vui lòng thử lại.");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            } catch (e) { alert("Lỗi: " + e.message); } 
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP'; }
         };
 
-        // === TAB 2: RÚT TIỀN (MIN 5$) ===
         window.createWithdraw = async () => {
             const amount = parseFloat(document.getElementById('wdAmount').value);
-            
-            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng ở mục Tài Khoản trước!");
-            // SỬA MIN RÚT: $5
+            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
             if (!amount || amount < 5) return alert("Tối thiểu rút $5");
             if (amount > userData.balance) return alert("Số dư không đủ!");
-
-            const req = userData.requiredTurnover || 0;
-            // Nếu req > 0 tức là chưa về 0, nghĩa là chưa đủ (do hàm autoReset đã check rồi)
-            if (req > 0) {
-                return alert(`Chưa đủ vòng cược! Vui lòng hoàn thành để rút.`);
-            }
+            if ((userData.requiredTurnover || 0) > 0) return alert("Chưa đủ vòng cược!");
 
             const btn = document.querySelector('.btn-withdraw');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
-            btn.disabled = true;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-                const transData = {
-                    type: 'withdraw',
-                    amount: amount,
+                const payload = {
+                    type: 'withdraw', amount: amount, status: 'pending',
                     bankInfo: `${userData.bankName} - ${realBankNumber} - ${userData.bankOwner}`,
-                    status: 'pending',
-                    userId: currentUser.uid,
-                    username: userData.username || 'Unknown',
+                    userId: currentUser.uid, username: userData.username || 'Unknown',
                     timestamp: serverTimestamp()
                 };
-
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    balance: userData.balance - amount
-                    // Không cần reset turnover ở đây nữa vì đã reset ở hàm checkAutoResetTurnover
-                });
-
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), transData);
-                await addDoc(collection(db, "admin_requests"), transData);
-
-                alert("Lệnh rút tiền đã được gửi!");
+                await updateDoc(doc(db, "users", currentUser.uid), { balance: userData.balance - amount });
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
+                await addDoc(collection(db, "admin_requests"), payload);
+                alert("Đã gửi yêu cầu rút tiền!");
                 document.getElementById('wdAmount').value = "";
                 window.switchTab('history');
-            } catch (e) {
-                alert("Lỗi hệ thống! Vui lòng thử lại sau.");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            } catch (e) { alert("Lỗi: " + e.message); } 
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN'; }
         };
     </script>
 </body>
