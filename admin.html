@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX MANAGER V7</title>
+    <title>CROWNEX MANAGER V7 - FULL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -48,8 +48,8 @@
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
         .btn-success { background: #10b981; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
 
-        /* SUB-TABS (NEW) */
-        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        /* SUB-TABS */
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .sub-tab { padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: #64748b; background: #151A25; border: 1px solid #2A303C; transition: 0.2s; }
         .sub-tab.active { background: #FCD535; color: #000; border-color: #FCD535; }
 
@@ -64,7 +64,6 @@
             .sidebar.active { transform: translateX(0); }
             .main-content { margin-left: 0; padding: 16px; padding-top: 80px; }
             .mobile-header { display: flex; }
-            /* Overlay khi mở menu trên mobile */
             .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
             .sidebar.active ~ .sidebar-overlay { display: block; }
         }
@@ -77,7 +76,7 @@
     <div id="login-screen" class="fixed inset-0 bg-[#0B0E14] z-[999] flex flex-col items-center justify-center">
         <div class="w-16 h-16 bg-gradient-to-br from-[#FCD535] to-[#eab308] rounded-2xl flex items-center justify-center text-black text-3xl font-black shadow-2xl mb-6 shadow-yellow-500/20">C</div>
         <h1 class="text-2xl font-bold text-white mb-2 tracking-tight">CROWNEX ADMIN</h1>
-        <p class="text-sm text-slate-500 mb-8">Hệ thống quản trị V7</p>
+        <p class="text-sm text-slate-500 mb-8">Hệ thống quản trị V7 (Full)</p>
         <div class="flex flex-col gap-4 w-full max-w-xs">
             <input type="password" id="adminPin" class="text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[1em] py-4 rounded-xl focus:border-[#FCD535] outline-none placeholder-slate-700 transition-all focus:scale-105" placeholder="••••" maxlength="4">
             <button onclick="checkPin()" id="btnLogin" class="btn btn-primary w-full py-4 text-sm uppercase tracking-wider font-bold shadow-lg shadow-yellow-500/10">Truy Cập</button>
@@ -94,7 +93,7 @@
             <button onclick="toggleSidebar()" class="text-white bg-[#2A303C] p-2 rounded hover:bg-[#FCD535] hover:text-black transition"><i class="fa-solid fa-bars text-xl"></i></button>
         </div>
 
-        <!-- SIDEBAR (MENU CHÍNH) -->
+        <!-- SIDEBAR -->
         <div id="sidebar" class="sidebar">
             <div class="h-20 flex items-center px-6 border-b border-[#2A303C]">
                 <div class="w-8 h-8 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-lg flex items-center justify-center text-black font-bold mr-3 shadow-lg shadow-yellow-500/20">C</div>
@@ -128,7 +127,6 @@
             </div>
         </div>
         
-        <!-- OVERLAY CHO MOBILE -->
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <!-- MAIN CONTENT -->
@@ -179,15 +177,12 @@
             <!-- VIEW: REQUESTS (NẠP/RÚT) -->
             <div id="view-requests" class="hidden fade-in">
                 <h2 class="text-xl font-bold text-white mb-4">Duyệt Nạp / Rút Tiền</h2>
-                
-                <!-- SUB-TABS FILTER (NEW) -->
                 <div class="sub-tabs">
                     <div class="sub-tab active" onclick="filterReq('all', this)">Tất cả</div>
                     <div class="sub-tab" onclick="filterReq('deposit', this)">Nạp tiền</div>
                     <div class="sub-tab" onclick="filterReq('withdraw', this)">Rút tiền</div>
                     <div class="sub-tab" onclick="filterReq('pending', this)">Chờ duyệt</div>
                 </div>
-
                 <div class="table-container">
                     <table>
                         <thead><tr><th>Thời gian</th><th>User</th><th>Loại</th><th>Số tiền</th><th>Ngân hàng</th><th>Trạng thái</th><th class="text-right">Xử lý</th></tr></thead>
@@ -322,23 +317,34 @@
         let allUsers = [], allReqs = [], activeReq = null;
         const ADMIN_PIN = "9999";
 
+        // --- AUTH & LOGIN ---
         window.checkPin = async () => {
             const pin = document.getElementById('adminPin').value;
+            const btn = document.getElementById('btnLogin');
+            const err = document.getElementById('pinError');
+
             if(pin === ADMIN_PIN) {
-                document.getElementById('btnLogin').innerText = "ĐANG VÀO...";
+                btn.innerText = "ĐANG VÀO...";
+                btn.disabled = true;
+                err.classList.add('hidden');
                 try {
                     if(!auth.currentUser) await signInAnonymously(auth);
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('app').classList.remove('hidden');
                     initAdmin();
                 } catch(e) { 
-                    document.getElementById('pinError').innerText = "Lỗi kết nối Firebase: "+e.message; 
-                    document.getElementById('pinError').classList.remove('hidden');
-                    document.getElementById('btnLogin').innerText = "TRUY CẬP";
+                    btn.innerText = "TRUY CẬP";
+                    btn.disabled = false;
+                    err.innerText = "Lỗi kết nối Firebase: " + e.message; 
+                    err.classList.remove('hidden');
                 }
-            } else { document.getElementById('pinError').innerText = "Sai mã PIN"; document.getElementById('pinError').classList.remove('hidden'); }
+            } else { 
+                err.innerText = "Sai mã PIN"; 
+                err.classList.remove('hidden'); 
+            }
         };
 
+        // --- INIT ---
         function initAdmin() {
             syncRealtimeTimer();
             loadDashboardStats();
@@ -349,36 +355,51 @@
             loadSettings();
         }
 
-        // --- 1. REALTIME RESET (GIÂY THỨ 0) ---
+        // --- 1. REALTIME RESET ---
         let lastResetMin = -1;
         function syncRealtimeTimer() {
             setInterval(() => {
                 const now = new Date();
                 const sec = now.getSeconds();
                 const min = now.getMinutes();
+                // Hiển thị đếm ngược đến giây 60
                 document.getElementById('realTimeClock').innerText = `00:${(60-sec).toString().padStart(2,'0')}`;
                 
-                if(sec === 0 && min !== lastResetMin) {
+                // Logic Reset: Nếu giây là 0 VÀ phút này chưa reset
+                if (sec === 0 && min !== lastResetMin) {
                     lastResetMin = min;
-                    if(document.getElementById('autoResetToggle').checked) manualReset(true);
+                    if(document.getElementById('autoResetToggle').checked) {
+                        manualReset(true);
+                    }
                 }
             }, 1000);
         }
 
         window.manualReset = async (silent=false) => {
-            try { await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); if(!silent) alert("Đã reset!"); } catch(e){}
+            try { 
+                await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
+                if(!silent) alert("Đã reset!"); 
+            } catch(e) { console.error(e); }
         };
 
         function loadDashboardStats() {
-            onSnapshot(doc(db, "games", "current"), (s) => { if(s.exists()) { const d=s.data(); document.getElementById('live-up').innerText="$"+(d.totalUp||0); document.getElementById('live-down').innerText="$"+(d.totalDown||0); } });
+            onSnapshot(doc(db, "games", "current"), (s) => { 
+                if(s.exists()) { 
+                    const d=s.data(); 
+                    document.getElementById('live-up').innerText="$"+(d.totalUp||0).toLocaleString(); 
+                    document.getElementById('live-down').innerText="$"+(d.totalDown||0).toLocaleString(); 
+                } 
+            });
         }
 
-        // --- 2. REQUESTS (WITH TABS & BANK PARSE) ---
+        // --- 2. REQUESTS ---
         function loadRequests() {
             onSnapshot(query(collection(db, "admin_requests"), orderBy("timestamp", "desc")), (snap) => {
                 allReqs = [];
                 snap.forEach(d => allReqs.push({id: d.id, ...d.data()}));
                 renderRequests('all');
+                
+                // Update badges
                 const pending = allReqs.filter(x => x.status === 'pending').length;
                 document.getElementById('badge-req').innerText = pending;
                 document.getElementById('badge-req').style.display = pending>0?'inline':'none';
@@ -394,10 +415,12 @@
         function renderRequests(filter) {
             let html = '';
             allReqs.forEach(data => {
+                // Filter Logic
                 if(filter !== 'all') {
                     if(filter === 'pending' && data.status !== 'pending') return;
                     if((filter === 'deposit' || filter === 'withdraw') && data.type !== filter) return;
                 }
+                
                 const isDep = data.type === 'deposit';
                 let bName = data.bankInfo ? data.bankInfo.split(' - ')[0] : '-';
 
@@ -419,19 +442,26 @@
             if(!data) return;
             activeReq = data;
             
+            // Parse Bank
             let bName = 'N/A', bNum = 'N/A', bOwner = 'N/A';
-            if(data.bankInfo) { const p = data.bankInfo.split(' - '); if(p[0]) bName=p[0]; if(p[1]) bNum=p[1]; if(p[2]) bOwner=p[2]; }
+            if(data.bankInfo) { 
+                const p = data.bankInfo.split(' - '); 
+                if(p[0]) bName=p[0]; if(p[1]) bNum=p[1]; if(p[2]) bOwner=p[2]; 
+            }
 
             document.getElementById('modal-uid').innerText = data.userId;
             document.getElementById('modal-type').innerText = data.type==='deposit'?'NẠP TIỀN':'RÚT TIỀN';
             document.getElementById('modal-type').className = `text-xs font-bold uppercase ${data.type==='deposit'?'text-green-400':'text-red-400'}`;
             document.getElementById('modal-amount').innerText = "$"+parseFloat(data.amount).toLocaleString();
+            
             document.getElementById('modal-bank-name').innerText = bName;
             document.getElementById('modal-bank-num').innerText = bNum;
             document.getElementById('modal-bank-owner').innerText = bOwner;
             
+            // Show/Hide Turnover input
             document.getElementById('div-turnover').style.display = data.type==='deposit'?'block':'none';
-            document.getElementById('modal-turnover').value = data.amount;
+            document.getElementById('modal-turnover').value = data.amount; // Default turnover = deposit amount
+            
             document.getElementById('modal-approve').classList.add('active');
         };
 
@@ -439,55 +469,206 @@
             if(!activeReq) return;
             const turn = parseFloat(document.getElementById('modal-turnover').value)||0;
             try {
+                // If Deposit: Add Balance + Turnover
                 if(activeReq.type === 'deposit') {
                     const uRef = doc(db, "users", activeReq.userId);
                     const snap = await getDoc(uRef);
                     if(snap.exists()) {
                         const u = snap.data();
-                        await updateDoc(uRef, { balance:(u.balance||0)+activeReq.amount, requiredTurnover:(u.requiredTurnover||0)+turn, depositToday:(u.depositToday||0)+activeReq.amount });
+                        await updateDoc(uRef, { 
+                            balance: (u.balance||0)+activeReq.amount, 
+                            requiredTurnover: (u.requiredTurnover||0)+turn, 
+                            depositToday: (u.depositToday||0)+activeReq.amount 
+                        });
                     }
                 }
+                
+                // Update Request
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'success' });
-                try { await addDoc(collection(db, "users", activeReq.userId, "transactions"), { type: activeReq.type, amount: activeReq.amount, status: 'success', timestamp: serverTimestamp() }); } catch(e){}
-                alert("Đã duyệt!"); closeModal('modal-approve');
-            } catch(e) { alert(e.message); }
+                
+                // Add History
+                try { 
+                    await addDoc(collection(db, "users", activeReq.userId, "transactions"), { 
+                        type: activeReq.type, amount: activeReq.amount, status: 'success', timestamp: serverTimestamp() 
+                    }); 
+                } catch(e){}
+                
+                alert("Đã duyệt!"); 
+                closeModal('modal-approve');
+            } catch(e) { alert("Lỗi: " + e.message); }
         };
 
         window.rejectTransaction = async () => {
             if(!activeReq) return;
-            if(!confirm("Từ chối và Hoàn tiền (nếu là rút)?")) return;
+            if(!confirm("Xác nhận TỪ CHỐI? Nếu là Rút tiền, hệ thống sẽ hoàn tiền lại cho User.")) return;
+            
             try {
+                // Refund if Withdraw
                 if(activeReq.type === 'withdraw') {
                     const uRef = doc(db, "users", activeReq.userId);
                     const snap = await getDoc(uRef);
-                    if(snap.exists()) await updateDoc(uRef, { balance:(snap.data().balance||0)+activeReq.amount });
+                    if(snap.exists()) {
+                        await updateDoc(uRef, { balance: (snap.data().balance||0)+activeReq.amount });
+                    }
                 }
+                
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'rejected' });
-                try { await addDoc(collection(db, "users", activeReq.userId, "transactions"), { type: activeReq.type, amount: activeReq.amount, status: 'rejected', timestamp: serverTimestamp() }); } catch(e){}
-                alert("Đã từ chối!"); closeModal('modal-approve');
-            } catch(e) { alert(e.message); }
+                
+                try { 
+                    await addDoc(collection(db, "users", activeReq.userId, "transactions"), { 
+                        type: activeReq.type, amount: activeReq.amount, status: 'rejected', timestamp: serverTimestamp() 
+                    }); 
+                } catch(e){}
+                
+                alert("Đã từ chối!"); 
+                closeModal('modal-approve');
+            } catch(e) { alert("Lỗi: " + e.message); }
         };
 
-        // --- OTHER FUNCTIONS (PROMO, USERS, ETC) ---
-        function loadUsers() { onSnapshot(collection(db, "users"), (s)=>{ allUsers=[]; let bal=0; let html=''; s.forEach(d=>{ const u=d.data(); allUsers.push({id:d.id,...u}); bal+=u.balance||0; html+=`<tr><td><div class="font-bold text-white text-[12px]">${u.fullName||'Unknown'}</div><div class="text-[10px] text-slate-500">${u.username||u.phone}</div></td><td class="font-mono text-green-400 font-bold">$${(u.balance||0).toLocaleString()}</td><td class="text-xs text-slate-400">${u.betTurnover||0}/${u.requiredTurnover||0}</td><td class="text-xs text-slate-400">${u.bankName||'-'}</td><td class="text-right"><i class="fa-solid fa-pen text-slate-500 cursor-pointer"></i></td></tr>`; }); document.getElementById('table-users').innerHTML=html; document.getElementById('stat-users').innerText=allUsers.length; document.getElementById('stat-balance').innerText="$"+bal.toLocaleString(); }); }
-        window.filterUsers = () => { const k=document.getElementById('searchUser').value.toLowerCase(); document.querySelectorAll('#table-users tr').forEach(r => r.style.display = r.innerText.toLowerCase().includes(k)?'':'none'); };
+        // --- 3. USERS ---
+        function loadUsers() {
+            onSnapshot(collection(db, "users"), (snap) => {
+                allUsers = [];
+                let totalBal = 0;
+                let html = '';
+                
+                snap.forEach(d => {
+                    const u = d.data();
+                    allUsers.push({id: d.id, ...u});
+                    totalBal += (u.balance||0);
+                    
+                    html += `<tr>
+                        <td><div class="font-bold text-white text-[12px]">${u.fullName||'Unknown'}</div><div class="text-[10px] text-slate-500">${u.username||u.phone}</div></td>
+                        <td class="font-mono text-green-400 font-bold">$${(u.balance||0).toLocaleString()}</td>
+                        <td class="text-xs text-slate-400">${(u.betTurnover||0).toLocaleString()}/${(u.requiredTurnover||0).toLocaleString()}</td>
+                        <td class="text-xs text-slate-400">${u.bankName||'-'}</td>
+                        <td class="text-right"><i class="fa-solid fa-pen text-slate-500 cursor-pointer hover:text-white"></i></td>
+                    </tr>`;
+                });
+                
+                document.getElementById('table-users').innerHTML = html;
+                document.getElementById('stat-users').innerText = allUsers.length;
+                document.getElementById('stat-balance').innerText = "$"+totalBal.toLocaleString();
+            });
+        }
+        
+        window.filterUsers = () => {
+            const k = document.getElementById('searchUser').value.toLowerCase();
+            const rows = document.querySelectorAll('#table-users tr');
+            rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(k) ? '' : 'none');
+        };
 
-        function loadPromotions() { onSnapshot(query(collection(db, "promotion_requests"), orderBy("timestamp", "desc")), (s)=>{ let h='',c=0; s.forEach(d=>{ const v=d.data(); if(v.status==='pending') { c++; h+=`<tr><td class="text-slate-500 text-[11px]">${v.timestamp?new Date(v.timestamp.toDate()).toLocaleTimeString():'...'}</td><td class="text-white text-[11px] font-bold">${v.username||'User'}</td><td class="text-purple-400 text-[11px] font-bold uppercase">${v.type}</td><td class="text-slate-400 text-[10px]">${v.details||'-'}</td><td class="text-right"><button onclick="quickApprovePromo('${d.id}','${v.userId}','${v.type}')" class="btn btn-primary px-2 py-1 text-[10px]">Duyệt</button></td></tr>`; } }); document.getElementById('table-promo').innerHTML=h||'<tr><td colspan="5" class="text-center p-4 text-slate-600">Không có yêu cầu</td></tr>'; document.getElementById('badge-promo').innerText=c; document.getElementById('badge-promo').style.display=c>0?'inline':'none'; }); }
-        window.quickApprovePromo = async (rid,uid,type) => { if(confirm("Duyệt?")) { try { const uRef=doc(db,"users",uid); const s=await getDoc(uRef); const bonus=type.includes('10')?10:0; await updateDoc(uRef,{ balance:(s.data().balance||0)+bonus, requiredTurnover:(s.data().requiredTurnover||0)+(bonus*5) }); await updateDoc(doc(db,"promotion_requests",rid),{status:'success'}); alert("Đã duyệt!"); } catch(e){alert(e.message);} } };
+        // --- 4. PROMOTIONS ---
+        function loadPromotions() {
+            onSnapshot(query(collection(db, "promotion_requests"), orderBy("timestamp", "desc")), (snap) => {
+                let html = '', c = 0;
+                snap.forEach(d => {
+                    const v = d.data();
+                    if(v.status === 'pending') {
+                        c++;
+                        html += `<tr>
+                            <td class="text-slate-500 text-[11px]">${v.timestamp?new Date(v.timestamp.toDate()).toLocaleTimeString():'...'}</td>
+                            <td class="text-white text-[11px] font-bold">${v.username||'User'}</td>
+                            <td class="text-purple-400 text-[11px] font-bold uppercase">${v.type}</td>
+                            <td class="text-slate-400 text-[10px]">${v.details||'-'}</td>
+                            <td class="text-right"><button onclick="quickApprovePromo('${d.id}','${v.userId}','${v.type}')" class="btn btn-primary px-2 py-1 text-[10px]">Duyệt</button></td>
+                        </tr>`;
+                    }
+                });
+                document.getElementById('table-promo').innerHTML = html || '<tr><td colspan="5" class="text-center p-4 text-slate-600">Không có yêu cầu</td></tr>';
+                document.getElementById('badge-promo').innerText = c;
+                document.getElementById('badge-promo').style.display = c>0?'inline':'none';
+            });
+        }
 
-        window.createGiftcode = async () => { const a=parseFloat(document.getElementById('gcAmount').value), l=parseInt(document.getElementById('gcLimit').value); if(!a) return alert("Nhập tiền"); const c='CR'+Math.random().toString(36).substring(2,8).toUpperCase(); await setDoc(doc(db,"giftcodes",c),{amount:a,limit:l,turnoverReq:parseFloat(document.getElementById('gcTurnover').value)||0,usedCount:0,usersClaimed:[],createdAt:Date.now()}); alert("Code: "+c); };
-        window.deleteGiftcode = async (id) => { if(confirm("Xóa?")) await deleteDoc(doc(db, "giftcodes", id)); };
-        function loadGiftcodes() { onSnapshot(collection(db,"giftcodes"),(s)=>{ let h=''; s.forEach(d=>{ const k=d.data(); h+=`<tr><td class="font-bold text-[#FCD535] font-mono select-all">${d.id}</td><td class="text-green-400">$${k.amount}</td><td>${k.usedCount}/${k.limit}</td><td class="text-right"><i class="fa-solid fa-trash text-red-500 cursor-pointer" onclick="deleteDoc(doc(db,'giftcodes','${d.id}'))"></i></td></tr>`; }); document.getElementById('table-giftcode').innerHTML=h; }); }
+        window.quickApprovePromo = async (rid, uid, type) => {
+            if(confirm("Duyệt khuyến mãi này?")) {
+                try {
+                    const uRef = doc(db, "users", uid);
+                    const s = await getDoc(uRef);
+                    // Quy tắc KM: Nạp đầu = 0 (manual add), Free10 = 10
+                    const bonus = type.includes('10') ? 10 : 0;
+                    const reqTurn = bonus * 5; // Ví dụ x5 vòng cược
+                    
+                    await updateDoc(uRef, { 
+                        balance: (s.data().balance||0)+bonus, 
+                        requiredTurnover: (s.data().requiredTurnover||0)+reqTurn 
+                    });
+                    
+                    await updateDoc(doc(db, "promotion_requests", rid), {status: 'success'});
+                    alert("Đã duyệt!");
+                } catch(e) { alert(e.message); }
+            }
+        };
 
+        // --- 5. GIFTCODE ---
+        window.createGiftcode = async () => {
+            const a = parseFloat(document.getElementById('gcAmount').value);
+            const l = parseInt(document.getElementById('gcLimit').value);
+            const t = parseFloat(document.getElementById('gcTurnover').value)||0;
+            
+            if(!a) return alert("Vui lòng nhập số tiền!");
+            
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let rand = ""; for(let i=0;i<6;i++) rand+=chars.charAt(Math.floor(Math.random()*chars.length));
+            const code = 'CR'+rand;
+
+            await setDoc(doc(db, "giftcodes", code), {
+                amount: a, limit: l, turnoverReq: t, usedCount: 0, usersClaimed: [], createdAt: Date.now()
+            });
+            alert("Code: " + code);
+        };
+
+        window.deleteGiftcode = async (id) => {
+            if(confirm("Xóa Giftcode này?")) await deleteDoc(doc(db, "giftcodes", id));
+        };
+
+        function loadGiftcodes() {
+            onSnapshot(collection(db, "giftcodes"), (snap) => {
+                let html = '';
+                snap.forEach(d => {
+                    const k = d.data();
+                    html += `<tr>
+                        <td class="font-bold text-[#FCD535] font-mono select-all">${d.id}</td>
+                        <td class="text-green-400">$${k.amount}</td>
+                        <td>${k.usedCount}/${k.limit}</td>
+                        <td class="text-right"><i class="fa-solid fa-trash text-red-500 cursor-pointer hover:text-red-400" onclick="deleteGiftcode('${d.id}')"></i></td>
+                    </tr>`;
+                });
+                document.getElementById('table-giftcode').innerHTML = html;
+            });
+        }
+
+        // --- 6. SETTINGS ---
         const confRef = doc(db, "settings", "global");
-        function loadSettings() { onSnapshot(confRef,(s)=>{ if(s.exists()){ const d=s.data(); document.getElementById('killWhaleToggle').checked=d.killWhaleMode; document.getElementById('priceOffset').value=d.marketOffset||0; document.getElementById('offsetDisplay').innerText=d.marketOffset||0; } }); }
-        window.toggleKillWhale=async()=>await setDoc(confRef,{killWhaleMode:document.getElementById('killWhaleToggle').checked},{merge:true});
-        window.saveConfig=async()=>await setDoc(confRef,{marketOffset:parseInt(document.getElementById('priceOffset').value)},{merge:true});
-        document.getElementById('priceOffset').addEventListener('input',(e)=>document.getElementById('offsetDisplay').innerText=e.target.value);
+        function loadSettings() {
+            onSnapshot(confRef, (snap) => {
+                if(snap.exists()) {
+                    const d = snap.data();
+                    document.getElementById('killWhaleToggle').checked = d.killWhaleMode;
+                    document.getElementById('priceOffset').value = d.marketOffset||0;
+                    document.getElementById('offsetDisplay').innerText = d.marketOffset||0;
+                }
+            });
+        }
+        
+        window.toggleKillWhale = async () => await setDoc(confRef, {killWhaleMode: document.getElementById('killWhaleToggle').checked}, {merge:true});
+        window.saveConfig = async () => { await setDoc(confRef, {marketOffset: parseInt(document.getElementById('priceOffset').value)}, {merge:true}); alert("Đã lưu!"); };
+        document.getElementById('priceOffset').addEventListener('input', (e) => document.getElementById('offsetDisplay').innerText = e.target.value);
 
+        // --- UTILS ---
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
-        window.switchTab = (id, el) => { document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); el.classList.add('active'); ['dashboard','requests','promo','users','giftcode','settings'].forEach(v=>document.getElementById('view-'+v).classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); if(window.innerWidth<768) document.getElementById('sidebar').classList.remove('active'); };
+        window.switchTab = (id, el) => {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            ['dashboard','requests','promo','users','giftcode','settings'].forEach(v => {
+                document.getElementById('view-'+v).classList.add('hidden');
+            });
+            document.getElementById('view-'+id).classList.remove('hidden');
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
+        };
         window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+
     </script>
 </body>
 </html>
