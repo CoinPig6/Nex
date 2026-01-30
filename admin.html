@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN V3</title>
+    <title>CROWNEX ADMIN V3 - FIXED</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -32,6 +32,9 @@
             .mobile-header { display: flex; }
         }
 
+        .mobile-header { display: none; }
+        @media (max-width: 768px) { .mobile-header { display: flex; } }
+
         /* MENU ITEMS */
         .nav-group { padding: 12px 16px; font-size: 11px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
         .nav-item { 
@@ -56,9 +59,7 @@
 
         /* BUTTONS & BADGES */
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; transition: 0.2s; text-transform: uppercase; }
-        .btn-green { background: #10b981; color: white; } .btn-green:hover { background: #059669; }
-        .btn-red { background: #ef4444; color: white; } .btn-red:hover { background: #dc2626; }
+        .badge-pending { background: #f59e0b; color: #000; }
         
         /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 60; display: none; justify-content: center; align-items: center; padding: 20px; }
@@ -91,7 +92,7 @@
     <div id="admin-panel" class="hidden">
         
         <!-- Mobile Header -->
-        <div class="mobile-header fixed top-0 w-full h-16 bg-[#111827]/90 backdrop-blur border-b border-slate-700 flex items-center justify-between px-4 z-40 md:hidden">
+        <div class="mobile-header fixed top-0 w-full h-16 bg-[#111827]/90 backdrop-blur border-b border-slate-700 flex items-center justify-between px-4 z-40">
             <span class="font-black text-[#FCD535] text-lg">ADMIN V3</span>
             <button onclick="toggleSidebar()" class="text-white p-2"><i class="fa-solid fa-bars text-xl"></i></button>
         </div>
@@ -227,7 +228,7 @@
                             <label class="text-[10px] text-slate-400 uppercase font-bold">Vòng cược yêu cầu ($)</label>
                             <input type="number" id="gcTurnover" class="input-std" value="0" placeholder="0 = Không yêu cầu">
                         </div>
-                        <button onclick="createGiftcode()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg">TẠO MÃ NGAY</button>
+                        <button onclick="generateGiftcode()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg">TẠO MÃ NGAY</button>
                     </div>
                     
                     <div class="card">
@@ -365,6 +366,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                console.log("Admin Logged In:", user.uid);
             }
         });
 
@@ -378,12 +380,12 @@
                 btn.innerText = "ĐANG VÀO...";
                 btn.disabled = true;
 
-                // Nếu chưa đăng nhập, tự động đăng nhập ẩn danh để có quyền truy cập
+                // Tự động đăng nhập ẩn danh nếu chưa đăng nhập
                 if (!auth.currentUser) {
                     try {
                         await signInAnonymously(auth);
                     } catch (e) {
-                        errorMsg.innerText = "Lỗi kết nối Firebase: " + e.message;
+                        errorMsg.innerText = "Lỗi Firebase: " + e.message;
                         errorMsg.classList.remove('hidden');
                         btn.innerText = "TRUY CẬP";
                         btn.disabled = false;
@@ -391,7 +393,6 @@
                     }
                 }
 
-                // Thành công
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('admin-panel').classList.remove('hidden');
                 initAdmin();
@@ -401,7 +402,7 @@
             }
         };
 
-        window.logout = () => signOut(auth).then(()=>window.location.href="login.html");
+        window.logout = () => signOut(auth).then(()=>window.location.reload());
 
         // --- UI ---
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
@@ -588,6 +589,8 @@
         };
 
         // 4. GIFTCODE & SETTINGS & DASHBOARD LIVE
+        
+        // --- FIX TÊN HÀM: Đổi thành generateGiftcode để khớp với HTML ---
         window.generateGiftcode = async () => {
             const amt = parseFloat(document.getElementById('gcAmount').value);
             const lim = parseInt(document.getElementById('gcLimit').value);
@@ -598,16 +601,26 @@
             alert("Code: "+code);
         };
 
+        // --- FIX XÓA CODE: Thêm hàm wrapper an toàn ---
+        window.removeGiftcode = async (codeId) => {
+            if(confirm("Xóa code này?")) {
+                await deleteDoc(doc(db, "giftcodes", codeId));
+            }
+        };
+
         function loadGiftcodes() {
             onSnapshot(collection(db, "giftcodes"), (snap) => {
                 let html = '';
                 snap.forEach(d => {
                     const k = d.data();
-                    html += `<tr class="border-b border-slate-800"><td class="font-bold text-yellow-400 font-mono">${d.id}</td><td class="text-green-400">$${k.amount}</td><td>${k.usedCount}/${k.limit}</td><td><button onclick="deleteDoc(doc(db,'giftcodes','${d.id}'))" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                    // Sửa onclick thành gọi hàm wrapper
+                    html += `<tr class="border-b border-slate-800"><td class="font-bold text-yellow-400 font-mono">${d.id}</td><td class="text-green-400">$${k.amount}</td><td>${k.usedCount}/${k.limit}</td><td><button onclick="removeGiftcode('${d.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
                 document.getElementById('gcList').innerHTML = html;
             });
         }
+
+        function loadDashboard() {} // Placeholder nếu cần logic thêm
 
         // Settings & Live Dashboard
         const confRef = doc(db, "settings", "global");
@@ -635,12 +648,7 @@
             alert("Đã lưu!");
         };
 
-        // EXPORT FOR HTML ONCLICK
-        window.deleteDoc = deleteDoc;
-        window.doc = doc;
-        window.db = db;
     </script>
 </body>
 </html>
-
 
