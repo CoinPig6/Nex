@@ -550,17 +550,38 @@
             setInterval(marketLoop, 30);
         }
 
+        // HÀM TẠO NẾN GIẢ LẬP (CÓ ĐỐI CHIẾU LỊCH SỬ)
         function generateStaticCandle(epoch, openPrice) {
-            // Pseudo-random deterministic candle based on epoch
             const seed = epoch * 123.45;
-            const volatility = Math.sin(seed) * 15;
-            const close = openPrice + ((Math.sin(seed * 2) - 0.5) * 20);
-            return {
-                open: openPrice, close: close,
-                high: Math.max(openPrice, close) + Math.abs(volatility),
-                low: Math.min(openPrice, close) - Math.abs(volatility),
-                epoch: epoch
-            };
+            let volatility = 15; // fixed base
+            // Randomize direction based on seed initially
+            let change = (Math.sin(seed * 2) - 0.5) * 20;
+
+            // KIỂM TRA LỊCH SỬ ĐỂ KHỚP MÀU NẾN
+            // Epoch chẵn (0, 2...) là nến Order (0-30s)
+            // Epoch lẻ (1, 3...) là nến Kết quả (30-60s)
+            if (epoch % 2 !== 0) {
+                // Tính xem nến này thuộc phút thứ mấy
+                const minuteIdx = Math.floor(epoch / 2) % 60;
+                // Nếu trong lịch sử có kết quả của phút này
+                if (state.history[minuteIdx]) {
+                    const res = state.history[minuteIdx];
+                    if (res === 'up') {
+                        // Bắt buộc nến Xanh (Close > Open)
+                        if (change <= 0) change = Math.abs(change) + 2;
+                        if (change < 2) change = 5; // Độ lớn tối thiểu
+                    } else if (res === 'down') {
+                        // Bắt buộc nến Đỏ (Close < Open)
+                        if (change >= 0) change = -Math.abs(change) - 2;
+                        if (change > -2) change = -5; // Độ lớn tối thiểu
+                    }
+                }
+            }
+
+            const close = openPrice + change;
+            const high = Math.max(openPrice, close) + Math.abs(Math.sin(seed) * 10);
+            const low = Math.min(openPrice, close) - Math.abs(Math.sin(seed) * 10);
+            return { open: openPrice, close: close, high: high, low: low, epoch: epoch };
         }
 
         const cvs = document.getElementById('chartCanvas'); const ctx = cvs.getContext('2d');
@@ -852,4 +873,5 @@
     </script>
 </body>
 </html>
+
 
