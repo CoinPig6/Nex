@@ -31,8 +31,9 @@
         .btn-claim { 
             background: #0ECB81; color: white; border-radius: 6px; 
             padding: 6px 12px; font-size: 11px; font-weight: bold; 
-            text-transform: uppercase; transition: 0.2s; 
+            text-transform: uppercase; transition: 0.2s; min-width: 80px;
         }
+        .btn-claim.pending { background: #F59E0B; color: black; cursor: wait; }
         .btn-claim:active { transform: scale(0.95); }
         .btn-claim:disabled { background: #2d3442; color: #6b7280; cursor: not-allowed; }
 
@@ -50,18 +51,19 @@
         }
         .btn-redeem:active { transform: scale(0.98); }
 
-        /* ATTENDANCE STEPS */
-        .step-container { display: flex; justify-content: space-between; margin-top: 10px; position: relative; }
-        .step-line { position: absolute; top: 12px; left: 0; right: 0; height: 2px; background: #2d3442; z-index: 0; }
-        .step-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .step-circle { width: 24px; height: 24px; rounded-full; background: #1e232e; border: 2px solid #2d3442; color: #6b7280; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
-        .step-item.active .step-circle { background: #FCD535; border-color: #FCD535; color: #111; box-shadow: 0 0 10px rgba(252, 213, 53, 0.4); }
-        .step-item.checked .step-circle { background: #0ECB81; border-color: #0ECB81; color: white; }
+        /* ATTENDANCE 7 DAYS */
+        .step-container { display: flex; justify-content: space-between; margin-top: 15px; position: relative; padding: 0 5px; }
+        .step-line { position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #2d3442; z-index: 0; }
+        .step-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 14%; }
+        .step-circle { width: 20px; height: 20px; border-radius: 50%; background: #1e232e; border: 2px solid #2d3442; color: #6b7280; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
         
-        /* COMING SOON */
-        .coming-soon { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
-        .badge-soon { position: absolute; top: 10px; right: 10px; background: #4b5563; color: #fff; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+        .step-item.active .step-circle { background: #FCD535; border-color: #FCD535; color: #111; box-shadow: 0 0 8px rgba(252, 213, 53, 0.4); transform: scale(1.2); }
+        .step-item.checked .step-circle { background: #0ECB81; border-color: #0ECB81; color: white; }
+        .reward-text { font-size: 9px; font-weight: bold; color: #6b7280; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+        .step-item.active .reward-text { color: #FCD535; }
+        .step-item.checked .reward-text { color: #0ECB81; }
 
+        /* TOAST */
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
@@ -107,7 +109,7 @@
 
     <div class="p-4 flex-1 overflow-y-auto pb-10">
         
-        <!-- === [MỚI] PHẦN NHẬP GIFTCODE === -->
+        <!-- === 1. NHẬP GIFTCODE === -->
         <div class="bg-[#1e232e] p-5 rounded-xl border border-[#FCD535] border-dashed mb-6 relative overflow-hidden shadow-lg">
             <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
             <h3 class="text-sm font-bold text-[#FCD535] mb-3 flex items-center gap-2">
@@ -115,30 +117,36 @@
             </h3>
             <input type="text" id="giftcodeInput" class="input-code" placeholder="MÃ NHẬN THƯỞNG">
             <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">ĐỔI QUÀ NGAY</button>
-            <p class="text-[10px] text-gray-500 mt-2 italic text-center">Theo dõi Telegram để săn mã code giới hạn.</p>
+            <p class="text-[10px] text-gray-500 mt-2 italic text-center">Mã code được phát tại Telegram chính thức.</p>
         </div>
 
-        <!-- 1. QUÀ TÂN THỦ -->
-        <div class="promo-card p-4 relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
-            <div class="flex justify-between items-center">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-[#FCD535]/10 rounded-full flex items-center justify-center text-[#FCD535] text-xl">
-                        <i class="fa-solid fa-user-plus"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Quà Tân Thủ</h3>
-                        <p class="text-[10px] text-gray-400">Tặng miễn phí trải nghiệm.</p>
-                    </div>
+        <!-- === 2. ĐIỂM DANH 7 NGÀY (ĐÃ SỬA: TỔNG $25) === -->
+        <div class="promo-card p-4">
+            <div class="flex gap-3 mb-3">
+                <div class="w-10 h-10 bg-[#0ECB81]/10 rounded-full flex items-center justify-center text-[#0ECB81] text-xl">
+                    <i class="fa-solid fa-calendar-check"></i>
                 </div>
-                <div class="text-right">
-                    <span class="block text-[#FCD535] font-black font-mono text-lg">+$10.00</span>
-                    <button id="btnNewbie" onclick="claimNewbie()" class="btn-claim mt-1">NHẬN NGAY</button>
+                <div>
+                    <h3 class="text-white font-bold text-sm">Điểm Danh 7 Ngày ($25)</h3>
+                    <p class="text-[10px] text-gray-400">Yêu cầu mỗi ngày: Nạp <span class="text-[#FCD535]">$20</span> & Cược <span class="text-[#FCD535]">$200</span>.</p>
                 </div>
             </div>
+
+            <!-- Steps 7 Days -->
+            <div class="step-container mb-4" id="attendanceSteps">
+                <div class="step-line"></div>
+                <!-- Dữ liệu render bằng JS -->
+            </div>
+
+            <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-2 border-t border-[#2d3442] pt-2">
+                <span>Nạp hôm nay: <b id="progressDep" class="text-white">0</b>/20</span>
+                <span>Cược hôm nay: <b id="progressBet" class="text-white">0</b>/200</span>
+            </div>
+
+            <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐIỂM DANH</button>
         </div>
 
-        <!-- 2. HOÀN TRẢ VIP -->
+        <!-- === 3. HOÀN TRẢ VIP === -->
         <div class="promo-card p-4">
             <div class="flex justify-between items-start mb-2">
                 <div class="flex gap-3">
@@ -161,55 +169,52 @@
                     <span>Hoàn trả khả dụng</span>
                     <span class="text-[#0ECB81] font-mono font-bold" id="refundAmount">$0.00</span>
                 </div>
-                <div class="text-[9px] text-gray-500 italic mt-1 text-right">* Yêu cầu tối thiểu $1 để rút.</div>
+                <div class="text-[9px] text-gray-500 italic mt-1 text-right">* Tự động cộng dồn theo tổng cược.</div>
             </div>
             
             <button id="btnRefund" onclick="claimRefund()" class="w-full btn-claim py-3" disabled>RÚT HOÀN TRẢ</button>
         </div>
 
-        <!-- 3. ĐIỂM DANH HÀNG NGÀY -->
-        <div class="promo-card p-4">
-            <div class="flex gap-3 mb-3">
-                <div class="w-10 h-10 bg-[#0ECB81]/10 rounded-full flex items-center justify-center text-[#0ECB81] text-xl">
-                    <i class="fa-solid fa-calendar-check"></i>
+        <!-- === 4. QUÀ TÂN THỦ (ĐƯA XUỐNG CUỐI) === -->
+        <div class="promo-card p-4 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
+            <div class="flex justify-between items-center">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-[#FCD535]/10 rounded-full flex items-center justify-center text-[#FCD535] text-xl">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Quà Tân Thủ</h3>
+                        <p class="text-[10px] text-gray-400">Tặng miễn phí trải nghiệm.</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-white font-bold text-sm">Điểm Danh Nhận Quà</h3>
-                    <p class="text-[10px] text-gray-400">Nạp $50 & Cược $200 mỗi ngày.</p>
+                <div class="text-right">
+                    <span class="block text-[#FCD535] font-black font-mono text-lg">+$10.00</span>
+                    <button id="btnNewbie" onclick="requestPromo('newbie')" class="btn-claim mt-1">ĐĂNG KÝ</button>
                 </div>
             </div>
-
-            <!-- Steps -->
-            <div class="step-container mb-4">
-                <div class="step-line"></div>
-                <!-- 5 Mốc điểm danh -->
-                <div class="step-item" id="day1"><div class="step-circle">1</div><span class="text-[9px] text-gray-500">$1</span></div>
-                <div class="step-item" id="day2"><div class="step-circle">2</div><span class="text-[9px] text-gray-500">$2</span></div>
-                <div class="step-item" id="day3"><div class="step-circle">3</div><span class="text-[9px] text-gray-500">$5</span></div>
-                <div class="step-item" id="day4"><div class="step-circle">4</div><span class="text-[9px] text-gray-500">$10</span></div>
-                <div class="step-item" id="day5"><div class="step-circle"><i class="fa-solid fa-crown"></i></div><span class="text-[9px] text-yellow-500 font-bold">$20</span></div>
-            </div>
-
-            <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-2">
-                <span>Nạp: <b id="progressDep" class="text-white">0</b>/50</span>
-                <span>Cược: <b id="progressBet" class="text-white">0</b>/200</span>
-            </div>
-
-            <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐIỂM DANH</button>
+            <p class="text-[9px] text-gray-500 mt-2 italic text-center">* Gửi yêu cầu để Admin xét duyệt.</p>
         </div>
 
-        <!-- 4. NẠP ĐẦU (COMING SOON) -->
-        <div class="promo-card p-4 coming-soon">
-            <div class="badge-soon">SẮP RA MẮT</div>
-            <div class="flex gap-3">
-                <div class="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 text-xl">
-                    <i class="fa-solid fa-sack-dollar"></i>
+        <!-- === 5. KHUYẾN MÃI NẠP 100% (ĐƯA XUỐNG CUỐI) === -->
+        <div class="promo-card p-4 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 opacity-20 rounded-full blur-xl"></div>
+            <div class="flex justify-between items-center">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 text-xl">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Thưởng Nạp Đầu 100%</h3>
+                        <p class="text-[10px] text-gray-400">X2 giá trị nạp lần đầu.</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-white font-bold text-sm">Thưởng Nạp Đầu</h3>
-                    <p class="text-[10px] text-gray-400">Nhận 100% giá trị nạp lần đầu.</p>
+                <div class="text-right">
+                    <span class="block text-purple-400 font-black font-mono text-lg">x2</span>
+                    <button id="btnDep100" onclick="requestPromo('deposit_100')" class="btn-claim mt-1">ĐĂNG KÝ</button>
                 </div>
             </div>
+            <p class="text-[9px] text-gray-500 mt-2 italic text-center">* Gửi yêu cầu để Admin xét duyệt.</p>
         </div>
 
     </div>
@@ -218,7 +223,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, addDoc, collection, query, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -226,8 +231,7 @@
             projectId: "btccoinbig",
             storageBucket: "btccoinbig.firebasestorage.app",
             messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -245,7 +249,7 @@
         window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
 
         // --- Auth & Data ---
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
@@ -255,29 +259,75 @@
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         userData = docSnap.data();
-                        renderPromo(userData);
+                        renderAll(userData);
                     }
                 });
+
+                // Check pending requests status
+                checkPendingRequests(user.uid);
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // --- RENDER LOGIC ---
-        function renderPromo(data) {
-            // 1. Newbie
-            const btnNewbie = document.getElementById('btnNewbie');
-            if (data.isNewbieClaimed) {
-                btnNewbie.innerText = "ĐÃ NHẬN";
-                btnNewbie.disabled = true;
-                btnNewbie.classList.add('opacity-50');
-            } else {
-                btnNewbie.disabled = false;
-            }
+        // --- RENDER ALL SECTIONS ---
+        function renderAll(data) {
+            renderRefund(data);
+            renderAttendance(data);
+        }
 
-            // 2. Refund (0.15%)
-            const lastTurnover = data.lastRefundTurnover || 0; 
-            const currentTurnover = data.betTurnover || 0;     
+        // --- 1. LOGIC GIFTCODE ---
+        window.redeemCode = async () => {
+            if (!currentUser) return;
+            const codeInput = document.getElementById('giftcodeInput');
+            const code = codeInput.value.trim().toUpperCase();
+            const btn = document.getElementById('btnRedeem');
+
+            if (!code) return showToast("Vui lòng nhập mã!", "error");
+
+            btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const codeRef = doc(db, "giftcodes", code);
+                    const codeSnap = await transaction.get(codeRef);
+                    if (!codeSnap.exists()) throw "Mã Code không tồn tại!";
+
+                    const k = codeSnap.data();
+                    if (k.usedCount >= k.limit) throw "Mã Code đã hết lượt!";
+                    if (k.usersClaimed && k.usersClaimed.includes(currentUser.uid)) throw "Bạn đã sử dụng mã này!";
+
+                    const userRef = doc(db, "users", currentUser.uid);
+                    const userSnap = await transaction.get(userRef);
+
+                    transaction.update(codeRef, { 
+                        usedCount: (k.usedCount || 0) + 1,
+                        usersClaimed: [...(k.usersClaimed || []), currentUser.uid]
+                    });
+
+                    transaction.update(userRef, {
+                        balance: (userSnap.data().balance || 0) + k.amount,
+                        requiredTurnover: (userSnap.data().requiredTurnover || 0) + (k.turnoverReq || 0)
+                    });
+                });
+
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'giftcode', amount: 0, code: code, status: 'success', timestamp: new Date()
+                });
+
+                showToast("Đổi mã thành công! Đã cộng tiền.", "success");
+                codeInput.value = "";
+            } catch (e) {
+                showToast(typeof e === 'string' ? e : e.message, "error");
+            } finally {
+                btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY";
+            }
+        };
+
+        // --- 2. LOGIC HOÀN TRẢ ---
+        function renderRefund(data) {
+            const currentTurnover = data.betTurnover || 0;
+            const lastTurnover = data.lastRefundTurnover || 0;
             const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
             const refundAmt = pendingTurnover * 0.0015;
 
@@ -285,30 +335,68 @@
             document.getElementById('refundAmount').innerText = "$" + refundAmt.toFixed(4);
 
             const btnRefund = document.getElementById('btnRefund');
-            if (refundAmt >= 1) {
+            if (refundAmt >= 0.1) {
                 btnRefund.disabled = false;
-                btnRefund.innerText = `NHẬN $${refundAmt.toFixed(2)}`;
+                btnRefund.innerText = `RÚT NGAY $${refundAmt.toFixed(2)}`;
             } else {
                 btnRefund.disabled = true;
-                btnRefund.innerText = "CHƯA ĐẠT MỐC $1";
+                btnRefund.innerText = "CHƯA ĐỦ MỐC $0.1";
             }
+        }
 
-            // 3. Attendance
+        window.claimRefund = async () => {
+            if (!currentUser || !userData) return;
+            try {
+                const btn = document.getElementById('btnRefund');
+                btn.disabled = true;
+                const currentTurnover = userData.betTurnover || 0;
+                const lastTurnover = userData.lastRefundTurnover || 0;
+                const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
+                const refundAmt = pendingTurnover * 0.0015;
+
+                if (refundAmt < 0.1) return;
+
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    balance: (userData.balance || 0) + refundAmt,
+                    lastRefundTurnover: currentTurnover
+                });
+
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'refund', amount: refundAmt, note: 'Hoàn trả 0.15%', status: 'success', timestamp: new Date()
+                });
+                showToast(`Đã nhận hoàn trả $${refundAmt.toFixed(2)}`, "success");
+            } catch (e) { console.error(e); }
+        };
+
+        // --- 3. LOGIC ĐIỂM DANH 7 NGÀY (CẬP NHẬT MỐC $25) ---
+        // Tổng: 1+1+2+3+4+5+9 = 25
+        const REWARDS_7_DAYS = [1, 1, 2, 3, 4, 5, 9];
+
+        function renderAttendance(data) {
             const depToday = data.depositToday || 0;
-            const betToday = data.betToday || 0; // Cần update biến này ở game.html
-            
+            const betToday = data.betToday || 0;
+
             document.getElementById('progressDep').innerText = depToday;
-            document.getElementById('progressDep').className = depToday >= 50 ? "text-[#0ECB81]" : "text-white";
+            document.getElementById('progressDep').className = depToday >= 20 ? "text-[#0ECB81]" : "text-white";
             document.getElementById('progressBet').innerText = betToday;
             document.getElementById('progressBet').className = betToday >= 200 ? "text-[#0ECB81]" : "text-white";
 
             const streak = data.attendanceStreak || 0;
-            for(let i=1; i<=5; i++) {
-                const el = document.getElementById(`day${i}`);
-                el.className = 'step-item'; 
-                if (i <= streak) el.classList.add('checked'); 
-                else if (i === streak + 1) el.classList.add('active'); 
+            let html = '<div class="step-line"></div>';
+            
+            for(let i=0; i<7; i++) {
+                let statusClass = '';
+                if (i < streak) statusClass = 'checked';
+                else if (i === streak) statusClass = 'active';
+
+                html += `
+                    <div class="step-item ${statusClass}">
+                        <div class="step-circle">${i+1}</div>
+                        <span class="reward-text">$${REWARDS_7_DAYS[i]}</span>
+                    </div>
+                `;
             }
+            document.getElementById('attendanceSteps').innerHTML = html;
 
             const btnAtt = document.getElementById('btnAttendance');
             const lastAttDate = data.lastAttendance ? new Date(data.lastAttendance).toDateString() : "";
@@ -318,9 +406,9 @@
                 btnAtt.disabled = true;
                 btnAtt.innerText = "ĐÃ ĐIỂM DANH HÔM NAY";
             } else {
-                if (depToday >= 50 && betToday >= 200) {
+                if (depToday >= 20 && betToday >= 200) {
                     btnAtt.disabled = false;
-                    btnAtt.innerText = "ĐIỂM DANH NGAY";
+                    btnAtt.innerText = `NHẬN NGAY $${REWARDS_7_DAYS[streak] || 1}`;
                 } else {
                     btnAtt.disabled = true;
                     btnAtt.innerText = "CHƯA ĐỦ ĐIỀU KIỆN";
@@ -328,112 +416,16 @@
             }
         }
 
-        // --- ACTIONS ---
-        
-        // --- 1. NHẬP CODE ---
-        window.redeemCode = async () => {
-            if (!currentUser) return;
-            const codeInput = document.getElementById('giftcodeInput');
-            const code = codeInput.value.trim().toUpperCase();
-            const btn = document.getElementById('btnRedeem');
-
-            if (!code) return showToast("Vui lòng nhập mã!", "error");
-
-            btn.disabled = true; btn.innerText = "ĐANG KIỂM TRA...";
-
-            try {
-                // Mã cứng (Demo) - Bạn có thể tạo collection giftcode trên Firebase nếu muốn động
-                let reward = 0;
-                if (code === "VIP99") reward = 99;
-                else if (code === "TANTHU") reward = 10;
-                else if (code === "TEST") reward = 50;
-                else {
-                    throw new Error("Mã không tồn tại hoặc hết hạn!");
-                }
-
-                // Cộng tiền
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    balance: (userData.balance || 0) + reward
-                });
-
-                // Lưu lịch sử
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'giftcode', amount: reward, code: code, status: 'success', timestamp: Date.now()
-                });
-
-                showToast(`Nhận thành công $${reward}!`, "success");
-                codeInput.value = "";
-
-            } catch (e) {
-                showToast(e.message, "error");
-            } finally {
-                btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY";
-            }
-        };
-
-        // --- 2. NHẬN TÂN THỦ ---
-        window.claimNewbie = async () => {
-            if (!currentUser) return;
-            try {
-                const btn = document.getElementById('btnNewbie');
-                btn.disabled = true; btn.innerText = "...";
-                
-                const bonus = 10;
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    balance: (userData.balance || 0) + bonus,
-                    isNewbieClaimed: true
-                });
-                
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'bonus', amount: bonus, note: 'Quà tân thủ', status: 'success', timestamp: Date.now()
-                });
-                
-                showToast("Nhận thành công $10!", "success");
-            } catch (e) {
-                console.error(e); showToast("Lỗi hệ thống", "error");
-            }
-        };
-
-        // --- 3. NHẬN HOÀN TRẢ ---
-        window.claimRefund = async () => {
-            if (!currentUser) return;
-            try {
-                const btn = document.getElementById('btnRefund');
-                btn.disabled = true;
-                
-                const currentTurnover = userData.betTurnover || 0;
-                const lastTurnover = userData.lastRefundTurnover || 0;
-                const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
-                const refundAmt = pendingTurnover * 0.0015;
-
-                if (refundAmt < 1) return;
-
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    balance: (userData.balance || 0) + refundAmt,
-                    lastRefundTurnover: currentTurnover // Update mốc mới
-                });
-
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'refund', amount: refundAmt, note: 'Hoàn trả cược', status: 'success', timestamp: Date.now()
-                });
-
-                showToast(`Đã nhận hoàn trả $${refundAmt.toFixed(2)}`, "success");
-            } catch (e) { console.error(e); }
-        };
-
-        // --- 4. ĐIỂM DANH ---
         window.claimAttendance = async () => {
             if (!currentUser) return;
             try {
                 const btn = document.getElementById('btnAttendance');
                 btn.disabled = true;
-
-                const rewards = [1, 2, 5, 10, 20];
                 const streak = userData.attendanceStreak || 0;
+                let reward = REWARDS_7_DAYS[streak] || 1;
                 
                 let nextStreak = streak + 1;
-                let reward = rewards[streak] || 1; 
-                if (streak >= 5) { nextStreak = 1; reward = rewards[0]; } // Reset vòng
+                if (nextStreak >= 7) nextStreak = 0;
 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: (userData.balance || 0) + reward,
@@ -442,11 +434,68 @@
                 });
 
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'attendance', amount: reward, note: `Điểm danh ngày ${nextStreak}`, status: 'success', timestamp: Date.now()
+                    type: 'attendance', amount: reward, note: `Điểm danh ngày ${streak + 1}`, status: 'success', timestamp: new Date()
                 });
-
                 showToast(`Điểm danh thành công! Nhận $${reward}`, "success");
-            } catch (e) { console.error(e); }
+            } catch (e) { showToast("Lỗi kết nối", "error"); }
+        };
+
+        // --- 4. LOGIC GỬI YÊU CẦU ---
+        async function checkPendingRequests(uid) {
+            const q = query(collection(db, "promotion_requests"), where("userId", "==", uid));
+            onSnapshot(q, (snap) => {
+                let pendingNewbie = false;
+                let pendingDep100 = false;
+                snap.forEach(d => {
+                    const r = d.data();
+                    if (r.type === 'newbie' && r.status === 'pending') pendingNewbie = true;
+                    if (r.type === 'deposit_100' && r.status === 'pending') pendingDep100 = true;
+                });
+                updateButtonState('btnNewbie', pendingNewbie, userData?.isNewbieClaimed);
+                updateButtonState('btnDep100', pendingDep100, userData?.isDep100Claimed);
+            });
+        }
+
+        function updateButtonState(btnId, isPending, isClaimed) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (isClaimed) {
+                btn.innerText = "ĐÃ NHẬN";
+                btn.disabled = true;
+                btn.className = "btn-claim disabled bg-gray-600 text-gray-400";
+            } else if (isPending) {
+                btn.innerText = "CHỜ DUYỆT...";
+                btn.disabled = true;
+                btn.className = "btn-claim pending";
+            } else {
+                btn.innerText = "ĐĂNG KÝ";
+                btn.disabled = false;
+                btn.className = "btn-claim";
+            }
+        }
+
+        window.requestPromo = async (type) => {
+            if (!currentUser) return;
+            if (type === 'newbie' && userData.isNewbieClaimed) return showToast("Bạn đã nhận quà này rồi!", "error");
+            
+            const btnId = type === 'newbie' ? 'btnNewbie' : 'btnDep100';
+            const btn = document.getElementById(btnId);
+            btn.disabled = true; btn.innerText = "ĐANG GỬI...";
+
+            try {
+                await addDoc(collection(db, "promotion_requests"), {
+                    userId: currentUser.uid,
+                    username: userData.username || 'Unknown',
+                    type: type,
+                    status: 'pending',
+                    details: type === 'newbie' ? 'Yêu cầu nhận quà tân thủ' : 'Yêu cầu khuyến mãi nạp đầu 100%',
+                    timestamp: new Date()
+                });
+                showToast("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.", "success");
+            } catch (e) {
+                showToast("Lỗi gửi yêu cầu", "error");
+                btn.disabled = false; btn.innerText = "ĐĂNG KÝ";
+            }
         };
 
         function showToast(msg, type) {
@@ -460,5 +509,4 @@
     </script>
 </body>
 </html>
-
 
