@@ -166,7 +166,7 @@
                 <button onclick="saveBankInfo()" class="btn-save" id="btnSaveBank">
                     <i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH
                 </button>
-                <p class="text-[9px] text-gray-500 mt-2 italic text-center">* Tên chủ tài khoản phải trùng với họ tên đăng ký.</p>
+                <p class="text-[9px] text-gray-500 mt-2 italic text-center text-red-400">* Lưu ý: Số tài khoản và Ngân hàng không được trùng với tài khoản khác.</p>
             </div>
 
             <!-- Thông tin đã lưu -->
@@ -193,7 +193,8 @@
                     <div class="w-8 h-8 rounded-full bg-[#1e232e] flex items-center justify-center text-blue-400"><i class="fa-solid fa-id-card"></i></div>
                     <span class="text-sm font-medium">ID Tài khoản</span>
                 </div>
-                <span class="text-sm text-gray-400 font-mono truncate max-w-[150px]" id="infoID">...</span>
+                <!-- UPDATED: break-all để hiện full ID -->
+                <span class="text-xs text-gray-400 font-mono break-all text-right w-1/2" id="infoID">...</span>
             </div>
             <div class="list-item">
                 <div class="flex items-center gap-3">
@@ -211,14 +212,14 @@
             </div>
         </div>
         
-        <p class="text-center text-[10px] text-gray-600 mt-6 font-mono">Phiên bản V30.2.2 - ID: <span id="appVersionID">...</span></p>
+        <p class="text-center text-[10px] text-gray-600 mt-6 font-mono">Phiên bản V30.2.3 - ID: <span id="appVersionID">...</span></p>
     </div>
 
     <!-- LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -252,8 +253,7 @@
         // Bank Save Logic
         window.saveBankInfo = async () => {
             const bankName = document.getElementById('bankName').value;
-            const bankNumber = document.getElementById('bankNumber').value;
-            // Lấy tên chủ tài khoản từ ô input (đã được tự động điền)
+            const bankNumber = document.getElementById('bankNumber').value.trim();
             const bankOwner = document.getElementById('bankOwner').value.trim();
 
             if (!bankName || !bankNumber) {
@@ -264,10 +264,38 @@
             if (!currentUserUID) return;
 
             const btn = document.getElementById('btnSaveBank');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG LƯU...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG KIỂM TRA...';
             btn.disabled = true;
 
             try {
+                // LOGIC KIỂM TRA TRÙNG LẶP: Query xem có ai đã dùng số TK và Ngân hàng này chưa
+                const usersRef = collection(db, "users");
+                // Query tìm người có số tk này (để tối ưu, check số TK trước vì nó unique hơn)
+                const q = query(usersRef, where("bankNumber", "==", bankNumber));
+                const querySnapshot = await getDocs(q);
+
+                let isDuplicate = false;
+                
+                if (!querySnapshot.empty) {
+                    // Nếu tìm thấy số tài khoản này, kiểm tra xem có đúng ngân hàng không
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        // Nếu cùng số tk VÀ cùng tên ngân hàng (và không phải là chính user này đang sửa lại)
+                        if (data.bankName === bankName && doc.id !== currentUserUID) {
+                            isDuplicate = true;
+                        }
+                    });
+                }
+
+                if (isDuplicate) {
+                    alert("LỖI: Số tài khoản này tại ngân hàng " + bankName + " đã được liên kết bởi người khác!");
+                    btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH';
+                    btn.disabled = false;
+                    return; 
+                }
+
+                // Nếu không trùng, tiến hành lưu
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG LƯU...';
                 await updateDoc(doc(db, "users", currentUserUID), {
                     bankName: bankName,
                     bankNumber: bankNumber,
@@ -275,10 +303,11 @@
                     isBankVerified: true
                 });
                 alert("Đã liên kết ngân hàng thành công!");
+
             } catch (error) {
                 console.error(error);
-                alert("Lỗi khi lưu thông tin. Vui lòng thử lại.");
-                btn.innerHTML = 'LƯU XÁC MINH';
+                alert("Lỗi hệ thống hoặc quyền truy cập. Vui lòng thử lại.");
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH';
                 btn.disabled = false;
             }
         };
@@ -313,7 +342,10 @@
             document.getElementById('displayBalance').innerText = "$" + (data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
             
             document.getElementById('infoPhone').innerText = data.phone || "Chưa cập nhật";
-            document.getElementById('infoID').innerText = uid.substring(0, 12) + "...";
+            
+            // UPDATED: Hiển thị đầy đủ ID
+            document.getElementById('infoID').innerText = uid;
+
             const d = new Date(data.createdAt || Date.now());
             document.getElementById('infoDate').innerText = d.toLocaleDateString('vi-VN');
             document.getElementById('sidebarUsername').innerText = data.fullName || data.username;
@@ -341,5 +373,4 @@
     </script>
 </body>
 </html>
-
 
