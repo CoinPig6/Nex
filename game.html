@@ -101,6 +101,8 @@
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
             <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
+            <!-- ADDED CSKH LINK -->
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
@@ -558,7 +560,8 @@
                 // Chuyển từ Result (của phút trước) sang Order (phút mới)
                 startOrderPhase();
             } else if (!isOrder && state.currentPhase === 'order') {
-                // Chuyển từ Order sang Result (Lock giá tại giây 30)
+                // Chuyển từ Order sang Result
+                // Logic Lock Price giờ đã nằm trong marketLoop để chính xác từng ms
                 startResultPhase();
             }
 
@@ -593,7 +596,6 @@
 
         function startResultPhase() {
             state.currentPhase = 'result'; 
-            state.lockPrice = state.visualPrice; // LOCK PRICE TẠI GIÂY 30
             window.cancelSelection();
             
             // UI Update
@@ -696,12 +698,19 @@
             let lastCandle = state.candles[state.candles.length - 1];
 
             if (!lastCandle || lastCandle.epoch !== currentEpoch30) {
-                // Tạo nến mới khi chuyển sang epoch mới (giây 00 hoặc giây 30)
+                // KHI CHUYỂN NẾN MỚI
                 let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
                 
-                // Nếu đang ở Phase Result (tức là vừa qua giây 30), Open phải bằng LockPrice
-                if (state.currentPhase === 'result' && state.lockPrice > 0) {
-                    openPrice = state.lockPrice;
+                // --- QUAN TRỌNG: LOGIC CHỐT GIÁ CHUẨN ---
+                // Nếu đây là nến Result (thời điểm giây 30), Lock giá ngay tại đây
+                // currentEpoch30 % 2 !== 0 là giây 30-59 (giả sử bắt đầu từ 00)
+                const isResultCandle = (currentEpoch30 % 2 !== 0); 
+                
+                if (isResultCandle) {
+                     // Bắt đầu nến Kết Quả: LOCK GIÁ CHÍNH XÁC
+                     state.lockPrice = openPrice;
+                     // Cập nhật UI ngay lập tức
+                     document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
                 }
                 
                 const newCandle = {
@@ -792,4 +801,5 @@
     </script>
 </body>
 </html>
+
 
