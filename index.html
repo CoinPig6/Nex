@@ -2,147 +2,268 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <!-- CHẶN ZOOM TUYỆT ĐỐI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex ID - Đăng nhập</title>
+    <title>Crownex ID - Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: '#FCD535',
+                        brandHover: '#e5c02b',
+                        dark: '#0b0f19',
+                    },
+                    animation: {
+                        'slide-down': 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        slideDown: {
+                            '0%': { opacity: '0', transform: 'translateY(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        /* CSS CHẶN ZOOM & UI */
-        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; }
-        body { 
-            background-color: #0b0f19; color: #d1d5db; font-family: 'Roboto', sans-serif;
-            display: flex; align-items: center; justify-content: center;
-            background-image: radial-gradient(circle at 50% 0%, #171b26 0%, #0b0f19 70%);
+        /* --- CẤU HÌNH CỐT LÕI --- */
+        html, body {
+            height: 100%; overflow: hidden; touch-action: pan-x pan-y;
+            -webkit-text-size-adjust: 100%;
+            background-color: #050505;
         }
-        .tech-border {
-            background: #13161f; border: 1px solid #2a2e39; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-radius: 16px; overflow: hidden;
-            width: 100%; max-width: 400px; position: relative; z-index: 10;
+        /* Input 16px để chặn iOS zoom */
+        input, select, textarea { font-size: 16px !important; }
+
+        /* NỀN ĐỘNG */
+        .bg-animate {
+            background: radial-gradient(circle at 50% 0%, #1a1f2e 0%, #000000 85%);
+            position: absolute; inset: 0; z-index: -1;
         }
-        .input-group { position: relative; margin-bottom: 16px; }
-        .input-field {
-            width: 100%; background: #0b0f19; border: 1px solid #2d3442;
-            color: #fff; padding: 12px 12px 12px 40px; border-radius: 8px;
-            font-size: 16px !important; transition: all 0.2s;
+        .orb {
+            position: absolute; width: 180px; height: 180px; background: #FCD535;
+            filter: blur(90px); opacity: 0.15; top: -40px; left: 50%; transform: translateX(-50%);
         }
-        .input-field:focus { border-color: #FCD535; outline: none; }
-        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; }
-        .input-field:focus + .input-icon { color: #FCD535; }
-        .btn-auth {
-            width: 100%; background: #FCD535; color: #111; font-weight: 800;
-            padding: 12px; border-radius: 8px; font-size: 14px; text-transform: uppercase;
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(252, 213, 53, 0.2);
+
+        /* CARD STYLE - CỐ ĐỊNH PHẦN TRÊN */
+        .glass-panel {
+            background: rgba(20, 24, 30, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border-radius: 20px;
+            width: 100%; max-width: 340px;
+            position: relative; overflow: hidden;
+            /* Không dùng transition height để tránh giật phần header */
+            transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .btn-auth:hover { filter: brightness(1.1); }
-        .btn-auth:disabled { background: #4b5563; color: #9ca3af; cursor: not-allowed; }
-        .tab-btn { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: bold; color: #6b7280; border-bottom: 2px solid transparent; cursor: pointer; }
-        .tab-btn.active { color: #FCD535; border-bottom-color: #FCD535; background: rgba(252, 213, 53, 0.05); }
-        #toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-            background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px;
-            border-radius: 50px; display: flex; align-items: center; gap: 10px;
-            z-index: 100; opacity: 0; transition: all 0.4s;
+
+        /* INPUT STYLE - COMPACT */
+        .input-box { position: relative; margin-bottom: 12px; }
+        .input-control {
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 12px 12px 12px 40px; border-radius: 10px;
+            transition: all 0.2s;
         }
-        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .input-control:focus {
+            border-color: #FCD535; background: rgba(0,0,0,0.6); outline: none;
+        }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: #555; font-size: 16px; transition: 0.2s;
+        }
+        .input-control:focus ~ .input-icon { color: #FCD535; }
+
+        /* SMOOTH TABS */
+        .tab-wrapper {
+            display: flex; position: relative; background: rgba(255,255,255,0.03);
+            border-radius: 10px; padding: 4px; margin-bottom: 20px;
+        }
+        .tab-item {
+            flex: 1; text-align: center; padding: 8px; font-size: 12px; font-weight: 700;
+            color: #6b7280; cursor: pointer; z-index: 10; transition: color 0.3s;
+        }
+        .tab-item.active { color: #000; }
         
-        #captchaCanvasLogin, #captchaCanvasReg {
-            background: #1e232e; border-radius: 6px; cursor: pointer; border: 1px solid #2d3442;
+        /* Sliding Pill Indicator */
+        .tab-indicator {
+            position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px);
+            background: #FCD535; border-radius: 8px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 2px 10px rgba(252, 213, 53, 0.3); z-index: 1;
+        }
+
+        /* BUTTON */
+        .btn-action {
+            width: 100%; background: linear-gradient(180deg, #FCD535 0%, #e0bc28 100%);
+            color: #000; font-weight: 800; padding: 12px; border-radius: 10px;
+            font-size: 13px; text-transform: uppercase; margin-top: 8px;
+            box-shadow: 0 4px 15px rgba(252, 213, 53, 0.15); transition: transform 0.1s;
+        }
+        .btn-action:active { transform: scale(0.97); }
+
+        /* FORM SLIDING ANIMATION */
+        .forms-container {
+            position: relative;
+            height: 280px; /* Chiều cao mặc định */
+            overflow: hidden;
+            transition: height 0.3s ease-in-out;
+        }
+
+        .auth-form {
+            position: absolute; top: 0; left: 0; width: 100%;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0; transform: translateX(40px); pointer-events: none;
+        }
+
+        .auth-form.active {
+            opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 20;
         }
         
-        /* MÀN HÌNH CHỜ KIỂM TRA ĐĂNG NHẬP */
-        #authCheckingOverlay {
-            position: fixed; inset: 0; background: #0b0f19; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.3s ease;
+        .auth-form.slide-left { transform: translateX(-40px); opacity: 0; }
+        .auth-form.slide-right { transform: translateX(40px); opacity: 0; }
+
+        /* TOAST & LOADING */
+        #toast-box {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; width: 85%; max-width: 300px;
         }
+        .toast-msg {
+            background: rgba(20, 20, 25, 0.95); backdrop-filter: blur(10px);
+            padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px;
+            margin-bottom: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border-left: 3px solid transparent; animation: slideDown 0.3s forwards;
+        }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
-<body>
-    <!-- LOADING OVERLAY -->
-    <div id="authCheckingOverlay">
-        <div class="w-16 h-16 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-3xl mb-4 animate-bounce rounded-bl-none">C</div>
-        <div class="text-[#FCD535] font-bold tracking-widest text-sm" id="loadingText"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>ĐANG KẾT NỐI...</div>
-        <div id="errorDetails" class="mt-4 text-red-500 text-xs font-mono hidden text-center px-4"></div>
-        <button onclick="forceLogout()" class="mt-8 bg-red-900/30 border border-red-900 text-red-400 px-4 py-2 rounded text-xs hover:bg-red-900/50 transition-colors">THOÁT TÀI KHOẢN BỊ KẸT</button>
+<!-- QUAN TRỌNG: items-start và pt-[100px] giúp form cố định vị trí phía trên -->
+<body class="flex justify-center items-start pt-[12vh]">
+
+    <div class="bg-animate"></div>
+    <div class="orb"></div>
+    <div id="toast-box"></div>
+
+    <!-- LOADING SCREEN -->
+    <div id="loadingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050505]">
+        <div class="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p id="loadingText" class="text-brand font-bold text-xs tracking-[3px] animate-pulse">ĐANG KẾT NỐI...</p>
+        <button onclick="forceLogout()" class="mt-8 px-4 py-1.5 border border-gray-800 rounded-full text-[10px] text-gray-500 hover:bg-gray-900 transition-colors">
+            Khởi động lại
+        </button>
     </div>
 
-    <div id="toast"><i class="fa-solid fa-circle-exclamation"></i><span id="toastMsg" class="text-sm font-bold text-white"></span></div>
+    <!-- MAIN INTERFACE -->
+    <div class="p-4 w-full flex justify-center animate-slide-down">
+        <div class="glass-panel p-5">
+            
+            <!-- HEADER -->
+            <div class="text-center mb-5">
+                <div class="w-10 h-10 bg-brand rounded-lg mx-auto flex items-center justify-center text-xl font-black text-black mb-2 shadow-[0_0_15px_rgba(252,213,53,0.3)]">C</div>
+                <h1 class="text-lg font-bold text-white tracking-wide">CROWNEX ID</h1>
+            </div>
 
-    <div class="tech-border fade-in mx-4">
-        <div class="p-6 pb-0 flex flex-col items-center">
-            <div class="w-12 h-12 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-2xl rounded-bl-none shadow-lg mb-3">C</div>
-            <h1 class="text-xl font-black text-white">CROWNEX ID</h1>
-            <p class="text-xs text-gray-500 font-bold uppercase mt-1">Hệ thống bảo mật V3.0</p>
-        </div>
-        <div class="flex border-b border-[#232836] mt-6">
-            <div class="tab-btn active" id="tabLoginBtn">ĐĂNG NHẬP</div>
-            <div class="tab-btn" id="tabRegBtn">ĐĂNG KÝ</div>
-        </div>
-        <div class="p-6">
-            <!-- LOGIN FORM -->
-            <form id="formLogin" class="fade-in">
-                <div class="input-group">
-                    <input type="text" id="loginUser" class="input-field" placeholder="Tên đăng nhập" required autocomplete="off">
-                    <i class="fa-solid fa-user input-icon"></i>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="loginPass" class="input-field" placeholder="Mật khẩu" required>
-                    <i class="fa-solid fa-lock input-icon"></i>
-                    <i class="fa-regular fa-eye absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 cursor-pointer" id="eyeLogin"></i>
-                </div>
-                <!-- Captcha Login -->
-                <div class="input-group grid grid-cols-3 gap-2">
-                    <div class="col-span-2 relative">
-                        <input type="text" id="loginCaptcha" class="input-field" placeholder="Mã xác nhận" required maxlength="4" autocomplete="off">
-                        <i class="fa-solid fa-shield-halved input-icon"></i>
+            <!-- TABS -->
+            <div class="tab-wrapper">
+                <div class="tab-indicator" id="tabIndicator"></div>
+                <div class="tab-item active" id="tabLoginBtn" onclick="switchTab('login')">ĐĂNG NHẬP</div>
+                <div class="tab-item" id="tabRegBtn" onclick="switchTab('register')">ĐĂNG KÝ</div>
+            </div>
+
+            <!-- FORMS CONTAINER -->
+            <div class="forms-container" id="formsWrapper">
+                
+                <!-- LOGIN FORM -->
+                <form id="formLogin" class="auth-form active">
+                    <div class="input-box">
+                        <input type="text" id="loginUser" class="input-control" placeholder="Tên đăng nhập" required autocomplete="off">
+                        <i class="fa-regular fa-user input-icon"></i>
                     </div>
-                    <canvas id="captchaCanvasLogin" width="100" height="48"></canvas>
-                </div>
-
-                <button type="submit" class="btn-auth" id="btnLogin">ĐĂNG NHẬP <i class="fa-solid fa-arrow-right ml-2"></i></button>
-            </form>
-
-            <!-- REGISTER FORM -->
-            <form id="formRegister" class="hidden fade-in">
-                <div class="input-group">
-                    <input type="text" id="regUser" class="input-field" placeholder="Tên đăng nhập (viết liền)" required autocomplete="off">
-                    <i class="fa-solid fa-user-tag input-icon"></i>
-                </div>
-                <div class="input-group">
-                    <input type="tel" id="regPhone" class="input-field" placeholder="Số điện thoại" required pattern="[0-9]*" autocomplete="off">
-                    <i class="fa-solid fa-phone input-icon"></i>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="regPass" class="input-field" placeholder="Mật khẩu (6+ ký tự)" required minlength="6">
-                    <i class="fa-solid fa-lock input-icon"></i>
-                </div>
-                <div class="input-group">
-                    <input type="text" id="regName" class="input-field" placeholder="Họ và tên hiển thị" required autocomplete="off">
-                    <i class="fa-solid fa-id-card input-icon"></i>
-                </div>
-                <div class="input-group grid grid-cols-3 gap-2">
-                    <div class="col-span-2 relative">
-                        <input type="text" id="regCaptcha" class="input-field" placeholder="Mã xác nhận" required maxlength="4" autocomplete="off">
-                        <i class="fa-solid fa-shield-halved input-icon"></i>
+                    <div class="input-box">
+                        <input type="password" id="loginPass" class="input-control" placeholder="Mật khẩu" required>
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <i class="fa-regular fa-eye absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm" onclick="togglePass('loginPass')"></i>
                     </div>
-                    <canvas id="captchaCanvasReg" width="100" height="48"></canvas>
-                </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <div class="col-span-2 relative">
+                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-wider text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:10px;">
+                        </div>
+                        <canvas id="canvasLogin" width="80" height="46" class="w-full h-[46px] rounded-lg border border-gray-700/50 cursor-pointer bg-black/20" onclick="drawCaptcha('login')"></canvas>
+                    </div>
 
-                <button type="submit" class="btn-auth" id="btnReg">ĐĂNG KÝ NGAY</button>
-            </form>
+                    <button type="submit" id="btnLogin" class="btn-action">
+                        TRUY CẬP <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="formRegister" class="auth-form slide-right">
+                    <div class="input-box">
+                        <input type="text" id="regUser" class="input-control" placeholder="Tên đăng nhập" required autocomplete="off">
+                        <i class="fa-solid fa-user-tag input-icon"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="tel" id="regPhone" class="input-control" placeholder="Số điện thoại" required pattern="[0-9]*">
+                        <i class="fa-solid fa-phone input-icon"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="password" id="regPass" class="input-control" placeholder="Mật khẩu (6+)" required minlength="6">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <i class="fa-regular fa-eye absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm" onclick="togglePass('regPass')"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="text" id="regName" class="input-control" placeholder="Họ tên hiển thị" required autocomplete="off">
+                        <i class="fa-solid fa-id-card input-icon"></i>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <div class="col-span-2 relative">
+                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-wider text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:10px;">
+                        </div>
+                        <canvas id="canvasReg" width="80" height="46" class="w-full h-[46px] rounded-lg border border-gray-700/50 cursor-pointer bg-black/20" onclick="drawCaptcha('reg')"></canvas>
+                    </div>
+
+                    <button type="submit" id="btnReg" class="btn-action">
+                        ĐĂNG KÝ NGAY
+                    </button>
+                </form>
+
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-[9px] text-gray-600 font-mono tracking-wider">BẢO MẬT BỞI FIREBASE &copy; 2024</p>
+            </div>
         </div>
     </div>
 
-    <!-- FIREBASE & LOGIC -->
+    <!-- SCRIPT LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Cấu hình Firebase
+        // CHẶN ZOOM
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('touchmove', function (event) { if (event.scale !== 1) { event.preventDefault(); } }, { passive: false });
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { event.preventDefault(); }
+            lastTouchEnd = now;
+        }, false);
+
+        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -156,221 +277,192 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        const EMAIL_PREFIX = "@crownex.com"; 
-        const overlay = document.getElementById('authCheckingOverlay');
-        const errorDetails = document.getElementById('errorDetails');
+        const EMAIL_PREFIX = "@crownex.com";
+
+        let captchaCodes = { login: '', reg: '' };
+        const loadingOverlay = document.getElementById('loadingOverlay');
         const loadingText = document.getElementById('loadingText');
 
-        // HÀM FORCE LOGOUT (Dùng khi bị kẹt)
-        window.forceLogout = () => {
-            signOut(auth).then(() => {
-                localStorage.clear();
-                window.location.reload();
-            });
-        };
-
-        // --- CƠ CHẾ TỰ ĐỘNG SỬA LỖI (AUTO-REPAIR) ---
+        // --- AUTH ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                console.log("Tìm thấy user: ", user.uid);
-                loadingText.innerText = "ĐANG ĐỒNG BỘ DỮ LIỆU...";
-                
+                loadingText.innerText = "ĐANG TẢI DỮ LIỆU...";
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
-                    
                     if (docSnap.exists()) {
-                        // 1. Dữ liệu OK -> Lưu & Vào Game
-                        const userData = docSnap.data();
-                        userData.uid = user.uid;
-                        localStorage.setItem('crownex_user_info', JSON.stringify(userData));
-                        window.location.href = "game.html";
+                        saveAndGo(docSnap.data(), user.uid);
                     } else {
-                        // 2. LỖI: Có User nhưng không có Data (Tài khoản ảo)
-                        // -> TIẾN HÀNH TỰ SỬA (Tạo lại dữ liệu)
-                        loadingText.innerText = "PHÁT HIỆN LỖI, ĐANG SỬA...";
-                        console.log("User missing in DB, repairing...");
-
-                        const fixedData = {
+                        const fixData = {
                             username: user.email.split('@')[0],
-                            phone: "Đang cập nhật",
-                            fullName: user.displayName || "Thành viên mới",
+                            phone: "0000000000",
+                            fullName: user.displayName || "Thành viên",
                             balance: 0,
                             createdAt: new Date().toISOString(),
                             role: 'user',
-                            repaired: true
+                            status: 'active'
                         };
-
-                        await setDoc(docRef, fixedData);
-                        
-                        // Lưu xong thì vào game
-                        fixedData.uid = user.uid;
-                        localStorage.setItem('crownex_user_info', JSON.stringify(fixedData));
-                        window.location.href = "game.html";
+                        await setDoc(docRef, fixData);
+                        saveAndGo(fixData, user.uid);
                     }
-                } catch (error) {
-                    // 3. Lỗi Quyền (Permission) hoặc Mạng
-                    console.error("Critical Error:", error);
-                    loadingText.innerText = "LỖI KẾT NỐI DATABASE!";
-                    loadingText.classList.add('text-red-500');
-                    errorDetails.innerText = "Code: " + error.code + "\nMess: " + error.message;
-                    errorDetails.classList.remove('hidden');
-                    
-                    // Nếu lỗi quyền, bắt buộc phải đăng xuất để không bị kẹt
-                    if (error.code && error.code.includes("permission-denied")) {
-                         setTimeout(() => window.forceLogout(), 3000);
-                    }
+                } catch (e) {
+                    toast('error', 'Lỗi kết nối!');
+                    loadingText.innerText = "MẤT KẾT NỐI MẠNG";
                 }
             } else {
-                hideOverlay();
+                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
             }
         });
 
-        function hideOverlay() {
-            setTimeout(() => {
-                overlay.style.opacity = '0';
-                setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            }, 500);
+        function saveAndGo(data, uid) {
+            data.uid = uid;
+            localStorage.setItem('crownex_user_info', JSON.stringify(data));
+            window.location.href = "game.html";
         }
 
-        // --- SETUP UI ---
-        const formLogin = document.getElementById('formLogin');
-        const formReg = document.getElementById('formRegister');
-        const btnLogin = document.getElementById('btnLogin');
-        const btnReg = document.getElementById('btnReg');
+        // --- SMOOTH TAB LOGIC ---
+        window.switchTab = (tab) => {
+            const loginForm = document.getElementById('formLogin');
+            const regForm = document.getElementById('formRegister');
+            const indicator = document.getElementById('tabIndicator');
+            const btnLogin = document.getElementById('tabLoginBtn');
+            const btnReg = document.getElementById('tabRegBtn');
+            const wrapper = document.getElementById('formsWrapper');
 
-        let captchaLoginCode = "";
-        let captchaRegCode = "";
+            if (tab === 'login') {
+                indicator.style.transform = 'translateX(0)';
+                btnLogin.classList.add('active'); btnReg.classList.remove('active');
+                
+                loginForm.classList.remove('slide-left', 'slide-right');
+                loginForm.classList.add('active');
+                
+                regForm.classList.remove('active', 'slide-left');
+                regForm.classList.add('slide-right');
 
-        drawCaptcha('login');
-        drawCaptcha('reg');
-        document.getElementById('captchaCanvasLogin').onclick = () => drawCaptcha('login');
-        document.getElementById('captchaCanvasReg').onclick = () => drawCaptcha('reg');
+                wrapper.style.height = '280px';
+                drawCaptcha('login');
+            } else {
+                indicator.style.transform = 'translateX(calc(100% + 8px))';
+                btnLogin.classList.remove('active'); btnReg.classList.add('active');
 
-        document.getElementById('tabLoginBtn').onclick = () => {
-            document.getElementById('tabLoginBtn').classList.add('active');
-            document.getElementById('tabRegBtn').classList.remove('active');
-            formLogin.classList.remove('hidden'); formReg.classList.add('hidden');
-            drawCaptcha('login');
+                regForm.classList.remove('slide-right', 'slide-left');
+                regForm.classList.add('active');
+
+                loginForm.classList.remove('active', 'slide-right');
+                loginForm.classList.add('slide-left');
+
+                wrapper.style.height = '370px';
+                drawCaptcha('reg');
+            }
         };
-        document.getElementById('tabRegBtn').onclick = () => {
-            document.getElementById('tabLoginBtn').classList.remove('active');
-            document.getElementById('tabRegBtn').classList.add('active');
-            formLogin.classList.add('hidden'); formReg.classList.remove('hidden');
-            drawCaptcha('reg');
-        };
-        document.getElementById('eyeLogin').onclick = function() {
-            const el = document.getElementById('loginPass');
+        // Reset height on load
+        document.addEventListener('DOMContentLoaded', () => {
+             document.getElementById('formsWrapper').style.height = '280px';
+        });
+
+        window.togglePass = (id) => {
+            const el = document.getElementById(id);
             el.type = el.type === 'password' ? 'text' : 'password';
-            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
         };
 
-        // --- LOGIN LOGIC ---
-        formLogin.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value;
-            const captcha = document.getElementById('loginCaptcha').value.toUpperCase();
+        window.forceLogout = () => {
+            signOut(auth).then(() => { localStorage.clear(); location.reload(); });
+        };
 
-            if(captcha !== captchaLoginCode) {
-                showToast('error', 'Mã xác nhận không đúng!');
+        // --- LOGIN ---
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value;
+            const cap = document.getElementById('loginCaptcha').value.toUpperCase();
+
+            if (cap !== captchaCodes.login) {
+                toast('error', 'Mã xác nhận sai!');
                 drawCaptcha('login');
                 document.getElementById('loginCaptcha').value = '';
                 return;
             }
-            
-            btnLogin.disabled = true;
-            btnLogin.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG VÀO...';
 
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
             try {
-                const email = username + EMAIL_PREFIX;
-                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-                // onAuthStateChanged sẽ tự xử lý tiếp
-            } catch (error) {
-                console.error(error);
-                let msg = 'Đăng nhập thất bại!';
-                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') msg = 'Sai tài khoản hoặc mật khẩu!';
-                else if (error.code === 'auth/too-many-requests') msg = 'Quá nhiều lần thử sai, vui lòng chờ!';
-                showToast('error', msg);
-                btnLogin.disabled = false;
-                btnLogin.innerHTML = 'ĐĂNG NHẬP <i class="fa-solid fa-arrow-right ml-2"></i>';
+                await signInWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
+            } catch (err) {
+                toast('error', 'Sai thông tin đăng nhập!');
+                btn.disabled = false; btn.innerHTML = `TRUY CẬP <i class="fa-solid fa-arrow-right ml-1"></i>`;
                 drawCaptcha('login');
             }
         });
 
-        // --- REGISTER LOGIC ---
-        formReg.addEventListener('submit', async (e) => {
+        // --- REGISTER ---
+        document.getElementById('formRegister').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('regUser').value.trim().toLowerCase().replace(/\s/g, '');
+            const btn = document.getElementById('btnReg');
+            const user = document.getElementById('regUser').value.trim().toLowerCase().replace(/\s/g,'');
             const phone = document.getElementById('regPhone').value.trim();
             const pass = document.getElementById('regPass').value;
-            const fullname = document.getElementById('regName').value.trim();
-            const captcha = document.getElementById('regCaptcha').value.toUpperCase();
+            const name = document.getElementById('regName').value.trim();
+            const cap = document.getElementById('regCaptcha').value.toUpperCase();
 
-            if(captcha !== captchaRegCode) {
-                showToast('error', 'Mã xác nhận không đúng!');
+            if (cap !== captchaCodes.reg) {
+                toast('error', 'Mã xác nhận sai!');
                 drawCaptcha('reg');
-                document.getElementById('regCaptcha').value = '';
                 return;
             }
 
-            btnReg.disabled = true;
-            btnReg.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO...';
-
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
             try {
-                const email = username + EMAIL_PREFIX;
-                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-                const user = userCredential.user;
-
-                await updateProfile(user, { displayName: fullname });
-                const userData = { username: username, phone: phone, fullName: fullname, balance: 0, createdAt: new Date().toISOString(), role: 'user' };
-                await setDoc(doc(db, "users", user.uid), userData);
-                
-                // onAuthStateChanged sẽ tự chuyển hướng
-            } catch (error) {
-                console.error(error);
-                let msg = "Lỗi đăng ký!";
-                if(error.code === 'auth/email-already-in-use') msg = "Tên đăng nhập đã tồn tại!";
-                if(error.code === 'auth/weak-password') msg = "Mật khẩu quá yếu (tối thiểu 6 ký tự)!";
-                showToast('error', msg);
+                const cred = await createUserWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
+                await updateProfile(cred.user, { displayName: name });
+                const newData = {
+                    username: user, phone: phone, fullName: name,
+                    balance: 0, createdAt: new Date().toISOString(), role: 'user', status: 'active'
+                };
+                await setDoc(doc(db, "users", cred.user.uid), newData);
+            } catch (err) {
+                let msg = 'Lỗi đăng ký!';
+                if(err.code.includes('email-already-in-use')) msg = 'Tên tài khoản đã tồn tại!';
+                if(err.code.includes('weak-password')) msg = 'Mật khẩu quá ngắn!';
+                toast('error', msg);
+                btn.disabled = false; btn.innerHTML = `ĐĂNG KÝ NGAY`;
                 drawCaptcha('reg');
-                btnReg.disabled = false;
-                btnReg.innerHTML = 'ĐĂNG KÝ NGAY';
             }
         });
 
         // --- UTILS ---
-        function showToast(type, msg) {
-            const toast = document.getElementById('toast');
-            const icon = toast.querySelector('i');
-            document.getElementById('toastMsg').innerText = msg;
-            icon.className = type === 'error' ? 'fa-solid fa-circle-exclamation text-[#F6465D]' : 'fa-solid fa-circle-check text-[#0ECB81]';
-            toast.style.borderColor = type === 'error' ? '#F6465D' : '#0ECB81';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function drawCaptcha(type) {
-            const canvasId = type === 'login' ? 'captchaCanvasLogin' : 'captchaCanvasReg';
-            const canvas = document.getElementById(canvasId);
-            if(!canvas) return;
+        window.drawCaptcha = (type) => {
+            const canvas = document.getElementById(type === 'login' ? 'canvasLogin' : 'canvasReg');
             const ctx = canvas.getContext('2d');
-            const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-            let code = ''; for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-            if(type === 'login') captchaLoginCode = code; else captchaRegCode = code;
-            ctx.fillStyle = '#1e232e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            for(let i=0; i<7; i++) {
-                ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`; ctx.beginPath();
-                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
-                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height); ctx.stroke();
-            }
-            ctx.font = 'bold 24px "IBM Plex Mono"'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; const charWidth = canvas.width / 4;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = ''; for(let i=0; i<4; i++) code += chars[Math.floor(Math.random()*chars.length)];
+            captchaCodes[type] = code;
+
+            ctx.font = 'bold 20px JetBrains Mono';
+            ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
             for(let i=0; i<4; i++) {
-                ctx.save(); const x = (i * charWidth) + (charWidth/2); const y = canvas.height / 2; const angle = (Math.random() - 0.5) * 0.5;
-                ctx.translate(x, y); ctx.rotate(angle); ctx.fillStyle = '#FCD535'; ctx.fillText(code[i], 0, 0); ctx.restore();
+                ctx.save();
+                ctx.translate(15 + i*16, 23);
+                ctx.rotate((Math.random()-0.5)*0.5);
+                ctx.fillStyle = '#FCD535';
+                ctx.fillText(code[i], 0, 0);
+                ctx.restore();
             }
-        }
+        };
+
+        window.toast = (type, msg) => {
+            const box = document.getElementById('toast-box');
+            const div = document.createElement('div');
+            const color = type === 'error' ? '#ef4444' : '#10b981';
+            const icon = type === 'error' ? 'fa-circle-xmark' : 'fa-circle-check';
+            div.className = 'toast-msg';
+            div.style.borderLeftColor = color;
+            div.innerHTML = `<i class="fa-solid ${icon}" style="color:${color}"></i><span class="text-white font-bold text-xs">${msg}</span>`;
+            box.appendChild(div);
+            setTimeout(() => { div.remove(); }, 2500);
+        };
+
+        drawCaptcha('login');
     </script>
 </body>
 </html>
