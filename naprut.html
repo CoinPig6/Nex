@@ -53,6 +53,10 @@
 
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* New Item Highlight */
+        .new-item { animation: highlight 1s ease-out; }
+        @keyframes highlight { 0% { background-color: rgba(252, 213, 53, 0.2); } 100% { background-color: #1e232e; } }
     </style>
 
     <!-- UI SCRIPTS -->
@@ -112,7 +116,6 @@
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
-                <!-- ID sidebarUsername đã được gán logic JS để cập nhật tên -->
                 <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">Loading...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
             </div>
         </div>
@@ -263,8 +266,6 @@
         let allHistory = []; // Cache toàn bộ lịch sử để filter
         let unsubscribeHistory = null;
         let realBankNumber = "";
-        
-        // Cấu hình mặc định (sẽ được ghi đè từ DB)
         let SETTINGS = { minDeposit: 10, minWithdraw: 5 };
 
         // --- PUBLIC FUNCTIONS (Gắn vào window) ---
@@ -337,13 +338,12 @@
             if (user) {
                 currentUser = user;
                 
-                // 1. Lấy Settings Global
+                // 1. Lấy Settings
                 onSnapshot(doc(db, "settings", "global"), (doc) => {
                     if(doc.exists()) {
                         const d = doc.data();
                         if(d.minDeposit) SETTINGS.minDeposit = d.minDeposit;
                         if(d.minWithdraw) SETTINGS.minWithdraw = d.minWithdraw;
-                        // Cập nhật placeholder
                         document.getElementById('depositAmount').placeholder = `Tối thiểu $${SETTINGS.minDeposit}`;
                         document.getElementById('wdAmount').placeholder = `Tối thiểu $${SETTINGS.minWithdraw}`;
                     }
@@ -358,7 +358,7 @@
                     }
                 });
 
-                // 3. Lấy History (1 lần)
+                // 3. Lấy History (Chỉ gọi 1 lần khi load app)
                 setupHistoryListener(user.uid);
             } else {
                 window.location.href = "login.html";
@@ -375,21 +375,16 @@
         }
 
         function renderUserData(data) {
-            // CẬP NHẬT TÊN HIỂN THỊ SIDEBAR
             document.getElementById('sidebarUsername').innerText = data.fullName || data.username || "Thành viên";
-
             document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
             document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
             
-            // Xử lý hiển thị Ngân hàng
             if (data.bankNumber) {
                 realBankNumber = data.bankNumber;
                 document.getElementById('noBankAlert').classList.add('hidden');
                 document.getElementById('withdrawForm').classList.remove('hidden');
-                
                 document.getElementById('wdBankName').value = data.bankName || "";
                 document.getElementById('wdBankOwner').value = data.bankOwner || "";
-                
                 let maskedBn = data.bankNumber;
                 if(maskedBn && maskedBn.length > 3) maskedBn = "******" + maskedBn.slice(-3);
                 document.getElementById('wdBankNumber').value = maskedBn;
@@ -399,12 +394,10 @@
                 document.getElementById('withdrawForm').classList.add('hidden');
             }
 
-            // Turnover
             const current = data.betTurnover || 0; 
             const required = data.requiredTurnover || 0; 
             document.getElementById('currentTurnover').innerText = current.toLocaleString();
             document.getElementById('requiredTurnover').innerText = required.toLocaleString();
-            
             let percent = required > 0 ? (current / required) * 100 : 100;
             if(percent > 100) percent = 100;
             document.getElementById('turnoverBar').style.width = percent + "%";
@@ -418,20 +411,29 @@
             }
         }
 
-        // --- HISTORY LOGIC ---
+        // --- HISTORY LISTENER (REALTIME FIX) ---
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
-            const q = query(collection(db, "users", uid, "transactions"), limit(50));
+            
+            // XÓA LIMIT ĐỂ ĐẢM BẢO LẤY HẾT DATA VÀ SORT ĐÚNG
+            // THÊM includeMetadataChanges: true ĐỂ BẮT GIAO DỊCH LOCAL NGAY LẬP TỨC
+            const q = collection(db, "users", uid, "transactions");
 
-            unsubscribeHistory = onSnapshot(q, (snapshot) => {
+            unsubscribeHistory = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
                 document.getElementById('historyError').classList.add('hidden');
                 allHistory = [];
-                snapshot.forEach(doc => allHistory.push(doc.data()));
                 
-                // Sort an toàn
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    // Fix lỗi timestamp null của local cache
+                    if (!d.timestamp) d.timestamp = { seconds: Date.now() / 1000 }; 
+                    allHistory.push(d);
+                });
+                
+                // Sort Client-side: Mới nhất lên đầu
                 allHistory.sort((a, b) => {
-                    const tA = a.timestamp ? (a.timestamp.seconds ? a.timestamp.seconds * 1000 : Date.now()) : Date.now();
-                    const tB = b.timestamp ? (b.timestamp.seconds ? b.timestamp.seconds * 1000 : Date.now()) : Date.now();
+                    const tA = a.timestamp?.seconds || 0;
+                    const tB = b.timestamp?.seconds || 0;
                     return tB - tA;
                 });
 
@@ -446,9 +448,7 @@
 
         function renderHistoryList(filterType) {
             const listEl = document.getElementById('historyList');
-            
-            // Filter logic
-            const filteredItems = allHistory.filter(item => {
+            const itemsToShow = allHistory.filter(item => {
                 if (filterType === 'all') return true;
                 if (filterType === 'deposit') return item.type === 'deposit';
                 if (filterType === 'withdraw') return item.type === 'withdraw';
@@ -456,19 +456,19 @@
                 return true;
             });
 
-            if (filteredItems.length === 0) {
+            if (itemsToShow.length === 0) {
                 listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Chưa có giao dịch nào</div>';
                 return;
             }
 
             let html = '';
-            filteredItems.forEach(data => {
+            // Chỉ hiện tối đa 50 giao dịch sau khi sort để tránh lag DOM
+            itemsToShow.slice(0, 50).forEach(data => {
                 let timeStr = "Vừa xong";
                 if (data.timestamp && data.timestamp.seconds) {
                     timeStr = new Date(data.timestamp.seconds * 1000).toLocaleString('vi-VN');
                 }
                 
-                // Icon Logic
                 let typeText = 'GIAO DỊCH'; let typeIcon = 'fa-circle'; let colorClass = 'text-white'; let amountSign = '+';
                 
                 switch(data.type) {
@@ -480,13 +480,15 @@
                     case 'bonus': case 'newbie': typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
-                // Status Badge
                 let badgeClass = 'badge-pending'; let statusText = 'ĐANG XỬ LÝ'; let statusIcon = 'fa-clock';
                 if (data.status === 'success') { badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; statusIcon = 'fa-check'; }
                 else if (data.status === 'rejected' || data.status === 'failed') { badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; statusIcon = 'fa-xmark'; }
 
+                // Highlight item mới
+                const isNew = (Date.now() / 1000 - data.timestamp.seconds) < 5 ? 'new-item' : '';
+
                 html += `
-                    <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center animate-fade-in-up">
+                    <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center ${isNew} transition-colors">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#232836] ${colorClass} bg-opacity-10 border border-white/5">
                                 <i class="fa-solid ${typeIcon}"></i>
