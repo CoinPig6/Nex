@@ -163,7 +163,7 @@
         </div>
     </div>
 
-    <!-- MAIN LOGIC (SỬA LỖI LOOP + AUTH REALTIME) -->
+    <!-- MAIN LOGIC (FIXED BALANCE UPDATE) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -279,7 +279,7 @@
             }
         }
 
-        // --- CÁC HÀM LOGIC GAME CŨ (GIỮ NGUYÊN) ---
+        // --- CÁC HÀM LOGIC GAME ---
         function checkSavedBet() {
             const saved = localStorage.getItem('crownex_active_bet');
             if (!saved) return;
@@ -295,15 +295,20 @@
             const result = Math.random() > 0.5 ? 'up' : 'down'; 
             const win = (betData.type === result);
             let profit = 0;
+            let totalReturn = 0;
             if (win) {
+                totalReturn = betData.amount * 1.95;
                 profit = betData.amount * 0.95;
-                state.balance += (betData.amount + profit);
+                state.balance += totalReturn; // Cộng hiển thị
                 showToast('success', `Kết quả phiên trước: THẮNG (+$${profit})`);
             } else { showToast('error', `Kết quả phiên trước: THUA (-$${betData.amount})`); }
             updateBalanceUI();
             localStorage.removeItem('crownex_active_bet');
             if(state.userData.uid) {
-                await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
+                // FIXED: Dùng increment để cộng tiền, tránh lỗi
+                if (win) {
+                    await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
+                }
                 await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
                     type: betData.type, amount: betData.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: betData.expires
                 });
@@ -374,6 +379,7 @@
             btn.classList.add('btn-loading');
             btn.innerText = "ĐANG XỬ LÝ...";
 
+            // Trừ tiền hiển thị (để user thấy ngay)
             state.balance -= amount;
             updateBalanceUI();
             
@@ -384,8 +390,9 @@
             const gameRef = doc(db, "games", "current");
             try {
                 const uRef = doc(db, "users", state.userData.uid);
+                // FIXED: Dùng increment để trừ tiền an toàn
                 await updateDoc(uRef, { 
-                    balance: state.balance,
+                    balance: increment(-amount),
                     betTurnover: increment(amount),
                     betToday: increment(amount)
                 }); 
@@ -532,7 +539,11 @@
 
                 if(state.userData.uid) {
                     try {
-                        await updateDoc(doc(db, "users", state.userData.uid), { balance: state.balance });
+                        // FIXED: Chỉ cập nhật tiền khi thắng, dùng increment
+                        if (win) {
+                            await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
+                        }
+                        // Ghi lịch sử
                         await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
                             type: b.type, amount: b.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: Date.now()
                         });
