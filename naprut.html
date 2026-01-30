@@ -94,7 +94,7 @@
         <div id="tab-deposit" class="fade-in">
             <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6">
                 <div class="bg-white p-2 rounded-lg mb-4">
-                    <!-- Ảnh QR tĩnh hoặc động -->
+                    <!-- Ảnh QR tĩnh -->
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020101021238570010A0000007270127000697042201132026290121520208QRIBFTTA53037045802VN5913NGUYEN VAN A6005HANOI62110707TEST12363041234" alt="QR Code" class="w-32 h-32">
                 </div>
                 <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-2" onclick="copyText('BVBank (Bản Việt)')">
@@ -176,6 +176,8 @@
                     Đang tải dữ liệu...
                 </div>
             </div>
+            <!-- Hiển thị lỗi nếu có -->
+            <div id="errorLog" class="text-red-500 text-[10px] text-center mt-2 hidden"></div>
         </div>
 
     </div>
@@ -205,6 +207,9 @@
         let currentUser = null;
         let userData = null;
         let unsubscribeHistory = null;
+        
+        // Lưu giữ số tài khoản thật để gửi admin (vì trên UI bị ẩn)
+        let realBankNumber = ""; 
 
         // === UI LOGIC ===
         window.toggleMenu = () => {
@@ -233,7 +238,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Sidebar info
                 const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
                 if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
 
@@ -259,19 +263,20 @@
             
             // Render Bank Info
             if (data.bankNumber) {
+                realBankNumber = data.bankNumber; // Lưu số thật
                 document.getElementById('wdBankName').value = data.bankName || "";
                 
-                // --- MASK BANK NUMBER (CHỈ HIỆN 3 SỐ CUỐI) ---
-                const rawBn = data.bankNumber;
-                let maskedBn = rawBn;
-                if(rawBn && rawBn.length > 3) {
-                    // Tạo chuỗi sao (*) với độ dài = độ dài thực - 3
-                    maskedBn = "•".repeat(rawBn.length - 3) + rawBn.slice(-3);
+                // --- MASK BANK NUMBER (Ẩn đi chỉ hiện 3 số cuối) ---
+                let maskedBn = data.bankNumber;
+                if(maskedBn && maskedBn.length > 3) {
+                    maskedBn = "******" + maskedBn.slice(-3);
                 }
                 document.getElementById('wdBankNumber').value = maskedBn;
-                // ----------------------------------------------
+                // ---------------------------------------------------
 
                 document.getElementById('wdBankOwner').value = data.bankOwner || "";
+            } else {
+                realBankNumber = "";
             }
 
             // Render Turnover
@@ -296,16 +301,18 @@
             }
         }
 
-        // === FUNCTION: LOAD LỊCH SỬ (REALTIME) ===
+        // === FUNCTION: LOAD LỊCH SỬ (QUAN TRỌNG) ===
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
 
+            // Lưu ý: Nếu bị treo ở đây, hãy F12 xem console có link tạo Index không
             const q = query(
                 collection(db, "users", uid, "transactions"), 
                 orderBy("timestamp", "desc"), 
                 limit(50)
             );
 
+            // Thêm Error Handler cho onSnapshot để debug lỗi
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('historyList');
                 let html = '';
@@ -317,11 +324,13 @@
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.toDate()) : new Date();
-                    const timeStr = date.toLocaleString('vi-VN');
+                    // Fix lỗi crash nếu timestamp null (do serverTimestamp chưa về)
+                    let timeStr = "Đang xử lý...";
+                    if (data.timestamp) {
+                        timeStr = new Date(data.timestamp.toDate()).toLocaleString('vi-VN');
+                    }
                     
                     let badgeClass = '', statusText = '', icon = '';
-
                     if (data.status === 'pending') {
                         badgeClass = 'badge-pending'; statusText = 'ĐANG XỬ LÝ'; icon = 'fa-clock';
                     } else if (data.status === 'success') {
@@ -353,6 +362,19 @@
                     `;
                 });
                 listEl.innerHTML = html;
+            }, (error) => {
+                // Xử lý lỗi nếu không load được
+                console.error("Lỗi Load History:", error);
+                const listEl = document.getElementById('historyList');
+                const errDiv = document.getElementById('errorLog');
+                
+                listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Không tải được dữ liệu. Vui lòng thử lại.</div>';
+                
+                // Nếu lỗi do thiếu Index (thường gặp nhất)
+                if (error.message.includes("indexes")) {
+                    errDiv.innerText = "Hệ thống cần tạo Index. Vui lòng báo Admin check Console (F12) để tạo link Index.";
+                    errDiv.classList.remove('hidden');
+                }
             });
         }
 
@@ -367,6 +389,7 @@
             btn.disabled = true;
 
             try {
+                // Dữ liệu chung cho cả 2 bảng
                 const transData = {
                     type: 'deposit',
                     amount: amount,
@@ -374,10 +397,13 @@
                     userId: currentUser.uid,
                     username: userData.username || 'Unknown',
                     content: userData.username ? userData.username.toUpperCase() : '',
-                    timestamp: serverTimestamp()
+                    timestamp: serverTimestamp() // Dùng server time chuẩn
                 };
 
+                // 1. Ghi vào lịch sử cá nhân (users/{uid}/transactions)
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), transData);
+                
+                // 2. Ghi vào bảng Admin (admin_requests) để Admin thấy
                 await addDoc(collection(db, "admin_requests"), transData);
 
                 alert("Đã tạo lệnh nạp! Vui lòng chờ hệ thống xác nhận.");
@@ -396,7 +422,7 @@
         window.createWithdraw = async () => {
             const amount = parseFloat(document.getElementById('wdAmount').value);
             
-            if (!userData.bankNumber) return alert("Vui lòng liên kết ngân hàng ở mục Tài Khoản trước!");
+            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng ở mục Tài Khoản trước!");
             if (!amount || amount < 10) return alert("Tối thiểu rút $10");
             if (amount > userData.balance) return alert("Số dư không đủ!");
 
@@ -412,24 +438,28 @@
             btn.disabled = true;
 
             try {
-                // Note: Dùng userData.bankNumber (số gốc) để gửi đi, không dùng giá trị trên UI đã bị che
+                // Sử dụng realBankNumber (số thật) để gửi admin
                 const transData = {
                     type: 'withdraw',
                     amount: amount,
-                    bankInfo: `${userData.bankName} - ${userData.bankNumber} - ${userData.bankOwner}`,
+                    bankInfo: `${userData.bankName} - ${realBankNumber} - ${userData.bankOwner}`,
                     status: 'pending',
                     userId: currentUser.uid,
                     username: userData.username || 'Unknown',
                     timestamp: serverTimestamp()
                 };
 
+                // 1. Trừ tiền và RESET vòng cược
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: userData.balance - amount,
                     betTurnover: 0,
                     requiredTurnover: 0
                 });
 
+                // 2. Ghi vào lịch sử cá nhân
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), transData);
+                
+                // 3. Ghi vào bảng Admin
                 await addDoc(collection(db, "admin_requests"), transData);
 
                 alert("Lệnh rút tiền đã được gửi và đang chờ duyệt!");
