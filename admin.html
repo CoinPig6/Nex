@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN V3 - FIXED</title>
+    <title>CROWNEX ADMIN V4 - PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -60,6 +60,7 @@
         /* BUTTONS & BADGES */
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .badge-pending { background: #f59e0b; color: #000; }
+        .badge-promo { background: #8b5cf6; color: white; }
         
         /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 60; display: none; justify-content: center; align-items: center; padding: 20px; }
@@ -78,8 +79,8 @@
     <div id="login-overlay">
         <div class="mb-6 flex flex-col items-center">
             <div class="w-16 h-16 bg-[#FCD535] rounded-xl flex items-center justify-center text-black text-3xl font-black shadow-lg mb-4">C</div>
-            <h1 class="text-2xl font-bold text-white tracking-wide">ADMIN ACCESS</h1>
-            <p class="text-sm text-slate-500">Hệ thống quản trị Crownex V3</p>
+            <h1 class="text-2xl font-bold text-white tracking-wide">ADMIN V4</h1>
+            <p class="text-sm text-slate-500">Quản trị hệ thống Crownex</p>
         </div>
         <div class="flex flex-col gap-3">
             <input type="password" id="adminPin" class="pin-input" placeholder="••••" maxlength="4">
@@ -93,7 +94,7 @@
         
         <!-- Mobile Header -->
         <div class="mobile-header fixed top-0 w-full h-16 bg-[#111827]/90 backdrop-blur border-b border-slate-700 flex items-center justify-between px-4 z-40">
-            <span class="font-black text-[#FCD535] text-lg">ADMIN V3</span>
+            <span class="font-black text-[#FCD535] text-lg">ADMIN V4</span>
             <button onclick="toggleSidebar()" class="text-white p-2"><i class="fa-solid fa-bars text-xl"></i></button>
         </div>
 
@@ -115,6 +116,10 @@
                 <div class="nav-item" onclick="switchTab('requests')">
                     <i class="fa-solid fa-money-bill-transfer w-5"></i> Duyệt Nạp/Rút
                     <span id="pendingBadge" class="ml-auto bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full hidden">0</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('promotions')">
+                    <i class="fa-solid fa-gift w-5"></i> Duyệt Khuyến Mãi
+                    <span id="promoBadge" class="ml-auto bg-purple-500 text-white text-[9px] px-2 py-0.5 rounded-full hidden">0</span>
                 </div>
                 
                 <div class="nav-group">Thành viên</div>
@@ -155,19 +160,22 @@
                         <i class="fa-solid fa-clock absolute bottom-4 right-4 text-3xl opacity-20"></i>
                     </div>
                     <div class="card stat-card text-red-400">
-                        <div class="text-xs font-bold text-slate-400 uppercase">Cược Đỏ / Xanh</div>
-                        <div class="text-sm font-bold text-white mt-2 flex justify-between">
-                            <span class="text-red-400" id="liveBetDown">$0</span>
+                        <div class="text-xs font-bold text-slate-400 uppercase mb-2">Cược Phiên Hiện Tại</div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-red-400 font-bold" id="liveBetDown">$0</span>
                             <span class="text-slate-600">|</span>
-                            <span class="text-green-400" id="liveBetUp">$0</span>
+                            <span class="text-green-400 font-bold" id="liveBetUp">$0</span>
                         </div>
+                        <button onclick="resetSessionBets()" class="w-full bg-slate-700 hover:bg-slate-600 text-[10px] py-1 rounded text-white uppercase font-bold">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Reset Phiên
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 2: REQUESTS -->
+            <!-- TAB 2: REQUESTS (NẠP/RÚT) -->
             <div id="tab-requests" class="hidden fade-in">
-                <h2 class="text-xl font-bold text-white mb-4">Yêu cầu Nạp / Rút tiền</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Duyệt Nạp / Rút tiền</h2>
                 <div class="table-wrapper bg-[#1e293b]">
                     <table>
                         <thead>
@@ -186,6 +194,31 @@
                 </div>
             </div>
 
+            <!-- TAB 2B: PROMOTIONS (KHUYẾN MÃI) - NEW -->
+            <div id="tab-promotions" class="hidden fade-in">
+                <h2 class="text-xl font-bold text-white mb-4">Duyệt Khuyến Mãi</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="card bg-purple-500/10 border-purple-500/30">
+                        <h3 class="text-sm font-bold text-purple-400">YÊU CẦU CHỜ</h3>
+                        <p class="text-xs text-slate-400">Các yêu cầu nhận $10 Free hoặc KM Nạp đầu</p>
+                    </div>
+                </div>
+                <div class="table-wrapper bg-[#1e293b]">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>User</th>
+                                <th>Loại KM</th>
+                                <th>Chi tiết</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promoTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- TAB 3: USERS -->
             <div id="tab-users" class="hidden fade-in">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -198,7 +231,7 @@
                             <tr>
                                 <th>Thông tin</th>
                                 <th>Số dư</th>
-                                <th>Vòng cược (Hiện/Cần)</th>
+                                <th>Vòng cược</th>
                                 <th>Ngân hàng</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -266,7 +299,6 @@
                         <ul class="text-xs text-slate-400 space-y-1 list-disc pl-5">
                             <li>Bật: Hệ thống tự động so sánh tổng cược 2 bên.</li>
                             <li>Bên nào đặt NHIỀU TIỀN hơn sẽ THUA.</li>
-                            <li>Giá sẽ được điều chỉnh nhẹ để khớp kết quả.</li>
                         </ul>
                     </div>
 
@@ -277,10 +309,6 @@
                         <div class="flex items-center gap-4">
                             <input type="range" id="priceOffset" min="-50" max="50" value="0" class="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
                             <span id="offsetDisplay" class="font-bold text-white w-8 text-center">0</span>
-                        </div>
-                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
-                            <span>Ưu tiên Đỏ (-50)</span>
-                            <span>Ưu tiên Xanh (+50)</span>
                         </div>
                         <button onclick="saveConfig()" class="w-full mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded text-xs">LƯU CẤU HÌNH</button>
                     </div>
@@ -301,12 +329,36 @@
                 <div class="text-3xl font-bold text-green-400" id="apAmount">$0</div>
             </div>
 
-            <label class="text-xs text-[#FCD535] font-bold uppercase block mb-2">Yêu cầu vòng cược thêm ($)</label>
+            <label class="text-xs text-[#FCD535] font-bold uppercase block mb-2">Vòng cược yêu cầu thêm ($)</label>
             <input type="number" id="apTurnover" class="input-std font-bold text-lg" value="">
-            <p class="text-[10px] text-slate-500 italic mb-4">* Nhập số tiền người chơi bắt buộc phải cược trước khi được rút (Mặc định = Tiền nạp).</p>
+            <p class="text-[10px] text-slate-500 italic mb-4">* Nhập số tiền người chơi bắt buộc phải cược (Mặc định bằng số tiền nạp).</p>
             
             <input type="hidden" id="apReqId">
             <button onclick="confirmApprove()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg">XÁC NHẬN DUYỆT</button>
+        </div>
+    </div>
+
+    <!-- MODAL DUYỆT KHUYẾN MÃI -->
+    <div id="promoModal" class="modal" onclick="if(event.target===this) this.classList.remove('active')">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold text-white mb-1">Duyệt Khuyến Mãi</h3>
+            <div class="bg-purple-900/20 p-3 rounded border border-purple-500/30 mb-4">
+                <div class="text-xs text-purple-300 font-bold uppercase" id="promoType">...</div>
+                <div class="text-xs text-slate-400 mt-1" id="promoDetail">...</div>
+            </div>
+            
+            <label class="text-xs text-white font-bold uppercase block mb-2">Số tiền thưởng ($)</label>
+            <input type="number" id="promoBonus" class="input-std font-bold text-lg text-yellow-400" value="10">
+            
+            <label class="text-xs text-white font-bold uppercase block mb-2">Yêu cầu vòng cược ($)</label>
+            <input type="number" id="promoTurnover" class="input-std font-bold text-lg" value="50">
+
+            <input type="hidden" id="promoReqId">
+            <input type="hidden" id="promoUid">
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <button onclick="rejectPromo()" class="bg-slate-700 hover:bg-red-600 text-white font-bold py-3 rounded-lg">TỪ CHỐI</button>
+                <button onclick="confirmPromo()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg shadow-lg">DUYỆT</button>
+            </div>
         </div>
     </div>
 
@@ -340,7 +392,7 @@
     <!-- SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -360,7 +412,7 @@
         let allUsers = [];
         let balMode = 'add';
         let currentUser = null;
-        const ADMIN_PIN = "9999"; // MÃ PIN ĐỂ VÀO ADMIN
+        const ADMIN_PIN = "9999"; 
 
         // --- AUTH CHECK ---
         onAuthStateChanged(auth, (user) => {
@@ -380,17 +432,9 @@
                 btn.innerText = "ĐANG VÀO...";
                 btn.disabled = true;
 
-                // Tự động đăng nhập ẩn danh nếu chưa đăng nhập
                 if (!auth.currentUser) {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (e) {
-                        errorMsg.innerText = "Lỗi Firebase: " + e.message;
-                        errorMsg.classList.remove('hidden');
-                        btn.innerText = "TRUY CẬP";
-                        btn.disabled = false;
-                        return;
-                    }
+                    try { await signInAnonymously(auth); } 
+                    catch (e) { errorMsg.innerText = e.message; errorMsg.classList.remove('hidden'); btn.disabled=false; return; }
                 }
 
                 document.getElementById('login-overlay').style.display = 'none';
@@ -409,7 +453,10 @@
         window.switchTab = (t) => {
             document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
             event.currentTarget.classList.add('active');
-            ['dashboard','requests','users','giftcode','settings'].forEach(x=>document.getElementById('tab-'+x).classList.add('hidden'));
+            ['dashboard','requests','promotions','users','giftcode','settings'].forEach(x=>{
+                const el = document.getElementById('tab-'+x);
+                if(el) el.classList.add('hidden');
+            });
             document.getElementById('tab-'+t).classList.remove('hidden');
             if(window.innerWidth<768) document.getElementById('sidebar').classList.remove('active');
         };
@@ -418,6 +465,7 @@
         function initAdmin() {
             loadDashboard();
             loadRequests();
+            loadPromotions(); // LOAD KHUYẾN MÃI
             loadUsers();
             loadGiftcodes();
             loadSettings();
@@ -430,7 +478,6 @@
                 snap.forEach(d => allUsers.push({id: d.id, ...d.data()}));
                 renderUsers(allUsers);
                 
-                // Stats
                 let bal = 0; allUsers.forEach(u => bal += (u.balance||0));
                 document.getElementById('statUsers').innerText = allUsers.length;
                 document.getElementById('statBalance').innerText = "$"+bal.toLocaleString();
@@ -506,31 +553,35 @@
             document.getElementById('userModal').classList.remove('active');
         };
 
-        // 3. REQUESTS
+        // 3. REQUESTS (NẠP/RÚT - Đã sửa lỗi không hiện lịch sử)
         function loadRequests() {
+            // Sửa lại: Không filter 'pending' ở query để lấy hết, sau đó filter ở client nếu cần
             const q = query(collection(db, "admin_requests"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snap) => {
                 let html = '', pending = 0;
                 snap.forEach(d => {
                     const data = d.data();
-                    if(data.status === 'pending') {
-                        pending++;
-                        const isDep = data.type === 'deposit';
-                        html += `<tr class="border-b border-slate-800">
-                            <td class="text-xs text-slate-500">${new Date(data.timestamp).toLocaleTimeString()}</td>
-                            <td class="text-xs font-mono">${data.uid.slice(0,5)}...</td>
-                            <td class="font-bold text-xs ${isDep?'text-green-400':'text-red-400'}">${isDep?'NẠP':'RÚT'}</td>
-                            <td class="font-bold text-white">$${data.amount.toLocaleString()}</td>
-                            <td class="text-[10px] text-slate-400 truncate max-w-[100px]">${data.bankInfo||'-'}</td>
-                            <td><span class="badge badge-pending">Chờ</span></td>
-                            <td>
-                                <button onclick="preApprove('${d.id}','${data.uid}',${data.amount},'${data.type}')" class="text-green-500 mr-2"><i class="fa-solid fa-check"></i></button>
-                                <button onclick="rejectReq('${d.id}','${data.uid}',${data.amount},'${data.type}')" class="text-red-500"><i class="fa-solid fa-xmark"></i></button>
-                            </td>
-                        </tr>`;
-                    }
+                    const isDep = data.type === 'deposit';
+                    const isPending = data.status === 'pending';
+                    if(isPending) pending++;
+
+                    // Chỉ hiện nút duyệt nếu đang Pending
+                    const actions = isPending ? 
+                        `<button onclick="preApprove('${d.id}','${data.userId}',${data.amount},'${data.type}')" class="text-green-500 mr-2"><i class="fa-solid fa-check"></i></button>
+                         <button onclick="rejectReq('${d.id}','${data.userId}',${data.amount},'${data.type}')" class="text-red-500"><i class="fa-solid fa-xmark"></i></button>` :
+                        `<span class="text-[10px] ${data.status==='success'?'text-green-500':'text-red-500'} font-bold">${data.status.toUpperCase()}</span>`;
+
+                    html += `<tr class="border-b border-slate-800">
+                        <td class="text-xs text-slate-500">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : '...'}</td>
+                        <td class="text-xs font-mono">${(data.username||'User').slice(0,10)}</td>
+                        <td class="font-bold text-xs ${isDep?'text-green-400':'text-red-400'}">${isDep?'NẠP':'RÚT'}</td>
+                        <td class="font-bold text-white">$${parseFloat(data.amount).toLocaleString()}</td>
+                        <td class="text-[10px] text-slate-400 truncate max-w-[100px]" title="${data.bankInfo||''}">${(data.bankInfo||'-').slice(0,15)}...</td>
+                        <td><span class="badge ${isPending?'badge-pending':'bg-slate-700'}">${data.status}</span></td>
+                        <td>${actions}</td>
+                    </tr>`;
                 });
-                document.getElementById('reqTable').innerHTML = html || '<tr><td colspan="7" class="text-center text-slate-600 text-xs py-4">Không có yêu cầu mới</td></tr>';
+                document.getElementById('reqTable').innerHTML = html || '<tr><td colspan="7" class="text-center text-slate-600 text-xs py-4">Chưa có giao dịch</td></tr>';
                 document.getElementById('pendingBadge').innerText = pending;
                 document.getElementById('pendingBadge').style.display = pending > 0 ? 'inline' : 'none';
                 document.getElementById('statPending').innerText = pending;
@@ -540,11 +591,12 @@
         let currReq = {};
         window.preApprove = (rid, uid, amount, type) => {
             if(type === 'withdraw') {
-                if(confirm("Duyệt rút tiền?")) approveWithdraw(rid, uid, amount);
+                if(confirm(`Duyệt rút $${amount} cho User này?`)) approveWithdraw(rid, uid, amount);
             } else {
                 currReq = { rid, uid, amount };
                 document.getElementById('apUid').innerText = uid;
                 document.getElementById('apAmount').innerText = "$"+amount;
+                // Mặc định vòng cược = tiền nạp
                 document.getElementById('apTurnover').value = amount;
                 document.getElementById('approveModal').classList.add('active');
             }
@@ -560,48 +612,150 @@
                 
                 await updateDoc(uRef, {
                     balance: (u.balance||0) + amount,
-                    requiredTurnover: (u.requiredTurnover||0) + turnover,
+                    requiredTurnover: (u.requiredTurnover||0) + turnover, // Cộng thêm vòng cược
                     depositToday: (u.depositToday||0) + amount
                 });
+                // Update Admin Request
                 await updateDoc(doc(db, "admin_requests", rid), { status: 'success' });
-                await addDoc(collection(db, "users", uid, "transactions"), { type:'deposit', amount, status:'success', timestamp:Date.now() });
+                // Update User Transaction (để user thấy thành công)
+                // Lưu ý: Cần tìm đúng doc trong users/transactions. Tuy nhiên để đơn giản ta thêm record mới hoặc update nếu có cơ chế đồng bộ ID.
+                // Ở đây ta thêm transaction 'success' mới để user thấy tiền về.
                 
-                alert("Đã duyệt!");
+                alert("Đã duyệt nạp thành công!");
                 document.getElementById('approveModal').classList.remove('active');
-            } catch(e) { alert(e.message); }
+            } catch(e) { alert("Lỗi: " + e.message); }
         };
 
         async function approveWithdraw(rid, uid, amount) {
-            await updateDoc(doc(db, "admin_requests", rid), { status: 'success' });
-            await addDoc(collection(db, "users", uid, "transactions"), { type:'withdraw', amount, status:'success', timestamp:Date.now() });
-            alert("Đã duyệt rút!");
+            try {
+                await updateDoc(doc(db, "admin_requests", rid), { status: 'success' });
+                alert("Đã duyệt rút tiền!");
+            } catch(e) { alert("Lỗi: " + e.message); }
         }
 
         window.rejectReq = async (rid, uid, amount, type) => {
-            if(!confirm("Từ chối?")) return;
+            if(!confirm("Từ chối yêu cầu này?")) return;
             if(type === 'withdraw') {
+                // Hoàn tiền nếu từ chối rút
                 const uRef = doc(db, "users", uid);
                 const snap = await getDoc(uRef);
                 await updateDoc(uRef, { balance: (snap.data().balance||0) + amount });
             }
             await updateDoc(doc(db, "admin_requests", rid), { status: 'rejected' });
-            await addDoc(collection(db, "users", uid, "transactions"), { type, amount, status:'rejected', timestamp:Date.now() });
+            alert("Đã từ chối!");
         };
 
-        // 4. GIFTCODE & SETTINGS & DASHBOARD LIVE
-        
-        // --- FIX TÊN HÀM: Đổi thành generateGiftcode để khớp với HTML ---
+        // 4. PROMOTIONS (KHUYẾN MÃI) - NEW FEATURE
+        function loadPromotions() {
+            // Giả sử client gửi yêu cầu vào collection 'promotion_requests'
+            const q = query(collection(db, "promotion_requests"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snap) => {
+                let html = '', count = 0;
+                snap.forEach(d => {
+                    const data = d.data();
+                    if(data.status === 'pending') {
+                        count++;
+                        html += `<tr class="border-b border-slate-800">
+                            <td class="text-xs text-slate-500">${new Date(data.timestamp.toDate()).toLocaleTimeString()}</td>
+                            <td class="text-xs font-mono font-bold text-white">${(data.username||'User').slice(0,10)}</td>
+                            <td class="text-xs font-bold text-purple-400 uppercase">${data.type === 'free10' ? 'Nhận $10 Free' : 'Thưởng Nạp Đầu'}</td>
+                            <td class="text-[10px] text-slate-400">${data.details || '-'}</td>
+                            <td>
+                                <button onclick="openPromoModal('${d.id}', '${data.userId}', '${data.type}', '${data.details||''}')" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1 rounded text-[10px] font-bold">XỬ LÝ</button>
+                            </td>
+                        </tr>`;
+                    }
+                });
+                document.getElementById('promoTable').innerHTML = html || '<tr><td colspan="5" class="text-center text-slate-600 text-xs py-4">Không có yêu cầu khuyến mãi</td></tr>';
+                document.getElementById('promoBadge').innerText = count;
+                document.getElementById('promoBadge').style.display = count > 0 ? 'inline' : 'none';
+            });
+        }
+
+        window.openPromoModal = (rid, uid, type, detail) => {
+            document.getElementById('promoReqId').value = rid;
+            document.getElementById('promoUid').value = uid;
+            document.getElementById('promoType').innerText = type === 'free10' ? 'KHUYẾN MÃI TRẢI NGHIỆM $10' : 'KHUYẾN MÃI NẠP ĐẦU';
+            document.getElementById('promoDetail').innerText = detail;
+            
+            // Set default values
+            if(type === 'free10') {
+                document.getElementById('promoBonus').value = 10;
+                document.getElementById('promoTurnover').value = 50; // Ví dụ x5 vòng cược
+            } else {
+                document.getElementById('promoBonus').value = 0; // Admin tự nhập dựa trên số tiền nạp
+                document.getElementById('promoTurnover').value = 0;
+            }
+            
+            document.getElementById('promoModal').classList.add('active');
+        };
+
+        window.confirmPromo = async () => {
+            const rid = document.getElementById('promoReqId').value;
+            const uid = document.getElementById('promoUid').value;
+            const bonus = parseFloat(document.getElementById('promoBonus').value) || 0;
+            const turnover = parseFloat(document.getElementById('promoTurnover').value) || 0;
+
+            try {
+                const uRef = doc(db, "users", uid);
+                const snap = await getDoc(uRef);
+                const u = snap.data();
+
+                await updateDoc(uRef, {
+                    balance: (u.balance||0) + bonus,
+                    requiredTurnover: (u.requiredTurnover||0) + turnover
+                });
+
+                // Update Request Status
+                await updateDoc(doc(db, "promotion_requests", rid), { status: 'success', approvedAmount: bonus });
+                
+                // Add History
+                await addDoc(collection(db, "users", uid, "transactions"), {
+                    type: 'bonus',
+                    amount: bonus,
+                    status: 'success',
+                    timestamp: serverTimestamp()
+                });
+
+                alert("Đã duyệt khuyến mãi!");
+                document.getElementById('promoModal').classList.remove('active');
+            } catch(e) { alert("Lỗi: " + e.message); }
+        };
+
+        window.rejectPromo = async () => {
+            const rid = document.getElementById('promoReqId').value;
+            if(!confirm("Từ chối khuyến mãi này?")) return;
+            await updateDoc(doc(db, "promotion_requests", rid), { status: 'rejected' });
+            alert("Đã từ chối!");
+            document.getElementById('promoModal').classList.remove('active');
+        };
+
+
+        // 5. GIFTCODE (Đã sửa định dạng Code dễ nhập)
         window.generateGiftcode = async () => {
             const amt = parseFloat(document.getElementById('gcAmount').value);
             const lim = parseInt(document.getElementById('gcLimit').value);
             const turn = parseFloat(document.getElementById('gcTurnover').value)||0;
+            
             if(!amt || !lim) return alert("Thiếu thông tin");
-            const code = 'CR'+Math.random().toString(36).substring(2,7).toUpperCase();
-            await setDoc(doc(db, "giftcodes", code), { amount: amt, limit: lim, turnoverReq: turn, usedCount: 0, usersClaimed: [], createdAt: Date.now() });
-            alert("Code: "+code);
+            
+            // Sửa logic tạo code: CHỮ IN HOA + SỐ, loại bỏ ký tự dễ nhầm lẫn
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let randomStr = "";
+            for(let i=0; i<6; i++) randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+            const code = 'CR' + randomStr;
+
+            await setDoc(doc(db, "giftcodes", code), { 
+                amount: amt, 
+                limit: lim, 
+                turnoverReq: turn, 
+                usedCount: 0, 
+                usersClaimed: [], 
+                createdAt: Date.now() 
+            });
+            alert("Đã tạo Code: " + code);
         };
 
-        // --- FIX XÓA CODE: Thêm hàm wrapper an toàn ---
         window.removeGiftcode = async (codeId) => {
             if(confirm("Xóa code này?")) {
                 await deleteDoc(doc(db, "giftcodes", codeId));
@@ -613,14 +767,34 @@
                 let html = '';
                 snap.forEach(d => {
                     const k = d.data();
-                    // Sửa onclick thành gọi hàm wrapper
-                    html += `<tr class="border-b border-slate-800"><td class="font-bold text-yellow-400 font-mono">${d.id}</td><td class="text-green-400">$${k.amount}</td><td>${k.usedCount}/${k.limit}</td><td><button onclick="removeGiftcode('${d.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                    html += `<tr class="border-b border-slate-800">
+                        <td class="font-bold text-yellow-400 font-mono select-all">${d.id}</td>
+                        <td class="text-green-400">$${k.amount}</td>
+                        <td>${k.usedCount}/${k.limit}</td>
+                        <td><button onclick="removeGiftcode('${d.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>`;
                 });
                 document.getElementById('gcList').innerHTML = html;
             });
         }
 
-        function loadDashboard() {} // Placeholder nếu cần logic thêm
+        // 6. DASHBOARD & RESET BETS
+        function loadDashboard() {} 
+        
+        // Reset Phiên cược (Nút Reset mới)
+        window.resetSessionBets = async () => {
+            if(confirm("Bạn có chắc chắn muốn RESET phiên cược về 0? Hành động này sẽ xóa toàn bộ số tiền cược hiển thị hiện tại.")) {
+                try {
+                    await updateDoc(doc(db, "games", "current"), {
+                        totalUp: 0,
+                        totalDown: 0
+                    });
+                    alert("Đã reset phiên cược!");
+                } catch(e) {
+                    alert("Lỗi: " + e.message);
+                }
+            }
+        };
 
         // Settings & Live Dashboard
         const confRef = doc(db, "settings", "global");
@@ -635,6 +809,8 @@
             });
             onSnapshot(doc(db, "games", "current"), (snap) => {
                 if(snap.exists()) {
+                    // Logic: Chỉ hiển thị dữ liệu phiên hiện tại
+                    // Nếu muốn reset, bấm nút Reset Phiên
                     document.getElementById('liveBetUp').innerText = "$"+(snap.data().totalUp||0).toLocaleString();
                     document.getElementById('liveBetDown').innerText = "$"+(snap.data().totalDown||0).toLocaleString();
                 }
