@@ -112,7 +112,8 @@
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
-                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
+                <!-- ID sidebarUsername đã được gán logic JS để cập nhật tên -->
+                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">Loading...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
             </div>
         </div>
     </div>
@@ -374,6 +375,9 @@
         }
 
         function renderUserData(data) {
+            // CẬP NHẬT TÊN HIỂN THỊ SIDEBAR
+            document.getElementById('sidebarUsername').innerText = data.fullName || data.username || "Thành viên";
+
             document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
             document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
             
