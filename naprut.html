@@ -42,6 +42,10 @@
         .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; }
         .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; }
         .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; }
+
+        /* ANIMATION */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -92,11 +96,13 @@
         
         <!-- === TAB 1: NẠP TIỀN === -->
         <div id="tab-deposit" class="fade-in">
-            <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6">
+            <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6 shadow-lg">
                 <div class="bg-white p-2 rounded-lg mb-4">
                     <!-- Ảnh QR tĩnh -->
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020101021238570010A0000007270127000697042201132026290121520208QRIBFTTA53037045802VN5913NGUYEN VAN A6005HANOI62110707TEST12363041234" alt="QR Code" class="w-32 h-32">
                 </div>
+                
+                <!-- Ngân hàng -->
                 <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-2" onclick="copyText('BVBank (Bản Việt)')">
                     <div class="flex flex-col">
                         <span class="text-[10px] text-gray-500 uppercase">Ngân hàng</span>
@@ -104,14 +110,26 @@
                     </div>
                     <span class="text-xs text-[#FCD535] font-bold">Sao chép</span>
                 </div>
-                <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center" onclick="copyText('99MM25740M76308618')">
+                
+                <!-- Số tài khoản -->
+                <div class="w-full bg-[#0b0f19] p-3 rounded border border-[#2d3442] flex justify-between items-center mb-4" onclick="copyText('99MM25740M76308618')">
                     <div class="flex flex-col">
                         <span class="text-[10px] text-gray-500 uppercase">Số tài khoản</span>
-                        <span class="text-sm text-white font-mono font-bold">99MM25740M76308618</span>
+                        <span class="text-sm text-white font-mono font-bold tracking-wider">99MM25740M76308618</span>
                     </div>
                     <i class="fa-regular fa-copy text-[#FCD535]"></i>
                 </div>
-                <p class="text-[10px] text-center text-gray-500 mt-3">Nội dung chuyển khoản: <strong class="text-white" id="depositContent">...</strong></p>
+
+                <!-- NỘI DUNG CHUYỂN KHOẢN (LÀM NỔI BẬT) -->
+                <div class="w-full bg-[#2a2f3d] p-4 rounded-xl border-2 border-[#FCD535] flex justify-between items-center cursor-pointer shadow-[0_0_15px_rgba(252,213,53,0.1)] relative overflow-hidden" id="depositContentBox">
+                    <div class="absolute top-0 right-0 bg-[#FCD535] text-black text-[9px] font-bold px-2 py-0.5 rounded-bl">BẮT BUỘC</div>
+                    <div class="flex flex-col z-10">
+                        <span class="text-[10px] text-[#FCD535] uppercase font-bold mb-1">Nội dung chuyển khoản</span>
+                        <span class="text-xl text-white font-mono font-black tracking-widest" id="depositContent">...</span>
+                    </div>
+                    <i class="fa-regular fa-copy text-[#FCD535] text-xl z-10"></i>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2 italic text-center">⚠ Nhập chính xác Nội dung để tiền vào tài khoản nhanh nhất.</p>
             </div>
 
             <div class="mb-4">
@@ -122,7 +140,6 @@
             <button onclick="createDeposit()" class="btn-action btn-deposit">
                 <i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP
             </button>
-            <p class="text-[10px] text-gray-500 mt-3 text-center italic">* Vui lòng chuyển khoản trước khi tạo lệnh. Tỷ giá $1 = 1 USDT.</p>
         </div>
 
         <!-- === TAB 2: RÚT TIỀN === -->
@@ -136,7 +153,7 @@
                 <div class="progress-bg">
                     <div class="progress-fill" style="width: 0%" id="turnoverBar"></div>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-2 italic">* Bạn cần hoàn thành 1 vòng cược tương ứng với số tiền nạp để có thể rút tiền.</p>
+                <p class="text-[10px] text-gray-500 mt-2 italic" id="turnoverNote">* Bạn cần hoàn thành vòng cược để rút tiền.</p>
             </div>
 
             <!-- Form Rút -->
@@ -155,7 +172,7 @@
                 </div>
                 <div>
                     <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label>
-                    <input type="number" id="wdAmount" class="input-dark" placeholder="Tối thiểu $10">
+                    <input type="number" id="wdAmount" class="input-dark" placeholder="Tối thiểu $5">
                 </div>
             </div>
 
@@ -170,14 +187,12 @@
         <!-- === TAB 3: LỊCH SỬ === -->
         <div id="tab-history" class="hidden fade-in">
             <div id="historyList" class="space-y-3">
-                <!-- Items will be injected here -->
+                <!-- Items injected here -->
                 <div class="text-center text-gray-500 text-xs mt-10">
                     <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>
                     Đang tải dữ liệu...
                 </div>
             </div>
-            <!-- Hiển thị lỗi nếu có -->
-            <div id="errorLog" class="text-red-500 text-[10px] text-center mt-2 hidden"></div>
         </div>
 
     </div>
@@ -195,20 +210,16 @@
             projectId: "btccoinbig",
             storageBucket: "btccoinbig.firebasestorage.app",
             messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // GLOBAL VARIABLES
         let currentUser = null;
         let userData = null;
         let unsubscribeHistory = null;
-        
-        // Lưu giữ số tài khoản thật để gửi admin (vì trên UI bị ẩn)
         let realBankNumber = ""; 
 
         // === UI LOGIC ===
@@ -234,22 +245,27 @@
             alert("Đã sao chép: " + text);
         };
 
-        // === FIREBASE AUTH & USER DATA ===
+        // COPY RIÊNG CHO BOX NỘI DUNG
+        document.getElementById('depositContentBox').addEventListener('click', () => {
+            const txt = document.getElementById('depositContent').innerText;
+            if(txt && txt !== '...') copyText(txt);
+        });
+
+        // === FIREBASE ===
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
-                if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
-
-                // 1. Listen User Data Realtime
+                
+                // Load User Data
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if(docSnap.exists()) {
                         userData = docSnap.data();
                         renderUserData(userData);
+                        checkAutoResetTurnover(userData); // CHECK VÒNG CƯỢC
                     }
                 });
 
-                // 2. Listen Transaction History Realtime
+                // Load History (Client-side sorting fix)
                 setupHistoryListener(user.uid);
 
             } else {
@@ -257,29 +273,38 @@
             }
         });
 
+        // 1. TỰ ĐỘNG RESET VÒNG CƯỢC KHI ĐỦ MỐC
+        function checkAutoResetTurnover(data) {
+            const cur = data.betTurnover || 0;
+            const req = data.requiredTurnover || 0;
+
+            // Nếu vòng cược hiện tại >= yêu cầu VÀ yêu cầu > 0 (đang bị khóa)
+            if (req > 0 && cur >= req) {
+                // Tự động cập nhật về 0
+                updateDoc(doc(db, "users", currentUser.uid), {
+                    betTurnover: 0,
+                    requiredTurnover: 0
+                }).then(() => {
+                    console.log("Auto reset turnover success");
+                });
+            }
+        }
+
         function renderUserData(data) {
             document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
-            document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "NOIDUNG";
+            document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
             
-            // Render Bank Info
+            // Bank Info
             if (data.bankNumber) {
-                realBankNumber = data.bankNumber; // Lưu số thật
+                realBankNumber = data.bankNumber;
                 document.getElementById('wdBankName').value = data.bankName || "";
-                
-                // --- MASK BANK NUMBER (Ẩn đi chỉ hiện 3 số cuối) ---
                 let maskedBn = data.bankNumber;
-                if(maskedBn && maskedBn.length > 3) {
-                    maskedBn = "******" + maskedBn.slice(-3);
-                }
+                if(maskedBn && maskedBn.length > 3) maskedBn = "******" + maskedBn.slice(-3);
                 document.getElementById('wdBankNumber').value = maskedBn;
-                // ---------------------------------------------------
-
                 document.getElementById('wdBankOwner').value = data.bankOwner || "";
-            } else {
-                realBankNumber = "";
             }
 
-            // Render Turnover
+            // Turnover Display
             const current = data.betTurnover || 0; 
             const required = data.requiredTurnover || 0; 
             
@@ -288,47 +313,53 @@
             
             let percent = 0;
             if(required > 0) percent = (current / required) * 100;
-            else if (current > 0) percent = 100;
-            if(required === 0 && current === 0) percent = 0;
+            else percent = 100; // Đã về 0 thì là 100%
             
             if(percent > 100) percent = 100;
             document.getElementById('turnoverBar').style.width = percent + "%";
             
-            if(percent >= 100 || (required === 0 && current >= 0)) {
+            const noteEl = document.getElementById('turnoverNote');
+            if (required === 0) {
                 document.getElementById('turnoverBar').style.background = "#0ECB81"; 
+                noteEl.innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check-circle"></i> Đủ điều kiện rút tiền</span>';
             } else {
                 document.getElementById('turnoverBar').style.background = "linear-gradient(90deg, #FCD535, #ff9f43)";
+                noteEl.innerText = "* Bạn cần hoàn thành vòng cược để rút tiền.";
             }
         }
 
-        // === FUNCTION: LOAD LỊCH SỬ (QUAN TRỌNG) ===
+        // 2. SỬA LỖI KHÔNG HIỆN LỊCH SỬ (Dùng Client-side Sorting)
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
 
-            // Lưu ý: Nếu bị treo ở đây, hãy F12 xem console có link tạo Index không
-            const q = query(
-                collection(db, "users", uid, "transactions"), 
-                orderBy("timestamp", "desc"), 
-                limit(50)
-            );
+            // Bỏ orderBy("timestamp") để tránh lỗi Index
+            const q = query(collection(db, "users", uid, "transactions"), limit(50));
 
-            // Thêm Error Handler cho onSnapshot để debug lỗi
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('historyList');
-                let html = '';
-                
                 if (snapshot.empty) {
                     listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Chưa có giao dịch nào</div>';
                     return;
                 }
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // Fix lỗi crash nếu timestamp null (do serverTimestamp chưa về)
+                // Chuyển sang mảng và sắp xếp bằng JS
+                let historyItems = [];
+                snapshot.forEach(doc => {
+                    historyItems.push(doc.data());
+                });
+
+                // Sắp xếp Mới nhất lên đầu
+                historyItems.sort((a, b) => {
+                    // Xử lý an toàn nếu timestamp null (vừa tạo xong)
+                    const tA = a.timestamp ? a.timestamp.toDate().getTime() : Date.now();
+                    const tB = b.timestamp ? b.timestamp.toDate().getTime() : Date.now();
+                    return tB - tA;
+                });
+
+                let html = '';
+                historyItems.forEach((data) => {
                     let timeStr = "Đang xử lý...";
-                    if (data.timestamp) {
-                        timeStr = new Date(data.timestamp.toDate()).toLocaleString('vi-VN');
-                    }
+                    if (data.timestamp) timeStr = new Date(data.timestamp.toDate()).toLocaleString('vi-VN');
                     
                     let badgeClass = '', statusText = '', icon = '';
                     if (data.status === 'pending') {
@@ -342,7 +373,7 @@
                     const isDep = data.type === 'deposit';
 
                     html += `
-                        <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center">
+                        <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center animate-fade-in-up">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#232836] ${isDep ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">
                                     <i class="fa-solid ${isDep ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
@@ -362,19 +393,6 @@
                     `;
                 });
                 listEl.innerHTML = html;
-            }, (error) => {
-                // Xử lý lỗi nếu không load được
-                console.error("Lỗi Load History:", error);
-                const listEl = document.getElementById('historyList');
-                const errDiv = document.getElementById('errorLog');
-                
-                listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Không tải được dữ liệu. Vui lòng thử lại.</div>';
-                
-                // Nếu lỗi do thiếu Index (thường gặp nhất)
-                if (error.message.includes("indexes")) {
-                    errDiv.innerText = "Hệ thống cần tạo Index. Vui lòng báo Admin check Console (F12) để tạo link Index.";
-                    errDiv.classList.remove('hidden');
-                }
             });
         }
 
@@ -389,7 +407,6 @@
             btn.disabled = true;
 
             try {
-                // Dữ liệu chung cho cả 2 bảng
                 const transData = {
                     type: 'deposit',
                     amount: amount,
@@ -397,20 +414,15 @@
                     userId: currentUser.uid,
                     username: userData.username || 'Unknown',
                     content: userData.username ? userData.username.toUpperCase() : '',
-                    timestamp: serverTimestamp() // Dùng server time chuẩn
+                    timestamp: serverTimestamp()
                 };
-
-                // 1. Ghi vào lịch sử cá nhân (users/{uid}/transactions)
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), transData);
-                
-                // 2. Ghi vào bảng Admin (admin_requests) để Admin thấy
                 await addDoc(collection(db, "admin_requests"), transData);
 
                 alert("Đã tạo lệnh nạp! Vui lòng chờ hệ thống xác nhận.");
                 document.getElementById('depositAmount').value = "";
                 window.switchTab('history');
             } catch (e) {
-                console.error("Lỗi Deposit:", e);
                 alert("Lỗi kết nối! Vui lòng thử lại.");
             } finally {
                 btn.innerHTML = originalText;
@@ -418,18 +430,19 @@
             }
         };
 
-        // === TAB 2: RÚT TIỀN ===
+        // === TAB 2: RÚT TIỀN (MIN 5$) ===
         window.createWithdraw = async () => {
             const amount = parseFloat(document.getElementById('wdAmount').value);
             
             if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng ở mục Tài Khoản trước!");
-            if (!amount || amount < 10) return alert("Tối thiểu rút $10");
+            // SỬA MIN RÚT: $5
+            if (!amount || amount < 5) return alert("Tối thiểu rút $5");
             if (amount > userData.balance) return alert("Số dư không đủ!");
 
-            const current = userData.betTurnover || 0;
-            const required = userData.requiredTurnover || 0;
-            if (current < required) {
-                return alert(`Chưa đủ vòng cược! Bạn cần cược thêm $${(required - current).toLocaleString()} nữa.`);
+            const req = userData.requiredTurnover || 0;
+            // Nếu req > 0 tức là chưa về 0, nghĩa là chưa đủ (do hàm autoReset đã check rồi)
+            if (req > 0) {
+                return alert(`Chưa đủ vòng cược! Vui lòng hoàn thành để rút.`);
             }
 
             const btn = document.querySelector('.btn-withdraw');
@@ -438,7 +451,6 @@
             btn.disabled = true;
 
             try {
-                // Sử dụng realBankNumber (số thật) để gửi admin
                 const transData = {
                     type: 'withdraw',
                     amount: amount,
@@ -449,24 +461,18 @@
                     timestamp: serverTimestamp()
                 };
 
-                // 1. Trừ tiền và RESET vòng cược
                 await updateDoc(doc(db, "users", currentUser.uid), {
-                    balance: userData.balance - amount,
-                    betTurnover: 0,
-                    requiredTurnover: 0
+                    balance: userData.balance - amount
+                    // Không cần reset turnover ở đây nữa vì đã reset ở hàm checkAutoResetTurnover
                 });
 
-                // 2. Ghi vào lịch sử cá nhân
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), transData);
-                
-                // 3. Ghi vào bảng Admin
                 await addDoc(collection(db, "admin_requests"), transData);
 
-                alert("Lệnh rút tiền đã được gửi và đang chờ duyệt!");
+                alert("Lệnh rút tiền đã được gửi!");
                 document.getElementById('wdAmount').value = "";
                 window.switchTab('history');
             } catch (e) {
-                console.error("Lỗi Withdraw:", e);
                 alert("Lỗi hệ thống! Vui lòng thử lại sau.");
             } finally {
                 btn.innerHTML = originalText;
@@ -476,5 +482,4 @@
     </script>
 </body>
 </html>
-
 
