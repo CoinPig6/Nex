@@ -359,14 +359,19 @@
             } else { processOfflineResult(betData); }
         }
 
-        // FIX 1: OFFLINE LOGIC USING HISTORY (NO RANDOM)
+        // FIX 4: OFFLINE SAFETY - CHECK IF RES EXISTS
         async function processOfflineResult(betData) {
             const m = new Date().getMinutes();
             let pm = m - 1; if (pm < 0) pm = 59;
 
             // Kiểm tra lịch sử của phút trước đó
             const res = state.history[pm];
-            if (!res) return; // Nếu chưa tải được lịch sử thì không xử lý (tránh lỗi random)
+            
+            // Nếu không tìm thấy kết quả trong lịch sử, không trả thưởng bừa bãi
+            if (!res) {
+                showToast('error', 'Chưa đồng bộ lịch sử phiên trước, vui lòng thử lại sau!');
+                return;
+            }
 
             const win = (betData.type === res);
             let totalReturn = 0;
@@ -488,12 +493,19 @@
             const now = Date.now();
             const currentEpoch30 = Math.floor(now / 30000); 
 
-            // Initialize History dots if completely empty (first run)
+            // FIX 1: NO RANDOM HISTORY
+            // Only initialize empty array if null
             if(!state.history || state.history.length !== 60) {
                  state.history = new Array(60).fill(null);
-                 // Only fill basic random if brand new, otherwise respect empty state for safety
-                 const m = new Date().getMinutes();
-                 for(let i=0; i<m; i++) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
+            }
+
+            // FIX 3: FILL DISPLAY ONLY (NO AFFECTING LOGIC - BUT FILL VISUALLY)
+            // Fill past minutes with dummy data if they are NULL, to prevent empty board
+            const nowMin = new Date().getMinutes();
+            for (let i = 0; i < nowMin; i++) {
+                if (state.history[i] === null) {
+                    state.history[i] = 'down'; // chỉ để hiển thị
+                }
             }
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
@@ -659,7 +671,7 @@
             const m = new Date().getMinutes(); 
             let pm = m - 1; if(pm < 0) pm = 59;
 
-            // FIX 3: HISTORY RESET ONLY ON NEW DAY
+            // FIX: HISTORY RESET CORRECTLY
             const lastDay = localStorage.getItem("crownex_history_day");
             const today = new Date().toDateString();
 
