@@ -57,6 +57,14 @@
         /* New Item Highlight */
         .new-item { animation: highlight 1s ease-out; }
         @keyframes highlight { 0% { background-color: rgba(252, 213, 53, 0.2); } 100% { background-color: #1e232e; } }
+
+        /* Date Header for History */
+        .date-header { font-size: 11px; color: #6b7280; font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px; display: flex; items-center; gap: 8px; }
+        .date-header::after { content: ''; flex: 1; height: 1px; background: #232836; }
+        
+        /* Rate Highlight Box */
+        .rate-box { background: rgba(252, 213, 53, 0.1); border: 1px solid #FCD535; color: #FCD535; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .rate-box-withdraw { background: rgba(246, 70, 93, 0.1); border: 1px solid #F6465D; color: #F6465D; }
     </style>
 
     <!-- UI SCRIPTS -->
@@ -144,6 +152,12 @@
         
         <!-- TAB 1: NẠP TIỀN -->
         <div id="tab-deposit" class="fade-in">
+            <!-- HIGHLIGHT TỶ GIÁ NẠP -->
+            <div class="rate-box">
+                <i class="fa-solid fa-coins text-lg"></i>
+                <span>TỶ GIÁ: 1.000 VNĐ = $10</span>
+            </div>
+
             <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6 shadow-lg">
                 <div class="bg-white p-2 rounded-lg mb-4">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020101021238570010A0000007270127000697042201132026290121520208QRIBFTTA53037045802VN5913NGUYEN VAN A6005HANOI62110707TEST12363041234" alt="QR Code" class="w-32 h-32">
@@ -172,8 +186,9 @@
             </div>
 
             <div class="mb-4">
-                <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Nhập số tiền đã chuyển Lưu ý $10=1.000VNĐ</label>
-                <input type="number" id="depositAmount" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 100">
+                <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Nhập số $ muốn nạp</label>
+                <input type="number" id="depositAmount" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 10">
+                <p class="text-[10px] text-gray-500 mt-1" id="depositCalcHint">Bạn cần chuyển: 0 VNĐ</p>
             </div>
             
             <button onclick="window.createDeposit()" class="btn-action btn-deposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
@@ -191,6 +206,12 @@
 
             <!-- Form Rút (Hiện khi đã liên kết) -->
             <div id="withdrawForm">
+                <!-- HIGHLIGHT TỶ GIÁ RÚT -->
+                <div class="rate-box rate-box-withdraw">
+                    <i class="fa-solid fa-money-bill-wave text-lg"></i>
+                    <span>TỐI THIỂU: 5.000 VNĐ = $50</span>
+                </div>
+
                 <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] mb-6">
                     <div class="flex justify-between items-end mb-1">
                         <span class="text-xs text-gray-400 font-bold uppercase"><i class="fa-solid fa-rotate mr-1"></i> Vòng cược yêu cầu</span>
@@ -212,7 +233,7 @@
                     <div>
                         <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label>
                         <div class="relative">
-                            <input type="number" id="wdAmount" class="input-dark font-mono font-bold pr-16" placeholder="Tối thiểu $20">
+                            <input type="number" id="wdAmount" class="input-dark font-mono font-bold pr-16" placeholder="Tối thiểu $50">
                             <button onclick="window.setMaxWithdraw()" class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] bg-[#2d3442] text-[#FCD535] px-2 py-1 rounded font-bold hover:bg-[#374151]">MAX</button>
                         </div>
                     </div>
@@ -246,7 +267,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, updateDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, addDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -263,12 +284,22 @@
         
         let currentUser = null;
         let userData = null;
-        let allHistory = []; // Cache toàn bộ lịch sử để filter
+        let allHistory = []; 
         let unsubscribeHistory = null;
         let realBankNumber = "";
-        let SETTINGS = { minDeposit: 10, minWithdraw: 5 };
+        
+        // SETTINGS THEO YÊU CẦU: $10 Nạp, $50 Rút
+        let SETTINGS = { minDeposit: 10, minWithdraw: 50 };
 
-        // --- PUBLIC FUNCTIONS (Gắn vào window) ---
+        // --- CALC DEPOSIT HINT ---
+        document.getElementById('depositAmount').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            // $1 = 100 VND (Vì $10 = 1.000 VND)
+            const vnd = val * 100; 
+            document.getElementById('depositCalcHint').innerText = `Bạn cần chuyển: ${vnd.toLocaleString()} VNĐ`;
+        });
+
+        // --- PUBLIC FUNCTIONS ---
         window.logoutModule = () => { signOut(auth).then(() => window.location.href = "login.html"); };
 
         window.setMaxWithdraw = () => {
@@ -276,16 +307,14 @@
         };
 
         window.filterHistory = (type, el) => {
-            // Update UI Chip
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
-            // Filter Data
             renderHistoryList(type);
         };
 
         window.createDeposit = async () => {
             const amount = parseFloat(document.getElementById('depositAmount').value);
-            if (!amount || amount < SETTINGS.minDeposit) return alert(`Tối thiểu nạp $${SETTINGS.minDeposit}`);
+            if (!amount || amount < SETTINGS.minDeposit) return alert(`Tối thiểu nạp $${SETTINGS.minDeposit} (1.000 VNĐ)`);
             
             const btn = document.querySelector('.btn-deposit');
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -301,6 +330,7 @@
                 await addDoc(collection(db, "admin_requests"), payload);
                 alert("Đã tạo lệnh nạp! Vui lòng chờ hệ thống xác nhận.");
                 document.getElementById('depositAmount').value = "";
+                document.getElementById('depositCalcHint').innerText = "Bạn cần chuyển: 0 VNĐ";
                 switchTab('history');
             } catch (e) { alert("Lỗi: " + e.message); } 
             finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP'; }
@@ -309,7 +339,7 @@
         window.createWithdraw = async () => {
             const amount = parseFloat(document.getElementById('wdAmount').value);
             if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
-            if (!amount || amount < SETTINGS.minWithdraw) return alert(`Tối thiểu rút $${SETTINGS.minWithdraw}`);
+            if (!amount || amount < SETTINGS.minWithdraw) return alert(`Tối thiểu rút $${SETTINGS.minWithdraw} (5.000 VNĐ)`);
             if (amount > userData.balance) return alert("Số dư không đủ!");
             if ((userData.requiredTurnover || 0) > 0) return alert("Chưa đủ vòng cược!");
 
@@ -323,7 +353,14 @@
                     userId: currentUser.uid, username: userData.username || 'Unknown',
                     timestamp: serverTimestamp()
                 };
-                await updateDoc(doc(db, "users", currentUser.uid), { balance: userData.balance - amount });
+                
+                // CẬP NHẬT LOGIC: Reset vòng cược về 0 khi rút
+                await updateDoc(doc(db, "users", currentUser.uid), { 
+                    balance: userData.balance - amount,
+                    betTurnover: 0,
+                    requiredTurnover: 0
+                });
+
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
                 await addDoc(collection(db, "admin_requests"), payload);
                 alert("Đã gửi yêu cầu rút tiền!");
@@ -338,18 +375,7 @@
             if (user) {
                 currentUser = user;
                 
-                // 1. Lấy Settings
-                onSnapshot(doc(db, "settings", "global"), (doc) => {
-                    if(doc.exists()) {
-                        const d = doc.data();
-                        if(d.minDeposit) SETTINGS.minDeposit = d.minDeposit;
-                        if(d.minWithdraw) SETTINGS.minWithdraw = d.minWithdraw;
-                        document.getElementById('depositAmount').placeholder = `Tối thiểu $${SETTINGS.minDeposit}`;
-                        document.getElementById('wdAmount').placeholder = `Tối thiểu $${SETTINGS.minWithdraw}`;
-                    }
-                });
-
-                // 2. Lấy User Data
+                // User Data
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if(docSnap.exists()) {
                         userData = docSnap.data();
@@ -358,7 +384,7 @@
                     }
                 });
 
-                // 3. Lấy History (Chỉ gọi 1 lần khi load app)
+                // History Listener
                 setupHistoryListener(user.uid);
             } else {
                 window.location.href = "login.html";
@@ -367,11 +393,9 @@
 
         // --- LOGIC FUNCTIONS ---
         function checkAutoResetTurnover(data) {
-            const cur = data.betTurnover || 0;
-            const req = data.requiredTurnover || 0;
-            if (req > 0 && cur >= req) {
-                updateDoc(doc(db, "users", currentUser.uid), { betTurnover: 0, requiredTurnover: 0 });
-            }
+            // Logic cũ: Reset nếu đã đạt, nhưng giờ ta reset khi rút tiền.
+            // Giữ lại để đảm bảo UI hiển thị đúng (thanh progress full xanh)
+            // Không tự động reset ở đây nữa để tránh xung đột logic "reset khi rút".
         }
 
         function renderUserData(data) {
@@ -398,46 +422,52 @@
             const required = data.requiredTurnover || 0; 
             document.getElementById('currentTurnover').innerText = current.toLocaleString();
             document.getElementById('requiredTurnover').innerText = required.toLocaleString();
-            let percent = required > 0 ? (current / required) * 100 : 100;
-            if(percent > 100) percent = 100;
-            document.getElementById('turnoverBar').style.width = percent + "%";
             
+            let percent = 0;
             if (required === 0) {
+                // Nếu required = 0, tức là đã xong hoặc chưa có cược, hiển thị full xanh
+                percent = 100;
                 document.getElementById('turnoverBar').style.background = "#0ECB81"; 
                 document.getElementById('turnoverNote').innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check-circle"></i> Đủ điều kiện rút tiền</span>';
             } else {
+                percent = (current / required) * 100;
+                if(percent > 100) percent = 100;
                 document.getElementById('turnoverBar').style.background = "linear-gradient(90deg, #FCD535, #ff9f43)";
                 document.getElementById('turnoverNote').innerText = "* Bạn cần hoàn thành vòng cược để rút tiền.";
             }
+            document.getElementById('turnoverBar').style.width = percent + "%";
         }
 
-        // --- HISTORY LISTENER (REALTIME FIX) ---
+        // --- HISTORY LOGIC (AUTO DELETE > 7 DAYS & HEADER DISPLAY) ---
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
             
-            // XÓA LIMIT ĐỂ ĐẢM BẢO LẤY HẾT DATA VÀ SORT ĐÚNG
-            // THÊM includeMetadataChanges: true ĐỂ BẮT GIAO DỊCH LOCAL NGAY LẬP TỨC
             const q = collection(db, "users", uid, "transactions");
 
             unsubscribeHistory = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
                 document.getElementById('historyError').classList.add('hidden');
                 allHistory = [];
                 
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    // Fix lỗi timestamp null của local cache
-                    if (!d.timestamp) d.timestamp = { seconds: Date.now() / 1000 }; 
-                    allHistory.push(d);
+                const now = Date.now();
+                const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
+                snapshot.forEach(docSnap => {
+                    const d = docSnap.data();
+                    if (!d.timestamp) d.timestamp = { seconds: now / 1000 }; 
+                    
+                    const itemTime = d.timestamp.seconds * 1000;
+
+                    // TỰ ĐỘNG XÓA NẾU QUÁ 7 NGÀY
+                    if (now - itemTime > sevenDaysMs) {
+                        deleteDoc(docSnap.ref).catch(err => console.log("Auto delete error", err));
+                    } else {
+                        // Chỉ thêm vào list nếu chưa quá hạn
+                        allHistory.push(d);
+                    }
                 });
                 
-                // Sort Client-side: Mới nhất lên đầu
-                allHistory.sort((a, b) => {
-                    const tA = a.timestamp?.seconds || 0;
-                    const tB = b.timestamp?.seconds || 0;
-                    return tB - tA;
-                });
-
-                // Render mặc định: All
+                // Sort: Mới nhất lên đầu
+                allHistory.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
                 renderHistoryList('all');
             }, (error) => {
                 console.error(error);
@@ -448,27 +478,43 @@
 
         function renderHistoryList(filterType) {
             const listEl = document.getElementById('historyList');
-            const itemsToShow = allHistory.filter(item => {
+            
+            // Filter theo loại (Nạp/Rút/Khác)
+            const filteredItems = allHistory.filter(item => {
                 if (filterType === 'all') return true;
                 if (filterType === 'deposit') return item.type === 'deposit';
                 if (filterType === 'withdraw') return item.type === 'withdraw';
-                if (filterType === 'other') return ['giftcode', 'attendance', 'refund', 'bonus', 'newbie'].includes(item.type);
+                if (filterType === 'other') return !['deposit', 'withdraw'].includes(item.type);
                 return true;
             });
 
-            if (itemsToShow.length === 0) {
+            if (filteredItems.length === 0) {
                 listEl.innerHTML = '<div class="text-center text-gray-500 text-xs mt-10">Chưa có giao dịch nào</div>';
                 return;
             }
 
             let html = '';
-            // Chỉ hiện tối đa 50 giao dịch sau khi sort để tránh lag DOM
-            itemsToShow.slice(0, 50).forEach(data => {
-                let timeStr = "Vừa xong";
-                if (data.timestamp && data.timestamp.seconds) {
-                    timeStr = new Date(data.timestamp.seconds * 1000).toLocaleString('vi-VN');
-                }
+            let currentHeader = ''; 
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+            filteredItems.slice(0, 50).forEach(data => {
+                const itemDate = new Date(data.timestamp.seconds * 1000);
+                const itemDateString = itemDate.toDateString();
                 
+                // LOGIC HIỂN THỊ TIÊU ĐỀ NGÀY (Hôm nay, Hôm qua, 7 ngày trước)
+                let headerLabel = '';
+                if (itemDateString === today) headerLabel = 'Hôm nay';
+                else if (itemDateString === yesterday) headerLabel = 'Hôm qua';
+                else headerLabel = '7 ngày trước';
+
+                if (headerLabel !== currentHeader) {
+                    currentHeader = headerLabel;
+                    html += `<div class="date-header">${currentHeader}</div>`;
+                }
+
+                // Render Item
+                let timeStr = itemDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                 let typeText = 'GIAO DỊCH'; let typeIcon = 'fa-circle'; let colorClass = 'text-white'; let amountSign = '+';
                 
                 switch(data.type) {
@@ -477,18 +523,17 @@
                     case 'giftcode': typeText = 'GIFTCODE'; typeIcon = 'fa-ticket'; colorClass = 'text-[#FCD535]'; break;
                     case 'attendance': typeText = 'ĐIỂM DANH'; typeIcon = 'fa-calendar-check'; colorClass = 'text-blue-400'; break;
                     case 'refund': typeText = 'HOÀN TRẢ'; typeIcon = 'fa-rotate-left'; colorClass = 'text-purple-400'; break;
-                    case 'bonus': case 'newbie': typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
+                    default: typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
                 let badgeClass = 'badge-pending'; let statusText = 'ĐANG XỬ LÝ'; let statusIcon = 'fa-clock';
                 if (data.status === 'success') { badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; statusIcon = 'fa-check'; }
                 else if (data.status === 'rejected' || data.status === 'failed') { badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; statusIcon = 'fa-xmark'; }
 
-                // Highlight item mới
                 const isNew = (Date.now() / 1000 - data.timestamp.seconds) < 5 ? 'new-item' : '';
 
                 html += `
-                    <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center ${isNew} transition-colors">
+                    <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center ${isNew} transition-colors mb-2">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#232836] ${colorClass} bg-opacity-10 border border-white/5">
                                 <i class="fa-solid ${typeIcon}"></i>
@@ -512,4 +557,5 @@
     </script>
 </body>
 </html>
+
 
