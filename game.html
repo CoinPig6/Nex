@@ -15,11 +15,10 @@
         
         /* UTILS */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-        .no-tap { -webkit-tap-highlight-color: transparent; }
 
         /* SIDEBAR & UI */
-        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform; }
-        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; cursor: pointer; }
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
 
@@ -62,7 +61,7 @@
         .dot.new { animation: popIn 0.3s; }
         
         /* TOAST */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 200; opacity: 0; transition: all 0.4s; }
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
         
@@ -75,34 +74,34 @@
         #pageLoader { position: fixed; inset: 0; background: #0b0f19; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
     </style>
 </head>
-<body class="no-tap">
+<body>
 
     <!-- LOADING SCREEN -->
     <div id="pageLoader">
         <div class="w-12 h-12 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-2xl animate-bounce rounded-bl-none">C</div>
-        <div class="text-[#6b7280] text-xs font-mono mt-4 font-bold tracking-widest">LOADING CHART DATA...</div>
+        <div class="text-[#6b7280] text-xs font-mono mt-4 font-bold tracking-widest">LOADING DATA...</div>
     </div>
 
     <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-lg"></i><span class="text-sm font-bold text-white" id="toastMsg">...</span></div>
 
     <!-- SIDEBAR -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="window.toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
             <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
             <span class="font-bold text-lg text-white">CROWNEX</span>
-            <button onclick="toggleMenu()" class="ml-auto text-gray-500 w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <button onclick="window.toggleMenu()" class="ml-auto text-gray-500 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <div onclick="menuAction('trade')" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</div>
-            <div onclick="menuAction('account')" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</div>
-            <div onclick="menuAction('wallet')" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</div>
-            <div onclick="menuAction('history')" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</div>
-            <div onclick="menuAction('promo')" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></div>
+            <a href="#" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
-            <div onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</div>
+            <a href="#" onclick="window.logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
@@ -113,10 +112,9 @@
     </div>
 
     <!-- HEADER -->
-    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 relative">
+    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
         <div class="flex items-center gap-4">
-            <!-- Increased touch area for menu button -->
-            <button onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center -ml-2 text-[#9ca3af] active:text-white"><i class="fa-solid fa-bars-staggered text-xl"></i></button>
+            <button onclick="window.toggleMenu()" class="cursor-pointer w-8 h-8 flex items-center justify-center active:scale-95 transition-transform"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
             <div class="flex flex-col justify-center">
                 <div class="flex items-center gap-2">
                     <span class="text-white font-bold text-sm">BTC/USDT</span>
@@ -132,14 +130,14 @@
     </header>
 
     <!-- CHART AREA -->
-    <div class="flex-1 relative bg-[#0b0f19] overflow-hidden touch-none" id="chart-wrapper">
+    <div class="flex-1 relative bg-[#0b0f19] overflow-hidden" id="chart-wrapper">
         <div class="absolute top-3 right-[70px] z-10"><span id="candleStatusBadge" class="text-[10px] font-bold px-3 py-1 rounded-full bg-[#232836] text-[#9ca3af] border border-[#374151]">WAITING</span></div>
         <canvas id="chartCanvas" class="w-full h-full block"></canvas>
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
         
         <!-- WIN/LOSE POPUP -->
-        <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0 pointer-events-none">
+        <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase">HÚP RỒI</div>
                 <div id="popupAmount" class="font-mono font-bold text-4xl drop-shadow-xl">+$0.00</div>
@@ -162,26 +160,26 @@
             <div class="text-center w-full">
                 <!-- QUICK SELECT BUTTONS -->
                 <div class="flex items-center justify-center gap-2 mb-3">
-                    <button onclick="setBetAmount(5)" class="chip">$5</button>
-                    <button onclick="setBetAmount(10)" class="chip">$10</button>
-                    <button onclick="setBetAmount(20)" class="chip">$20</button>
-                    <button onclick="setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
+                    <button onclick="window.setBetAmount(5)" class="chip">$5</button>
+                    <button onclick="window.setBetAmount(10)" class="chip">$10</button>
+                    <button onclick="window.setBetAmount(20)" class="chip">$20</button>
+                    <button onclick="window.setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
                 </div>
 
                 <div class="flex items-center justify-center gap-2">
-                    <button onclick="adjustBet(-5)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
+                    <button onclick="window.adjustBet(-5)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
                     <div class="w-36 relative group">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] font-bold font-mono text-sm">$</span>
-                        <input type="number" id="betInput" value="10" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="updateProfit()">
+                        <input type="number" id="betInput" value="10" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="window.updateProfit()">
                     </div>
-                    <button onclick="adjustBet(5)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
+                    <button onclick="window.adjustBet(5)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
                 </div>
                 <div class="text-[10px] text-[#6b7280] font-bold uppercase mt-1">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+$9.50</span> (95%)</div>
             </div>
         </div>
         
         <div class="flex gap-3 h-14 relative mb-2">
-            <button id="btnSell" onclick="selectSide('down')" class="flex-1 btn-trade bg-[#F6465D] rounded-xl flex items-center justify-between px-4 shadow-[0_4px_0_#b9283a]">
+            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 btn-trade bg-[#F6465D] rounded-xl flex items-center justify-between px-4 shadow-[0_4px_0_#b9283a]">
                 <div class="flex flex-col items-start"><span class="font-black text-lg text-white">BÁN</span><span class="text-[9px] text-white/70 font-mono font-bold">DOWN</span></div>
                 <i class="fa-solid fa-arrow-trend-down text-2xl text-white/40"></i>
                 <div id="badge-down" class="hidden absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-1 rounded shadow-lg">0$</div>
@@ -193,7 +191,7 @@
                 <span id="timerText" class="text-white font-mono font-bold text-2xl z-10 leading-none mt-0.5">30</span>
             </div>
             
-            <button id="btnBuy" onclick="selectSide('up')" class="flex-1 btn-trade bg-[#0ECB81] rounded-xl flex items-center justify-between px-4 shadow-[0_4px_0_#0aa869]">
+            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 btn-trade bg-[#0ECB81] rounded-xl flex items-center justify-between px-4 shadow-[0_4px_0_#0aa869]">
                 <div class="flex flex-col items-start"><span class="font-black text-lg text-white">MUA</span><span class="text-[9px] text-white/70 font-mono font-bold">UP</span></div>
                 <i class="fa-solid fa-arrow-trend-up text-2xl text-white/40"></i>
                 <div id="badge-up" class="hidden absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-1 rounded shadow-lg">0$</div>
@@ -226,8 +224,8 @@
         </div>
         
         <div class="flex gap-3 mb-2">
-            <button onclick="cancelSelection()" class="flex-1 py-3 bg-[#232836] rounded-xl text-[#9ca3af] font-bold text-sm">HỦY</button>
-            <button id="btnConfirm" onclick="confirmBet()" class="flex-[2] py-3 bg-[#FCD535] rounded-xl text-black font-black text-sm shadow-lg shadow-yellow-500/20">XÁC NHẬN NGAY</button>
+            <button onclick="window.cancelSelection()" class="flex-1 py-3 bg-[#232836] rounded-xl text-[#9ca3af] font-bold text-sm">HỦY</button>
+            <button id="btnConfirm" onclick="window.confirmBet()" class="flex-[2] py-3 bg-[#FCD535] rounded-xl text-black font-black text-sm shadow-lg shadow-yellow-500/20">XÁC NHẬN NGAY</button>
         </div>
     </div>
 
@@ -237,53 +235,7 @@
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
-            authDomain: "btccoinbig.firebaseapp.com",
-            projectId: "btccoinbig",
-            storageBucket: "btccoinbig.firebasestorage.app",
-            messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
-        };
-        
-        let app, db, auth;
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-        } catch(e) {
-            console.error("Firebase init failed:", e);
-        }
-
-        // CONFIG
-        const CONFIG = { 
-            basePrice: 98100, 
-            chartPaddingRight: 90,
-            gridStep: 20 
-        };
-
-        const state = {
-            balance: 0, userData: null, currentBet: null, 
-            pendingBet: { type: null, amount: 0 },
-            history: new Array(60).fill(null), 
-            candles: [], 
-            visualPrice: CONFIG.basePrice,
-            targetPrice: CONFIG.basePrice, 
-            currentPhase: 'order',
-            lockPrice: 0,
-            isProcessing: false,
-            gameStarted: false,
-            // ADMIN CONFIGS
-            marketOffset: 0, killWhaleMode: false, totalUp: 0, totalDown: 0
-        };
-
-        // GLOBAL EXPORTS
-        window.logout = () => { 
-            if(auth) signOut(auth).then(() => { localStorage.clear(); window.location.href = "index.html"; }); 
-            else window.location.reload();
-        };
-
+        // --- GLOBAL UI FUNCTIONS ---
         window.toggleMenu = () => {
             const sb = document.getElementById('sidebar'); 
             const ov = document.getElementById('sidebarOverlay');
@@ -293,69 +245,108 @@
             } else { 
                 sb.classList.add('-translate-x-full'); 
                 ov.classList.add('opacity-0'); 
-                setTimeout(() => ov.classList.add('hidden'), 300); 
+                setTimeout(()=>ov.classList.add('hidden'), 300); 
             }
         };
 
-        window.menuAction = (action) => {
-            window.toggleMenu();
-            setTimeout(() => {
-                showToast('error', "Tính năng đang bảo trì!");
-            }, 300);
+        window.logout = () => { 
+            const auth = getAuth();
+            if(auth) {
+                signOut(auth).then(() => { 
+                    localStorage.clear();
+                    window.location.href = "index.html"; 
+                });
+            } else { window.location.href = "index.html"; }
         };
 
-        // STARTUP
-        if (auth) {
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    let userStr = localStorage.getItem('crownex_user_info');
-                    if (userStr) {
-                        state.userData = JSON.parse(userStr);
-                        finishLoading();
-                    } else {
-                        try {
-                            const docSnap = await getDoc(doc(db, "users", user.uid));
-                            if(docSnap.exists()) {
-                                state.userData = docSnap.data();
-                                state.userData.uid = user.uid;
-                                localStorage.setItem('crownex_user_info', JSON.stringify(state.userData));
-                                finishLoading();
-                            } else { window.logout(); }
-                        } catch (e) { finishLoadingGuest(); }
-                    }
-                    if(state.userData && state.userData.uid) {
-                        onSnapshot(doc(db, "users", user.uid), (doc) => { if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); } });
-                    }
-                } else { 
-                    finishLoadingGuest();
-                }
-            });
-        } else {
-            finishLoadingGuest();
-        }
+        window.setBetAmount = (val) => { document.getElementById('betInput').value = val; window.updateProfit(); }
+        window.setAllIn = () => { document.getElementById('betInput').value = Math.floor(state.balance); window.updateProfit(); }
+        window.adjustBet = (val) => {
+            const inp = document.getElementById('betInput');
+            let current = parseFloat(inp.value) || 0;
+            let nextVal = current + val;
+            if (nextVal < 1) nextVal = 1;
+            inp.value = nextVal;
+            window.updateProfit();
+        };
+        window.updateProfit = () => {
+            const val = parseFloat(document.getElementById('betInput').value) || 0;
+            document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
+        };
+        
+        // --- FIREBASE SETUP ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664",
+            measurementId: "G-7Q1GBFNQ37"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        function finishLoadingGuest() {
-            state.userData = { uid: "guest", username: "Khách", balance: 1000 };
-            finishLoading();
-        }
+        // CONFIG
+        const CONFIG = { basePrice: 98100, chartPaddingRight: 80, gridStep: 20 };
+        const state = {
+            balance: 0, userData: null, currentBet: null, 
+            pendingBet: { type: null, amount: 0 },
+            history: new Array(60).fill(null), 
+            candles: [], 
+            visualPrice: CONFIG.basePrice,
+            targetPrice: CONFIG.basePrice, 
+            currentPhase: 'order', 
+            lockPrice: 0, isProcessing: false, gameStarted: false,
+            marketOffset: 0, killWhaleMode: false, totalUp: 0, totalDown: 0
+        };
+
+        // --- AUTH LOGIC ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                let userStr = localStorage.getItem('crownex_user_info');
+                if (userStr) {
+                    state.userData = JSON.parse(userStr);
+                    finishLoading();
+                } else {
+                    try {
+                        const docSnap = await getDoc(doc(db, "users", user.uid));
+                        if(docSnap.exists()) {
+                            state.userData = docSnap.data();
+                            state.userData.uid = user.uid;
+                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData));
+                            finishLoading();
+                        } else { window.logout(); }
+                    } catch (e) { console.error(e); }
+                }
+
+                onSnapshot(doc(db, "users", user.uid), (doc) => {
+                    if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
+                });
+                onSnapshot(doc(db, "settings", "global"), (doc) => {
+                    if(doc.exists()) { state.marketOffset = doc.data().marketOffset || 0; state.killWhaleMode = doc.data().killWhaleMode || false; }
+                });
+                onSnapshot(doc(db, "games", "current"), (doc) => {
+                    if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; }
+                });
+            } else { 
+                state.userData = { uid: "guest", username: "Khách", balance: 1000 };
+                finishLoading();
+            }
+        });
 
         function finishLoading() {
             document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username || "Guest";
             state.balance = state.userData.balance || 0;
             updateBalanceUI();
-            
-            if (!state.gameStarted) { 
-                initGame(); 
-                checkSavedBet(); 
-                state.gameStarted = true; 
-            }
-
             const loader = document.getElementById('pageLoader');
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
+            if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
         }
 
-        // --- BETTING UI LOGIC ---
+        // --- BETTING LOGIC ---
         function checkSavedBet() {
             const saved = localStorage.getItem('crownex_active_bet');
             if (!saved) return;
@@ -368,7 +359,7 @@
         }
 
         async function processOfflineResult(betData) {
-            const result = Math.random() > 0.5 ? 'up' : 'down'; // Simple offline simulation
+            const result = Math.random() > 0.5 ? 'up' : 'down'; 
             const win = (betData.type === result);
             let profit = 0; let totalReturn = 0;
             if (win) {
@@ -378,7 +369,7 @@
             } else { showToast('error', `Phiên trước: THUA (-$${betData.amount})`); }
             updateBalanceUI();
             localStorage.removeItem('crownex_active_bet');
-            if(state.userData.uid && state.userData.uid !== "guest" && db) {
+            if(state.userData.uid && state.userData.uid !== "guest") {
                 if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
             }
         }
@@ -391,7 +382,7 @@
             document.getElementById(otherBtn).classList.add('locked');
         }
 
-        window.showToast = (type, msg) => {
+        function showToast(type, msg) {
             const t = document.getElementById('toast');
             const i = t.querySelector('i');
             document.getElementById('toastMsg').innerText = msg;
@@ -400,21 +391,6 @@
             else { i.className = 'fa-solid fa-circle-check text-lg text-[#0ECB81]'; t.style.borderColor = '#0ECB81'; }
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
-
-        window.setBetAmount = (val) => { document.getElementById('betInput').value = val; window.updateProfit(); }
-        window.setAllIn = () => { document.getElementById('betInput').value = Math.floor(state.balance); window.updateProfit(); }
-        window.adjustBet = (val) => {
-            const inp = document.getElementById('betInput');
-            let nextVal = (parseFloat(inp.value) || 0) + val;
-            if (nextVal < 1) nextVal = 1;
-            inp.value = nextVal;
-            window.updateProfit();
-        };
-
-        window.updateProfit = () => {
-            const val = parseFloat(document.getElementById('betInput').value) || 0;
-            document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
-        };
 
         window.selectSide = (type) => {
             if (state.currentPhase !== 'order') return showToast('error', "Đang chờ kết quả, vui lòng đợi!");
@@ -427,8 +403,10 @@
             state.pendingBet.type = type; state.pendingBet.amount = amount;
             
             const typeEl = document.getElementById('confirmType');
-            typeEl.innerText = type.toUpperCase();
-            typeEl.className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase text-xl' : 'text-[#F6465D] font-bold uppercase text-xl';
+            if(typeEl) {
+                typeEl.innerText = type.toUpperCase();
+                typeEl.className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase text-xl' : 'text-[#F6465D] font-bold uppercase text-xl';
+            }
             document.getElementById('confirmBalance').innerText = "$" + state.balance.toLocaleString('en-US');
             document.getElementById('confirmAmount').innerText = "$" + amount;
             document.getElementById('confirmWin').innerText = "+$" + (amount * 1.95).toFixed(2);
@@ -457,11 +435,15 @@
             state.pendingBet = { type: null, amount: 0 };
             document.getElementById('confirmBar').classList.remove('active');
 
-            if(state.userData.uid && state.userData.uid !== "guest" && db) {
+            if(state.userData.uid && state.userData.uid !== "guest") {
                 try {
                     const uRef = doc(db, "users", state.userData.uid);
-                    await updateDoc(uRef, { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
-                    await setDoc(doc(db, "games", "current"), { [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount) }, { merge: true });
+                    await updateDoc(uRef, { 
+                        balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount)
+                    }); 
+                    await setDoc(doc(db, "games", "current"), {
+                        [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
+                    }, { merge: true });
                 } catch(e) { console.error(e); }
             }
 
@@ -483,16 +465,16 @@
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
-        // --- GAME CORE LOGIC (FIXED HISTORY) ---
+        // --- GAME CORE LOGIC (FIXED) ---
         function initGame() {
-            // 1. Load Result History
+            // 1. Load History
             const h = localStorage.getItem('crownex_history_v30');
             if (h) state.history = JSON.parse(h);
             
             const now = Date.now();
             const currentEpoch30 = Math.floor(now / 30000); 
-            
-            // Generate basic history if missing
+
+            // Initialize History dots if empty
             const m = new Date().getMinutes();
             if(!state.history || state.history.length !== 60) state.history = new Array(60).fill(null);
             for(let i=0; i<m; i++) if(!state.history[i]) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
@@ -500,42 +482,46 @@
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
             
-            // 2. CANDLES INIT - BACKFILL LOGIC
+            // 2. CANDLE INITIALIZATION
             state.candles = [];
             let p = CONFIG.basePrice;
 
-            // Attempt to load
             const savedData = localStorage.getItem('crownex_chart_data');
             if (savedData) {
                 try { state.candles = JSON.parse(savedData); } catch (e) { state.candles = []; }
             }
 
-            // CHECK & FILL HOLES
-            // If we have less than 50 candles, or the last candle is old, regenerate fully
-            // This fixes the "1 green candle" bug
-            let needRegen = false;
-            if (state.candles.length < 50) needRegen = true;
-            else {
-                const lastEpoch = state.candles[state.candles.length - 1].epoch;
-                if (currentEpoch30 - lastEpoch > 100) needRegen = true;
-            }
+            const needsBackfill = state.candles.length === 0 || (currentEpoch30 - state.candles[state.candles.length-1].epoch > 100);
 
-            if (needRegen) {
-                console.log("Regenerating history candles...");
+            if (needsBackfill) {
                 state.candles = [];
-                // Generate 60 candles in the past
-                for(let i = 60; i > 0; i--) {
+                // Generate 50 historical candles ending NOW
+                let simPrice = CONFIG.basePrice;
+                for(let i = 50; i > 0; i--) {
                     const epoch = currentEpoch30 - i;
-                    const c = generateStaticCandle(epoch, p);
+                    const c = generateStaticCandle(epoch, simPrice);
                     state.candles.push(c);
-                    p = c.close; // Next candle starts from this close
+                    simPrice = c.close;
                 }
+                // Set current market price to match end of history
+                p = simPrice;
             } else {
-                // If data exists, sync price
                 p = state.candles[state.candles.length - 1].close;
+                const lastSavedEpoch = state.candles[state.candles.length - 1].epoch;
+                const missingCount = currentEpoch30 - lastSavedEpoch;
+                if(missingCount > 0) {
+                     for(let i = 1; i < missingCount; i++) {
+                        const epoch = lastSavedEpoch + i;
+                        const c = generateStaticCandle(epoch, p);
+                        state.candles.push(c);
+                        p = c.close;
+                     }
+                }
             }
+            
+            if (state.candles.length > 60) state.candles = state.candles.slice(-60);
 
-            // Sync visual price to prevent jumps
+            // Sync visual price exactly to last candle close to prevent jump
             state.visualPrice = p;
             state.targetPrice = p;
 
@@ -544,30 +530,35 @@
             setInterval(marketLoop, 30);
         }
 
-        // GENERATE CANDLE
         function generateStaticCandle(epoch, openPrice) {
-            const seed = epoch * 123.45;
-            let change = (Math.sin(seed * 2) - 0.5) * 20;
+            // UPDATED: More centered random generator to avoid drift
+            // Uses sin/cos mixture to feel random but deterministic for the same epoch
+            let change = (Math.sin(epoch * 1.5) + Math.cos(epoch * 2.5)) * 8;
 
-            // FORCE COLOR MATCH WITH HISTORY BUBBLES
-            // If epoch is odd (Result candle), it corresponds to a specific minute result
-            if (epoch % 2 !== 0) {
+            // UPDATED: Mean Reversion (Pull back to basePrice if too far)
+            const diff = openPrice - CONFIG.basePrice;
+            if (Math.abs(diff) > 40) {
+                change -= (diff * 0.15); // Stronger pull back
+            }
+
+            // Match history if available
+            if (epoch % 2 !== 0) { // Result candle
                 const minuteIdx = Math.floor(epoch / 2) % 60;
                 if (state.history[minuteIdx]) {
                     const res = state.history[minuteIdx];
                     if (res === 'up') {
-                        if (change <= 0) change = Math.abs(change) + 3;
-                        if (change < 1) change = 5;
+                        if (change <= 0) change = Math.abs(change) + 4;
+                        if (change < 2) change = 4;
                     } else if (res === 'down') {
-                        if (change >= 0) change = -Math.abs(change) - 3;
-                        if (change > -1) change = -5;
+                        if (change >= 0) change = -Math.abs(change) - 4;
+                        if (change > -2) change = -4;
                     }
                 }
             }
 
             const close = openPrice + change;
-            const high = Math.max(openPrice, close) + Math.abs(Math.sin(seed) * 5);
-            const low = Math.min(openPrice, close) - Math.abs(Math.sin(seed) * 5);
+            const high = Math.max(openPrice, close) + Math.abs(Math.sin(epoch) * 6);
+            const low = Math.min(openPrice, close) - Math.abs(Math.sin(epoch) * 6);
             return { open: openPrice, close: close, high: high, low: low, epoch: epoch };
         }
 
@@ -602,8 +593,8 @@
             const mi = ('0'+now.getMinutes()).slice(-2);
             document.getElementById('sessionID').innerText = `${y}${d}${mo}${h}${mi}`;
 
-            if (isOrder && state.currentPhase === 'result') startOrderPhase();
-            else if (!isOrder && state.currentPhase === 'order') startResultPhase();
+            if (isOrder && state.currentPhase === 'result') { startOrderPhase(); } 
+            else if (!isOrder && state.currentPhase === 'order') { startResultPhase(); }
 
             document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
             const progressPercent = (timeLeft / 30) * 100;
@@ -617,6 +608,7 @@
             document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "ORDERING";
             document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-[#0ECB81]/20 text-[#0ECB81] border border-[#0ECB81]/50";
+            
             document.getElementById('lockLabel').style.display = 'none'; 
             document.getElementById('lockLine').style.display = 'none';
             state.currentBet = null;
@@ -624,7 +616,7 @@
             document.getElementById('badge-down').classList.add('hidden');
             document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
             document.getElementById('btnSell').classList.remove('dimmed', 'locked');
-            if(state.userData && state.userData.uid !== "guest" && db) { setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); }
+            if(state.userData.uid && state.userData.uid !== "guest") { setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); }
         }
 
         function startResultPhase() {
@@ -659,6 +651,7 @@
             if (state.currentBet) {
                 const b = state.currentBet; const win = (b.type === res);
                 let profit = 0; let totalReturn = 0;
+                
                 if (win) {
                     totalReturn = b.amount * 1.95; profit = b.amount * 0.95;
                     state.balance += totalReturn; 
@@ -668,12 +661,9 @@
                 updateBalanceUI();
                 localStorage.removeItem('crownex_active_bet');
 
-                if(state.userData && state.userData.uid !== "guest" && db) {
+                if(state.userData.uid && state.userData.uid !== "guest") {
                     try {
                         if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
-                        await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
-                            type: b.type, amount: b.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: Date.now()
-                        });
                     } catch (e) { console.error(e); }
                 }
             }
@@ -682,8 +672,7 @@
         function showPopup(w, a) {
             const p = document.getElementById('resultPopup'); const b = document.getElementById('popupBorder');
             const t = document.getElementById('popupTitle'); const m = document.getElementById('popupAmount');
-            p.classList.remove('hidden', 'scale-90', 'opacity-0', 'pointer-events-none'); 
-            p.classList.add('scale-100', 'opacity-100');
+            p.classList.remove('hidden', 'scale-90', 'opacity-0'); p.classList.add('scale-100', 'opacity-100');
             if (w) {
                 b.className = 'tech-border p-6 relative bg-[#13161f] win'; t.innerText = "HÚP RỒI"; t.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase";
                 m.innerText = "+$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#0ECB81]";
@@ -691,7 +680,7 @@
                 b.className = 'tech-border p-6 relative bg-[#13161f] lose'; t.innerText = "GÃY RỒI"; t.className = "text-[#F6465D] font-black text-xl mb-2 uppercase";
                 m.innerText = "-$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#F6465D]";
             }
-            setTimeout(() => { p.classList.add('scale-90', 'opacity-0', 'pointer-events-none'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
+            setTimeout(() => { p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
         }
 
         function marketLoop() {
@@ -699,8 +688,15 @@
             const baseNoise = Math.sin(now / 1000) * 20 + (Math.random() - 0.5) * 10;
             state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
             
-            // Smoother lerp
-            if (Math.abs(state.targetPrice - state.visualPrice) > 50) state.visualPrice = state.targetPrice;
+            if (state.currentPhase === 'result' && state.killWhaleMode && state.lockPrice > 0) {
+               if (state.totalUp > state.totalDown) {
+                   if (state.targetPrice >= state.lockPrice) state.targetPrice = state.lockPrice - 5;
+               } else if (state.totalDown > state.totalUp) {
+                   if (state.targetPrice <= state.lockPrice) state.targetPrice = state.lockPrice + 5;
+               }
+            }
+
+            if (Math.abs(state.targetPrice - state.visualPrice) > 100) state.visualPrice = state.targetPrice;
             else state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1;
 
             const currentEpoch30 = Math.floor(now / 30000);
@@ -721,6 +717,7 @@
                 if(state.candles.length > 60) state.candles.shift();
                 lastCandle = newCandle;
             }
+
             lastCandle.close = state.visualPrice;
             if (state.visualPrice > lastCandle.high) lastCandle.high = state.visualPrice;
             if (state.visualPrice < lastCandle.low) lastCandle.low = state.visualPrice;
@@ -730,7 +727,7 @@
         
         function drawLoop() {
             const w = (cvs.width - CONFIG.chartPaddingRight) / 25; 
-            const r = 120;
+            const r = 120; 
             const min = state.visualPrice - r / 2;
             
             ctx.clearRect(0, 0, cvs.width, cvs.height);
@@ -751,7 +748,7 @@
             const lastIdx = state.candles.length - 1;
             for (let i = 0; i < state.candles.length; i++) {
                 const dist = lastIdx - i;
-                if (dist > 30) continue; 
+                if (dist > 25) continue; 
 
                 const x = (cvs.width - CONFIG.chartPaddingRight) - (dist * w) - (w/2);
                 const c = state.candles[i];
@@ -767,6 +764,7 @@
 
                 ctx.lineWidth = 1;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
+                
                 const bodyH = Math.max(Math.abs(yC - yO), 1);
                 ctx.fillRect(x - (w/2) + 2, Math.min(yO, yC), w - 4, bodyH);
             }
@@ -784,4 +782,5 @@
     </script>
 </body>
 </html>
+
 
