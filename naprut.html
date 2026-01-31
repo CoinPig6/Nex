@@ -267,7 +267,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        // IMPORT THÊM orderBy
         import { getFirestore, doc, updateDoc, addDoc, deleteDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -380,7 +379,6 @@
                     if(docSnap.exists()) {
                         userData = docSnap.data();
                         renderUserData(userData);
-                        checkAutoResetTurnover(userData);
                     }
                 });
 
@@ -435,17 +433,15 @@
             document.getElementById('turnoverBar').style.width = percent + "%";
         }
 
-        // --- OPTIMIZED HISTORY LOGIC (THEO YÊU CẦU CHUẨN) ---
+        // --- OPTIMIZED HISTORY LOGIC (STATUS FIX) ---
         function setupHistoryListener(uid) {
             if (unsubscribeHistory) unsubscribeHistory();
 
-            // SỬA LỖI 1: Thêm orderBy để đảm bảo thứ tự
             const q = query(
                 collection(db, "users", uid, "transactions"),
                 orderBy("timestamp", "desc")
             );
 
-            // SỬA LỖI 2: Không dùng deleteDoc trong snapshot loop
             unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 document.getElementById('historyError').classList.add('hidden');
                 allHistory = [];
@@ -457,14 +453,11 @@
                     const d = docSnap.data();
                     let dateObj = null;
 
-                    // SỬA LỖI 3: Xử lý timestamp chuẩn
                     if (d.timestamp?.toDate) {
                         dateObj = d.timestamp.toDate();
                     } else if (d.timestamp?.seconds) {
                         dateObj = new Date(d.timestamp.seconds * 1000);
                     } else {
-                        // Pending fix: Sử dụng Date hiện tại để hiển thị ngay lập tức ở đầu danh sách
-                        // Thay vì Date(0) sẽ bị đẩy xuống cuối do sort desc
                         dateObj = new Date(); 
                     }
 
@@ -476,7 +469,6 @@
                     }
                 });
 
-                // Tự động render lại theo tab đang chọn
                 renderHistoryList(
                     document.querySelector('.filter-chip.active')?.innerText.includes('Nạp') ? 'deposit' :
                     document.querySelector('.filter-chip.active')?.innerText.includes('Rút') ? 'withdraw' :
@@ -513,7 +505,6 @@
                 const itemDate = data.dateObj;
                 const itemDateString = itemDate.toDateString();
                 
-                // HEADER NGÀY THÁNG
                 let headerLabel = '';
                 if (itemDateString === today) headerLabel = 'Hôm nay';
                 else if (itemDateString === yesterday) headerLabel = 'Hôm qua';
@@ -539,7 +530,14 @@
                     default: typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
-                let badgeClass = 'badge-pending'; let statusText = 'ĐANG XỬ LÝ'; let statusIcon = 'fa-clock';
+                // LOGIC STATUS CHUYỂN ĐỔI RÕ RÀNG
+                // 1. Kiểm tra success/failed trước
+                // 2. Mặc định còn lại là pending (Đang xử lý)
+                // -> Đảm bảo không bao giờ hiện 2 trạng thái cùng lúc
+
+                let badgeClass = ''; 
+                let statusText = ''; 
+                let statusIcon = '';
                 
                 if (data.status === 'success') { 
                     badgeClass = 'badge-success'; 
@@ -549,6 +547,11 @@
                     badgeClass = 'badge-reject'; 
                     statusText = 'THẤT BẠI'; 
                     statusIcon = 'fa-xmark'; 
+                } else {
+                    // Default fallback cho pending hoặc rỗng
+                    badgeClass = 'badge-pending'; 
+                    statusText = 'ĐANG XỬ LÝ'; 
+                    statusIcon = 'fa-clock';
                 }
 
                 const isNew = (Date.now() - itemDate.getTime()) < 5000 ? 'new-item' : '';
