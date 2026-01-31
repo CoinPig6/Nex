@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex Pro - Giao dịch</title>
+    <title>Crownex Pro - Logic Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -12,8 +12,6 @@
         html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        
-        /* UTILS */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
 
         /* SIDEBAR & UI */
@@ -235,6 +233,9 @@
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // FIX 2: GLOBAL LOCK FLAG
+        let roundSettled = false;
+
         // --- GLOBAL UI FUNCTIONS ---
         window.toggleMenu = () => {
             const sb = document.getElementById('sidebar'); 
@@ -358,20 +359,33 @@
             } else { processOfflineResult(betData); }
         }
 
+        // FIX 1: OFFLINE LOGIC USING HISTORY (NO RANDOM)
         async function processOfflineResult(betData) {
-            const result = Math.random() > 0.5 ? 'up' : 'down'; 
-            const win = (betData.type === result);
-            let profit = 0; let totalReturn = 0;
+            const m = new Date().getMinutes();
+            let pm = m - 1; if (pm < 0) pm = 59;
+
+            // Kiểm tra lịch sử của phút trước đó
+            const res = state.history[pm];
+            if (!res) return; // Nếu chưa tải được lịch sử thì không xử lý (tránh lỗi random)
+
+            const win = (betData.type === res);
+            let totalReturn = 0;
+
             if (win) {
-                totalReturn = betData.amount * 1.95; profit = betData.amount * 0.95;
+                totalReturn = betData.amount * 1.95;
                 state.balance += totalReturn;
-                showToast('success', `Phiên trước: THẮNG (+$${profit.toFixed(2)})`);
-            } else { showToast('error', `Phiên trước: THUA (-$${betData.amount})`); }
+                showToast('success', `Phiên trước: THẮNG (+$${(betData.amount*0.95).toFixed(2)})`);
+                if(state.userData.uid !== "guest") {
+                    await updateDoc(doc(db,"users",state.userData.uid), {
+                        balance: increment(totalReturn)
+                    });
+                }
+            } else {
+                showToast('error', `Phiên trước: THUA (-$${betData.amount})`);
+            }
+
             updateBalanceUI();
             localStorage.removeItem('crownex_active_bet');
-            if(state.userData.uid && state.userData.uid !== "guest") {
-                if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
-            }
         }
 
         function updateBetUI(type, amount) {
@@ -465,20 +479,22 @@
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
-        // --- GAME CORE LOGIC (FIXED) ---
+        // --- GAME CORE LOGIC ---
         function initGame() {
-            // 1. Load History
+            // Load History safely
             const h = localStorage.getItem('crownex_history_v30');
             if (h) state.history = JSON.parse(h);
             
             const now = Date.now();
             const currentEpoch30 = Math.floor(now / 30000); 
 
-            // Initialize History dots if empty
-            const m = new Date().getMinutes();
-            if(!state.history || state.history.length !== 60) state.history = new Array(60).fill(null);
-            for(let i=0; i<m; i++) if(!state.history[i]) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
-            for(let i=m; i<60; i++) state.history[i] = null;
+            // Initialize History dots if completely empty (first run)
+            if(!state.history || state.history.length !== 60) {
+                 state.history = new Array(60).fill(null);
+                 // Only fill basic random if brand new, otherwise respect empty state for safety
+                 const m = new Date().getMinutes();
+                 for(let i=0; i<m; i++) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
+            }
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
             
@@ -531,14 +547,10 @@
         }
 
         function generateStaticCandle(epoch, openPrice) {
-            // UPDATED: More centered random generator to avoid drift
-            // Uses sin/cos mixture to feel random but deterministic for the same epoch
             let change = (Math.sin(epoch * 1.5) + Math.cos(epoch * 2.5)) * 8;
-
-            // UPDATED: Mean Reversion (Pull back to basePrice if too far)
             const diff = openPrice - CONFIG.basePrice;
             if (Math.abs(diff) > 40) {
-                change -= (diff * 0.15); // Stronger pull back
+                change -= (diff * 0.15); 
             }
 
             // Match history if available
@@ -634,6 +646,10 @@
         }
 
         async function finalizeRound() {
+            // FIX 2: PREVENT DOUBLE RUN
+            if (roundSettled) return;
+            roundSettled = true;
+
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
             if (state.killWhaleMode) {
                 if (state.totalUp > state.totalDown) res = 'down';
@@ -642,7 +658,17 @@
 
             const m = new Date().getMinutes(); 
             let pm = m - 1; if(pm < 0) pm = 59;
-            if(m === 0) state.history.fill(null); 
+
+            // FIX 3: HISTORY RESET ONLY ON NEW DAY
+            const lastDay = localStorage.getItem("crownex_history_day");
+            const today = new Date().toDateString();
+
+            if (lastDay !== today) {
+                state.history = new Array(60).fill(null);
+                localStorage.setItem("crownex_history_day", today);
+            }
+
+            // Ghi kết quả vào phút vừa xong (ghi đè lên dữ liệu cũ nếu là vòng mới)
             state.history[pm] = res;
             
             localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
@@ -667,6 +693,9 @@
                     } catch (e) { console.error(e); }
                 }
             }
+
+            // Release lock after 1s
+            setTimeout(() => { roundSettled = false; }, 1000);
         }
 
         function showPopup(w, a) {
