@@ -40,9 +40,10 @@
             text-transform: uppercase; transition: 0.2s; min-width: 90px;
             text-align: center; display: inline-block;
         }
-        .btn-claim.pending { background: #F59E0B; color: black; cursor: wait; }
-        .btn-claim:active { transform: scale(0.95); }
-        .btn-claim:disabled { background: #2d3442; color: #6b7280; cursor: not-allowed; transform: none; }
+        .btn-claim.pending { background: #F59E0B; color: black; cursor: wait; opacity: 1 !important; }
+        .btn-claim.received { background: #374151; color: #9CA3AF; cursor: not-allowed; opacity: 0.8; }
+        .btn-claim:active:not(:disabled) { transform: scale(0.95); }
+        .btn-claim:disabled { cursor: not-allowed; }
 
         /* GIFTCODE INPUT */
         .input-code { 
@@ -140,7 +141,6 @@
 
             <!-- Steps 7 Days -->
             <div class="step-container mb-4" id="attendanceSteps">
-                <div class="step-line"></div>
                 <!-- Rendered by JS -->
             </div>
 
@@ -180,7 +180,7 @@
             <button id="btnRefund" onclick="claimRefund()" class="w-full btn-claim py-3" disabled>CHƯA ĐỦ MỐC $1</button>
         </div>
 
-        <!-- === 4. QUÀ TÂN THỦ (ẨN NÚT KHI ĐÃ ẤN) === -->
+        <!-- === 4. QUÀ TÂN THỦ === -->
         <div class="promo-card p-4 relative overflow-hidden" id="cardNewbie">
             <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
             <div class="flex justify-between items-center">
@@ -200,7 +200,7 @@
             </div>
         </div>
 
-        <!-- === 5. KHUYẾN MÃI NẠP ĐẦU (MAX $1000 - MIN $200) === -->
+        <!-- === 5. KHUYẾN MÃI NẠP ĐẦU === -->
         <div class="promo-card p-4 relative overflow-hidden">
             <div class="promo-tag">HOT</div>
             <div class="flex justify-between items-center">
@@ -229,18 +229,19 @@
                         <i class="fa-solid fa-2"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Nạp Lần 2</h3>
-                        <p class="text-[10px] text-gray-400">Ưu đãi đặc biệt cho lần 2.</p>
+                        <h3 class="text-white font-bold text-sm">Nạp Lần 2 (50%)</h3>
+                        <p class="text-[10px] text-gray-400">Thưởng tối đa: $1,000</p>
+                        <p class="text-[10px] text-gray-500">Doanh thu: (Nạp x1) + (KM x5)</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="block text-indigo-400 font-black font-mono text-lg">BONUS</span>
+                    <span class="block text-indigo-400 font-black font-mono text-lg">50%</span>
                     <button id="btnDep2" onclick="requestPromo('deposit_2')" class="btn-claim mt-1">ĐĂNG KÝ</button>
                 </div>
             </div>
         </div>
 
-        <!-- === 7. NẠP HÀNG NGÀY (10% x2 VC) === -->
+        <!-- === 7. NẠP HÀNG NGÀY === -->
         <div class="promo-card p-4 relative overflow-hidden">
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
@@ -259,7 +260,7 @@
             </div>
         </div>
 
-        <!-- === 8. CUỐI TUẦN T7-CN (50% x5 VC) === -->
+        <!-- === 8. CUỐI TUẦN T7-CN (UPDATED) === -->
         <div class="promo-card p-4 relative overflow-hidden">
             <div class="promo-tag bg-red-600">T7 - CN</div>
             <div class="flex justify-between items-center">
@@ -268,8 +269,9 @@
                         <i class="fa-solid fa-calendar-week"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Siêu Deal Cuối Tuần</h3>
-                        <p class="text-[10px] text-gray-400">Max $1,000 - x5 Vòng cược.</p>
+                        <h3 class="text-white font-bold text-sm">Siêu Deal Cuối Tuần (50%)</h3>
+                        <p class="text-[10px] text-gray-400">Thưởng tối đa: $1,000</p>
+                        <p class="text-[10px] text-gray-500">Doanh thu: (Nạp + KM) x5</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -301,6 +303,11 @@
         const db = getFirestore(app);
         let currentUser = null;
         let userData = null;
+
+        // --- Utils: Time Standardization ---
+        function getTodayString() {
+            return new Date().toDateString(); 
+        }
 
         // --- Sidebar ---
         window.toggleMenu = () => {
@@ -335,7 +342,7 @@
         function renderAll(data) {
             renderRefund(data);
             renderAttendance(data);
-            checkWeekend(); // Kiểm tra có phải T7 CN không để hiện nút
+            checkWeekend();
         }
 
         // --- 1. GIFTCODE ---
@@ -373,7 +380,7 @@
                 });
 
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'giftcode', amount: 0, code: code, status: 'success', timestamp: new Date()
+                    type: 'giftcode', amount: 0, code: code, status: 'success', timestamp: Date.now()
                 });
                 showToast("Đổi mã thành công!", "success");
                 codeInput.value = "";
@@ -381,7 +388,7 @@
             finally { btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY"; }
         };
 
-        // --- 2. HOÀN TRẢ (Min $1) ---
+        // --- 2. HOÀN TRẢ ---
         function renderRefund(data) {
             const currentTurnover = data.betTurnover || 0;
             const lastTurnover = data.lastRefundTurnover || 0;
@@ -420,22 +427,22 @@
                     lastRefundTurnover: currentTurnover
                 });
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'refund', amount: refundAmt, note: 'Hoàn trả 0.15%', status: 'success', timestamp: new Date()
+                    type: 'refund', amount: refundAmt, note: 'Hoàn trả 0.15%', status: 'success', timestamp: Date.now()
                 });
                 showToast(`Đã nhận hoàn trả $${refundAmt.toFixed(2)}`, "success");
             } catch (e) { console.error(e); }
         };
 
-        // --- 3. ĐIỂM DANH (Reset 00h) ---
+        // --- 3. ĐIỂM DANH ---
         const REWARDS_7_DAYS = [1, 1, 2, 3, 4, 5, 9];
 
         function renderAttendance(data) {
-            // Kiểm tra ngày hôm nay
-            const todayStr = new Date().toDateString();
+            const todayStr = getTodayString();
+            
             const lastDepDate = data.lastDepositDate ? new Date(data.lastDepositDate).toDateString() : "";
             const lastBetDate = data.lastBetDate ? new Date(data.lastBetDate).toDateString() : "";
-            
-            // Logic: Nếu ngày nạp/cược không phải hôm nay, coi như = 0
+            const lastAttDate = data.lastAttendance ? new Date(data.lastAttendance).toDateString() : "";
+
             const depToday = (lastDepDate === todayStr) ? (data.depositToday || 0) : 0;
             const betToday = (lastBetDate === todayStr) ? (data.betToday || 0) : 0;
 
@@ -462,7 +469,6 @@
             document.getElementById('attendanceSteps').innerHTML = html;
 
             const btnAtt = document.getElementById('btnAttendance');
-            const lastAttDate = data.lastAttendance ? new Date(data.lastAttendance).toDateString() : "";
 
             if (lastAttDate === todayStr) {
                 btnAtt.disabled = true;
@@ -470,7 +476,9 @@
             } else {
                 if (depToday >= 20 && betToday >= 200) {
                     btnAtt.disabled = false;
-                    btnAtt.innerText = `NHẬN NGAY $${REWARDS_7_DAYS[streak] || 1}`;
+                    let displayRewardIndex = streak;
+                    if (streak >= 7) displayRewardIndex = 0;
+                    btnAtt.innerText = `NHẬN NGAY $${REWARDS_7_DAYS[displayRewardIndex] || 1}`;
                 } else {
                     btnAtt.disabled = true;
                     btnAtt.innerText = "CHƯA ĐỦ ĐIỀU KIỆN";
@@ -480,14 +488,16 @@
 
         window.claimAttendance = async () => {
             if (!currentUser) return;
+            const btn = document.getElementById('btnAttendance');
+            
             try {
-                const btn = document.getElementById('btnAttendance');
                 btn.disabled = true;
-                const streak = userData.attendanceStreak || 0;
-                let reward = REWARDS_7_DAYS[streak] || 1;
                 
-                let nextStreak = streak + 1;
-                if (nextStreak >= 7) nextStreak = 0;
+                let currentStreak = userData.attendanceStreak || 0;
+                if (currentStreak >= 7) currentStreak = 0;
+
+                let reward = REWARDS_7_DAYS[currentStreak] || 1;
+                let nextStreak = currentStreak + 1;
 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: (userData.balance || 0) + reward,
@@ -496,10 +506,19 @@
                 });
 
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'attendance', amount: reward, note: `Điểm danh ngày ${streak + 1}`, status: 'success', timestamp: new Date()
+                    type: 'attendance', 
+                    amount: reward, 
+                    note: `Điểm danh ngày ${nextStreak}`, 
+                    status: 'success', 
+                    timestamp: Date.now()
                 });
+
                 showToast(`Điểm danh thành công! Nhận $${reward}`, "success");
-            } catch (e) { showToast("Lỗi kết nối", "error"); }
+            } catch (e) { 
+                console.error(e);
+                showToast("Lỗi xử lý điểm danh", "error"); 
+                btn.disabled = false;
+            }
         };
 
         // --- 4. KHUYẾN MÃI BUTTONS LOGIC ---
@@ -519,13 +538,12 @@
                 let statusMap = {};
                 snap.forEach(d => {
                     const r = d.data();
-                    statusMap[r.type] = r.status;
+                    if (!statusMap[r.type] || r.status === 'pending' || r.status === 'success') {
+                         statusMap[r.type] = r.status;
+                    }
                 });
                 
-                // Newbie: Nếu đã có bất kỳ trạng thái nào (pending/approved/rejected) -> Ẩn hoặc disable vĩnh viễn
-                updateNewbieButton(statusMap['newbie']);
-                
-                // Các gói khác: Chỉ chặn khi đang pending
+                updatePromoBtn('btnNewbie', statusMap['newbie']);
                 updatePromoBtn('btnDep1', statusMap['deposit_1']);
                 updatePromoBtn('btnDep2', statusMap['deposit_2']);
                 updatePromoBtn('btnDaily', statusMap['daily_10']);
@@ -533,46 +551,29 @@
             });
         }
 
-        function updateNewbieButton(status) {
-            const btn = document.getElementById('btnNewbie');
-            if (!btn) return;
-            
-            if (status) {
-                // Đã có record -> Không cho ấn nữa (Ẩn nút hoặc đổi trạng thái)
-                btn.disabled = true;
-                if (status === 'pending') {
-                    btn.innerText = "CHỜ DUYỆT";
-                    btn.className = "btn-claim pending";
-                } else if (status === 'success') {
-                    btn.innerText = "ĐÃ NHẬN";
-                    btn.className = "btn-claim bg-gray-600";
-                } else {
-                    btn.innerText = "ĐÃ TỪ CHỐI"; // Hoặc ẩn luôn theo yêu cầu
-                    btn.style.display = 'none'; // Ẩn luôn nếu cần
-                }
-            } else {
-                btn.innerText = "ĐĂNG KÝ";
-                btn.disabled = false;
-            }
-        }
-
         function updatePromoBtn(btnId, status) {
             const btn = document.getElementById(btnId);
             if (!btn) return;
+
+            btn.className = "btn-claim mt-1"; 
 
             if (status === 'pending') {
                 btn.innerText = "ĐANG XÉT DUYỆT";
                 btn.disabled = true;
                 btn.classList.add('pending');
-            } else {
-                // Nếu là weekend, check ngày lại lần nữa để không ghi đè
+            } 
+            else if (status === 'success') {
+                btn.innerText = "ĐÃ NHẬN";
+                btn.disabled = true;
+                btn.classList.add('received');
+            } 
+            else {
                 if (btnId === 'btnWeekend') {
                      const today = new Date().getDay();
-                     if (today !== 0 && today !== 6) return; // Giữ nguyên trạng thái disable do ngày
+                     if (today !== 0 && today !== 6) return; 
                 }
                 btn.innerText = "ĐĂNG KÝ";
                 btn.disabled = false;
-                btn.classList.remove('pending');
             }
         }
 
@@ -587,9 +588,23 @@
             if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
 
             try {
-                // Check quy tắc cụ thể
-                if (type === 'deposit_1') {
-                    // Có thể check thêm balance >= 200 ở đây nếu muốn
+                const q = query(
+                    collection(db, "promotion_requests"), 
+                    where("userId", "==", currentUser.uid),
+                    where("type", "==", type)
+                );
+                const querySnap = await getDocs(q);
+                let isDuplicate = false;
+                
+                querySnap.forEach((doc) => {
+                    const s = doc.data().status;
+                    if (s === 'pending' || s === 'success') isDuplicate = true;
+                });
+
+                if (isDuplicate) {
+                    showToast("Bạn đã đăng ký hoặc đã nhận gói này rồi!", "error");
+                    checkPendingRequests(currentUser.uid);
+                    return;
                 }
 
                 await addDoc(collection(db, "promotion_requests"), {
@@ -597,11 +612,12 @@
                     username: userData.username || 'Unknown',
                     type: type,
                     status: 'pending',
-                    timestamp: new Date()
+                    timestamp: Date.now()
                 });
                 showToast("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.", "success");
             } catch (e) {
-                showToast("Lỗi gửi yêu cầu", "error");
+                console.error(e);
+                showToast("Lỗi gửi yêu cầu: " + e.message, "error");
                 if(btn) { btn.disabled = false; btn.innerText = "ĐĂNG KÝ"; }
             }
         };
@@ -617,4 +633,5 @@
     </script>
 </body>
 </html>
+
 
