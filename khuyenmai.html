@@ -27,15 +27,22 @@
             overflow: hidden; margin-bottom: 16px; position: relative; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
+        .promo-tag {
+            position: absolute; top: 0; right: 0;
+            background: #F6465D; color: white;
+            font-size: 9px; font-weight: bold;
+            padding: 4px 8px; border-bottom-left-radius: 8px;
+        }
         
         .btn-claim { 
             background: #0ECB81; color: white; border-radius: 6px; 
-            padding: 6px 12px; font-size: 11px; font-weight: bold; 
-            text-transform: uppercase; transition: 0.2s; min-width: 80px;
+            padding: 8px 12px; font-size: 11px; font-weight: bold; 
+            text-transform: uppercase; transition: 0.2s; min-width: 90px;
+            text-align: center; display: inline-block;
         }
         .btn-claim.pending { background: #F59E0B; color: black; cursor: wait; }
         .btn-claim:active { transform: scale(0.95); }
-        .btn-claim:disabled { background: #2d3442; color: #6b7280; cursor: not-allowed; }
+        .btn-claim:disabled { background: #2d3442; color: #6b7280; cursor: not-allowed; transform: none; }
 
         /* GIFTCODE INPUT */
         .input-code { 
@@ -117,10 +124,9 @@
             </h3>
             <input type="text" id="giftcodeInput" class="input-code" placeholder="MÃ NHẬN THƯỞNG">
             <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">ĐỔI QUÀ NGAY</button>
-            <p class="text-[10px] text-gray-500 mt-2 italic text-center">Mã code được phát tại Telegram chính thức.</p>
         </div>
 
-        <!-- === 2. ĐIỂM DANH 7 NGÀY (ĐÃ SỬA: TỔNG $25) === -->
+        <!-- === 2. ĐIỂM DANH 7 NGÀY === -->
         <div class="promo-card p-4">
             <div class="flex gap-3 mb-3">
                 <div class="w-10 h-10 bg-[#0ECB81]/10 rounded-full flex items-center justify-center text-[#0ECB81] text-xl">
@@ -128,14 +134,14 @@
                 </div>
                 <div>
                     <h3 class="text-white font-bold text-sm">Điểm Danh 7 Ngày ($25)</h3>
-                    <p class="text-[10px] text-gray-400">Yêu cầu mỗi ngày: Nạp <span class="text-[#FCD535]">$20</span> & Cược <span class="text-[#FCD535]">$200</span>.</p>
+                    <p class="text-[10px] text-gray-400">00:00 Làm mới nhiệm vụ.</p>
                 </div>
             </div>
 
             <!-- Steps 7 Days -->
             <div class="step-container mb-4" id="attendanceSteps">
                 <div class="step-line"></div>
-                <!-- Dữ liệu render bằng JS -->
+                <!-- Rendered by JS -->
             </div>
 
             <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-2 border-t border-[#2d3442] pt-2">
@@ -146,7 +152,7 @@
             <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐIỂM DANH</button>
         </div>
 
-        <!-- === 3. HOÀN TRẢ VIP === -->
+        <!-- === 3. HOÀN TRẢ VIP (MIN $1) === -->
         <div class="promo-card p-4">
             <div class="flex justify-between items-start mb-2">
                 <div class="flex gap-3">
@@ -154,8 +160,8 @@
                         <i class="fa-solid fa-rotate-left"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Hoàn Trả Mỗi Ngày</h3>
-                        <p class="text-[10px] text-gray-400">Tỷ lệ <span class="text-white font-bold">0.15%</span> trên tổng cược.</p>
+                        <h3 class="text-white font-bold text-sm">Hoàn Trả Không Giới Hạn</h3>
+                        <p class="text-[10px] text-gray-400">Tối thiểu <span class="text-white font-bold">$1</span> để nhận.</p>
                     </div>
                 </div>
             </div>
@@ -169,14 +175,13 @@
                     <span>Hoàn trả khả dụng</span>
                     <span class="text-[#0ECB81] font-mono font-bold" id="refundAmount">$0.00</span>
                 </div>
-                <div class="text-[9px] text-gray-500 italic mt-1 text-right">* Tự động cộng dồn theo tổng cược.</div>
             </div>
             
-            <button id="btnRefund" onclick="claimRefund()" class="w-full btn-claim py-3" disabled>RÚT HOÀN TRẢ</button>
+            <button id="btnRefund" onclick="claimRefund()" class="w-full btn-claim py-3" disabled>CHƯA ĐỦ MỐC $1</button>
         </div>
 
-        <!-- === 4. QUÀ TÂN THỦ (ĐƯA XUỐNG CUỐI) === -->
-        <div class="promo-card p-4 relative overflow-hidden">
+        <!-- === 4. QUÀ TÂN THỦ (ẨN NÚT KHI ĐÃ ẤN) === -->
+        <div class="promo-card p-4 relative overflow-hidden" id="cardNewbie">
             <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
@@ -185,36 +190,93 @@
                     </div>
                     <div>
                         <h3 class="text-white font-bold text-sm">Quà Tân Thủ</h3>
-                        <p class="text-[10px] text-gray-400">Tặng miễn phí trải nghiệm.</p>
+                        <p class="text-[10px] text-gray-400">Chỉ nhận 1 lần duy nhất.</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="block text-[#FCD535] font-black font-mono text-lg">+$10.00</span>
+                    <span class="block text-[#FCD535] font-black font-mono text-lg">FREE</span>
                     <button id="btnNewbie" onclick="requestPromo('newbie')" class="btn-claim mt-1">ĐĂNG KÝ</button>
                 </div>
             </div>
-            <p class="text-[9px] text-gray-500 mt-2 italic text-center">* Gửi yêu cầu để Admin xét duyệt.</p>
         </div>
 
-        <!-- === 5. KHUYẾN MÃI NẠP 100% (ĐƯA XUỐNG CUỐI) === -->
+        <!-- === 5. KHUYẾN MÃI NẠP ĐẦU (MAX $1000 - MIN $200) === -->
         <div class="promo-card p-4 relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 opacity-20 rounded-full blur-xl"></div>
+            <div class="promo-tag">HOT</div>
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
                     <div class="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 text-xl">
-                        <i class="fa-solid fa-sack-dollar"></i>
+                        <i class="fa-solid fa-1"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Thưởng Nạp Đầu 100%</h3>
-                        <p class="text-[10px] text-gray-400">X2 giá trị nạp lần đầu.</p>
+                        <h3 class="text-white font-bold text-sm">Nạp Đầu 100%</h3>
+                        <p class="text-[10px] text-gray-400">Tối thiểu: $200 - Tối đa: $1,000</p>
+                        <p class="text-[10px] text-gray-500">(Tiền nạp + KM) x3 Cược</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="block text-purple-400 font-black font-mono text-lg">x2</span>
-                    <button id="btnDep100" onclick="requestPromo('deposit_100')" class="btn-claim mt-1">ĐĂNG KÝ</button>
+                    <span class="block text-purple-400 font-black font-mono text-lg">100%</span>
+                    <button id="btnDep1" onclick="requestPromo('deposit_1')" class="btn-claim mt-1">ĐĂNG KÝ</button>
                 </div>
             </div>
-            <p class="text-[9px] text-gray-500 mt-2 italic text-center">* Gửi yêu cầu để Admin xét duyệt.</p>
+        </div>
+
+        <!-- === 6. KHUYẾN MÃI NẠP LẦN 2 === -->
+        <div class="promo-card p-4 relative overflow-hidden">
+            <div class="flex justify-between items-center">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 text-xl">
+                        <i class="fa-solid fa-2"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Nạp Lần 2</h3>
+                        <p class="text-[10px] text-gray-400">Ưu đãi đặc biệt cho lần 2.</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-indigo-400 font-black font-mono text-lg">BONUS</span>
+                    <button id="btnDep2" onclick="requestPromo('deposit_2')" class="btn-claim mt-1">ĐĂNG KÝ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- === 7. NẠP HÀNG NGÀY (10% x2 VC) === -->
+        <div class="promo-card p-4 relative overflow-hidden">
+            <div class="flex justify-between items-center">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-400 text-xl">
+                        <i class="fa-solid fa-repeat"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Nạp Mỗi Ngày</h3>
+                        <p class="text-[10px] text-gray-400">Thưởng 10% - x2 Vòng cược.</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-teal-400 font-black font-mono text-lg">10%</span>
+                    <button id="btnDaily" onclick="requestPromo('daily_10')" class="btn-claim mt-1">ĐĂNG KÝ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- === 8. CUỐI TUẦN T7-CN (50% x5 VC) === -->
+        <div class="promo-card p-4 relative overflow-hidden">
+            <div class="promo-tag bg-red-600">T7 - CN</div>
+            <div class="flex justify-between items-center">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-400 text-xl">
+                        <i class="fa-solid fa-calendar-week"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Siêu Deal Cuối Tuần</h3>
+                        <p class="text-[10px] text-gray-400">Max $1,000 - x5 Vòng cược.</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-red-400 font-black font-mono text-lg">50%</span>
+                    <button id="btnWeekend" onclick="requestPromo('weekend_50')" class="btn-claim mt-1">ĐĂNG KÝ</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -270,13 +332,13 @@
             }
         });
 
-        // --- RENDER ALL SECTIONS ---
         function renderAll(data) {
             renderRefund(data);
             renderAttendance(data);
+            checkWeekend(); // Kiểm tra có phải T7 CN không để hiện nút
         }
 
-        // --- 1. LOGIC GIFTCODE ---
+        // --- 1. GIFTCODE ---
         window.redeemCode = async () => {
             if (!currentUser) return;
             const codeInput = document.getElementById('giftcodeInput');
@@ -284,7 +346,6 @@
             const btn = document.getElementById('btnRedeem');
 
             if (!code) return showToast("Vui lòng nhập mã!", "error");
-
             btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
 
             try {
@@ -314,17 +375,13 @@
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
                     type: 'giftcode', amount: 0, code: code, status: 'success', timestamp: new Date()
                 });
-
-                showToast("Đổi mã thành công! Đã cộng tiền.", "success");
+                showToast("Đổi mã thành công!", "success");
                 codeInput.value = "";
-            } catch (e) {
-                showToast(typeof e === 'string' ? e : e.message, "error");
-            } finally {
-                btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY";
-            }
+            } catch (e) { showToast(typeof e === 'string' ? e : e.message, "error"); } 
+            finally { btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY"; }
         };
 
-        // --- 2. LOGIC HOÀN TRẢ ---
+        // --- 2. HOÀN TRẢ (Min $1) ---
         function renderRefund(data) {
             const currentTurnover = data.betTurnover || 0;
             const lastTurnover = data.lastRefundTurnover || 0;
@@ -335,32 +392,33 @@
             document.getElementById('refundAmount').innerText = "$" + refundAmt.toFixed(4);
 
             const btnRefund = document.getElementById('btnRefund');
-            if (refundAmt >= 0.1) {
+            if (refundAmt >= 1.0) {
                 btnRefund.disabled = false;
                 btnRefund.innerText = `RÚT NGAY $${refundAmt.toFixed(2)}`;
+                btnRefund.classList.remove('opacity-50');
             } else {
                 btnRefund.disabled = true;
-                btnRefund.innerText = "CHƯA ĐỦ MỐC $0.1";
+                btnRefund.innerText = "CHƯA ĐỦ MỐC $1";
+                btnRefund.classList.add('opacity-50');
             }
         }
 
         window.claimRefund = async () => {
             if (!currentUser || !userData) return;
+            const btn = document.getElementById('btnRefund');
+            btn.disabled = true;
             try {
-                const btn = document.getElementById('btnRefund');
-                btn.disabled = true;
                 const currentTurnover = userData.betTurnover || 0;
                 const lastTurnover = userData.lastRefundTurnover || 0;
                 const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
                 const refundAmt = pendingTurnover * 0.0015;
 
-                if (refundAmt < 0.1) return;
+                if (refundAmt < 1.0) return showToast("Số dư hoàn trả chưa đủ $1", "error");
 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: (userData.balance || 0) + refundAmt,
                     lastRefundTurnover: currentTurnover
                 });
-
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
                     type: 'refund', amount: refundAmt, note: 'Hoàn trả 0.15%', status: 'success', timestamp: new Date()
                 });
@@ -368,13 +426,18 @@
             } catch (e) { console.error(e); }
         };
 
-        // --- 3. LOGIC ĐIỂM DANH 7 NGÀY (CẬP NHẬT MỐC $25) ---
-        // Tổng: 1+1+2+3+4+5+9 = 25
+        // --- 3. ĐIỂM DANH (Reset 00h) ---
         const REWARDS_7_DAYS = [1, 1, 2, 3, 4, 5, 9];
 
         function renderAttendance(data) {
-            const depToday = data.depositToday || 0;
-            const betToday = data.betToday || 0;
+            // Kiểm tra ngày hôm nay
+            const todayStr = new Date().toDateString();
+            const lastDepDate = data.lastDepositDate ? new Date(data.lastDepositDate).toDateString() : "";
+            const lastBetDate = data.lastBetDate ? new Date(data.lastBetDate).toDateString() : "";
+            
+            // Logic: Nếu ngày nạp/cược không phải hôm nay, coi như = 0
+            const depToday = (lastDepDate === todayStr) ? (data.depositToday || 0) : 0;
+            const betToday = (lastBetDate === todayStr) ? (data.betToday || 0) : 0;
 
             document.getElementById('progressDep').innerText = depToday;
             document.getElementById('progressDep').className = depToday >= 20 ? "text-[#0ECB81]" : "text-white";
@@ -400,7 +463,6 @@
 
             const btnAtt = document.getElementById('btnAttendance');
             const lastAttDate = data.lastAttendance ? new Date(data.lastAttendance).toDateString() : "";
-            const todayStr = new Date().toDateString();
 
             if (lastAttDate === todayStr) {
                 btnAtt.disabled = true;
@@ -440,61 +502,107 @@
             } catch (e) { showToast("Lỗi kết nối", "error"); }
         };
 
-        // --- 4. LOGIC GỬI YÊU CẦU ---
+        // --- 4. KHUYẾN MÃI BUTTONS LOGIC ---
+        function checkWeekend() {
+            const today = new Date().getDay(); // 0 is Sunday, 6 is Saturday
+            const btn = document.getElementById('btnWeekend');
+            if (today !== 0 && today !== 6) {
+                btn.disabled = true;
+                btn.innerText = "CHỈ MỞ T7 - CN";
+                btn.classList.add('opacity-50');
+            }
+        }
+
         async function checkPendingRequests(uid) {
             const q = query(collection(db, "promotion_requests"), where("userId", "==", uid));
             onSnapshot(q, (snap) => {
-                let pendingNewbie = false;
-                let pendingDep100 = false;
+                let statusMap = {};
                 snap.forEach(d => {
                     const r = d.data();
-                    if (r.type === 'newbie' && r.status === 'pending') pendingNewbie = true;
-                    if (r.type === 'deposit_100' && r.status === 'pending') pendingDep100 = true;
+                    statusMap[r.type] = r.status;
                 });
-                updateButtonState('btnNewbie', pendingNewbie, userData?.isNewbieClaimed);
-                updateButtonState('btnDep100', pendingDep100, userData?.isDep100Claimed);
+                
+                // Newbie: Nếu đã có bất kỳ trạng thái nào (pending/approved/rejected) -> Ẩn hoặc disable vĩnh viễn
+                updateNewbieButton(statusMap['newbie']);
+                
+                // Các gói khác: Chỉ chặn khi đang pending
+                updatePromoBtn('btnDep1', statusMap['deposit_1']);
+                updatePromoBtn('btnDep2', statusMap['deposit_2']);
+                updatePromoBtn('btnDaily', statusMap['daily_10']);
+                updatePromoBtn('btnWeekend', statusMap['weekend_50']);
             });
         }
 
-        function updateButtonState(btnId, isPending, isClaimed) {
-            const btn = document.getElementById(btnId);
+        function updateNewbieButton(status) {
+            const btn = document.getElementById('btnNewbie');
             if (!btn) return;
-            if (isClaimed) {
-                btn.innerText = "ĐÃ NHẬN";
+            
+            if (status) {
+                // Đã có record -> Không cho ấn nữa (Ẩn nút hoặc đổi trạng thái)
                 btn.disabled = true;
-                btn.className = "btn-claim disabled bg-gray-600 text-gray-400";
-            } else if (isPending) {
-                btn.innerText = "CHỜ DUYỆT...";
-                btn.disabled = true;
-                btn.className = "btn-claim pending";
+                if (status === 'pending') {
+                    btn.innerText = "CHỜ DUYỆT";
+                    btn.className = "btn-claim pending";
+                } else if (status === 'success') {
+                    btn.innerText = "ĐÃ NHẬN";
+                    btn.className = "btn-claim bg-gray-600";
+                } else {
+                    btn.innerText = "ĐÃ TỪ CHỐI"; // Hoặc ẩn luôn theo yêu cầu
+                    btn.style.display = 'none'; // Ẩn luôn nếu cần
+                }
             } else {
                 btn.innerText = "ĐĂNG KÝ";
                 btn.disabled = false;
-                btn.className = "btn-claim";
+            }
+        }
+
+        function updatePromoBtn(btnId, status) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+
+            if (status === 'pending') {
+                btn.innerText = "ĐANG XÉT DUYỆT";
+                btn.disabled = true;
+                btn.classList.add('pending');
+            } else {
+                // Nếu là weekend, check ngày lại lần nữa để không ghi đè
+                if (btnId === 'btnWeekend') {
+                     const today = new Date().getDay();
+                     if (today !== 0 && today !== 6) return; // Giữ nguyên trạng thái disable do ngày
+                }
+                btn.innerText = "ĐĂNG KÝ";
+                btn.disabled = false;
+                btn.classList.remove('pending');
             }
         }
 
         window.requestPromo = async (type) => {
             if (!currentUser) return;
-            if (type === 'newbie' && userData.isNewbieClaimed) return showToast("Bạn đã nhận quà này rồi!", "error");
-            
-            const btnId = type === 'newbie' ? 'btnNewbie' : 'btnDep100';
-            const btn = document.getElementById(btnId);
-            btn.disabled = true; btn.innerText = "ĐANG GỬI...";
+            const btnIdMap = {
+                'newbie': 'btnNewbie', 'deposit_1': 'btnDep1', 
+                'deposit_2': 'btnDep2', 'daily_10': 'btnDaily', 
+                'weekend_50': 'btnWeekend'
+            };
+            const btn = document.getElementById(btnIdMap[type]);
+            if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
 
             try {
+                // Check quy tắc cụ thể
+                if (type === 'deposit_1') {
+                    // Có thể check thêm balance >= 200 ở đây nếu muốn
+                }
+
                 await addDoc(collection(db, "promotion_requests"), {
                     userId: currentUser.uid,
                     username: userData.username || 'Unknown',
                     type: type,
                     status: 'pending',
-                    details: type === 'newbie' ? 'Yêu cầu nhận quà tân thủ' : 'Yêu cầu khuyến mãi nạp đầu 100%',
                     timestamp: new Date()
                 });
                 showToast("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.", "success");
             } catch (e) {
                 showToast("Lỗi gửi yêu cầu", "error");
-                btn.disabled = false; btn.innerText = "ĐĂNG KÝ";
+                if(btn) { btn.disabled = false; btn.innerText = "ĐĂNG KÝ"; }
             }
         };
 
