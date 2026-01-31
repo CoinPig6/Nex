@@ -12,15 +12,14 @@
         html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .text-up { color: #0ECB81; } .bg-up { background-color: #0ECB81; }
-        .text-down { color: #F6465D; } .bg-down { background-color: #F6465D; }
         
         /* UTILS */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .no-tap { -webkit-tap-highlight-color: transparent; }
 
         /* SIDEBAR & UI */
-        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform; }
+        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; cursor: pointer; }
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
 
@@ -63,7 +62,7 @@
         .dot.new { animation: popIn 0.3s; }
         
         /* TOAST */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; }
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 200; opacity: 0; transition: all 0.4s; }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
         
@@ -76,12 +75,12 @@
         #pageLoader { position: fixed; inset: 0; background: #0b0f19; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
     </style>
 </head>
-<body>
+<body class="no-tap">
 
     <!-- LOADING SCREEN -->
     <div id="pageLoader">
         <div class="w-12 h-12 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-2xl animate-bounce rounded-bl-none">C</div>
-        <div class="text-[#6b7280] text-xs font-mono mt-4 font-bold tracking-widest">LOADING DATA...</div>
+        <div class="text-[#6b7280] text-xs font-mono mt-4 font-bold tracking-widest">LOADING CHART DATA...</div>
     </div>
 
     <!-- TOAST -->
@@ -93,17 +92,17 @@
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
             <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
             <span class="font-bold text-lg text-white">CROWNEX</span>
-            <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <button onclick="toggleMenu()" class="ml-auto text-gray-500 w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="#" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
-            <a href="#" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
-            <a href="#" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
-            <a href="#" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
-            <a href="#" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
+            <div onclick="menuAction('trade')" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</div>
+            <div onclick="menuAction('account')" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</div>
+            <div onclick="menuAction('wallet')" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</div>
+            <div onclick="menuAction('history')" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</div>
+            <div onclick="menuAction('promo')" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></div>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
-            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+            <div onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</div>
         </nav>
         <div class="p-4 border-t border-[#232836] bg-[#12141c]">
             <div class="flex items-center gap-3">
@@ -114,9 +113,10 @@
     </div>
 
     <!-- HEADER -->
-    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
+    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 relative">
         <div class="flex items-center gap-4">
-            <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
+            <!-- Increased touch area for menu button -->
+            <button onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center -ml-2 text-[#9ca3af] active:text-white"><i class="fa-solid fa-bars-staggered text-xl"></i></button>
             <div class="flex flex-col justify-center">
                 <div class="flex items-center gap-2">
                     <span class="text-white font-bold text-sm">BTC/USDT</span>
@@ -132,14 +132,14 @@
     </header>
 
     <!-- CHART AREA -->
-    <div class="flex-1 relative bg-[#0b0f19] overflow-hidden" id="chart-wrapper">
+    <div class="flex-1 relative bg-[#0b0f19] overflow-hidden touch-none" id="chart-wrapper">
         <div class="absolute top-3 right-[70px] z-10"><span id="candleStatusBadge" class="text-[10px] font-bold px-3 py-1 rounded-full bg-[#232836] text-[#9ca3af] border border-[#374151]">WAITING</span></div>
         <canvas id="chartCanvas" class="w-full h-full block"></canvas>
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
         
         <!-- WIN/LOSE POPUP -->
-        <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
+        <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0 pointer-events-none">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase">HÚP RỒI</div>
                 <div id="popupAmount" class="font-mono font-bold text-4xl drop-shadow-xl">+$0.00</div>
@@ -201,7 +201,7 @@
         </div>
     </div>
 
-    <!-- !!! MISSING CONFIRM BAR FIXED HERE !!! -->
+    <!-- CONFIRM BAR -->
     <div id="confirmBar" class="p-4 bg-[#1e232e] rounded-t-2xl shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
         <div class="flex justify-between items-center mb-4">
             <div class="flex flex-col">
@@ -246,14 +246,20 @@
             appId: "1:116892525933:web:04b0da25f3f933ce162664",
             measurementId: "G-7Q1GBFNQ37"
         };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch(e) {
+            console.error("Firebase init failed:", e);
+        }
 
         // CONFIG
         const CONFIG = { 
             basePrice: 98100, 
-            chartPaddingRight: 80, // Tăng padding để dễ nhìn nến cuối
+            chartPaddingRight: 90,
             gridStep: 20 
         };
 
@@ -264,7 +270,7 @@
             candles: [], 
             visualPrice: CONFIG.basePrice,
             targetPrice: CONFIG.basePrice, 
-            currentPhase: 'order', // 'order' (0-29s) or 'result' (30-59s)
+            currentPhase: 'order',
             lockPrice: 0,
             isProcessing: false,
             gameStarted: false,
@@ -272,57 +278,81 @@
             marketOffset: 0, killWhaleMode: false, totalUp: 0, totalDown: 0
         };
 
-        // --- AUTH & DATA ---
+        // GLOBAL EXPORTS
         window.logout = () => { 
-            signOut(auth).then(() => { 
-                localStorage.clear();
-                window.location.href = "index.html"; 
-            }); 
+            if(auth) signOut(auth).then(() => { localStorage.clear(); window.location.href = "index.html"; }); 
+            else window.location.reload();
         };
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                let userStr = localStorage.getItem('crownex_user_info');
-                if (userStr) {
-                    state.userData = JSON.parse(userStr);
-                    finishLoading();
-                } else {
-                    try {
-                        const docSnap = await getDoc(doc(db, "users", user.uid));
-                        if(docSnap.exists()) {
-                            state.userData = docSnap.data();
-                            state.userData.uid = user.uid;
-                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData));
-                            finishLoading();
-                        } else { window.logout(); }
-                    } catch (e) { console.error(e); }
-                }
-
-                onSnapshot(doc(db, "users", user.uid), (doc) => {
-                    if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
-                });
-                onSnapshot(doc(db, "settings", "global"), (doc) => {
-                    if(doc.exists()) { state.marketOffset = doc.data().marketOffset || 0; state.killWhaleMode = doc.data().killWhaleMode || false; }
-                });
-                onSnapshot(doc(db, "games", "current"), (doc) => {
-                    if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; }
-                });
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar'); 
+            const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { 
+                sb.classList.remove('-translate-x-full'); 
+                ov.classList.remove('hidden', 'opacity-0'); 
             } else { 
-                // Auto login for testing if not using real auth
-                // window.location.href = "index.html"; 
-                state.userData = { uid: "guest", username: "Guest", balance: 1000 };
-                finishLoading();
+                sb.classList.add('-translate-x-full'); 
+                ov.classList.add('opacity-0'); 
+                setTimeout(() => ov.classList.add('hidden'), 300); 
             }
-        });
+        };
+
+        window.menuAction = (action) => {
+            window.toggleMenu();
+            setTimeout(() => {
+                showToast('error', "Tính năng đang bảo trì!");
+            }, 300);
+        };
+
+        // STARTUP
+        if (auth) {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    let userStr = localStorage.getItem('crownex_user_info');
+                    if (userStr) {
+                        state.userData = JSON.parse(userStr);
+                        finishLoading();
+                    } else {
+                        try {
+                            const docSnap = await getDoc(doc(db, "users", user.uid));
+                            if(docSnap.exists()) {
+                                state.userData = docSnap.data();
+                                state.userData.uid = user.uid;
+                                localStorage.setItem('crownex_user_info', JSON.stringify(state.userData));
+                                finishLoading();
+                            } else { window.logout(); }
+                        } catch (e) { finishLoadingGuest(); }
+                    }
+                    if(state.userData && state.userData.uid) {
+                        onSnapshot(doc(db, "users", user.uid), (doc) => { if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); } });
+                    }
+                } else { 
+                    finishLoadingGuest();
+                }
+            });
+        } else {
+            finishLoadingGuest();
+        }
+
+        function finishLoadingGuest() {
+            state.userData = { uid: "guest", username: "Khách", balance: 1000 };
+            finishLoading();
+        }
 
         function finishLoading() {
             document.getElementById('sidebarUsername').innerText = state.userData.fullName || state.userData.username || "Guest";
             state.balance = state.userData.balance || 0;
             updateBalanceUI();
+            
+            if (!state.gameStarted) { 
+                initGame(); 
+                checkSavedBet(); 
+                state.gameStarted = true; 
+            }
+
             const loader = document.getElementById('pageLoader');
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
-            if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
         }
 
         // --- BETTING UI LOGIC ---
@@ -338,8 +368,7 @@
         }
 
         async function processOfflineResult(betData) {
-            // Xử lý kết quả offline đơn giản (thực tế nên check server)
-            const result = Math.random() > 0.5 ? 'up' : 'down'; 
+            const result = Math.random() > 0.5 ? 'up' : 'down'; // Simple offline simulation
             const win = (betData.type === result);
             let profit = 0; let totalReturn = 0;
             if (win) {
@@ -349,11 +378,8 @@
             } else { showToast('error', `Phiên trước: THUA (-$${betData.amount})`); }
             updateBalanceUI();
             localStorage.removeItem('crownex_active_bet');
-            if(state.userData.uid && state.userData.uid !== "guest") {
+            if(state.userData.uid && state.userData.uid !== "guest" && db) {
                 if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
-                await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
-                    type: betData.type, amount: betData.amount, result: win ? 'win' : 'lose', profit: win ? profit : 0, timestamp: betData.expires
-                });
             }
         }
 
@@ -365,7 +391,7 @@
             document.getElementById(otherBtn).classList.add('locked');
         }
 
-        function showToast(type, msg) {
+        window.showToast = (type, msg) => {
             const t = document.getElementById('toast');
             const i = t.querySelector('i');
             document.getElementById('toastMsg').innerText = msg;
@@ -375,20 +401,11 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        window.setBetAmount = (val) => {
-            document.getElementById('betInput').value = val;
-            window.updateProfit();
-        }
-
-        window.setAllIn = () => {
-             document.getElementById('betInput').value = Math.floor(state.balance);
-             window.updateProfit();
-        }
-
+        window.setBetAmount = (val) => { document.getElementById('betInput').value = val; window.updateProfit(); }
+        window.setAllIn = () => { document.getElementById('betInput').value = Math.floor(state.balance); window.updateProfit(); }
         window.adjustBet = (val) => {
             const inp = document.getElementById('betInput');
-            let current = parseFloat(inp.value) || 0;
-            let nextVal = current + val;
+            let nextVal = (parseFloat(inp.value) || 0) + val;
             if (nextVal < 1) nextVal = 1;
             inp.value = nextVal;
             window.updateProfit();
@@ -401,10 +418,7 @@
 
         window.selectSide = (type) => {
             if (state.currentPhase !== 'order') return showToast('error', "Đang chờ kết quả, vui lòng đợi!");
-            if (state.currentBet) {
-                if(state.currentBet.type !== type) return showToast('error', "Không được cược đối nghịch!");
-                // Cho phép cược thêm (dồn lệnh)
-            }
+            if (state.currentBet && state.currentBet.type !== type) return showToast('error', "Không được cược đối nghịch!");
             
             const amount = parseFloat(document.getElementById('betInput').value);
             if (!amount || amount <= 0) return;
@@ -412,24 +426,13 @@
             
             state.pendingBet.type = type; state.pendingBet.amount = amount;
             
-            // UPDATE BOTTOM SHEET DATA
             const typeEl = document.getElementById('confirmType');
-            if(typeEl) {
-                typeEl.innerText = type.toUpperCase();
-                typeEl.className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase text-xl' : 'text-[#F6465D] font-bold uppercase text-xl';
-            }
-            
-            const balEl = document.getElementById('confirmBalance');
-            if(balEl) balEl.innerText = "$" + state.balance.toLocaleString('en-US');
-            
-            const amtEl = document.getElementById('confirmAmount');
-            if(amtEl) amtEl.innerText = "$" + amount;
-            
-            const winEl = document.getElementById('confirmWin');
-            if(winEl) winEl.innerText = "+$" + (amount * 1.95).toFixed(2);
-            
-            const bar = document.getElementById('confirmBar');
-            if(bar) bar.classList.add('active');
+            typeEl.innerText = type.toUpperCase();
+            typeEl.className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase text-xl' : 'text-[#F6465D] font-bold uppercase text-xl';
+            document.getElementById('confirmBalance').innerText = "$" + state.balance.toLocaleString('en-US');
+            document.getElementById('confirmAmount').innerText = "$" + amount;
+            document.getElementById('confirmWin').innerText = "+$" + (amount * 1.95).toFixed(2);
+            document.getElementById('confirmBar').classList.add('active');
         };
 
         window.cancelSelection = () => {
@@ -454,15 +457,11 @@
             state.pendingBet = { type: null, amount: 0 };
             document.getElementById('confirmBar').classList.remove('active');
 
-            if(state.userData.uid && state.userData.uid !== "guest") {
+            if(state.userData.uid && state.userData.uid !== "guest" && db) {
                 try {
                     const uRef = doc(db, "users", state.userData.uid);
-                    await updateDoc(uRef, { 
-                        balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount)
-                    }); 
-                    await setDoc(doc(db, "games", "current"), {
-                        [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
-                    }, { merge: true });
+                    await updateDoc(uRef, { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
+                    await setDoc(doc(db, "games", "current"), { [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount) }, { merge: true });
                 } catch(e) { console.error(e); }
             }
 
@@ -482,86 +481,61 @@
             btn.classList.remove('btn-loading'); btn.innerText = "XÁC NHẬN NGAY";
         };
 
-        window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
-            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
-            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
-        };
-
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
-        // --- GAME CORE LOGIC (UPDATED WITH PERSISTENCE) ---
+        // --- GAME CORE LOGIC (FIXED HISTORY) ---
         function initGame() {
-            // 1. Load History (Kết quả thắng thua)
+            // 1. Load Result History
             const h = localStorage.getItem('crownex_history_v30');
             if (h) state.history = JSON.parse(h);
             
             const now = Date.now();
-            const currentEpoch30 = Math.floor(now / 30000); // Epoch hiện tại
+            const currentEpoch30 = Math.floor(now / 30000); 
             
-            // Xử lý lịch sử bóng (History Blocks)
+            // Generate basic history if missing
             const m = new Date().getMinutes();
             if(!state.history || state.history.length !== 60) state.history = new Array(60).fill(null);
-            // Reset hiển thị history nếu cần
             for(let i=0; i<m; i++) if(!state.history[i]) state.history[i] = Math.random() > 0.5 ? 'up' : 'down';
             for(let i=m; i<60; i++) state.history[i] = null;
 
             resizeCanvas(); renderHistoryBlocks(); window.addEventListener('resize', resizeCanvas);
             
-            // 2. XỬ LÝ NẾN (CANDLES) - PHẦN QUAN TRỌNG ĐỂ LƯU NẾN
+            // 2. CANDLES INIT - BACKFILL LOGIC
             state.candles = [];
             let p = CONFIG.basePrice;
 
-            // Kiểm tra xem có dữ liệu cũ đã lưu không
+            // Attempt to load
             const savedData = localStorage.getItem('crownex_chart_data');
-            
             if (savedData) {
-                try {
-                    state.candles = JSON.parse(savedData);
-                    // Kiểm tra và lấp đầy khoảng trống (Backfill)
-                    if (state.candles.length > 0) {
-                        const lastSavedEpoch = state.candles[state.candles.length - 1].epoch;
-                        const missingCount = currentEpoch30 - lastSavedEpoch;
-
-                        if (missingCount > 0 && missingCount < 1000) { // Giới hạn backfill tránh treo
-                            let lastClose = state.candles[state.candles.length - 1].close;
-                            for (let i = 1; i < missingCount; i++) { // Chạy đến trước epoch hiện tại
-                                const epoch = lastSavedEpoch + i;
-                                const c = generateStaticCandle(epoch, lastClose);
-                                state.candles.push(c);
-                                lastClose = c.close;
-                            }
-                            // Cập nhật giá bắt đầu cho vòng lặp hiện tại
-                            p = lastClose;
-                        } else if (missingCount >= 1000) {
-                             // Quá lâu, reset lại từ đầu
-                             state.candles = [];
-                        } else {
-                             p = state.candles[state.candles.length - 1].close;
-                        }
-                    }
-                } catch (e) {
-                    console.log("Lỗi đọc cache nến, tạo mới.");
-                    state.candles = [];
-                }
+                try { state.candles = JSON.parse(savedData); } catch (e) { state.candles = []; }
             }
 
-            // Nếu không có nến nào (lần đầu chơi hoặc đã reset), tạo mới 40 nến giả lập
-            if (state.candles.length === 0) {
-                for(let i = 40; i > 0; i--) {
+            // CHECK & FILL HOLES
+            // If we have less than 50 candles, or the last candle is old, regenerate fully
+            // This fixes the "1 green candle" bug
+            let needRegen = false;
+            if (state.candles.length < 50) needRegen = true;
+            else {
+                const lastEpoch = state.candles[state.candles.length - 1].epoch;
+                if (currentEpoch30 - lastEpoch > 100) needRegen = true;
+            }
+
+            if (needRegen) {
+                console.log("Regenerating history candles...");
+                state.candles = [];
+                // Generate 60 candles in the past
+                for(let i = 60; i > 0; i--) {
                     const epoch = currentEpoch30 - i;
                     const c = generateStaticCandle(epoch, p);
                     state.candles.push(c);
-                    p = c.close;
+                    p = c.close; // Next candle starts from this close
                 }
-            }
-            
-            // Cắt bớt mảng nếu quá dài (giữ lại 60 nến gần nhất để nhẹ máy)
-            if (state.candles.length > 60) {
-                state.candles = state.candles.slice(state.candles.length - 60);
+            } else {
+                // If data exists, sync price
+                p = state.candles[state.candles.length - 1].close;
             }
 
-            // Cập nhật giá hiển thị hiện tại khớp với nến cuối cùng
+            // Sync visual price to prevent jumps
             state.visualPrice = p;
             state.targetPrice = p;
 
@@ -570,37 +544,30 @@
             setInterval(marketLoop, 30);
         }
 
-        // HÀM TẠO NẾN GIẢ LẬP (CÓ ĐỐI CHIẾU LỊCH SỬ)
+        // GENERATE CANDLE
         function generateStaticCandle(epoch, openPrice) {
             const seed = epoch * 123.45;
-            let volatility = 15; // fixed base
-            // Randomize direction based on seed initially
             let change = (Math.sin(seed * 2) - 0.5) * 20;
 
-            // KIỂM TRA LỊCH SỬ ĐỂ KHỚP MÀU NẾN
-            // Epoch chẵn (0, 2...) là nến Order (0-30s)
-            // Epoch lẻ (1, 3...) là nến Kết quả (30-60s)
+            // FORCE COLOR MATCH WITH HISTORY BUBBLES
+            // If epoch is odd (Result candle), it corresponds to a specific minute result
             if (epoch % 2 !== 0) {
-                // Tính xem nến này thuộc phút thứ mấy
                 const minuteIdx = Math.floor(epoch / 2) % 60;
-                // Nếu trong lịch sử có kết quả của phút này
                 if (state.history[minuteIdx]) {
                     const res = state.history[minuteIdx];
                     if (res === 'up') {
-                        // Bắt buộc nến Xanh (Close > Open)
-                        if (change <= 0) change = Math.abs(change) + 5;
-                        if (change < 2) change = 5; // Độ lớn tối thiểu
+                        if (change <= 0) change = Math.abs(change) + 3;
+                        if (change < 1) change = 5;
                     } else if (res === 'down') {
-                        // Bắt buộc nến Đỏ (Close < Open)
-                        if (change >= 0) change = -Math.abs(change) - 5;
-                        if (change > -2) change = -5; // Độ lớn tối thiểu
+                        if (change >= 0) change = -Math.abs(change) - 3;
+                        if (change > -1) change = -5;
                     }
                 }
             }
 
             const close = openPrice + change;
-            const high = Math.max(openPrice, close) + Math.abs(Math.sin(seed) * 10);
-            const low = Math.min(openPrice, close) - Math.abs(Math.sin(seed) * 10);
+            const high = Math.max(openPrice, close) + Math.abs(Math.sin(seed) * 5);
+            const low = Math.min(openPrice, close) - Math.abs(Math.sin(seed) * 5);
             return { open: openPrice, close: close, high: high, low: low, epoch: epoch };
         }
 
@@ -624,31 +591,19 @@
             }
         }
 
-        // --- STRICT TIMING LOOP (1s) ---
         function syncLoop() {
             const now = new Date();
             const s = now.getSeconds();
-            
-            // 0-29s: ORDER PHASE (Candle 1 in minute)
-            // 30-59s: RESULT/WAITING PHASE (Candle 2 in minute)
             const isOrder = s < 30;
             const timeLeft = isOrder ? (30 - s) : (60 - s);
 
-            // Session ID Format: YYYYMMDDHHMM
             const y = now.getFullYear(); const mo = ('0'+(now.getMonth()+1)).slice(-2);
             const d = ('0'+now.getDate()).slice(-2); const h = ('0'+now.getHours()).slice(-2);
             const mi = ('0'+now.getMinutes()).slice(-2);
             document.getElementById('sessionID').innerText = `${y}${d}${mo}${h}${mi}`;
 
-            // Phase Transition Logic
-            if (isOrder && state.currentPhase === 'result') {
-                // Chuyển từ Result (của phút trước) sang Order (phút mới)
-                startOrderPhase();
-            } else if (!isOrder && state.currentPhase === 'order') {
-                // Chuyển từ Order sang Result
-                // Logic Lock Price giờ đã nằm trong marketLoop để chính xác từng ms
-                startResultPhase();
-            }
+            if (isOrder && state.currentPhase === 'result') startOrderPhase();
+            else if (!isOrder && state.currentPhase === 'order') startResultPhase();
 
             document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
             const progressPercent = (timeLeft / 30) * 100;
@@ -656,58 +611,43 @@
         }
 
         function startOrderPhase() {
-            finalizeRound(); // Tính kết quả phút trước
+            finalizeRound();
             state.currentPhase = 'order';
-            
-            // UI Update
             document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
             document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "ORDERING";
             document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-[#0ECB81]/20 text-[#0ECB81] border border-[#0ECB81]/50";
-            
             document.getElementById('lockLabel').style.display = 'none'; 
             document.getElementById('lockLine').style.display = 'none';
             state.currentBet = null;
-            
-            // Reset Badges
             document.getElementById('badge-up').classList.add('hidden'); 
             document.getElementById('badge-down').classList.add('hidden');
             document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
             document.getElementById('btnSell').classList.remove('dimmed', 'locked');
-            
-            // Reset Server Totals
-            if(state.userData.uid && state.userData.uid !== "guest") { setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); }
+            if(state.userData && state.userData.uid !== "guest" && db) { setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); }
         }
 
         function startResultPhase() {
             state.currentPhase = 'result'; 
             window.cancelSelection();
-            
-            // UI Update
             document.getElementById('phaseText').innerText = "CHỜ KẾT QUẢ";
             document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-[#3b82f6] w-full transition-all duration-1000 ease-linear";
             document.getElementById('candleStatusBadge').innerText = "WAITING";
             document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/50";
-
             document.getElementById('lockLabel').style.display = 'block'; 
             document.getElementById('lockLine').style.display = 'block';
             document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
-            
-            // Lock Buttons
             document.getElementById('btnBuy').classList.add('dimmed'); 
             document.getElementById('btnSell').classList.add('dimmed');
         }
 
         async function finalizeRound() {
-            // So sánh giá đóng cửa (hiện tại - giây 00) với giá Lock (giây 30)
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
-            
             if (state.killWhaleMode) {
                 if (state.totalUp > state.totalDown) res = 'down';
                 else if (state.totalDown > state.totalUp) res = 'up';
             }
 
-            // Cập nhật lịch sử (phút trước)
             const m = new Date().getMinutes(); 
             let pm = m - 1; if(pm < 0) pm = 59;
             if(m === 0) state.history.fill(null); 
@@ -716,23 +656,19 @@
             localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
             renderHistoryBlocks();
 
-            // Trả thưởng
             if (state.currentBet) {
                 const b = state.currentBet; const win = (b.type === res);
                 let profit = 0; let totalReturn = 0;
-                
                 if (win) {
                     totalReturn = b.amount * 1.95; profit = b.amount * 0.95;
                     state.balance += totalReturn; 
                     showPopup(true, profit);
-                } else { 
-                    showPopup(false, b.amount); 
-                }
+                } else { showPopup(false, b.amount); }
                 
                 updateBalanceUI();
                 localStorage.removeItem('crownex_active_bet');
 
-                if(state.userData.uid && state.userData.uid !== "guest") {
+                if(state.userData && state.userData.uid !== "guest" && db) {
                     try {
                         if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
                         await addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
@@ -746,7 +682,8 @@
         function showPopup(w, a) {
             const p = document.getElementById('resultPopup'); const b = document.getElementById('popupBorder');
             const t = document.getElementById('popupTitle'); const m = document.getElementById('popupAmount');
-            p.classList.remove('hidden', 'scale-90', 'opacity-0'); p.classList.add('scale-100', 'opacity-100');
+            p.classList.remove('hidden', 'scale-90', 'opacity-0', 'pointer-events-none'); 
+            p.classList.add('scale-100', 'opacity-100');
             if (w) {
                 b.className = 'tech-border p-6 relative bg-[#13161f] win'; t.innerText = "HÚP RỒI"; t.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase";
                 m.innerText = "+$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#0ECB81]";
@@ -754,70 +691,36 @@
                 b.className = 'tech-border p-6 relative bg-[#13161f] lose'; t.innerText = "GÃY RỒI"; t.className = "text-[#F6465D] font-black text-xl mb-2 uppercase";
                 m.innerText = "-$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#F6465D]";
             }
-            setTimeout(() => { p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
+            setTimeout(() => { p.classList.add('scale-90', 'opacity-0', 'pointer-events-none'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
         }
 
-        // --- MARKET & DRAW LOOP (UPDATED WITH PERSISTENCE) ---
         function marketLoop() {
-            // 1. Calculate Target Price
             const now = Date.now();
             const baseNoise = Math.sin(now / 1000) * 20 + (Math.random() - 0.5) * 10;
             state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
             
-            // Kill Whale Logic Adjustment
-            if (state.currentPhase === 'result' && state.killWhaleMode && state.lockPrice > 0) {
-               if (state.totalUp > state.totalDown) {
-                   if (state.targetPrice >= state.lockPrice) state.targetPrice = state.lockPrice - 5;
-               } else if (state.totalDown > state.totalUp) {
-                   if (state.targetPrice <= state.lockPrice) state.targetPrice = state.lockPrice + 5;
-               }
-            }
+            // Smoother lerp
+            if (Math.abs(state.targetPrice - state.visualPrice) > 50) state.visualPrice = state.targetPrice;
+            else state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1;
 
-            // 2. Smooth Price Movement
-            // Fix: Nếu chênh lệch quá lớn (do mới load lại trang), nhảy giá luôn để tránh trượt
-            if (Math.abs(state.targetPrice - state.visualPrice) > 100) {
-                state.visualPrice = state.targetPrice;
-            } else {
-                state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1;
-            }
-
-            // 3. Candle Logic (SNAP TO GRID 30s)
-            // epoch30 là định danh của nến 30s hiện tại.
             const currentEpoch30 = Math.floor(now / 30000);
-            
             let lastCandle = state.candles[state.candles.length - 1];
 
             if (!lastCandle || lastCandle.epoch !== currentEpoch30) {
-                // KHI CHUYỂN NẾN MỚI
                 let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
-                
-                // --- UPDATE: LƯU NẾN VÀO BỘ NHỚ ---
-                if (state.candles.length > 0) {
-                    localStorage.setItem('crownex_chart_data', JSON.stringify(state.candles));
-                }
+                if (state.candles.length > 0) localStorage.setItem('crownex_chart_data', JSON.stringify(state.candles));
 
-                // --- QUAN TRỌNG: LOGIC CHỐT GIÁ CHUẨN ---
-                // Nếu đây là nến Result (thời điểm giây 30), Lock giá ngay tại đây
                 const isResultCandle = (currentEpoch30 % 2 !== 0); 
-                
                 if (isResultCandle) {
                      state.lockPrice = openPrice;
                      document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
                 }
                 
-                const newCandle = {
-                    epoch: currentEpoch30,
-                    open: openPrice,
-                    close: openPrice,
-                    high: openPrice,
-                    low: openPrice
-                };
+                const newCandle = { epoch: currentEpoch30, open: openPrice, close: openPrice, high: openPrice, low: openPrice };
                 state.candles.push(newCandle);
-                if(state.candles.length > 60) state.candles.shift(); // Giữ lại 60 nến
+                if(state.candles.length > 60) state.candles.shift();
                 lastCandle = newCandle;
             }
-
-            // Update Current Candle
             lastCandle.close = state.visualPrice;
             if (state.visualPrice > lastCandle.high) lastCandle.high = state.visualPrice;
             if (state.visualPrice < lastCandle.low) lastCandle.low = state.visualPrice;
@@ -826,20 +729,18 @@
         function resizeCanvas() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
         
         function drawLoop() {
-            const w = (cvs.width - CONFIG.chartPaddingRight) / 25; // Vẽ khoảng 25 nến
-            const r = 120; // Range giá vẽ
+            const w = (cvs.width - CONFIG.chartPaddingRight) / 25; 
+            const r = 120;
             const min = state.visualPrice - r / 2;
             
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
-            // Grid
             for(let p = Math.floor(min / 20) * 20; p < min + r; p += 20) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
                 ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 55, y + 4);
             }
 
-            // Lock Line (Waiting Phase)
             if (state.currentPhase === 'result') {
                 const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
                 document.getElementById('lockLine').style.top = yl + 'px'; document.getElementById('lockLabel').style.top = yl + 'px';
@@ -847,15 +748,10 @@
                 ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(cvs.width, yl); ctx.stroke(); ctx.setLineDash([]);
             }
 
-            // Draw Candles
-            // Ta vẽ từ cuối mảng (mới nhất) về trước
             const lastIdx = state.candles.length - 1;
-            
             for (let i = 0; i < state.candles.length; i++) {
-                // Tính vị trí X. Nến cuối cùng luôn nằm ở vị trí cố định bên phải (End-anchored)
-                // Vị trí nến i = (Width - Padding) - (Distance from end * candleWidth)
                 const dist = lastIdx - i;
-                if (dist > 25) continue; // Skip if out of view
+                if (dist > 30) continue; 
 
                 const x = (cvs.width - CONFIG.chartPaddingRight) - (dist * w) - (w/2);
                 const c = state.candles[i];
@@ -869,20 +765,15 @@
                 ctx.fillStyle = isUp ? '#0ECB81' : '#F6465D'; 
                 ctx.strokeStyle = ctx.fillStyle;
 
-                // Wick
                 ctx.lineWidth = 1;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-                
-                // Body
                 const bodyH = Math.max(Math.abs(yC - yO), 1);
                 ctx.fillRect(x - (w/2) + 2, Math.min(yO, yC), w - 4, bodyH);
             }
 
-            // Current Price Line
             const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
             ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(0, yc); ctx.lineTo(cvs.width, yc); ctx.stroke(); ctx.setLineDash([]);
             
-            // Price Bubble
             ctx.fillStyle = state.visualPrice >= state.candles[lastIdx].open ? '#0ECB81' : '#F6465D';
             ctx.fillRect(cvs.width - 60, yc - 10, 60, 20); 
             ctx.fillStyle = '#000'; ctx.font = 'bold 11px IBM Plex Mono';
