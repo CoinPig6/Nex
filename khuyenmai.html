@@ -304,6 +304,15 @@
         let currentUser = null;
         let userData = null;
 
+        // --- MAP: Type to Button ID ---
+        const BTN_MAP = {
+            'newbie': 'btnNewbie',
+            'deposit_1': 'btnDep1',
+            'deposit_2': 'btnDep2',
+            'daily_10': 'btnDaily',
+            'weekend_50': 'btnWeekend'
+        };
+
         // --- Utils: Time Standardization ---
         function getTodayString() {
             return new Date().toDateString(); 
@@ -333,7 +342,7 @@
                 });
 
                 // Check pending requests status
-                checkPendingRequests(user.uid);
+                checkPromoRequests(user.uid);
             } else {
                 window.location.href = "login.html";
             }
@@ -342,7 +351,7 @@
         function renderAll(data) {
             renderRefund(data);
             renderAttendance(data);
-            checkWeekend();
+            // checkWeekend is handled inside checkPromoRequests now
         }
 
         // --- 1. GIFTCODE ---
@@ -521,33 +530,49 @@
             }
         };
 
-        // --- 4. KHUYẾN MÃI BUTTONS LOGIC ---
-        function checkWeekend() {
-            const today = new Date().getDay(); // 0 is Sunday, 6 is Saturday
-            const btn = document.getElementById('btnWeekend');
-            if (today !== 0 && today !== 6) {
-                btn.disabled = true;
-                btn.innerText = "CHỈ MỞ T7 - CN";
-                btn.classList.add('opacity-50');
-            }
+        // --- 4. CORE FIX: KHUYẾN MÃI STATUS LOGIC ---
+
+        function getStatusPriority(status) {
+            // SUCCESS > PENDING > REJECTED (or others)
+            if (status === 'success') return 3;
+            if (status === 'pending') return 2;
+            return 1; 
         }
 
-        async function checkPendingRequests(uid) {
+        async function checkPromoRequests(uid) {
             const q = query(collection(db, "promotion_requests"), where("userId", "==", uid));
+            
             onSnapshot(q, (snap) => {
-                let statusMap = {};
-                snap.forEach(d => {
-                    const r = d.data();
-                    if (!statusMap[r.type] || r.status === 'pending' || r.status === 'success') {
-                         statusMap[r.type] = r.status;
-                    }
-                });
+                // 1. Group Requests By Type
+                let requestsByType = {};
                 
-                updatePromoBtn('btnNewbie', statusMap['newbie']);
-                updatePromoBtn('btnDep1', statusMap['deposit_1']);
-                updatePromoBtn('btnDep2', statusMap['deposit_2']);
-                updatePromoBtn('btnDaily', statusMap['daily_10']);
-                updatePromoBtn('btnWeekend', statusMap['weekend_50']);
+                snap.forEach(doc => {
+                    const r = doc.data();
+                    if (!requestsByType[r.type]) requestsByType[r.type] = [];
+                    requestsByType[r.type].push(r);
+                });
+
+                // 2. Process each known button type
+                Object.keys(BTN_MAP).forEach(type => {
+                    const btnId = BTN_MAP[type];
+                    const requests = requestsByType[type] || [];
+
+                    // 3. SORT LOGIC: Priority > Timestamp
+                    requests.sort((a, b) => {
+                        const priA = getStatusPriority(a.status);
+                        const priB = getStatusPriority(b.status);
+                        
+                        if (priA !== priB) return priB - priA; // High priority first
+                        return b.timestamp - a.timestamp;      // Newer first
+                    });
+
+                    // 4. Pick top Request
+                    const topReq = requests.length > 0 ? requests[0] : null;
+                    const finalStatus = topReq ? topReq.status : null;
+
+                    // 5. Update UI
+                    updatePromoBtn(btnId, finalStatus);
+                });
             });
         }
 
@@ -555,6 +580,20 @@
             const btn = document.getElementById(btnId);
             if (!btn) return;
 
+            // -- Logic cho Nút Weekend --
+            // Nếu là nút Weekend: Nếu KHÔNG có status (hoặc rejected) thì mới check ngày
+            // Nếu đang PENDING hoặc SUCCESS thì phải hiện status đó, bất chấp ngày
+            if (btnId === 'btnWeekend' && (status !== 'pending' && status !== 'success')) {
+                const today = new Date().getDay();
+                if (today !== 0 && today !== 6) {
+                    btn.className = "btn-claim mt-1 opacity-50";
+                    btn.innerText = "CHỈ MỞ T7 - CN";
+                    btn.disabled = true;
+                    return; // Dừng luôn, không cho set thành ĐĂNG KÝ
+                }
+            }
+
+            // -- Reset Class Base --
             btn.className = "btn-claim mt-1"; 
 
             if (status === 'pending') {
@@ -568,10 +607,7 @@
                 btn.classList.add('received');
             } 
             else {
-                if (btnId === 'btnWeekend') {
-                     const today = new Date().getDay();
-                     if (today !== 0 && today !== 6) return; 
-                }
+                // Trạng thái: null hoặc rejected -> Cho phép đăng ký lại
                 btn.innerText = "ĐĂNG KÝ";
                 btn.disabled = false;
             }
@@ -579,20 +615,20 @@
 
         window.requestPromo = async (type) => {
             if (!currentUser) return;
-            const btnIdMap = {
-                'newbie': 'btnNewbie', 'deposit_1': 'btnDep1', 
-                'deposit_2': 'btnDep2', 'daily_10': 'btnDaily', 
-                'weekend_50': 'btnWeekend'
-            };
-            const btn = document.getElementById(btnIdMap[type]);
+            const btnId = BTN_MAP[type];
+            const btn = document.getElementById(btnId);
+
+            // Optimistic UI update to prevent double clicks immediately
             if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
 
             try {
+                // Double check server side for existing pending/success
                 const q = query(
                     collection(db, "promotion_requests"), 
                     where("userId", "==", currentUser.uid),
                     where("type", "==", type)
                 );
+                
                 const querySnap = await getDocs(q);
                 let isDuplicate = false;
                 
@@ -602,8 +638,9 @@
                 });
 
                 if (isDuplicate) {
-                    showToast("Bạn đã đăng ký hoặc đã nhận gói này rồi!", "error");
-                    checkPendingRequests(currentUser.uid);
+                    showToast("Bạn đang có yêu cầu xử lý hoặc đã nhận!", "error");
+                    // Force re-check to fix UI if needed
+                    checkPromoRequests(currentUser.uid);
                     return;
                 }
 
@@ -614,10 +651,13 @@
                     status: 'pending',
                     timestamp: Date.now()
                 });
+                
                 showToast("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.", "success");
+                
             } catch (e) {
                 console.error(e);
-                showToast("Lỗi gửi yêu cầu: " + e.message, "error");
+                showToast("Lỗi: " + e.message, "error");
+                // Revert button if error
                 if(btn) { btn.disabled = false; btn.innerText = "ĐĂNG KÝ"; }
             }
         };
@@ -633,5 +673,4 @@
     </script>
 </body>
 </html>
-
 
