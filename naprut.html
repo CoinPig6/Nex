@@ -341,7 +341,11 @@
             if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
             if (!amount || amount < SETTINGS.minWithdraw) return alert(`Tối thiểu rút $${SETTINGS.minWithdraw} (5.000 VNĐ)`);
             if (amount > userData.balance) return alert("Số dư không đủ!");
-            if ((userData.requiredTurnover || 0) > 0) return alert("Chưa đủ vòng cược!");
+            
+            // SỬA LỖI VÒNG CƯỢC: So sánh ĐÃ CƯỢC < YÊU CẦU thì mới chặn
+            const currentTurnover = parseFloat(userData.betTurnover || 0);
+            const requiredTurnover = parseFloat(userData.requiredTurnover || 0);
+            if (currentTurnover < requiredTurnover) return alert(`Chưa đủ vòng cược! (${currentTurnover}/${requiredTurnover})`);
 
             const btn = document.querySelector('.btn-withdraw');
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -354,6 +358,7 @@
                     timestamp: serverTimestamp()
                 };
                 
+                // Khi rút thành công request -> trừ tiền, reset vòng cược
                 await updateDoc(doc(db, "users", currentUser.uid), { 
                     balance: userData.balance - amount,
                     betTurnover: 0,
@@ -420,7 +425,8 @@
             document.getElementById('requiredTurnover').innerText = required.toLocaleString();
             
             let percent = 0;
-            if (required === 0) {
+            // Nếu required = 0 hoặc current >= required thì full cây
+            if (required === 0 || current >= required) {
                 percent = 100;
                 document.getElementById('turnoverBar').style.background = "#0ECB81"; 
                 document.getElementById('turnoverNote').innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check-circle"></i> Đủ điều kiện rút tiền</span>';
@@ -530,28 +536,17 @@
                     default: typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
-                // LOGIC STATUS CHUYỂN ĐỔI RÕ RÀNG
-                // 1. Kiểm tra success/failed trước
-                // 2. Mặc định còn lại là pending (Đang xử lý)
-                // -> Đảm bảo không bao giờ hiện 2 trạng thái cùng lúc
-
-                let badgeClass = ''; 
-                let statusText = ''; 
-                let statusIcon = '';
+                // SỬA LỖI UI: BỎ BADGE PENDING KHI ĐÃ THÀNH CÔNG/THẤT BẠI
+                // Đảm bảo chỉ hiện 1 badge duy nhất
+                let badgeHtml = '';
                 
                 if (data.status === 'success') { 
-                    badgeClass = 'badge-success'; 
-                    statusText = 'THÀNH CÔNG'; 
-                    statusIcon = 'fa-check'; 
+                    badgeHtml = `<span class="badge badge-success mt-1"><i class="fa-solid fa-check mr-1"></i>THÀNH CÔNG</span>`;
                 } else if (data.status === 'rejected' || data.status === 'failed') { 
-                    badgeClass = 'badge-reject'; 
-                    statusText = 'THẤT BẠI'; 
-                    statusIcon = 'fa-xmark'; 
+                    badgeHtml = `<span class="badge badge-reject mt-1"><i class="fa-solid fa-xmark mr-1"></i>THẤT BẠI</span>`;
                 } else {
-                    // Default fallback cho pending hoặc rỗng
-                    badgeClass = 'badge-pending'; 
-                    statusText = 'ĐANG XỬ LÝ'; 
-                    statusIcon = 'fa-clock';
+                    // Mặc định là pending nếu không phải 2 trạng thái trên
+                    badgeHtml = `<span class="badge badge-pending mt-1"><i class="fa-solid fa-clock mr-1"></i>ĐANG XỬ LÝ</span>`;
                 }
 
                 const isNew = (Date.now() - itemDate.getTime()) < 5000 ? 'new-item' : '';
@@ -571,7 +566,7 @@
                             <div class="font-mono font-bold text-sm ${colorClass}">
                                 ${amountSign}$${parseFloat(data.amount).toLocaleString()}
                             </div>
-                            <span class="badge ${badgeClass} mt-1"><i class="fa-solid ${statusIcon} mr-1"></i>${statusText}</span>
+                            ${badgeHtml}
                         </div>
                     </div>
                 `;
