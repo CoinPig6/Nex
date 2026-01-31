@@ -267,7 +267,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, updateDoc, addDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // IMPORT THÊM orderBy
+        import { getFirestore, doc, updateDoc, addDoc, deleteDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -305,8 +306,10 @@
         };
 
         window.filterHistory = (type, el) => {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
+            if (el) {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+            }
             renderHistoryList(type);
         };
 
@@ -432,53 +435,54 @@
             document.getElementById('turnoverBar').style.width = percent + "%";
         }
 
-        // --- OPTIMIZED HISTORY LOGIC ---
+        // --- OPTIMIZED HISTORY LOGIC (THEO YÊU CẦU CHUẨN) ---
         function setupHistoryListener(uid) {
-            if(unsubscribeHistory) unsubscribeHistory();
-            
-            const q = collection(db, "users", uid, "transactions");
+            if (unsubscribeHistory) unsubscribeHistory();
 
-            unsubscribeHistory = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+            // SỬA LỖI 1: Thêm orderBy để đảm bảo thứ tự
+            const q = query(
+                collection(db, "users", uid, "transactions"),
+                orderBy("timestamp", "desc")
+            );
+
+            // SỬA LỖI 2: Không dùng deleteDoc trong snapshot loop
+            unsubscribeHistory = onSnapshot(q, (snapshot) => {
                 document.getElementById('historyError').classList.add('hidden');
                 allHistory = [];
-                
+
                 const now = Date.now();
                 const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    
-                    // TIMESTAMP HANDLING (Time Chuẩn)
-                    let timestampObj = null;
-                    if (d.timestamp) {
-                        // Nếu là Firestore Timestamp (có hàm toDate)
-                        if (d.timestamp.toDate) {
-                            timestampObj = d.timestamp.toDate();
-                        } 
-                        // Nếu là object {seconds, nanoseconds}
-                        else if (d.timestamp.seconds) {
-                            timestampObj = new Date(d.timestamp.seconds * 1000);
-                        }
-                    }
-                    // Fallback cho local writes (pending)
-                    if (!timestampObj) timestampObj = new Date();
+                    let dateObj = null;
 
-                    // Thêm field dateObj vào để sort và hiển thị
-                    d.dateObj = timestampObj;
-
-                    // TỰ ĐỘNG XÓA NẾU QUÁ 7 NGÀY
-                    if (now - timestampObj.getTime() > sevenDaysMs) {
-                        deleteDoc(docSnap.ref).catch(err => console.log("Auto delete error", err));
+                    // SỬA LỖI 3: Xử lý timestamp chuẩn
+                    if (d.timestamp?.toDate) {
+                        dateObj = d.timestamp.toDate();
+                    } else if (d.timestamp?.seconds) {
+                        dateObj = new Date(d.timestamp.seconds * 1000);
                     } else {
+                        // Pending fix: Sử dụng Date hiện tại để hiển thị ngay lập tức ở đầu danh sách
+                        // Thay vì Date(0) sẽ bị đẩy xuống cuối do sort desc
+                        dateObj = new Date(); 
+                    }
+
+                    d.dateObj = dateObj;
+
+                    // CHỈ HIỂN THỊ, KHÔNG XOÁ (Client-side filtering)
+                    if (now - dateObj.getTime() <= sevenDaysMs) {
                         allHistory.push(d);
                     }
                 });
-                
-                // Sort: Mới nhất lên đầu
-                allHistory.sort((a, b) => b.dateObj - a.dateObj);
-                renderHistoryList('all');
-            }, (error) => {
-                console.error(error);
+
+                // Tự động render lại theo tab đang chọn
+                renderHistoryList(
+                    document.querySelector('.filter-chip.active')?.innerText.includes('Nạp') ? 'deposit' :
+                    document.querySelector('.filter-chip.active')?.innerText.includes('Rút') ? 'withdraw' :
+                    'all'
+                );
+            }, () => {
                 document.getElementById('historyList').innerHTML = '';
                 document.getElementById('historyError').classList.remove('hidden');
             });
@@ -509,12 +513,11 @@
                 const itemDate = data.dateObj;
                 const itemDateString = itemDate.toDateString();
                 
-                // HEADER NGÀY THÁNG (Chuẩn)
+                // HEADER NGÀY THÁNG
                 let headerLabel = '';
                 if (itemDateString === today) headerLabel = 'Hôm nay';
                 else if (itemDateString === yesterday) headerLabel = 'Hôm qua';
                 else {
-                    // Định dạng dd/mm/yyyy cho ngày cũ
                     headerLabel = itemDate.toLocaleDateString('vi-VN');
                 }
 
@@ -523,8 +526,7 @@
                     html += `<div class="date-header">${currentHeader}</div>`;
                 }
 
-                // Render Item Details
-                let timeStr = itemDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}); // Chỉ hiện HH:mm
+                let timeStr = itemDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                 
                 let typeText = 'GIAO DỊCH'; let typeIcon = 'fa-circle'; let colorClass = 'text-white'; let amountSign = '+';
                 
@@ -537,10 +539,8 @@
                     default: typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
-                // LOGIC TRẠNG THÁI (Đúng theo yêu cầu Admin duyệt)
                 let badgeClass = 'badge-pending'; let statusText = 'ĐANG XỬ LÝ'; let statusIcon = 'fa-clock';
                 
-                // Firestore status: pending -> success / rejected
                 if (data.status === 'success') { 
                     badgeClass = 'badge-success'; 
                     statusText = 'THÀNH CÔNG'; 
