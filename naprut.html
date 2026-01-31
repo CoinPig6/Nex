@@ -41,10 +41,10 @@
         .filter-chip.active { background: #FCD535; color: #111; border-color: #FCD535; }
 
         /* STATUS BADGE */
-        .badge { padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; }
-        .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; }
-        .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; items-center; gap: 4px; }
+        .badge-pending { background: rgba(252, 213, 53, 0.15); color: #FCD535; border: 1px solid rgba(252, 213, 53, 0.3); }
+        .badge-success { background: rgba(14, 203, 129, 0.15); color: #0ECB81; border: 1px solid rgba(14, 203, 129, 0.3); }
+        .badge-reject { background: rgba(246, 70, 93, 0.15); color: #F6465D; border: 1px solid rgba(246, 70, 93, 0.3); }
 
         /* SKELETON */
         .skeleton { background: linear-gradient(90deg, #1e232e 25%, #2a303c 50%, #1e232e 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }
@@ -288,13 +288,11 @@
         let unsubscribeHistory = null;
         let realBankNumber = "";
         
-        // SETTINGS THEO YÊU CẦU: $10 Nạp, $50 Rút
         let SETTINGS = { minDeposit: 10, minWithdraw: 50 };
 
         // --- CALC DEPOSIT HINT ---
         document.getElementById('depositAmount').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value) || 0;
-            // $1 = 100 VND (Vì $10 = 1.000 VND)
             const vnd = val * 100; 
             document.getElementById('depositCalcHint').innerText = `Bạn cần chuyển: ${vnd.toLocaleString()} VNĐ`;
         });
@@ -354,7 +352,6 @@
                     timestamp: serverTimestamp()
                 };
                 
-                // CẬP NHẬT LOGIC: Reset vòng cược về 0 khi rút
                 await updateDoc(doc(db, "users", currentUser.uid), { 
                     balance: userData.balance - amount,
                     betTurnover: 0,
@@ -393,9 +390,7 @@
 
         // --- LOGIC FUNCTIONS ---
         function checkAutoResetTurnover(data) {
-            // Logic cũ: Reset nếu đã đạt, nhưng giờ ta reset khi rút tiền.
-            // Giữ lại để đảm bảo UI hiển thị đúng (thanh progress full xanh)
-            // Không tự động reset ở đây nữa để tránh xung đột logic "reset khi rút".
+           // Giữ nguyên logic reset khi rút tiền
         }
 
         function renderUserData(data) {
@@ -425,7 +420,6 @@
             
             let percent = 0;
             if (required === 0) {
-                // Nếu required = 0, tức là đã xong hoặc chưa có cược, hiển thị full xanh
                 percent = 100;
                 document.getElementById('turnoverBar').style.background = "#0ECB81"; 
                 document.getElementById('turnoverNote').innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check-circle"></i> Đủ điều kiện rút tiền</span>';
@@ -438,7 +432,7 @@
             document.getElementById('turnoverBar').style.width = percent + "%";
         }
 
-        // --- HISTORY LOGIC (AUTO DELETE > 7 DAYS & HEADER DISPLAY) ---
+        // --- OPTIMIZED HISTORY LOGIC ---
         function setupHistoryListener(uid) {
             if(unsubscribeHistory) unsubscribeHistory();
             
@@ -453,21 +447,35 @@
 
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    if (!d.timestamp) d.timestamp = { seconds: now / 1000 }; 
                     
-                    const itemTime = d.timestamp.seconds * 1000;
+                    // TIMESTAMP HANDLING (Time Chuẩn)
+                    let timestampObj = null;
+                    if (d.timestamp) {
+                        // Nếu là Firestore Timestamp (có hàm toDate)
+                        if (d.timestamp.toDate) {
+                            timestampObj = d.timestamp.toDate();
+                        } 
+                        // Nếu là object {seconds, nanoseconds}
+                        else if (d.timestamp.seconds) {
+                            timestampObj = new Date(d.timestamp.seconds * 1000);
+                        }
+                    }
+                    // Fallback cho local writes (pending)
+                    if (!timestampObj) timestampObj = new Date();
+
+                    // Thêm field dateObj vào để sort và hiển thị
+                    d.dateObj = timestampObj;
 
                     // TỰ ĐỘNG XÓA NẾU QUÁ 7 NGÀY
-                    if (now - itemTime > sevenDaysMs) {
+                    if (now - timestampObj.getTime() > sevenDaysMs) {
                         deleteDoc(docSnap.ref).catch(err => console.log("Auto delete error", err));
                     } else {
-                        // Chỉ thêm vào list nếu chưa quá hạn
                         allHistory.push(d);
                     }
                 });
                 
                 // Sort: Mới nhất lên đầu
-                allHistory.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+                allHistory.sort((a, b) => b.dateObj - a.dateObj);
                 renderHistoryList('all');
             }, (error) => {
                 console.error(error);
@@ -479,7 +487,6 @@
         function renderHistoryList(filterType) {
             const listEl = document.getElementById('historyList');
             
-            // Filter theo loại (Nạp/Rút/Khác)
             const filteredItems = allHistory.filter(item => {
                 if (filterType === 'all') return true;
                 if (filterType === 'deposit') return item.type === 'deposit';
@@ -499,22 +506,26 @@
             const yesterday = new Date(Date.now() - 86400000).toDateString();
 
             filteredItems.slice(0, 50).forEach(data => {
-                const itemDate = new Date(data.timestamp.seconds * 1000);
+                const itemDate = data.dateObj;
                 const itemDateString = itemDate.toDateString();
                 
-                // LOGIC HIỂN THỊ TIÊU ĐỀ NGÀY (Hôm nay, Hôm qua, 7 ngày trước)
+                // HEADER NGÀY THÁNG (Chuẩn)
                 let headerLabel = '';
                 if (itemDateString === today) headerLabel = 'Hôm nay';
                 else if (itemDateString === yesterday) headerLabel = 'Hôm qua';
-                else headerLabel = '7 ngày trước';
+                else {
+                    // Định dạng dd/mm/yyyy cho ngày cũ
+                    headerLabel = itemDate.toLocaleDateString('vi-VN');
+                }
 
                 if (headerLabel !== currentHeader) {
                     currentHeader = headerLabel;
                     html += `<div class="date-header">${currentHeader}</div>`;
                 }
 
-                // Render Item
-                let timeStr = itemDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                // Render Item Details
+                let timeStr = itemDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}); // Chỉ hiện HH:mm
+                
                 let typeText = 'GIAO DỊCH'; let typeIcon = 'fa-circle'; let colorClass = 'text-white'; let amountSign = '+';
                 
                 switch(data.type) {
@@ -526,11 +537,21 @@
                     default: typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
+                // LOGIC TRẠNG THÁI (Đúng theo yêu cầu Admin duyệt)
                 let badgeClass = 'badge-pending'; let statusText = 'ĐANG XỬ LÝ'; let statusIcon = 'fa-clock';
-                if (data.status === 'success') { badgeClass = 'badge-success'; statusText = 'THÀNH CÔNG'; statusIcon = 'fa-check'; }
-                else if (data.status === 'rejected' || data.status === 'failed') { badgeClass = 'badge-reject'; statusText = 'TỪ CHỐI'; statusIcon = 'fa-xmark'; }
+                
+                // Firestore status: pending -> success / rejected
+                if (data.status === 'success') { 
+                    badgeClass = 'badge-success'; 
+                    statusText = 'THÀNH CÔNG'; 
+                    statusIcon = 'fa-check'; 
+                } else if (data.status === 'rejected' || data.status === 'failed') { 
+                    badgeClass = 'badge-reject'; 
+                    statusText = 'THẤT BẠI'; 
+                    statusIcon = 'fa-xmark'; 
+                }
 
-                const isNew = (Date.now() / 1000 - data.timestamp.seconds) < 5 ? 'new-item' : '';
+                const isNew = (Date.now() - itemDate.getTime()) < 5000 ? 'new-item' : '';
 
                 html += `
                     <div class="bg-[#1e232e] p-3 rounded-lg border border-[#2d3442] flex justify-between items-center ${isNew} transition-colors mb-2">
@@ -547,7 +568,7 @@
                             <div class="font-mono font-bold text-sm ${colorClass}">
                                 ${amountSign}$${parseFloat(data.amount).toLocaleString()}
                             </div>
-                            <span class="badge ${badgeClass} mt-1 inline-block"><i class="fa-solid ${statusIcon} mr-1"></i>${statusText}</span>
+                            <span class="badge ${badgeClass} mt-1"><i class="fa-solid ${statusIcon} mr-1"></i>${statusText}</span>
                         </div>
                     </div>
                 `;
