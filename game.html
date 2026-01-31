@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex Pro - Visual Fix</title>
+    <title>Crownex Pro - Synced & Min 100</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -158,21 +158,21 @@
             <div class="text-center w-full">
                 <!-- QUICK SELECT BUTTONS -->
                 <div class="flex items-center justify-center gap-2 mb-3">
-                    <button onclick="window.setBetAmount(5)" class="chip">$5</button>
-                    <button onclick="window.setBetAmount(10)" class="chip">$10</button>
-                    <button onclick="window.setBetAmount(20)" class="chip">$20</button>
+                    <button onclick="window.setBetAmount(100)" class="chip">$100</button>
+                    <button onclick="window.setBetAmount(200)" class="chip">$200</button>
+                    <button onclick="window.setBetAmount(500)" class="chip">$500</button>
                     <button onclick="window.setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
                 </div>
 
                 <div class="flex items-center justify-center gap-2">
-                    <button onclick="window.adjustBet(-5)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
+                    <button onclick="window.adjustBet(-10)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
                     <div class="w-36 relative group">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] font-bold font-mono text-sm">$</span>
-                        <input type="number" id="betInput" value="10" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="window.updateProfit()">
+                        <input type="number" id="betInput" value="100" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="window.updateProfit()">
                     </div>
-                    <button onclick="window.adjustBet(5)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
+                    <button onclick="window.adjustBet(10)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
                 </div>
-                <div class="text-[10px] text-[#6b7280] font-bold uppercase mt-1">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+$9.50</span> (95%)</div>
+                <div class="text-[10px] text-[#6b7280] font-bold uppercase mt-1">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+$95.00</span> (95%)</div>
             </div>
         </div>
         
@@ -266,7 +266,7 @@
             const inp = document.getElementById('betInput');
             let current = parseFloat(inp.value) || 0;
             let nextVal = current + val;
-            if (nextVal < 1) nextVal = 1;
+            if (nextVal < 1) nextVal = 1; // Input can hold low values but confirmBet will check 100
             inp.value = nextVal;
             window.updateProfit();
         };
@@ -417,6 +417,7 @@
             
             const amount = parseFloat(document.getElementById('betInput').value);
             if (!amount || amount <= 0) return;
+            if (amount < 100) return showToast('error', "Mức cược tối thiểu là $100!");
             if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
             
             state.pendingBet.type = type; state.pendingBet.amount = amount;
@@ -443,6 +444,7 @@
             const type = state.pendingBet.type;
 
             if (amount > state.balance) { showToast('error', "Số dư không đủ!"); return; }
+            if (amount < 100) { showToast('error', "Mức cược tối thiểu là $100!"); return; }
 
             state.isProcessing = true;
             const btn = document.getElementById('btnConfirm');
@@ -484,6 +486,13 @@
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
+        // --- CORE SYNC HELPERS (DETERMINISTIC) ---
+        // Hàm tính trend dao động dựa trên epoch (30s) -> Đảm bảo mọi máy tính đều ra số giống nhau
+        function getDeterministicTrend(epoch) {
+            // Công thức sóng sin phức hợp để tạo trend "như thật" nhưng cố định theo thời gian
+            return (Math.sin(epoch * 1.5) + Math.cos(epoch * 2.5)) * 8;
+        }
+
         // --- GAME CORE LOGIC ---
         function initGame() {
             // Load History safely
@@ -550,7 +559,9 @@
         }
 
         function generateStaticCandle(epoch, openPrice) {
-            let change = (Math.sin(epoch * 1.5) + Math.cos(epoch * 2.5)) * 8;
+            // Dùng hàm deterministic để tính độ thay đổi giá
+            let change = getDeterministicTrend(epoch);
+            
             const diff = openPrice - CONFIG.basePrice;
             if (Math.abs(diff) > 40) {
                 change -= (diff * 0.15); 
@@ -597,14 +608,15 @@
                     if (r === 'up') displayClass = 'dot up';
                     else if (r === 'down') displayClass = 'dot down';
                     else if (i < currentMin) {
-                        // VISUAL FIX: "HIỆN THEO NẾN"
-                        // Nếu history là NULL, ta dùng chính thuật toán sinh nến để đoán màu
-                        // Điều này đảm bảo màu hiển thị khớp với nến giả lập
-                        const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45);
+                        // VISUAL FIX: "HIỆN THEO NẾN" - ĐỒNG BỘ 100%
+                        // Tính toán thời gian của phút đó để lấy epoch chuẩn
+                        const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45); // Lấy giây 45 để chắc chắn nằm trong nến result
                         const targetEpoch = Math.floor(targetTime.getTime() / 30000);
                         
-                        // Copy logic từ generateStaticCandle để xác định hướng (chỉ lấy dấu)
-                        const change = (Math.sin(targetEpoch * 1.5) + Math.cos(targetEpoch * 2.5)) * 8;
+                        // Dùng chung hàm getDeterministicTrend với generateStaticCandle
+                        // Điều này đảm bảo Nến ảo và Bóng ảo cùng một màu
+                        const change = getDeterministicTrend(targetEpoch);
+                        
                         const visualDirection = change >= 0 ? 'up' : 'down';
                         displayClass = visualDirection === 'up' ? 'dot up' : 'dot down';
                     }
@@ -742,7 +754,12 @@
 
         function marketLoop() {
             const now = Date.now();
-            const baseNoise = Math.sin(now / 1000) * 20 + (Math.random() - 0.5) * 10;
+            
+            // SYNC FIX: Loại bỏ hoàn toàn Math.random()
+            // Sử dụng các hàm sóng sin lồng nhau dựa trên thời gian thực (t) để tạo nhiễu giống ngẫu nhiên nhưng đồng bộ trên mọi máy
+            const t = now / 1000;
+            const baseNoise = (Math.sin(t) * 10) + (Math.sin(t * 5) * 5) + (Math.sin(t * 13) * 2);
+            
             state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
             
             if (state.currentPhase === 'result' && state.killWhaleMode && state.lockPrice > 0) {
