@@ -153,20 +153,17 @@
         async function loadHistory(uid) {
             const listEl = document.getElementById('historyList');
             const netEl = document.getElementById('netProfitDisplay');
+            
+            // Tính mốc thời gian 24h trước (dạng số mili-giây)
             const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
 
             try {
+                // Lấy 100 giao dịch mới nhất
                 const q = query(collection(db, "users", uid, "betHistory"), orderBy("timestamp", "desc"), limit(100));
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
-                    netEl.innerText = "$0.00";
-                    netEl.className = "font-mono font-bold text-3xl z-10 text-white";
-                    listEl.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-40 opacity-40 mt-4">
-                            <i class="fa-regular fa-folder-open text-4xl mb-2 text-gray-500"></i>
-                            <span class="text-xs text-gray-500">Chưa có giao dịch nào</span>
-                        </div>`;
+                    showEmptyState(listEl, netEl);
                     return;
                 }
 
@@ -177,25 +174,45 @@
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     
-                    // LỌC 24H
-                    if (data.timestamp < oneDayAgo) return; 
+                    // --- BẮT ĐẦU FIX LỖI TIMESTAMP ---
+                    let ts;
+                    if (data.timestamp && typeof data.timestamp.toMillis === 'function') {
+                        // Trường hợp chuẩn: Dữ liệu là Firestore Timestamp
+                        ts = data.timestamp.toMillis();
+                    } else if (typeof data.timestamp === 'number') {
+                        // Trường hợp dự phòng: Dữ liệu lỡ lưu dạng số (Date.now())
+                        ts = data.timestamp;
+                    } else {
+                        // Dữ liệu lỗi hoặc null -> bỏ qua
+                        return;
+                    }
+                    // --- KẾT THÚC FIX ---
+
+                    // LOGIC LỌC 24H
+                    // Nếu thời gian tạo (ts) nhỏ hơn mốc 24h trước -> bỏ qua
+                    if (ts < oneDayAgo) return; 
                     
                     hasData24h = true;
+
+                    // Lấy dữ liệu an toàn (tránh NaN)
                     const isWin = data.result === 'win';
-                    const amount = parseFloat(data.amount);
-                    const profit = parseFloat(data.profit); // Tiền lãi nhận được (không tính gốc)
+                    const amount = Number(data.amount) || 0;
+                    const profit = Number(data.profit) || 0; // Tiền lãi
 
                     // Tính Lợi nhuận ròng:
-                    // Thắng: + Tiền lãi (profit)
-                    // Thua: - Tiền cược (amount)
+                    // Thắng: + Tiền lãi
+                    // Thua: - Tiền cược
                     if(isWin) {
                         netProfit += profit;
                     } else {
                         netProfit -= amount;
                     }
 
-                    const date = new Date(data.timestamp);
+                    // Tạo đối tượng Date chuẩn từ ts (đã convert)
+                    const date = new Date(ts);
                     const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)} ${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
+                    
+                    // Tạo mã phiên ảo hiển thị cho đẹp
                     const sessionID = `${date.getFullYear()}${('0'+date.getDate()).slice(-2)}${('0'+(date.getMonth()+1)).slice(-2)}${('0'+date.getHours()).slice(-2)}${('0'+date.getMinutes()).slice(-2)}`;
 
                     html += `
@@ -223,32 +240,41 @@
                 });
 
                 if (!hasData24h) {
-                    listEl.innerHTML = `<div class="text-center text-gray-500 text-xs mt-10">Không có giao dịch trong 24h qua</div>`;
-                    netProfit = 0;
+                    showEmptyState(listEl, netEl);
                 } else {
                     listEl.innerHTML = html;
-                }
-
-                // HIỂN THỊ LỢI NHUẬN RÒNG
-                const sign = netProfit > 0 ? "+" : "";
-                netEl.innerText = sign + "$" + netProfit.toFixed(2);
-                
-                // Đổi màu theo lãi/lỗ
-                if(netProfit > 0) {
-                    netEl.className = "font-mono font-bold text-3xl z-10 text-up";
-                } else if (netProfit < 0) {
-                    netEl.className = "font-mono font-bold text-3xl z-10 text-down";
-                } else {
-                    netEl.className = "font-mono font-bold text-3xl z-10 text-gray-400";
+                    updateNetProfitDisplay(netEl, netProfit);
                 }
 
             } catch (error) {
                 console.error("Lỗi:", error);
-                listEl.innerHTML = '<div class="text-center text-red-500 text-xs mt-10">Lỗi tải dữ liệu. Vui lòng thử lại!</div>';
+                listEl.innerHTML = '<div class="text-center text-red-500 text-xs mt-10">Lỗi kết nối máy chủ. Vui lòng tải lại trang!</div>';
+            }
+        }
+
+        function showEmptyState(listEl, netEl) {
+            netEl.innerText = "$0.00";
+            netEl.className = "font-mono font-bold text-3xl z-10 text-white";
+            listEl.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-40 opacity-40 mt-4">
+                    <i class="fa-regular fa-folder-open text-4xl mb-2 text-gray-500"></i>
+                    <span class="text-xs text-gray-500">Chưa có giao dịch nào trong 24h</span>
+                </div>`;
+        }
+
+        function updateNetProfitDisplay(netEl, netProfit) {
+            const sign = netProfit > 0 ? "+" : "";
+            netEl.innerText = sign + "$" + netProfit.toFixed(2);
+            
+            if(netProfit > 0) {
+                netEl.className = "font-mono font-bold text-3xl z-10 text-up";
+            } else if (netProfit < 0) {
+                netEl.className = "font-mono font-bold text-3xl z-10 text-down";
+            } else {
+                netEl.className = "font-mono font-bold text-3xl z-10 text-gray-400";
             }
         }
     </script>
 </body>
 </html>
-
 
