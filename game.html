@@ -230,7 +230,7 @@
     <!-- MAIN LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // GLOBAL FLAGS
@@ -678,8 +678,6 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // CRITICAL SYNC: Result is simply what the price is visually
-            // Because marketLoop forces visual price to match trend, this is now safe
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
             
             const m = new Date().getMinutes(); 
@@ -692,7 +690,6 @@
                 localStorage.setItem("crownex_history_day", today);
             }
 
-            // Save authoritative result
             state.history[pm] = res;
             localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
             renderHistoryBlocks();
@@ -712,7 +709,22 @@
 
                 if(state.userData.uid && state.userData.uid !== "guest") {
                     try {
-                        if (win) await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) });
+                        // SAVE HISTORY TO FIREBASE
+                        const batchPromise = [];
+                        if (win) {
+                             batchPromise.push(updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) }));
+                        }
+                        
+                        batchPromise.push(addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
+                            type: b.type,
+                            amount: b.amount,
+                            result: win ? 'win' : 'lose',
+                            profit: win ? profit : -b.amount,
+                            timestamp: serverTimestamp(),
+                            sessionId: document.getElementById('sessionID').innerText
+                        }));
+                        
+                        await Promise.all(batchPromise);
                     } catch (e) { console.error(e); }
                 }
             }
@@ -739,10 +751,6 @@
             const t = now / 1000;
             // Base random movement (Natural)
             const baseNoise = (Math.sin(t) * 10) + (Math.sin(t * 5) * 5) + (Math.sin(t * 13) * 2);
-            
-            // REMOVED: Automatic manipulation logic
-            // REMOVED: Desired trend calculation
-            // REMOVED: Kill Whale logic
             
             // Only keep manual offset if admin set it in settings (marketOffset)
             state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
