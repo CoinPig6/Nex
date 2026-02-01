@@ -202,7 +202,7 @@
                     <div>
                         <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút (USDT)</label>
                         <div class="relative">
-                            <input type="number" id="wdAmount" class="input-dark font-mono font-bold pr-16" placeholder="Tối thiểu $5">
+                            <input type="number" id="wdAmount" class="input-dark font-mono font-bold pr-16" placeholder="Tối thiểu $1">
                             <button onclick="window.setMaxWithdraw()" class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] bg-[#2d3442] text-[#FCD535] px-2 py-1 rounded font-bold hover:bg-[#374151] active:scale-95 transition">MAX</button>
                         </div>
                         <p class="text-[10px] text-gray-500 mt-1" id="withdrawCalcHint">Thực nhận: 0 VNĐ</p>
@@ -251,7 +251,7 @@
         const db = getFirestore(app);
         
         const RATES = { DEPOSIT: 26000, WITHDRAW: 25000 };
-        const RULES = { MIN_DEPOSIT: 50000, MIN_WITHDRAW_USDT: 5 };
+        const RULES = { MIN_DEPOSIT: 50000, MIN_WITHDRAW_USDT: 1 };
 
         let state = { user: null, data: null, history: [] };
 
