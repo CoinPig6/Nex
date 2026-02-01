@@ -737,52 +737,23 @@
         function marketLoop() {
             const now = Date.now();
             const t = now / 1000;
-            // Base random movement
+            // Base random movement (Natural)
             const baseNoise = (Math.sin(t) * 10) + (Math.sin(t * 5) * 5) + (Math.sin(t * 13) * 2);
             
-            // Determine manipulation direction (Kill Whale or Natural Trend)
-            let manipulationBias = 0;
-            const currentEpoch30 = Math.floor(now / 30000);
+            // REMOVED: Automatic manipulation logic
+            // REMOVED: Desired trend calculation
+            // REMOVED: Kill Whale logic
             
-            // Only apply strong manipulation in Result Phase (Odd epoch)
-            if (currentEpoch30 % 2 !== 0 && state.lockPrice > 0) {
-               const seconds = new Date().getSeconds();
-               // Determine desired outcome based on Trend + Admin Mode
-               let desired = getDeterministicTrend(currentEpoch30) >= 0 ? 'up' : 'down';
-
-               // Kill Whale Override (Admin Logic)
-               if (state.killWhaleMode === true) {
-                   if (state.totalUp > state.totalDown) desired = 'down';
-                   else if (state.totalDown > state.totalUp) desired = 'up';
-               }
-
-               // "Magnetic Pull" to ensure visual candle matches desired outcome
-               const strength = (seconds < 45) ? 0 : ((seconds - 45) / 1.5); // Increase pull in last 15s
-               
-               if (desired === 'up') {
-                   // Pull price UP above lockPrice
-                   if (state.visualPrice < state.lockPrice + 3) {
-                       manipulationBias = 10 + (strength * 20); 
-                   } else {
-                       manipulationBias = 5; // Sustain
-                   }
-               } else {
-                   // Pull price DOWN below lockPrice
-                   if (state.visualPrice > state.lockPrice - 3) {
-                       manipulationBias = -10 - (strength * 20);
-                   } else {
-                       manipulationBias = -5; // Sustain
-                   }
-               }
-            }
-
-            state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0) + manipulationBias;
+            // Only keep manual offset if admin set it in settings (marketOffset)
+            state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0);
 
             // Smooth movement
             if (Math.abs(state.targetPrice - state.visualPrice) > 100) state.visualPrice = state.targetPrice;
             else state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1;
 
             let lastCandle = state.candles[state.candles.length - 1];
+            const currentEpoch30 = Math.floor(now / 30000);
+
             if (!lastCandle || lastCandle.epoch !== currentEpoch30) {
                 let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
                 if (state.candles.length > 0) localStorage.setItem('crownex_chart_data', JSON.stringify(state.candles));
