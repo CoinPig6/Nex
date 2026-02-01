@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex Pro - Synced & Min 100</title>
+    <title>Crownex Pro - Synced & Min 1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -158,21 +158,21 @@
             <div class="text-center w-full">
                 <!-- QUICK SELECT BUTTONS -->
                 <div class="flex items-center justify-center gap-2 mb-3">
-                    <button onclick="window.setBetAmount(100)" class="chip">$100</button>
-                    <button onclick="window.setBetAmount(200)" class="chip">$200</button>
-                    <button onclick="window.setBetAmount(500)" class="chip">$500</button>
+                    <button onclick="window.setBetAmount(1)" class="chip">$1</button>
+                    <button onclick="window.setBetAmount(5)" class="chip">$5</button>
+                    <button onclick="window.setBetAmount(10)" class="chip">$10</button>
                     <button onclick="window.setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
                 </div>
 
                 <div class="flex items-center justify-center gap-2">
-                    <button onclick="window.adjustBet(-10)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
+                    <button onclick="window.adjustBet(-1)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
                     <div class="w-36 relative group">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] font-bold font-mono text-sm">$</span>
-                        <input type="number" id="betInput" value="100" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="window.updateProfit()">
+                        <input type="number" id="betInput" value="1" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="window.updateProfit()">
                     </div>
-                    <button onclick="window.adjustBet(10)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
+                    <button onclick="window.adjustBet(1)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
                 </div>
-                <div class="text-[10px] text-[#6b7280] font-bold uppercase mt-1">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+$95.00</span> (95%)</div>
+                <div class="text-[10px] text-[#6b7280] font-bold uppercase mt-1">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+$0.95</span> (95%)</div>
             </div>
         </div>
         
@@ -266,7 +266,7 @@
             const inp = document.getElementById('betInput');
             let current = parseFloat(inp.value) || 0;
             let nextVal = current + val;
-            if (nextVal < 1) nextVal = 1; // Input can hold low values but confirmBet will check 100
+            if (nextVal < 1) nextVal = 1; // Min bet 1 logic
             inp.value = nextVal;
             window.updateProfit();
         };
@@ -417,7 +417,7 @@
             
             const amount = parseFloat(document.getElementById('betInput').value);
             if (!amount || amount <= 0) return;
-            if (amount < 100) return showToast('error', "Mức cược tối thiểu là $100!");
+            if (amount < 1) return showToast('error', "Mức cược tối thiểu là $1!"); // Updated Min 1
             if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
             
             state.pendingBet.type = type; state.pendingBet.amount = amount;
@@ -444,7 +444,7 @@
             const type = state.pendingBet.type;
 
             if (amount > state.balance) { showToast('error', "Số dư không đủ!"); return; }
-            if (amount < 100) { showToast('error', "Mức cược tối thiểu là $100!"); return; }
+            if (amount < 1) { showToast('error', "Mức cược tối thiểu là $1!"); return; } // Updated Min 1
 
             state.isProcessing = true;
             const btn = document.getElementById('btnConfirm');
@@ -592,12 +592,33 @@
 
         function renderHistoryBlocks() {
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
-            let u = 0, d = 0; state.history.forEach(r => { if(r === 'up') u++; if(r === 'down') d++; });
-            document.getElementById('count-up').innerText = u; document.getElementById('count-down').innerText = d;
             
+            // LOGIC ĐẾM SỐ LƯỢNG CHÍNH XÁC (BAO GỒM CẢ CÁC KẾT QUẢ ĐÃ QUA TRONG GIỜ HIỆN TẠI)
+            let u = 0, d = 0;
             const currentMin = new Date().getMinutes();
             const now = new Date();
 
+            // Tính toán tổng số dựa trên những gì sẽ được hiển thị (Visual + Stored)
+            for(let i = 0; i < 60; i++) {
+                let r = state.history[i];
+                
+                // Nếu không có dữ liệu trong storage, nhưng là thời gian quá khứ trong giờ hiện tại
+                // Ta phải tính toán kết quả "ảo" (deterministic) để cộng vào tổng
+                if (!r && i < currentMin) {
+                    const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45); 
+                    const targetEpoch = Math.floor(targetTime.getTime() / 30000);
+                    const change = getDeterministicTrend(targetEpoch);
+                    r = change >= 0 ? 'up' : 'down';
+                }
+
+                if(r === 'up') u++;
+                if(r === 'down') d++;
+            }
+
+            document.getElementById('count-up').innerText = u; 
+            document.getElementById('count-down').innerText = d;
+            
+            // RENDER VISUAL DOTS
             for(let b=0; b < 3; b++) {
                 const div = document.createElement('div'); div.className = 'history-block';
                 const s = b * 20;
@@ -609,12 +630,8 @@
                     else if (r === 'down') displayClass = 'dot down';
                     else if (i < currentMin) {
                         // VISUAL FIX: "HIỆN THEO NẾN" - ĐỒNG BỘ 100%
-                        // Tính toán thời gian của phút đó để lấy epoch chuẩn
-                        const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45); // Lấy giây 45 để chắc chắn nằm trong nến result
+                        const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45);
                         const targetEpoch = Math.floor(targetTime.getTime() / 30000);
-                        
-                        // Dùng chung hàm getDeterministicTrend với generateStaticCandle
-                        // Điều này đảm bảo Nến ảo và Bóng ảo cùng một màu
                         const change = getDeterministicTrend(targetEpoch);
                         
                         const visualDirection = change >= 0 ? 'up' : 'down';
@@ -856,5 +873,4 @@
     </script>
 </body>
 </html>
-
 
