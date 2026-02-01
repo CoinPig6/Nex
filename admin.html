@@ -786,7 +786,7 @@
             document.getElementById('modal-promo-approve').classList.add('active');
         };
 
-        // XÁC NHẬN DUYỆT KHUYẾN MÃI
+        // XÁC NHẬN DUYỆT KHUYẾN MÃI - SỬA TYPE THÀNH "Km"
         window.confirmPromoApproval = async () => {
             const pid = document.getElementById('promo-id-target').value;
             const finalAmount = parseFloat(document.getElementById('promo-amount-input').value) || 0;
@@ -807,12 +807,15 @@
                         balance: (uSnap.data().balance||0) + finalAmount, 
                         requiredTurnover: (uSnap.data().requiredTurnover||0) + finalTurnover 
                     });
+                    
+                    // SỬA Ở ĐÂY: Type đổi thành "Km" để hiện lịch sử đúng
                     await addDoc(collection(db, "users", p.userId, "transactions"), { 
-                        type: "promo", 
+                        type: "Km", // Thay đổi từ "promo" sang "Km"
                         promoId: pid, 
                         promoName: p.type || "Khuyến mãi", 
                         amount: finalAmount, 
                         status: "success", 
+                        note: p.type || "Khuyến mãi", // Thêm note
                         timestamp: serverTimestamp() 
                     });
                 }
@@ -872,6 +875,7 @@
             document.getElementById('modal-user-edit').classList.add('active');
         };
 
+        // SỬA PHẦN NÀY: Thay đổi type thành "Cộng tiền" và "Trừ tiền"
         window.saveUserEdit = async () => {
             const uid = document.getElementById('edit-user-id').value;
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
@@ -886,9 +890,19 @@
                         bankName: document.getElementById('edit-bank').value,
                         bankNumber: document.getElementById('edit-bank-num').value,
                         balance: (u.balance||0) + balAdj,
-                        requiredTurnover: (u.requiredTurnover||0) + turnAdj // Cập nhật cược
+                        requiredTurnover: (u.requiredTurnover||0) + turnAdj
                     });
-                    if(balAdj !== 0) await addDoc(collection(db, "users", uid, "transactions"), { type: balAdj > 0 ? 'admin_add' : 'admin_sub', amount: Math.abs(balAdj), status: 'success', note: 'Admin Adjust', timestamp: serverTimestamp() });
+                    
+                    // SỬA Ở ĐÂY:
+                    if(balAdj !== 0) {
+                        await addDoc(collection(db, "users", uid, "transactions"), { 
+                            type: balAdj > 0 ? 'Cộng tiền' : 'Trừ tiền', // Type rõ ràng tiếng Việt
+                            amount: Math.abs(balAdj), 
+                            status: 'success', 
+                            note: balAdj > 0 ? 'Admin cộng tiền' : 'Admin trừ tiền', 
+                            timestamp: serverTimestamp() 
+                        });
+                    }
                     window.closeModal('modal-user-edit'); window.showToast("Cập nhật thành công!");
                 } catch(e) { alert("Lỗi: "+e.message); }
             }
