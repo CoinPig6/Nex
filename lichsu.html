@@ -166,8 +166,7 @@
                 
                 // QUERY MỚI: Truy vấn collection gốc 'betHistory', lọc theo field 'uid'
                 const q = query(
-                    collection(db, "betHistory"), 
-                    where("uid", "==", uid),
+                    collection(db, "users", uid, "betHistory")
                     orderBy("timestamp", "desc"), 
                     limit(100)
                 );
