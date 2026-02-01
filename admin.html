@@ -33,6 +33,10 @@
         /* Animations */
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .fade-out { animation: fadeOut 0.3s forwards; }
+        @keyframes fadeOut { to { opacity: 0; transform: scale(0.95); pointer-events: none; } }
+
         .spin-slow { animation: spin 3s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -107,6 +111,10 @@
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
         .modal-content { background: #151A25; width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid #333; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #151A25; border: 1px solid #2A303C; border-left: 4px solid #FCD535; color: white; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: translateY(100px); transition: 0.3s; z-index: 9999; font-weight: 600; font-size: 13px; }
+        .toast.show { transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -120,13 +128,20 @@
             </div>
         </div>
         <h1 class="text-2xl font-bold text-white mb-2 tracking-tight">CROWNEX ADMIN</h1>
-        <p class="text-xs text-slate-500 mb-8 font-mono border border-[#2A303C] px-3 py-1 rounded-full">SYSTEM V9.2 - SECURE</p>
+        <p class="text-xs text-slate-500 mb-8 font-mono border border-[#2A303C] px-3 py-1 rounded-full">SYSTEM V9.3 - SECURE</p>
         
         <div class="flex flex-col gap-4 w-full max-w-xs">
             <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[1em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-transparent" placeholder="••••" maxlength="4">
             <button onclick="window.checkPin()" id="btnLogin" class="btn btn-primary w-full py-3.5 shadow-lg">TRUY CẬP</button>
         </div>
         <div id="pinError" class="mt-4 text-red-500 text-xs font-bold hidden bg-red-500/10 px-4 py-2 rounded border border-red-500/20"></div>
+        <div id="uid-display" class="hidden mt-6 text-center animate-fade-in-up">
+            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Admin UID (Dùng cho Rules)</p>
+            <div class="flex items-center gap-2 bg-[#1C2230] p-2 rounded border border-[#2A303C]">
+                <code id="uid-text" class="text-[10px] text-green-400 font-mono select-all">...</code>
+                <button onclick="window.copyUid()" class="text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-copy"></i></button>
+            </div>
+        </div>
     </div>
 
     <!-- 2. GIAO DIỆN CHÍNH -->
@@ -139,7 +154,12 @@
                 <h2 id="page-title" class="text-lg font-bold text-white">Dashboard</h2>
                 <span class="text-[10px] text-green-500 font-mono flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> SYSTEM ONLINE</span>
             </div>
-            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-bold shadow-lg">A</div>
+            <div class="flex items-center gap-4">
+                <button onclick="window.initDefaults()" class="hidden md:flex bg-[#1C2230] hover:bg-[#2A303C] text-xs text-slate-400 px-3 py-1.5 rounded border border-[#2A303C] transition items-center gap-2">
+                    <i class="fa-solid fa-database"></i> Check DB
+                </button>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-bold shadow-lg">A</div>
+            </div>
         </header>
 
         <!-- SIDEBAR -->
@@ -191,6 +211,16 @@
                         <div class="text-[11px] font-bold text-slate-400 uppercase">Tổng Số Dư</div>
                         <div class="text-3xl font-bold text-green-400 mt-2 font-mono" id="stat-balance">$0</div>
                     </div>
+                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+                        <i class="fa-solid fa-arrow-down absolute right-4 top-4 text-4xl opacity-10 text-green-500"></i>
+                        <div class="text-[11px] font-bold text-slate-400 uppercase">Nạp Hôm Nay</div>
+                        <div class="text-3xl font-bold text-white mt-2 font-mono" id="stat-dep-today">$0</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+                         <i class="fa-solid fa-arrow-up absolute right-4 top-4 text-4xl opacity-10 text-red-500"></i>
+                        <div class="text-[11px] font-bold text-slate-400 uppercase">Rút Hôm Nay</div>
+                        <div class="text-3xl font-bold text-white mt-2 font-mono" id="stat-wit-today">$0</div>
+                    </div>
                 </div>
 
                 <!-- Live Monitor -->
@@ -202,9 +232,9 @@
                         <div class="font-mono font-bold text-[#FCD535] text-xl" id="realTimeClock">00:00</div>
                     </div>
                     <div class="flex gap-8 items-center justify-center py-4">
-                        <div class="text-center"><div class="text-xs text-slate-500 font-bold mb-1">DOWN</div><div class="text-3xl font-bold text-red-500 font-mono" id="live-down">$0</div></div>
+                        <div class="text-center"><div class="text-xs text-slate-500 font-bold mb-1">DOWN (ĐỎ)</div><div class="text-3xl font-bold text-red-500 font-mono" id="live-down">$0</div></div>
                         <div class="h-12 w-px bg-[#2A303C]"></div>
-                        <div class="text-center"><div class="text-xs text-slate-500 font-bold mb-1">UP</div><div class="text-3xl font-bold text-green-500 font-mono" id="live-up">$0</div></div>
+                        <div class="text-center"><div class="text-xs text-slate-500 font-bold mb-1">UP (XANH)</div><div class="text-3xl font-bold text-green-500 font-mono" id="live-up">$0</div></div>
                     </div>
                     <div class="mt-4 flex justify-center gap-4">
                          <button onclick="window.manualReset()" class="bg-[#2A303C] hover:bg-white hover:text-black text-white px-4 py-2 rounded text-xs font-bold transition"><i class="fa-solid fa-rotate-right mr-1"></i> Reset Phiên</button>
@@ -220,9 +250,9 @@
             <div id="view-requests" class="hidden fade-in">
                 <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
                     <button onclick="window.filterReq('all', this)" class="sub-tab active px-4 py-2 rounded-full text-xs font-bold bg-[#FCD535] text-black">Tất cả</button>
-                    <button onclick="window.filterReq('deposit', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C]">Nạp tiền</button>
-                    <button onclick="window.filterReq('withdraw', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C]">Rút tiền</button>
-                    <button onclick="window.filterReq('pending', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C]">Chờ xử lý</button>
+                    <button onclick="window.filterReq('deposit', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Nạp tiền</button>
+                    <button onclick="window.filterReq('withdraw', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Rút tiền</button>
+                    <button onclick="window.filterReq('pending', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Chờ xử lý</button>
                 </div>
                 <div class="table-container">
                     <div class="overflow-x-auto">
@@ -252,7 +282,7 @@
                 <div class="flex justify-between mb-4">
                     <div class="relative w-full max-w-xs">
                         <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500 text-xs"></i>
-                        <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User..." class="input-box pl-9">
+                        <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User (Tên, SĐT)..." class="input-box pl-9">
                     </div>
                 </div>
                 <div class="table-container max-h-[70vh] overflow-y-auto">
@@ -287,26 +317,51 @@
             <!-- 6. CẤU HÌNH -->
             <div id="view-settings" class="hidden fade-in">
                 <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Kill Whale Config -->
                     <div class="glass-card p-6 rounded-2xl border-red-500/30">
-                        <div class="flex justify-between items-center">
-                            <div><h3 class="font-bold text-white">KILL WHALE MODE</h3><p class="text-xs text-red-400">Chế độ giết cá voi (Bẻ cầu)</p></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-skull-crossbones text-red-500"></i> KILL WHALE MODE
+                                </h3>
+                                <p class="text-xs text-red-400 mt-1">Chế độ "bẻ cầu" giết cá voi</p>
+                            </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="killWhaleToggle" onchange="window.toggleKillWhale()" class="sr-only peer">
+                                <input type="checkbox" id="killWhaleToggle" onchange="window.saveKillWhaleConfig()" class="sr-only peer">
                                 <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
                             </label>
                         </div>
+                        
+                        <div class="bg-[#0B0E14] p-4 rounded-xl border border-[#2A303C]">
+                            <div class="flex justify-between text-xs text-slate-400 mb-2">
+                                <span>Thời điểm đảo chiều (Giây cuối)</span>
+                                <span id="flipTimeDisplay" class="text-[#FCD535] font-bold">6s</span>
+                            </div>
+                            <input type="range" id="flipTime" min="1" max="15" value="6" oninput="document.getElementById('flipTimeDisplay').innerText = this.value + 's'" onchange="window.saveKillWhaleConfig()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                            <p class="text-[10px] text-slate-500 italic mt-2">Ví dụ: Chọn 6s -> Biểu đồ chạy bình thường, đến giây thứ 54 sẽ bẻ lái kết quả.</p>
+                        </div>
                     </div>
+
+                    <!-- Market Offset -->
                     <div class="glass-card p-6 rounded-2xl">
-                        <h3 class="font-bold text-blue-400 mb-4">Điều Chỉnh Kết Quả</h3>
+                        <h3 class="font-bold text-blue-400 mb-4">Điều Chỉnh Kết Quả Thủ Công</h3>
+                        <p class="text-xs text-slate-400 mb-4">Can thiệp trực tiếp vào kết quả giá (Cộng/Trừ điểm)</p>
                         <input type="range" id="priceOffset" min="-50" max="50" value="0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                        <div class="flex justify-between text-xs font-bold text-slate-400 mt-2"><span>ĐỎ (-50)</span><span id="offsetDisplay" class="text-white">0</span><span>XANH (+50)</span></div>
-                        <button onclick="window.saveConfig()" class="btn bg-[#2A303C] text-white w-full mt-4">Lưu Cấu Hình</button>
+                        <div class="flex justify-between text-xs font-bold text-slate-400 mt-2">
+                            <span>ĐỎ (-50)</span>
+                            <span id="offsetDisplay" class="text-white text-lg">0</span>
+                            <span>XANH (+50)</span>
+                        </div>
+                        <button onclick="window.saveConfig()" class="btn bg-[#2A303C] text-white w-full mt-6 hover:bg-blue-600 border border-[#2A303C]">Lưu Cấu Hình</button>
                     </div>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">Action Successful!</div>
 
     <!-- MODAL DUYỆT NẠP/RÚT -->
     <div id="modal-approve" class="modal-overlay">
@@ -365,8 +420,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc, serverTimestamp, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // FIREBASE CONFIG - COPY FROM CONSOLE
         const firebaseConfig = { 
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU", 
             authDomain: "btccoinbig.firebaseapp.com", 
@@ -380,10 +436,10 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        const ADMIN_PIN = "9999";
+        const ADMIN_PIN = "9999"; // Mã PIN đăng nhập
         let allUsers = [], allReqs = [], allPromos = [], activeReq = null;
 
-        // --- GLOBAL FUNCTIONS (GẮN VÀO WINDOW) ---
+        // --- GLOBAL FUNCTIONS ---
         
         window.checkPin = async () => {
             const pin = document.getElementById('adminPin').value;
@@ -391,16 +447,10 @@
             const err = document.getElementById('pinError');
             
             if(pin === ADMIN_PIN) {
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
                 btn.disabled = true;
                 try {
                     if(!auth.currentUser) await signInAnonymously(auth);
-                    document.getElementById('login-screen').classList.add('fade-out'); // Animation effect could be added
-                    setTimeout(() => {
-                        document.getElementById('login-screen').style.display = 'none';
-                        document.getElementById('app').classList.remove('hidden');
-                        initAdmin();
-                    }, 500);
                 } catch(e) { 
                     btn.innerHTML = 'TRUY CẬP'; btn.disabled = false;
                     err.innerText = "Lỗi kết nối: " + e.message; err.classList.remove('hidden');
@@ -411,8 +461,41 @@
             }
         };
 
-        function initAdmin() {
-            // Load Data
+        // Listen for auth state
+        onAuthStateChanged(auth, async (user) => {
+            if(user) {
+                const btn = document.getElementById('btnLogin');
+                const pin = document.getElementById('adminPin').value;
+                if(pin === ADMIN_PIN) {
+                    // Show UID for setup
+                    document.getElementById('uid-text').innerText = user.uid;
+                    document.getElementById('uid-display').classList.remove('hidden');
+                    
+                    // Transition to app
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Success';
+                    setTimeout(() => {
+                        document.getElementById('login-screen').classList.add('fade-out');
+                        document.getElementById('app').classList.remove('hidden');
+                        initAdmin();
+                    }, 1500);
+                }
+            }
+        });
+
+        window.copyUid = () => {
+            const uid = document.getElementById('uid-text').innerText;
+            navigator.clipboard.writeText(uid);
+            window.showToast("Đã copy UID!");
+        };
+
+        window.showToast = (msg) => {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        };
+
+        async function initAdmin() {
+            window.initDefaults(); // Auto fix DB
             syncRealtimeTimer();
             loadDashboardStats();
             loadRequests();
@@ -422,10 +505,25 @@
             loadSettings();
         }
 
+        // Auto create missing documents to prevent blank admin
+        window.initDefaults = async () => {
+            try {
+                const gRef = doc(db, "games", "current");
+                const sRef = doc(db, "settings", "global");
+                
+                const [gSnap, sSnap] = await Promise.all([getDoc(gRef), getDoc(sRef)]);
+                
+                if(!gSnap.exists()) await setDoc(gRef, { totalUp: 0, totalDown: 0 });
+                if(!sSnap.exists()) await setDoc(sRef, { minBet: 100, status: "on", killWhaleMode: false });
+                
+                console.log("DB Checked/Initialized");
+            } catch(e) { console.error("Init Error:", e); }
+        };
+
         // --- NAVIGATION ---
         window.switchTab = (tabName, el, title) => {
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            if(el) el.classList.add('active');
+            if(el) el.classList.add('active'); // Fix crash if el is null
             if(title) document.getElementById('page-title').innerText = title;
             
             ['dashboard','requests','promo','users','giftcode','settings'].forEach(id => {
@@ -455,7 +553,7 @@
         window.manualReset = async (silent) => {
             try {
                 await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 });
-                if(!silent) alert("Đã reset phiên cược!");
+                if(!silent) window.showToast("Đã reset phiên cược!");
             } catch(e) { console.error(e); }
         };
 
@@ -467,6 +565,8 @@
                     document.getElementById('live-down').innerText = "$"+(d.totalDown||0).toLocaleString();
                 }
             });
+            
+            // Calculate today stats from transactions if needed, strictly from admin_requests usually better for fast loading
         }
 
         // --- REQUESTS LOGIC ---
@@ -474,7 +574,14 @@
             onSnapshot(query(collection(db, "admin_requests"), orderBy("timestamp", "desc")), snap => {
                 allReqs = [];
                 snap.forEach(d => allReqs.push({id: d.id, ...d.data()}));
-                window.filterReq('all', document.querySelector('.sub-tab.active'));
+                
+                // Keep current filter active
+                const activeBtn = document.querySelector('.sub-tab.active') || document.querySelector('.sub-tab');
+                const currentFilter = activeBtn.innerText === 'Tất cả' ? 'all' : 
+                                     (activeBtn.innerText.includes('Nạp') ? 'deposit' : 
+                                     (activeBtn.innerText.includes('Rút') ? 'withdraw' : 'pending'));
+                
+                window.filterReq(currentFilter, activeBtn);
                 
                 const pending = allReqs.filter(x => x.status === 'pending').length;
                 const badge = document.getElementById('badge-req');
@@ -484,24 +591,36 @@
         }
 
         window.filterReq = (filter, el) => {
-            document.querySelectorAll('.sub-tab').forEach(x => {
-                x.classList.remove('bg-[#FCD535]', 'text-black');
-                x.classList.add('bg-[#151A25]', 'text-white');
-            });
-            el.classList.remove('bg-[#151A25]', 'text-white');
-            el.classList.add('bg-[#FCD535]', 'text-black');
+            if(el) {
+                document.querySelectorAll('.sub-tab').forEach(x => {
+                    x.classList.remove('bg-[#FCD535]', 'text-black');
+                    x.classList.add('bg-[#151A25]', 'text-white');
+                });
+                el.classList.remove('bg-[#151A25]', 'text-white');
+                el.classList.add('bg-[#FCD535]', 'text-black');
+            }
 
             let html = '';
+            let depToday = 0, witToday = 0;
+
             allReqs.forEach(d => {
+                // Calc stats
+                if(d.status === 'success') {
+                    const amt = parseFloat(d.amount)||0;
+                    if(d.type === 'deposit') depToday += amt;
+                    else witToday += amt;
+                }
+
                 if(filter !== 'all') {
                     if(filter === 'pending' && d.status !== 'pending') return;
                     if((filter === 'deposit' || filter === 'withdraw') && d.type !== filter) return;
                 }
                 const isDep = d.type === 'deposit';
                 let sttClass = d.status==='pending' ? 'text-yellow-500' : (d.status==='success'?'text-green-500':'text-red-500');
+                const timeStr = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString('vi-VN') : '-';
                 
                 html += `<tr class="group border-b border-[#2A303C]">
-                    <td class="font-mono text-[10px] text-slate-500">${d.timestamp?.toDate().toLocaleTimeString()}</td>
+                    <td class="font-mono text-[10px] text-slate-500">${timeStr}</td>
                     <td class="font-bold text-white text-xs">${d.username||d.userId.slice(0,6)}...</td>
                     <td><span class="text-[10px] font-bold px-2 py-1 rounded ${isDep?'bg-green-500/10 text-green-500':'bg-red-500/10 text-red-500'}">${isDep?'NẠP':'RÚT'}</span></td>
                     <td class="font-bold text-white font-mono">$${parseFloat(d.amount).toLocaleString()}</td>
@@ -513,6 +632,9 @@
                 </tr>`;
             });
             document.getElementById('table-requests').innerHTML = html || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Không có dữ liệu</td></tr>';
+            
+            document.getElementById('stat-dep-today').innerText = "$"+depToday.toLocaleString();
+            document.getElementById('stat-wit-today').innerText = "$"+witToday.toLocaleString();
         };
 
         window.openApproveModal = (rid) => {
@@ -565,6 +687,7 @@
                 });
 
                 window.closeModal('modal-approve');
+                window.showToast("Đã duyệt thành công!");
             } catch(e) { alert("Lỗi: "+e.message); }
             finally { btn.innerText = originalText; btn.disabled = false; }
         };
@@ -579,7 +702,6 @@
                 }
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'rejected' });
                 
-                // Sync reject
                 const qTx = query(collection(db, "users", activeReq.userId, "transactions"), 
                     where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
                 const sTx = await getDocs(qTx);
@@ -614,6 +736,7 @@
                 const bonus = p.bonusAmount || (p.type.includes('10') ? 10 : 0);
                 const turn = p.turnoverRequire || bonus*5;
                 const statusColor = p.status==='pending' ? 'text-yellow-400' : (p.status==='success'?'text-green-400':'text-red-400');
+                const timeStr = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleString('vi-VN') : '-';
 
                 // Mobile
                 mHtml += `<div class="glass-card p-4 rounded-xl border border-[#2A303C] mb-3">
@@ -633,7 +756,7 @@
 
                 // Desktop
                 dHtml += `<tr>
-                    <td class="text-slate-500 text-[10px] font-mono">${p.timestamp?.toDate().toLocaleString()}</td>
+                    <td class="text-slate-500 text-[10px] font-mono">${timeStr}</td>
                     <td class="text-white text-xs font-bold">${p.username}</td>
                     <td><span class="text-purple-400 text-[10px] font-bold border border-purple-500/30 px-2 py-1 rounded">${p.type}</span></td>
                     <td class="text-green-400 font-bold text-xs">+$${bonus}</td>
@@ -675,6 +798,7 @@
                 }
 
                 await updateDoc(pRef, { status: 'success', approvedAt: serverTimestamp() });
+                window.showToast("Duyệt khuyến mãi thành công");
             } catch(e) { alert("Lỗi: "+e.message); if(btn) btn.disabled = false; }
         };
 
@@ -745,6 +869,7 @@
                         });
                     }
                     window.closeModal('modal-user-edit');
+                    window.showToast("Cập nhật thành công!");
                 } catch(e) { alert("Lỗi: "+e.message); }
             }
         };
@@ -758,7 +883,7 @@
             await setDoc(doc(db, "giftcodes", code), { 
                 amount: a, limit: l, turnoverReq: parseFloat(document.getElementById('gcTurnover').value)||0, usedCount: 0, usersClaimed: [], createdAt: Date.now() 
             });
-            alert("Code: " + code);
+            window.showToast("Tạo code thành công: " + code);
         };
         
         function loadGiftcodes() {
@@ -782,17 +907,34 @@
         function loadSettings() {
             onSnapshot(setRef, s => {
                 if(s.exists()) {
-                    document.getElementById('killWhaleToggle').checked = s.data().killWhaleMode;
-                    document.getElementById('priceOffset').value = s.data().marketOffset || 0;
-                    document.getElementById('offsetDisplay').innerText = s.data().marketOffset || 0;
+                    const data = s.data();
+                    document.getElementById('killWhaleToggle').checked = data.killWhaleMode;
+                    document.getElementById('priceOffset').value = data.marketOffset || 0;
+                    document.getElementById('offsetDisplay').innerText = data.marketOffset || 0;
+                    
+                    // Kill Whale Flip Time
+                    const ft = data.flipTime || 6;
+                    document.getElementById('flipTime').value = ft;
+                    document.getElementById('flipTimeDisplay').innerText = ft + 's';
                 }
             });
         }
-        window.toggleKillWhale = async () => await setDoc(setRef, {killWhaleMode: document.getElementById('killWhaleToggle').checked}, {merge:true});
+        
+        window.saveKillWhaleConfig = async () => {
+            const mode = document.getElementById('killWhaleToggle').checked;
+            const time = parseInt(document.getElementById('flipTime').value);
+            await setDoc(setRef, {
+                killWhaleMode: mode,
+                flipTime: time
+            }, {merge:true});
+            window.showToast(mode ? `Đã BẬT Kill Whale (Bẻ cầu ${time}s cuối)` : "Đã TẮT Kill Whale");
+        };
+
         window.saveConfig = async () => { 
             await setDoc(setRef, {marketOffset: parseInt(document.getElementById('priceOffset').value)}, {merge:true});
-            alert("Đã lưu cấu hình!");
+            window.showToast("Đã lưu Offset giá!");
         };
+        
         document.getElementById('priceOffset').addEventListener('input', (e) => document.getElementById('offsetDisplay').innerText = e.target.value);
 
     </script>
