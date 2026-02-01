@@ -233,7 +233,7 @@
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // GLOBAL LOCK FLAG
+        // GLOBAL FLAGS
         let roundSettled = false;
 
         // --- GLOBAL UI FUNCTIONS ---
@@ -329,7 +329,7 @@
                     if(doc.exists()) { 
                         const data = doc.data();
                         state.marketOffset = data.marketOffset || 0; 
-                        state.killWhaleMode = data.killWhaleMode === true; // Strict boolean check
+                        state.killWhaleMode = data.killWhaleMode === true;
                     }
                 });
                 onSnapshot(doc(db, "games", "current"), (doc) => {
@@ -360,36 +360,7 @@
             if (betData.expires > now) {
                 state.currentBet = { type: betData.type, amount: betData.amount };
                 updateBetUI(betData.type, betData.amount);
-            } else { processOfflineResult(betData); }
-        }
-
-        async function processOfflineResult(betData) {
-            const m = new Date().getMinutes();
-            let pm = m - 1; if (pm < 0) pm = 59;
-            const res = state.history[pm];
-            
-            if (!res) {
-                return;
             }
-
-            const win = (betData.type === res);
-            let totalReturn = 0;
-
-            if (win) {
-                totalReturn = betData.amount * 1.95;
-                state.balance += totalReturn;
-                showToast('success', `Phiên trước: THẮNG (+$${(betData.amount*0.95).toFixed(2)})`);
-                if(state.userData.uid !== "guest") {
-                    await updateDoc(doc(db,"users",state.userData.uid), {
-                        balance: increment(totalReturn)
-                    });
-                }
-            } else {
-                showToast('error', `Phiên trước: THUA (-$${betData.amount})`);
-            }
-
-            updateBalanceUI();
-            localStorage.removeItem('crownex_active_bet');
         }
 
         function updateBetUI(type, amount) {
@@ -411,7 +382,6 @@
         }
 
         window.selectSide = (type) => {
-            // FIX: STRICT TIME CHECK - SECONDS
             const currentSeconds = new Date().getSeconds();
             if (currentSeconds >= 30) return showToast('error', "Đã hết thời gian cược phiên này!");
 
@@ -442,7 +412,6 @@
         };
 
         window.confirmBet = async () => {
-            // FIX: STRICT TIME CHECK AGAIN ON CONFIRM
             const currentSeconds = new Date().getSeconds();
             if (currentSeconds >= 30) {
                 window.cancelSelection();
@@ -496,14 +465,14 @@
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
         
-        // --- CORE SYNC HELPERS (DETERMINISTIC) ---
+        // --- SYNC ENGINE (CORE FIX) ---
+        // This function decides the outcome for a specific minute based on a fixed algorithm.
+        // It ensures History, Candle, and Payout always agree.
         function getDeterministicTrend(epoch) {
             return (Math.sin(epoch * 1.5) + Math.cos(epoch * 2.5)) * 8;
         }
 
-        // --- GAME CORE LOGIC ---
         function initGame() {
-            // FIX: LOAD HISTORY BEFORE GENERATING CANDLES
             const h = localStorage.getItem('crownex_history_v30');
             if (h) state.history = JSON.parse(h);
             
@@ -560,36 +529,35 @@
             setInterval(marketLoop, 30);
         }
 
-        // FIX: STRICT CANDLE GENERATION BASED ON HISTORY
+        // --- CANDLE & SYNC LOGIC ---
         function generateStaticCandle(epoch, openPrice) {
             let change = getDeterministicTrend(epoch);
             
-            // Normalize big changes
-            const diff = openPrice - CONFIG.basePrice;
-            if (Math.abs(diff) > 40) { change -= (diff * 0.15); }
-
-            // Sync with history if this is a RESULT CANDLE (Odd epochs)
-            // Epoch 0: Order (00-30s), Epoch 1: Result (30-60s)
+            // Result Phase (Epoch is Odd, e.g., 30s-60s block of a minute)
+            // We use history to force color matching
             if (epoch % 2 !== 0) {
                 const minuteIdx = Math.floor(epoch / 2) % 60;
-                const res = state.history[minuteIdx];
+                let res = state.history[minuteIdx];
 
-                if (res) {
-                    if (res === 'up') {
-                        // Force GREEN: Close > Open
-                        if (change <= 0) change = Math.abs(change) + 3;
-                        if (change < 2) change = 2; // Min spread
-                    } else if (res === 'down') {
-                        // Force RED: Close < Open
-                        if (change >= 0) change = -Math.abs(change) - 3;
-                        if (change > -2) change = -2; // Min spread
-                    }
+                // If no history recorded, assume deterministic
+                if (!res) {
+                    res = change >= 0 ? 'up' : 'down';
                 }
+
+                if (res === 'up') {
+                    if (change <= 0) change = Math.abs(change) + 2; 
+                } else if (res === 'down') {
+                    if (change >= 0) change = -Math.abs(change) - 2;
+                }
+            } else {
+                // Order Phase (Epoch is Even) - normalize extreme drifts
+                const diff = openPrice - CONFIG.basePrice;
+                if (Math.abs(diff) > 40) change -= (diff * 0.2); 
             }
 
             const close = openPrice + change;
-            const high = Math.max(openPrice, close) + Math.abs(Math.sin(epoch) * 6);
-            const low = Math.min(openPrice, close) - Math.abs(Math.sin(epoch) * 6);
+            const high = Math.max(openPrice, close) + Math.abs(Math.sin(epoch) * 5);
+            const low = Math.min(openPrice, close) - Math.abs(Math.sin(epoch) * 5);
             return { open: openPrice, close: close, high: high, low: low, epoch: epoch };
         }
 
@@ -602,19 +570,21 @@
             const currentMin = new Date().getMinutes();
             const now = new Date();
 
-            // FIX: HISTORY LOGIC - ONLY SHOW COMPLETED MINUTES
             for(let i = 0; i < 60; i++) {
-                // Skip if this is current or future minute
-                if (i >= currentMin) break;
+                if (i >= currentMin) break; // Don't show future
 
                 let r = state.history[i];
+                // Backfill history if missing using consistent logic
                 if (!r) {
                     const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45); 
-                    const targetEpoch = Math.floor(targetTime.getTime() / 30000);
+                    const targetEpoch = Math.floor(targetTime.getTime() / 30000); // Result epoch
+                    // Must be odd epoch for result
+                    if(targetEpoch % 2 === 0) targetEpoch++; 
+                    
                     const change = getDeterministicTrend(targetEpoch);
                     r = change >= 0 ? 'up' : 'down';
                 }
-
+                
                 if(r === 'up') u++;
                 if(r === 'down') d++;
             }
@@ -626,7 +596,7 @@
                 const div = document.createElement('div'); div.className = 'history-block';
                 const s = b * 20;
                 for(let i=s; i<s+20; i++) {
-                    // FIX: ONLY RENDER DOTS FOR COMPLETED MINUTES
+                    // Future/Current dots are empty
                     if (i >= currentMin) {
                         const placeholder = document.createElement('div');
                         placeholder.className = 'dot'; 
@@ -635,12 +605,12 @@
                     }
 
                     let r = state.history[i];
-                    
                     if (!r) {
-                        const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45);
-                        const targetEpoch = Math.floor(targetTime.getTime() / 30000);
-                        const change = getDeterministicTrend(targetEpoch);
-                        r = change >= 0 ? 'up' : 'down';
+                         const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), i, 45); 
+                         const targetEpoch = Math.floor(targetTime.getTime() / 30000);
+                         if(targetEpoch % 2 === 0) targetEpoch++;
+                         const change = getDeterministicTrend(targetEpoch);
+                         r = change >= 0 ? 'up' : 'down';
                     }
 
                     const d = document.createElement('div'); 
@@ -708,7 +678,8 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // FIX: Ensure result is consistent with final visual price
+            // CRITICAL SYNC: Result is simply what the price is visually
+            // Because marketLoop forces visual price to match trend, this is now safe
             let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
             
             const m = new Date().getMinutes(); 
@@ -716,14 +687,13 @@
 
             const lastDay = localStorage.getItem("crownex_history_day");
             const today = new Date().toDateString();
-
             if (lastDay !== today) {
                 state.history = new Array(60).fill(null);
                 localStorage.setItem("crownex_history_day", today);
             }
 
+            // Save authoritative result
             state.history[pm] = res;
-            
             localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
             renderHistoryBlocks();
 
@@ -767,42 +737,52 @@
         function marketLoop() {
             const now = Date.now();
             const t = now / 1000;
+            // Base random movement
             const baseNoise = (Math.sin(t) * 10) + (Math.sin(t * 5) * 5) + (Math.sin(t * 13) * 2);
             
-            // FIX: CHECK KILL WHALE MODE (Strictly enabled by Admin)
+            // Determine manipulation direction (Kill Whale or Natural Trend)
             let manipulationBias = 0;
+            const currentEpoch30 = Math.floor(now / 30000);
             
-            if (state.currentPhase === 'result' && state.killWhaleMode === true && state.lockPrice > 0) {
-               // Smooth manipulation over the last 30s
+            // Only apply strong manipulation in Result Phase (Odd epoch)
+            if (currentEpoch30 % 2 !== 0 && state.lockPrice > 0) {
                const seconds = new Date().getSeconds();
-               const strength = (seconds - 30) / 10; // 0 to 3 intensity
+               // Determine desired outcome based on Trend + Admin Mode
+               let desired = getDeterministicTrend(currentEpoch30) >= 0 ? 'up' : 'down';
+
+               // Kill Whale Override (Admin Logic)
+               if (state.killWhaleMode === true) {
+                   if (state.totalUp > state.totalDown) desired = 'down';
+                   else if (state.totalDown > state.totalUp) desired = 'up';
+               }
+
+               // "Magnetic Pull" to ensure visual candle matches desired outcome
+               const strength = (seconds < 45) ? 0 : ((seconds - 45) / 1.5); // Increase pull in last 15s
                
-               if (state.totalUp > state.totalDown) {
-                   // Kill UP -> Push Down. 
-                   if (state.visualPrice > state.lockPrice - 2) {
-                       manipulationBias = -15 * strength; 
+               if (desired === 'up') {
+                   // Pull price UP above lockPrice
+                   if (state.visualPrice < state.lockPrice + 3) {
+                       manipulationBias = 10 + (strength * 20); 
                    } else {
-                       manipulationBias = -5; // Hold below
+                       manipulationBias = 5; // Sustain
                    }
-               } else if (state.totalDown > state.totalUp) {
-                   // Kill DOWN -> Push Up
-                   if (state.visualPrice < state.lockPrice + 2) {
-                       manipulationBias = 15 * strength;
+               } else {
+                   // Pull price DOWN below lockPrice
+                   if (state.visualPrice > state.lockPrice - 3) {
+                       manipulationBias = -10 - (strength * 20);
                    } else {
-                       manipulationBias = 5; // Hold above
+                       manipulationBias = -5; // Sustain
                    }
                }
             }
 
-            // Target Price = Base + Noise + Global Offset + Dynamic Manipulation
             state.targetPrice = CONFIG.basePrice + baseNoise + (state.marketOffset || 0) + manipulationBias;
 
+            // Smooth movement
             if (Math.abs(state.targetPrice - state.visualPrice) > 100) state.visualPrice = state.targetPrice;
             else state.visualPrice += (state.targetPrice - state.visualPrice) * 0.1;
 
-            const currentEpoch30 = Math.floor(now / 30000);
             let lastCandle = state.candles[state.candles.length - 1];
-
             if (!lastCandle || lastCandle.epoch !== currentEpoch30) {
                 let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
                 if (state.candles.length > 0) localStorage.setItem('crownex_chart_data', JSON.stringify(state.candles));
@@ -833,12 +813,14 @@
             
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
+            // Grid
             for(let p = Math.floor(min / 20) * 20; p < min + r; p += 20) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
                 ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 55, y + 4);
             }
 
+            // Lock Line
             if (state.currentPhase === 'result') {
                 const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
                 document.getElementById('lockLine').style.top = yl + 'px'; document.getElementById('lockLabel').style.top = yl + 'px';
@@ -883,4 +865,5 @@
     </script>
 </body>
 </html>
+
 
