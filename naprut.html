@@ -143,7 +143,7 @@
                 </div>
             </div>
 
-            <!-- Form Nạp (ĐÃ XOÁ DÒNG LƯU Ý VÒNG CƯỢC) -->
+            <!-- Form Nạp -->
             <div class="mb-4">
                 <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền chuyển khoản (VNĐ)</label>
                 <input type="number" id="depositVND" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 100,000VNĐ">
@@ -493,9 +493,14 @@
 
         window.filterHistory = (type) => { renderHistory(type); };
 
+        // SỬA HÀM RENDER HISTORY ĐỂ HIỂN THỊ ĐÚNG TYPE
         function renderHistory(filterType = 'all') {
             const list = document.getElementById('historyList');
-            const items = state.history.filter(i => filterType === 'all' || (filterType === 'deposit' ? i.type === 'deposit' : i.type === 'withdraw'));
+            // Filter: Nếu là 'all' thì lấy hết, nếu khác thì filter chính xác type
+            const items = state.history.filter(i => {
+                if(filterType === 'all') return true;
+                return i.type === filterType;
+            });
             
             if(items.length === 0) {
                 list.innerHTML = `<div class="text-center py-10 opacity-50"><i class="fa-solid fa-box-open text-4xl mb-2"></i><p class="text-xs">Chưa có dữ liệu</p></div>`;
@@ -504,10 +509,46 @@
 
             let html = '';
             items.forEach(item => {
-                let color = item.type === 'deposit' ? 'text-[#0ECB81]' : 'text-[#F6465D]';
-                let icon = item.type === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up';
-                let sign = item.type === 'deposit' ? '+' : '-';
-                let title = item.type === 'deposit' ? 'NẠP TIỀN' : 'RÚT TIỀN';
+                let color, icon, sign, title;
+
+                // LOGIC PHÂN LOẠI HIỂN THỊ
+                switch(item.type) {
+                    case 'deposit':
+                        color = 'text-[#0ECB81]'; // Green
+                        icon = 'fa-arrow-down';
+                        sign = '+';
+                        title = 'NẠP TIỀN';
+                        break;
+                    case 'withdraw':
+                        color = 'text-[#F6465D]'; // Red
+                        icon = 'fa-arrow-up';
+                        sign = '-';
+                        title = 'RÚT TIỀN';
+                        break;
+                    case 'Km': // KHUYẾN MÃI
+                        color = 'text-purple-400'; // Purple
+                        icon = 'fa-gift';
+                        sign = '+';
+                        title = 'KHUYẾN MÃI';
+                        break;
+                    case 'admin_add': // ADMIN CỘNG
+                        color = 'text-[#0ECB81]'; // Green
+                        icon = 'fa-circle-plus';
+                        sign = '+';
+                        title = 'CỘNG TIỀN';
+                        break;
+                    case 'admin_sub': // ADMIN TRỪ
+                        color = 'text-[#F6465D]'; // Red
+                        icon = 'fa-circle-minus';
+                        sign = '-';
+                        title = 'TRỪ TIỀN';
+                        break;
+                    default:
+                        color = 'text-gray-400';
+                        icon = 'fa-circle-question';
+                        sign = '';
+                        title = 'GIAO DỊCH';
+                }
                 
                 let statusBadge = '';
                 if(item.status === 'success') statusBadge = '<span class="text-[10px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded border border-green-500/20 font-bold">THÀNH CÔNG</span>';
@@ -542,5 +583,4 @@
     </script>
 </body>
 </html>
-
 
