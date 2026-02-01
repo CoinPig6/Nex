@@ -422,7 +422,7 @@
 
         // FIREBASE CONFIG - COPY FROM CONSOLE
         const firebaseConfig = { 
-            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU", 
+            apiKey: "", 
             authDomain: "btccoinbig.firebaseapp.com", 
             projectId: "btccoinbig", 
             storageBucket: "btccoinbig.firebasestorage.app", 
@@ -717,7 +717,7 @@
             } catch(e) { alert("Lỗi: "+e.message); }
         };
 
-        // --- FIX 1: DÙNG ĐÚNG COLLECTION "promo_requests" ---
+        // --- FIX 1: DÙNG ĐÚNG COLLECTION "promo_requests" VÀ GHI ĐÚNG TYPE ---
         function loadPromotions() {
             // FIX: promotion_requests -> promo_requests
             onSnapshot(query(collection(db, "promo_requests"), orderBy("timestamp", "desc")), snap => {
@@ -781,18 +781,20 @@
             document.getElementById('table-promo-desktop').innerHTML = dHtml || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Trống</td></tr>';
         }
 
+        // --- CORE FIX: HÀM DUYỆT KHUYẾN MÃI MỚI ---
         window.approvePromo = async (pid, btn) => {
             if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
             try {
-                // FIX: promotion_requests -> promo_requests
+                // 1. Lấy dữ liệu yêu cầu KM
                 const pRef = doc(db, "promo_requests", pid);
                 const pSnap = await getDoc(pRef);
                 if(!pSnap.exists() || pSnap.data().status !== 'pending') return;
                 const pData = pSnap.data();
 
-                const bonus = pData.bonusAmount || (pData.type.includes('10') ? 10 : 0);
-                const turn = pData.turnoverRequire || bonus*5;
+                const bonus = pData.bonusAmount || 0;
+                const turn = pData.turnoverRequire || 0;
 
+                // 2. Cập nhật số dư User
                 const uRef = doc(db, "users", pData.userId);
                 const uSnap = await getDoc(uRef);
                 if(uSnap.exists()) {
@@ -800,18 +802,25 @@
                         balance: (uSnap.data().balance||0) + bonus,
                         requiredTurnover: (uSnap.data().requiredTurnover||0) + turn
                     });
+                    
+                    // 3. GHI HISTORY CHUẨN (Type: Promo)
                     await addDoc(collection(db, "users", pData.userId, "transactions"), {
-                        type: 'promo_bonus', amount: bonus, status: 'success', note: `Bonus: ${pData.type}`, timestamp: serverTimestamp()
+                        type: "promo",               // QUAN TRỌNG: Type chuẩn
+                        promoId: pid,
+                        promoName: pData.type || "Khuyến mãi",
+                        amount: bonus,               // Số tiền thưởng thực
+                        status: "success",
+                        timestamp: serverTimestamp()
                     });
                 }
 
+                // 4. Đánh dấu đã duyệt
                 await updateDoc(pRef, { status: 'success', approvedAt: serverTimestamp() });
                 window.showToast("Duyệt khuyến mãi thành công");
             } catch(e) { alert("Lỗi: "+e.message); if(btn) btn.disabled = false; }
         };
 
         window.rejectPromo = async (pid) => {
-            // FIX: promotion_requests -> promo_requests
             if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promo_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() });
         };
 
