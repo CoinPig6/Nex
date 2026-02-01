@@ -875,7 +875,7 @@
             document.getElementById('modal-user-edit').classList.add('active');
         };
 
-        // SỬA PHẦN NÀY: Thay đổi type thành "Cộng tiền" và "Trừ tiền"
+        // SỬA PHẦN NÀY: Thay đổi logic lưu lịch sử khi Admin chỉnh tiền
         window.saveUserEdit = async () => {
             const uid = document.getElementById('edit-user-id').value;
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
@@ -893,13 +893,15 @@
                         requiredTurnover: (u.requiredTurnover||0) + turnAdj
                     });
                     
-                    // SỬA Ở ĐÂY:
+                    // QUAN TRỌNG: Lưu lịch sử giao dịch với type rõ ràng
                     if(balAdj !== 0) {
+                        const isAdd = balAdj > 0;
                         await addDoc(collection(db, "users", uid, "transactions"), { 
-                            type: balAdj > 0 ? 'Cộng tiền' : 'Trừ tiền', // Type rõ ràng tiếng Việt
+                            type: isAdd ? 'admin_add' : 'admin_sub', // Type chuẩn hệ thống
                             amount: Math.abs(balAdj), 
                             status: 'success', 
-                            note: balAdj > 0 ? 'Admin cộng tiền' : 'Admin trừ tiền', 
+                            note: isAdd ? 'Cộng tiền' : 'Trừ tiền', // Note tiếng Việt để hiển thị
+                            admin: true,
                             timestamp: serverTimestamp() 
                         });
                     }
@@ -921,4 +923,5 @@
     </script>
 </body>
 </html>
+
 
