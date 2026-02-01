@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN V9 - FINAL</title>
+    <title>CROWNEX ADMIN V9 - FINAL FIXED</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -36,9 +36,6 @@
         
         .fade-out { animation: fadeOut 0.3s forwards; }
         @keyframes fadeOut { to { opacity: 0; transform: scale(0.95); pointer-events: none; } }
-
-        .spin-slow { animation: spin 3s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -90,6 +87,7 @@
         .btn-primary:hover { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); filter: brightness(1.1); }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
         .btn-danger:hover { background: #ef4444; color: white; }
+        .btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; }
 
         /* Tables */
         .table-container { border-radius: 16px; overflow: hidden; border: 1px solid #2A303C; background: #11151D; }
@@ -836,9 +834,11 @@
                         <td class="text-right"><button onclick="window.openUserEdit('${u.id}')" class="text-slate-400 hover:text-[#FCD535]"><i class="fa-solid fa-pen-to-square"></i></button></td>
                     </tr>`;
                 });
-                document.getElementById('table-users').innerHTML = html;
+                
+                // --- FIX: CODE ĐẦY ĐỦ KHÔNG CẮT ---
+                document.getElementById('table-users').innerHTML = html || '<tr><td colspan="5" class="text-center p-4 text-slate-500">Chưa có user</td></tr>';
                 document.getElementById('stat-users').innerText = allUsers.length;
-                document.getElementById('stat-balance').innerText = "$"+totalBal.toLocaleString();
+                document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
             });
         }
 
@@ -849,8 +849,6 @@
             });
         };
 
-        // --- FIX CRITICAL ERROR HERE ---
-        // Sửa hàm openUserEdit đầy đủ, không bị cắt dở
         window.openUserEdit = (uid) => {
             const u = allUsers.find(x => x.id === uid);
             if(!u) return;
