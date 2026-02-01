@@ -124,7 +124,8 @@
                 <i class="fa-solid fa-ticket"></i> NHẬP GIFTCODE
             </h3>
             <input type="text" id="giftcodeInput" class="input-code" placeholder="NHẬP MÃ CODE TẠI ĐÂY">
-            <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">ĐỔI QUÀ NGAY</button>
+            <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">KÍCH HOẠT MÃ</button>
+            <p class="text-[10px] text-center text-gray-500 mt-2 italic">*Yêu cầu sẽ được gửi đến Admin để duyệt</p>
         </div>
 
         <!-- === 2. ĐIỂM DANH 7 NGÀY (UPDATED LOGIC) === -->
@@ -291,7 +292,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, addDoc, collection, query, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot, addDoc, collection, query, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -354,6 +355,22 @@
                 const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
                 if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
 
+                // FIX 1: TẠO USER DOC NẾU CHƯA CÓ (ĐỂ TRÁNH LỖI KHI GHI TRANSACTIONS)
+                // Dùng getDoc check trước, nếu chưa có mới setDoc (tránh reset balance về 0)
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        username: user.email,
+                        balance: 0,
+                        attendanceStreak: 0,
+                        betTurnover: 0,
+                        createdAt: Date.now()
+                    });
+                }
+
                 // Listen to User Data
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
@@ -374,7 +391,7 @@
             renderAttendance(data);
         }
 
-        // --- 1. GIFTCODE ---
+        // --- 1. GIFTCODE (FIXED RULES: GỬI REQUEST CHO ADMIN) ---
         window.redeemCode = async () => {
             if (!currentUser) return;
             const codeInput = document.getElementById('giftcodeInput');
@@ -382,39 +399,26 @@
             const btn = document.getElementById('btnRedeem');
 
             if (!code) return showToast("Vui lòng nhập mã!", "error");
-            btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
+            btn.disabled = true; btn.innerText = "ĐANG GỬI...";
 
             try {
-                await runTransaction(db, async (transaction) => {
-                    const codeRef = doc(db, "giftcodes", code);
-                    const codeSnap = await transaction.get(codeRef);
-                    if (!codeSnap.exists()) throw "Mã Code không tồn tại!";
-
-                    const k = codeSnap.data();
-                    if (k.usedCount >= k.limit) throw "Mã Code đã hết lượt!";
-                    if (k.usersClaimed && k.usersClaimed.includes(currentUser.uid)) throw "Bạn đã sử dụng mã này!";
-
-                    const userRef = doc(db, "users", currentUser.uid);
-                    const userSnap = await transaction.get(userRef);
-
-                    transaction.update(codeRef, { 
-                        usedCount: (k.usedCount || 0) + 1,
-                        usersClaimed: [...(k.usersClaimed || []), currentUser.uid]
-                    });
-
-                    transaction.update(userRef, {
-                        balance: (userSnap.data().balance || 0) + k.amount,
-                        requiredTurnover: (userSnap.data().requiredTurnover || 0) + (k.turnoverReq || 0)
-                    });
+                // THAY VÌ UPDATE GIFTCODE (BỊ CHẶN BỞI RULE), TA TẠO REQUEST CHO ADMIN
+                await addDoc(collection(db, "admin_requests"), {
+                    type: "giftcode",
+                    uid: currentUser.uid,
+                    username: userData?.username || currentUser.email,
+                    code: code,
+                    timestamp: Date.now(),
+                    status: "pending"
                 });
 
-                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'giftcode', amount: 0, code: code, status: 'success', timestamp: Date.now()
-                });
-                showToast("Đổi mã thành công!", "success");
+                showToast("Đã gửi mã! Chờ Admin duyệt.", "success");
                 codeInput.value = "";
-            } catch (e) { showToast(typeof e === 'string' ? e : e.message, "error"); } 
-            finally { btn.disabled = false; btn.innerText = "ĐỔI QUÀ NGAY"; }
+            } catch (e) { 
+                showToast("Lỗi: " + e.message, "error"); 
+                console.error(e);
+            } 
+            finally { btn.disabled = false; btn.innerText = "KÍCH HOẠT MÃ"; }
         };
 
         // --- 2. HOÀN TRẢ ---
@@ -575,7 +579,7 @@
             }
         };
 
-        // --- 4. CORE FIX: KHUYẾN MÃI STATUS LOGIC ---
+        // --- 4. CORE FIX: KHUYẾN MÃI STATUS LOGIC & COLLECTION NAME ---
 
         function getStatusPriority(status) {
             if (status === 'success') return 3;
@@ -584,7 +588,8 @@
         }
 
         async function checkPromoRequests(uid) {
-            const q = query(collection(db, "promotion_requests"), where("userId", "==", uid));
+            // FIX: ĐỔI TÊN COLLECTION THÀNH 'promo_requests' CHO KHỚP RULES
+            const q = query(collection(db, "promo_requests"), where("userId", "==", uid));
             
             onSnapshot(q, (snap) => {
                 let requestsByType = {};
@@ -655,8 +660,9 @@
             if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
 
             try {
+                // FIX: ĐỔI TÊN COLLECTION THÀNH 'promo_requests'
                 const q = query(
-                    collection(db, "promotion_requests"), 
+                    collection(db, "promo_requests"), 
                     where("userId", "==", currentUser.uid),
                     where("type", "==", type)
                 );
@@ -671,13 +677,14 @@
 
                 if (isDuplicate) {
                     showToast("Bạn đang có yêu cầu chờ duyệt hoặc đã nhận!", "error");
-                    checkPromoRequests(currentUser.uid);
+                    checkPromoRequests(currentUser.uid); // Refresh UI
                     return;
                 }
 
-                await addDoc(collection(db, "promotion_requests"), {
+                // FIX: GHI VÀO 'promo_requests'
+                await addDoc(collection(db, "promo_requests"), {
                     userId: currentUser.uid,
-                    username: userData.username || 'Unknown',
+                    username: userData?.username || 'Unknown',
                     type: type,
                     status: 'pending',
                     timestamp: Date.now()
