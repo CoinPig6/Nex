@@ -154,7 +154,7 @@
             <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐANG TẢI...</button>
         </div>
 
-        <!-- === 3. HOÀN TRẢ VIP (MIN $1) === -->
+        <!-- === 3. HOÀN TRẢ VIP (Fixed 0.15%) === -->
         <div class="promo-card p-4">
             <div class="flex justify-between items-start mb-2">
                 <div class="flex gap-3">
@@ -163,7 +163,7 @@
                     </div>
                     <div>
                         <h3 class="text-white font-bold text-sm">Hoàn Trả Không Giới Hạn</h3>
-                        <p class="text-[10px] text-gray-400">Tỷ lệ 1.5% - Tự động cộng mỗi ngày.</p>
+                        <p class="text-[10px] text-gray-400">Tỷ lệ <span class="text-[#FCD535] font-bold">0.15%</span> - Tự động cộng mỗi ngày.</p>
                         <p class="text-[10px] text-gray-400">Rút tối thiểu: <span class="text-white font-bold">$1</span></p>
                     </div>
                 </div>
@@ -175,7 +175,7 @@
                     <span class="text-white font-mono" id="refundTurnover">$0.00</span>
                 </div>
                 <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>Hoàn trả khả dụng</span>
+                    <span>Hoàn trả khả dụng (0.15%)</span>
                     <span class="text-[#0ECB81] font-mono font-bold" id="refundAmount">$0.00</span>
                 </div>
             </div>
@@ -328,16 +328,17 @@
             const now = new Date();
             const last = new Date(lastDateMs);
             
-            // Xóa phần giờ phút giây để so sánh ngày chuẩn
+            // Đặt giờ về 00:00:00 để so sánh chính xác theo ngày
             const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const lastZero = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
             
             const diffMs = todayZero - lastZero;
-            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+            // Làm tròn để tránh lỗi lệch mili giây
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-            if (diffDays === 0) return { claimedToday: true, isConsecutive: true }; // Cùng ngày
-            if (diffDays === 1) return { claimedToday: false, isConsecutive: true }; // Liên tiếp (hôm qua)
-            return { claimedToday: false, isConsecutive: false }; // Đứt quãng (hôm kia hoặc lâu hơn)
+            if (diffDays === 0) return { claimedToday: true, isConsecutive: true }; // Cùng ngày (Đã nhận hôm nay)
+            if (diffDays === 1) return { claimedToday: false, isConsecutive: true }; // Cách 1 ngày (Liên tiếp)
+            return { claimedToday: false, isConsecutive: false }; // Cách > 1 ngày (Đứt quãng)
         }
 
         // --- Sidebar ---
@@ -355,8 +356,6 @@
                 const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
                 if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
 
-                // FIX 1: TẠO USER DOC NẾU CHƯA CÓ (ĐỂ TRÁNH LỖI KHI GHI TRANSACTIONS)
-                // Dùng getDoc check trước, nếu chưa có mới setDoc (tránh reset balance về 0)
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 
@@ -391,7 +390,7 @@
             renderAttendance(data);
         }
 
-        // --- 1. GIFTCODE (DIRECT CLAIM) ---
+        // --- 1. GIFTCODE (FIXED: LẤY TRỰC TIẾP THEO ID) ---
         window.redeemCode = async () => {
             if (!currentUser) return;
             const codeInput = document.getElementById('giftcodeInput');
@@ -402,25 +401,18 @@
             btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
 
             try {
-                // 1. Tìm mã trong collection 'giftcodes'
-                const q = query(collection(db, "giftcodes"), where("code", "==", code));
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    throw new Error("Mã Giftcode không tồn tại hoặc sai!");
-                }
-
-                const codeDocSnapshot = querySnapshot.docs[0];
-                const codeRef = doc(db, "giftcodes", codeDocSnapshot.id);
+                // FIX: Admin lưu Giftcode bằng ID (code là document ID)
+                // Nên ta dùng doc() để lấy trực tiếp, thay vì query()
+                const codeRef = doc(db, "giftcodes", code);
                 const userRef = doc(db, "users", currentUser.uid);
                 let receivedAmount = 0;
 
-                // 2. Chạy Transaction để đảm bảo tính nhất quán
+                // 2. Chạy Transaction
                 await runTransaction(db, async (transaction) => {
                     const sfDoc = await transaction.get(codeRef);
                     const userSfDoc = await transaction.get(userRef);
 
-                    if (!sfDoc.exists()) throw "Mã không tồn tại!";
+                    if (!sfDoc.exists()) throw "Mã không tồn tại hoặc sai!";
                     
                     const data = sfDoc.data();
                     
@@ -449,7 +441,7 @@
                     });
                 });
 
-                // 3. Ghi lịch sử giao dịch (sau khi transaction thành công)
+                // 3. Ghi lịch sử giao dịch
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
                     type: 'giftcode',
                     amount: receivedAmount,
@@ -472,11 +464,13 @@
             }
         };
 
-        // --- 2. HOÀN TRẢ ---
+        // --- 2. HOÀN TRẢ (FIXED: 0.15% = 0.0015) ---
         function renderRefund(data) {
             const currentTurnover = data.betTurnover || 0;
             const lastTurnover = data.lastRefundTurnover || 0;
             const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
+            
+            // FIX: Đúng 0.15% (nhân 0.0015)
             const refundAmt = pendingTurnover * 0.0015;
 
             document.getElementById('refundTurnover').innerText = "$" + currentTurnover.toLocaleString();
@@ -502,7 +496,9 @@
                 const currentTurnover = userData.betTurnover || 0;
                 const lastTurnover = userData.lastRefundTurnover || 0;
                 const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
-                const refundAmt = pendingTurnover * 0.015;
+                
+                // FIX: Đúng 0.15% khi claim
+                const refundAmt = pendingTurnover * 0.0015;
 
                 if (refundAmt < 1.0) return showToast("Số dư hoàn trả chưa đủ $1", "error");
 
@@ -517,8 +513,8 @@
             } catch (e) { console.error(e); }
         };
 
-        // --- 3. ĐIỂM DANH (LOGIC MỚI: RESET NẾU NGẮT QUÃNG) ---
-        const REWARDS_7_DAYS = [1, 2, 3, 5, 8, 12, 25]; // Cấu hình phần thưởng hấp dẫn hơn
+        // --- 3. ĐIỂM DANH (FIXED: RESET KHI QUA NGÀY) ---
+        const REWARDS_7_DAYS = [1, 2, 3, 5, 8, 12, 25]; 
 
         function renderAttendance(data) {
             const todayStr = getTodayString();
@@ -534,26 +530,23 @@
             document.getElementById('progressBet').innerText = betToday;
             document.getElementById('progressBet').className = betToday >= 200 ? "text-[#0ECB81]" : "text-white";
 
-            // LOGIC KIỂM TRA NGẮT QUÃNG
+            // LOGIC RESET: Nếu không liên tiếp và chưa nhận hôm nay -> Reset visually về 0
             const { claimedToday, isConsecutive } = checkDayDiff(data.lastAttendance);
             
-            // Nếu không liên tiếp và chưa nhận hôm nay -> Reset visually về 0
-            // Nếu liên tiếp -> Giữ nguyên streak
-            // Nếu đã nhận hôm nay -> Giữ nguyên streak
             let displayStreak = data.attendanceStreak || 0;
+            
+            // FIX: Nếu đứt quãng (qua 00h hôm sau mà chưa điểm danh của hôm qua)
             if (!isConsecutive && !claimedToday) {
                 displayStreak = 0; 
             }
-            if (displayStreak >= 7) displayStreak = 0; // Cycle reset
+            if (displayStreak >= 7) displayStreak = 0; 
 
             let html = '<div class="step-line"></div>';
             for(let i=0; i<7; i++) {
                 let statusClass = '';
-                // Nếu đã nhận hôm nay: hiển thị active đến mốc hiện tại
                 if (claimedToday) {
                     if (i < displayStreak) statusClass = 'checked';
                 } else {
-                    // Chưa nhận: hiển thị checked các mốc cũ, mốc tiếp theo là active
                     if (i < displayStreak) statusClass = 'checked';
                     else if (i === displayStreak) statusClass = 'active';
                 }
@@ -592,21 +585,18 @@
             try {
                 btn.disabled = true;
                 
-                // Kiểm tra lại logic ngày khi bấm nút (Server-side simulation)
                 const { isConsecutive } = checkDayDiff(userData.lastAttendance);
-                
                 let streak = userData.attendanceStreak || 0;
                 
-                // NẾU KHÔNG LIÊN TIẾP -> RESET VỀ 0
+                // FIX: Nếu không liên tiếp (bị đứt quãng) -> Reset về 0
                 if (!isConsecutive) {
                     streak = 0;
                 }
 
-                // Nếu đã full chuỗi 7 ngày -> Reset về 0
                 if (streak >= 7) streak = 0;
 
                 let reward = REWARDS_7_DAYS[streak];
-                let nextStreak = streak + 1; // Tăng streak cho ngày mai
+                let nextStreak = streak + 1; 
 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: (userData.balance || 0) + reward,
@@ -630,7 +620,7 @@
             }
         };
 
-        // --- 4. CORE FIX: KHUYẾN MÃI STATUS LOGIC & COLLECTION NAME ---
+        // --- 4. KHUYẾN MÃI KHÁC ---
 
         function getStatusPriority(status) {
             if (status === 'success') return 3;
@@ -639,7 +629,6 @@
         }
 
         async function checkPromoRequests(uid) {
-            // FIX: ĐỔI TÊN COLLECTION THÀNH 'promo_requests' CHO KHỚP RULES
             const q = query(collection(db, "promo_requests"), where("userId", "==", uid));
             
             onSnapshot(q, (snap) => {
@@ -674,10 +663,9 @@
             const btn = document.getElementById(btnId);
             if (!btn) return;
 
-            // Logic Weekend Button
             if (btnId === 'btnWeekend' && (status !== 'pending' && status !== 'success')) {
                 const today = new Date().getDay();
-                if (today !== 0 && today !== 6) { // 0=Sunday, 6=Saturday
+                if (today !== 0 && today !== 6) { 
                     btn.className = "btn-claim mt-1 opacity-50";
                     btn.innerText = "CHỈ MỞ T7 - CN";
                     btn.disabled = true;
@@ -711,7 +699,6 @@
             if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
 
             try {
-                // FIX: ĐỔI TÊN COLLECTION THÀNH 'promo_requests'
                 const q = query(
                     collection(db, "promo_requests"), 
                     where("userId", "==", currentUser.uid),
@@ -728,11 +715,10 @@
 
                 if (isDuplicate) {
                     showToast("Bạn đang có yêu cầu chờ duyệt hoặc đã nhận!", "error");
-                    checkPromoRequests(currentUser.uid); // Refresh UI
+                    checkPromoRequests(currentUser.uid); 
                     return;
                 }
 
-                // FIX: GHI VÀO 'promo_requests'
                 await addDoc(collection(db, "promo_requests"), {
                     userId: currentUser.uid,
                     username: userData?.username || 'Unknown',
