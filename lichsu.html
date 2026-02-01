@@ -147,7 +147,6 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Thêm timeout an toàn: sau 5s nếu chưa load xong thì báo lỗi mạng
                 const safeTimer = setTimeout(() => {
                    const listEl = document.getElementById('historyList');
                    if(listEl && listEl.innerHTML.includes('loading-spinner')) {
@@ -173,10 +172,8 @@
             const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
 
             try {
-                // Dùng try-catch để bắt lỗi Permission hoặc Query
                 const q = query(collection(db, "users", uid, "betHistory"), orderBy("timestamp", "desc"), limit(100));
                 
-                // Sử dụng getDocs với options để tránh lỗi cache
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
@@ -189,10 +186,9 @@
                 let hasData24h = false;
 
                 querySnapshot.forEach((doc) => {
-                    // Dùng { serverTimestamps: 'estimate' } để fix lỗi null timestamp
+                    // Fix: Use { serverTimestamps: 'estimate' } to prevent null timestamp on immediate write
                     const data = doc.data({ serverTimestamps: 'estimate' });
                     
-                    // --- XỬ LÝ TIMESTAMP AN TOÀN ---
                     let ts = 0;
                     try {
                         if (data.timestamp && typeof data.timestamp.toMillis === 'function') {
@@ -201,13 +197,15 @@
                             ts = data.timestamp;
                         } else if (data.timestamp && data.timestamp.seconds) {
                             ts = data.timestamp.seconds * 1000;
+                        } else {
+                            // Fallback to client-side session ID if timestamp failed
+                             ts = Date.now();
                         }
                     } catch(err) {
-                        console.log("Lỗi parse time:", err);
-                        return; // Bỏ qua item lỗi
+                        ts = Date.now();
                     }
 
-                    if (!ts || ts < oneDayAgo) return; 
+                    if (ts < oneDayAgo) return; 
                     
                     hasData24h = true;
 
@@ -221,7 +219,7 @@
                     const date = new Date(ts);
                     const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
                     const dateStr = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
-                    const sessionID = `${date.getFullYear()}${('0'+date.getDate()).slice(-2)}${('0'+(date.getMonth()+1)).slice(-2)}${('0'+date.getHours()).slice(-2)}${('0'+date.getMinutes()).slice(-2)}`;
+                    const sessionID = data.sessionId || '---';
 
                     html += `
                         <div class="tech-border p-3 flex justify-between items-center ${isWin ? 'card-win' : 'card-lose'}">
@@ -259,7 +257,6 @@
 
             } catch (error) {
                 console.error("Lỗi Firestore:", error);
-                // Hiển thị lỗi rõ ràng thay vì spinner
                 netEl.innerText = "$0.00";
                 listEl.innerHTML = `
                     <div class="flex flex-col items-center justify-center mt-10 p-4">
