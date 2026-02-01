@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN - MANAGER V10</title>
+    <title>CROWNEX ADMIN - MANAGER V11</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -88,9 +88,11 @@
 
         /* Tables */
         .table-container { border-radius: 16px; overflow: hidden; border: 1px solid #2A303C; background: #11151D; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        th { background: #1A202C; color: #94a3b8; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 18px; border-bottom: 1px solid #2A303C; }
-        td { padding: 16px 18px; color: #e2e8f0; font-size: 13px; border-bottom: 1px solid #2A303C; }
+        /* Fix scroll ngang cho bảng */
+        .table-scroll-wrapper { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 800px; /* Force width to enable scroll */ border-collapse: separate; border-spacing: 0; }
+        th { background: #1A202C; color: #94a3b8; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 18px; border-bottom: 1px solid #2A303C; white-space: nowrap; }
+        td { padding: 16px 18px; color: #e2e8f0; font-size: 13px; border-bottom: 1px solid #2A303C; white-space: nowrap; }
         tr:hover { background: #181d29; }
 
         /* Responsive */
@@ -120,7 +122,7 @@
                 <span class="text-4xl font-black text-[#FCD535]">C</span>
             </div>
         </div>
-        <h1 class="text-xl font-bold text-white mb-8 tracking-tight">ADMIN ACCESS V10</h1>
+        <h1 class="text-xl font-bold text-white mb-8 tracking-tight">ADMIN ACCESS V11</h1>
         
         <div class="flex flex-col gap-4 w-full max-w-xs px-4">
             <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[0.5em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-transparent" placeholder="••••" maxlength="4">
@@ -177,30 +179,43 @@
             
             <!-- 1. DASHBOARD -->
             <div id="view-dashboard" class="fade-in">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                <!-- Hàng 1: Thống kê cơ bản -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                     <div class="glass-card p-4 rounded-xl">
                         <div class="text-[10px] font-bold text-slate-400 uppercase">Thành Viên</div>
                         <div class="text-2xl font-bold text-white mt-1" id="stat-users">0</div>
                     </div>
                     <div class="glass-card p-4 rounded-xl">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase">Tổng Số Dư</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Tổng Số Dư User</div>
                         <div class="text-2xl font-bold text-green-400 mt-1 font-mono" id="stat-balance">$0</div>
                     </div>
-                    <div class="glass-card p-4 rounded-xl">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase">Nạp Hôm Nay</div>
+                    <div class="glass-card p-4 rounded-xl border-l-4 border-green-500">
+                        <div class="text-[10px] font-bold text-green-500 uppercase">Nạp Hôm Nay</div>
                         <div class="text-2xl font-bold text-white mt-1 font-mono" id="stat-dep-today">$0</div>
                     </div>
-                    <div class="glass-card p-4 rounded-xl">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase">Rút Hôm Nay</div>
+                    <div class="glass-card p-4 rounded-xl border-l-4 border-red-500">
+                        <div class="text-[10px] font-bold text-red-500 uppercase">Rút Hôm Nay</div>
                         <div class="text-2xl font-bold text-white mt-1 font-mono" id="stat-wit-today">$0</div>
                     </div>
                 </div>
 
-                <!-- Live Monitor -->
+                <!-- Hàng 2: Tổng Nạp/Rút Toàn Thời Gian -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="glass-card p-4 rounded-xl bg-[#151A25]/50 border border-[#2A303C]">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Tổng Nạp (All Time)</div>
+                        <div class="text-xl font-bold text-green-400 mt-1 font-mono" id="stat-dep-total">$0</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl bg-[#151A25]/50 border border-[#2A303C]">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Tổng Rút (All Time)</div>
+                        <div class="text-xl font-bold text-red-400 mt-1 font-mono" id="stat-wit-total">$0</div>
+                    </div>
+                </div>
+
+                <!-- Live Monitor (Đã sửa hoạt động) -->
                 <div class="glass-card p-4 rounded-xl border-red-500/30 bg-gradient-to-br from-[#151A25] to-red-900/10">
                     <div class="flex justify-between items-center mb-4">
                         <div class="text-xs font-black text-red-500 uppercase flex items-center gap-2">
-                            <span class="animate-pulse w-2 h-2 rounded-full bg-red-500"></span> Live Cược
+                            <span class="animate-pulse w-2 h-2 rounded-full bg-red-500"></span> Live Cược (Realtime)
                         </div>
                         <div class="font-mono font-bold text-[#FCD535] text-lg" id="realTimeClock">00:00</div>
                     </div>
@@ -215,16 +230,18 @@
                 </div>
             </div>
 
-            <!-- 2. NẠP RÚT -->
+            <!-- 2. NẠP RÚT (Chỉ giữ lại Nạp và Rút) -->
             <div id="view-requests" class="hidden fade-in">
                 <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
-                    <button onclick="window.filterReq('all', this)" class="sub-tab active px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Tất cả</button>
-                    <button onclick="window.filterReq('deposit', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Nạp tiền</button>
-                    <button onclick="window.filterReq('withdraw', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Rút tiền</button>
-                    <button onclick="window.filterReq('pending', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Chờ xử lý</button>
+                    <button onclick="window.filterReq('deposit', this)" class="sub-tab active flex-1 md:flex-none px-8 py-3 rounded-xl text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap uppercase">
+                        <i class="fa-solid fa-arrow-down mr-2"></i>Nạp tiền
+                    </button>
+                    <button onclick="window.filterReq('withdraw', this)" class="sub-tab flex-1 md:flex-none px-8 py-3 rounded-xl text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap uppercase">
+                        <i class="fa-solid fa-arrow-up mr-2"></i>Rút tiền
+                    </button>
                 </div>
                 <div class="table-container">
-                    <div class="overflow-x-auto">
+                    <div class="table-scroll-wrapper">
                         <table>
                             <thead><tr><th>Thời gian</th><th>User</th><th>Loại</th><th>Số tiền</th><th>Ngân hàng / STK</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
                             <tbody id="table-requests"></tbody>
@@ -233,7 +250,7 @@
                 </div>
             </div>
 
-            <!-- 3. KHUYẾN MÃI (CHIA TAB & AUTO REJECT) -->
+            <!-- 3. KHUYẾN MÃI -->
             <div id="view-promo" class="hidden fade-in">
                 <!-- Tabs -->
                 <div class="flex gap-2 mb-4">
@@ -245,26 +262,40 @@
                 <div id="promo-mobile" class="space-y-3 md:hidden"></div>
                 <!-- Desktop Table -->
                 <div class="hidden md:block table-container">
-                    <div class="overflow-x-auto">
+                    <div class="table-scroll-wrapper">
                         <table>
-                            <thead><tr><th>Thời gian</th><th>User / IP</th><th>Loại KM</th><th>Thưởng</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
+                            <thead><tr><th>Thời gian</th><th>User / IP</th><th>Loại KM</th><th>Thưởng Gốc</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
                             <tbody id="table-promo-desktop"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- 4. NGƯỜI CHƠI -->
+            <!-- 4. NGƯỜI CHƠI (Có lướt ngang) -->
             <div id="view-users" class="hidden fade-in">
                 <div class="mb-4">
                     <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User (Tên, SĐT, STK)..." class="input-box">
                 </div>
-                <!-- Bảng lướt ngang được -->
-                <div class="table-container max-h-[70vh] overflow-y-auto">
-                    <table>
-                        <thead class="sticky top-0 z-10"><tr><th>User</th><th>Số dư</th><th>Tổng Cược</th><th>Ngân hàng</th><th class="text-right">Sửa</th></tr></thead>
-                        <tbody id="table-users"></tbody>
-                    </table>
+                <!-- Bảng lướt ngang được với min-width -->
+                <div class="table-container max-h-[75vh] overflow-y-auto">
+                    <div class="table-scroll-wrapper">
+                        <table>
+                            <thead class="sticky top-0 z-10">
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Tên / SĐT</th>
+                                    <th>Số dư</th>
+                                    <th>Tổng Cược</th>
+                                    <th>Cược Yêu Cầu</th>
+                                    <th>Ngân hàng</th>
+                                    <th>Số TK</th>
+                                    <th>IP</th>
+                                    <th class="text-right">Sửa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-users"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -281,10 +312,12 @@
                         </div>
                     </div>
                     <div class="md:col-span-2 table-container h-[400px] overflow-y-auto">
-                        <table>
-                            <thead class="sticky top-0 z-10"><tr><th>Mã</th><th>Giá trị</th><th>Đã dùng</th><th class="text-right">Xóa</th></tr></thead>
-                            <tbody id="table-giftcode"></tbody>
-                        </table>
+                        <div class="table-scroll-wrapper">
+                            <table>
+                                <thead class="sticky top-0 z-10"><tr><th>Mã</th><th>Giá trị</th><th>Đã dùng</th><th class="text-right">Xóa</th></tr></thead>
+                                <tbody id="table-giftcode"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -355,7 +388,33 @@
         </div>
     </div>
 
-    <!-- MODAL EDIT USER -->
+    <!-- MODAL DUYỆT KHUYẾN MÃI (MỚI) -->
+    <div id="modal-promo-approve" class="modal-overlay">
+        <div class="modal-content animate-fade-in-up">
+            <div class="bg-[#1C2230] px-4 py-3 border-b border-[#2A303C] flex justify-between items-center">
+                <h3 class="text-sm font-bold text-white uppercase">Duyệt Khuyến Mãi</h3>
+                <button onclick="window.closeModal('modal-promo-approve')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 space-y-4">
+                <input type="hidden" id="promo-id-target">
+                <div class="bg-[#0B0E14] p-3 rounded-lg border border-[#2A303C]">
+                    <div class="text-xs text-slate-500 mb-1">User: <span id="promo-user-target" class="text-white font-bold"></span></div>
+                    <div class="text-xs text-slate-500">Loại KM: <span id="promo-type-target" class="text-[#FCD535] font-bold"></span></div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Số Tiền Thưởng ($)</label>
+                    <input type="number" id="promo-amount-input" class="input-box bg-[#151A25] text-green-400 font-bold text-lg">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Yêu Cầu Cược (Turnover) ($)</label>
+                    <input type="number" id="promo-turnover-input" class="input-box bg-[#151A25]">
+                </div>
+                <button onclick="window.confirmPromoApproval()" class="btn btn-success w-full bg-green-600 hover:bg-green-500 text-white shadow-lg">XÁC NHẬN DUYỆT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT USER (SỬA ĐỂ THÊM NHẬP VÒNG CƯỢC) -->
     <div id="modal-user-edit" class="modal-overlay">
         <div class="modal-content animate-fade-in-up">
             <div class="bg-[#1C2230] px-4 py-3 border-b border-[#2A303C] flex justify-between items-center">
@@ -370,10 +429,22 @@
                     <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Tên Ngân Hàng</label><input type="text" id="edit-bank" class="input-box"></div>
                 </div>
                 <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Số Tài Khoản (STK)</label><input type="text" id="edit-bank-num" class="input-box font-mono text-[#FCD535]"></div>
-                <div class="bg-[#0B0E14] p-3 rounded-lg border border-[#2A303C]">
-                    <div class="flex justify-between mb-2"><span class="text-xs text-slate-400">Số dư</span><span class="font-mono font-bold text-white" id="edit-current-bal">$0</span></div>
-                    <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25]" placeholder="+/- Tiền">
+                
+                <!-- Khu vực cộng tiền & cược -->
+                <div class="bg-[#0B0E14] p-3 rounded-lg border border-[#2A303C] space-y-2">
+                    <div class="flex justify-between"><span class="text-xs text-slate-400">Số dư hiện tại</span><span class="font-mono font-bold text-white" id="edit-current-bal">$0</span></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[9px] text-slate-500 block">+/- Số tiền</label>
+                            <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25] text-white" placeholder="VD: 100 hoặc -100">
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-500 block">Cộng Vòng Cược</label>
+                            <input type="number" id="edit-adjust-turnover" class="input-box bg-[#151A25] text-white" placeholder="VD: 500">
+                        </div>
+                    </div>
                 </div>
+                
                 <button onclick="window.saveUserEdit()" class="btn btn-primary w-full text-black">LƯU THAY ĐỔI</button>
             </div>
         </div>
@@ -399,8 +470,8 @@
         
         const ADMIN_PIN = "9999"; 
         let allUsers = [], allReqs = [], allPromos = [], activeReq = null;
-        let promoTab = 'pending'; // 'pending' or 'history'
-        let usedIPs = new Set(); // Store IP of successful promos
+        let promoTab = 'pending'; 
+        let usedIPs = new Set(); 
 
         window.checkPin = async () => {
             const pin = document.getElementById('adminPin').value;
@@ -433,8 +504,9 @@
         async function initAdmin() {
             window.initDefaults();
             syncRealtimeTimer();
-            loadDashboardStats();
-            loadRequests();
+            // Khởi tạo các listener
+            loadLiveBets(); // Mới: Load Live Cược trực tiếp từ bảng Bets
+            loadRequestsAndStats(); // Gộp load request và tính toán dashboard
             loadPromotions();
             loadUsers();
             loadGiftcodes();
@@ -455,19 +527,77 @@
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
         window.closeModal = (id) => document.getElementById(id).classList.remove('active');
 
-        // DASHBOARD
+        // --- DASHBOARD TIME & LIVE BETS (FIXED) ---
         let lastResetMin = -1;
         function syncRealtimeTimer() { setInterval(() => { const now = new Date(); const sec = now.getSeconds(); document.getElementById('realTimeClock').innerText = `00:${(60-sec).toString().padStart(2,'0')}`; if(sec === 0 && now.getMinutes() !== lastResetMin) lastResetMin = now.getMinutes(); }, 1000); }
+        
         window.manualReset = async () => { try { await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); window.showToast("Đã reset phiên!"); } catch(e) {} };
-        function loadDashboardStats() { onSnapshot(doc(db, "games", "current"), s => { if(s.exists()) { const d = s.data(); document.getElementById('live-up').innerText = "$"+(d.totalUp||0).toLocaleString(); document.getElementById('live-down').innerText = "$"+(d.totalDown||0).toLocaleString(); } }); }
+        
+        // SỬA LIVE CƯỢC: Nghe trực tiếp từ collection 'bets' với status pending
+        function loadLiveBets() {
+            const q = query(collection(db, "bets"), where("status", "==", "pending"));
+            onSnapshot(q, (snapshot) => {
+                let totalUp = 0;
+                let totalDown = 0;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Giả sử choice 'up' hoặc 'chan' là Xanh/Up, còn lại là Đỏ/Down
+                    if (data.choice === 'up' || data.choice === 'chan' || data.choice === 'green') {
+                        totalUp += (data.amount || 0);
+                    } else {
+                        totalDown += (data.amount || 0);
+                    }
+                });
+                document.getElementById('live-up').innerText = "$" + totalUp.toLocaleString();
+                document.getElementById('live-down').innerText = "$" + totalDown.toLocaleString();
+            }, (error) => {
+                console.error("Lỗi Live Cược:", error);
+            });
+        }
 
-        // --- REQUESTS (HIỂN THỊ FULL INFO NGÂN HÀNG) ---
-        function loadRequests() {
+        // --- REQUESTS & DASHBOARD STATS (TÁCH BIỆT HÔM NAY / TỔNG) ---
+        function loadRequestsAndStats() {
             onSnapshot(query(collection(db, "admin_requests"), orderBy("timestamp", "desc")), snap => {
                 allReqs = [];
-                snap.forEach(d => allReqs.push({id: d.id, ...d.data()}));
-                const activeBtn = document.querySelector('.sub-tab.active');
-                window.filterReq(activeBtn ? (activeBtn.innerText.includes('Nạp') ? 'deposit' : (activeBtn.innerText.includes('Rút') ? 'withdraw' : (activeBtn.innerText.includes('Chờ') ? 'pending' : 'all'))) : 'all', activeBtn);
+                let depToday = 0, witToday = 0;
+                let depTotal = 0, witTotal = 0;
+                
+                // Xác định đầu ngày hôm nay
+                const now = new Date();
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+                snap.forEach(d => {
+                    const data = {id: d.id, ...d.data()};
+                    allReqs.push(data);
+                    
+                    if(data.status === 'success') {
+                        const amt = parseFloat(data.amount) || 0;
+                        const time = data.timestamp?.toDate ? data.timestamp.toDate().getTime() : 0;
+                        
+                        // Tính tổng All Time
+                        if(data.type === 'deposit') depTotal += amt;
+                        else witTotal += amt;
+
+                        // Tính tổng Hôm Nay
+                        if(time >= startOfDay) {
+                            if(data.type === 'deposit') depToday += amt;
+                            else witToday += amt;
+                        }
+                    }
+                });
+
+                // Cập nhật Dashboard
+                document.getElementById('stat-dep-today').innerText = "$" + depToday.toLocaleString();
+                document.getElementById('stat-wit-today').innerText = "$" + witToday.toLocaleString();
+                document.getElementById('stat-dep-total').innerText = "$" + depTotal.toLocaleString();
+                document.getElementById('stat-wit-total').innerText = "$" + witTotal.toLocaleString();
+
+                // Render Table Requests (Mặc định hiển thị tab đang active hoặc Deposit)
+                const activeBtn = document.querySelector('#view-requests .sub-tab.active');
+                const filterType = activeBtn ? (activeBtn.innerText.includes('Nạp') ? 'deposit' : 'withdraw') : 'deposit';
+                window.filterReq(filterType, activeBtn || document.querySelector('#view-requests .sub-tab'));
+                
+                // Badge
                 const pending = allReqs.filter(x => x.status === 'pending').length;
                 const badge = document.getElementById('badge-req');
                 badge.innerText = pending; badge.style.display = pending > 0 ? 'inline' : 'none';
@@ -475,18 +605,25 @@
         }
 
         window.filterReq = (filter, el) => {
-            if(el) { document.querySelectorAll('.sub-tab').forEach(x => { x.classList.remove('bg-[#FCD535]','text-black'); x.classList.add('bg-[#151A25]','text-white'); }); el.classList.remove('bg-[#151A25]','text-white'); el.classList.add('bg-[#FCD535]','text-black'); }
+            // Đổi style button
+            if(el) { 
+                document.querySelectorAll('#view-requests .sub-tab').forEach(x => { 
+                    x.classList.remove('bg-[#FCD535]','text-black'); 
+                    x.classList.add('bg-[#151A25]','text-white'); 
+                }); 
+                el.classList.remove('bg-[#151A25]','text-white'); 
+                el.classList.add('bg-[#FCD535]','text-black'); 
+            }
             
-            let html = '', depToday = 0, witToday = 0;
-            allReqs.forEach(d => {
-                if(d.status === 'success') { const amt = parseFloat(d.amount)||0; if(d.type === 'deposit') depToday += amt; else witToday += amt; }
-                if(filter !== 'all') { if(filter === 'pending' && d.status !== 'pending') return; if((filter === 'deposit' || filter === 'withdraw') && d.type !== filter) return; }
-                
+            let html = '';
+            // Chỉ hiển thị đúng loại Nạp hoặc Rút
+            const list = allReqs.filter(d => d.type === filter);
+            
+            list.forEach(d => {
                 const isDep = d.type === 'deposit';
                 const sttClass = d.status==='pending' ? 'text-yellow-500' : (d.status==='success'?'text-green-500':'text-red-500');
                 const timeStr = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString('vi-VN') : '-';
                 
-                // --- PARSE BANK INFO ---
                 const bankInfoArr = d.bankInfo ? d.bankInfo.split(' - ') : [];
                 const bName = bankInfoArr[0] || '-';
                 const bNum = bankInfoArr[1] || '-';
@@ -508,9 +645,7 @@
                     </td>
                 </tr>`;
             });
-            document.getElementById('table-requests').innerHTML = html || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Trống</td></tr>';
-            document.getElementById('stat-dep-today').innerText = "$"+depToday.toLocaleString();
-            document.getElementById('stat-wit-today').innerText = "$"+witToday.toLocaleString();
+            document.getElementById('table-requests').innerHTML = html || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Chưa có giao dịch nào</td></tr>';
         };
 
         window.openApproveModal = (rid) => {
@@ -563,7 +698,7 @@
             } catch(e) { alert("Lỗi: "+e.message); }
         };
 
-        // --- PROMOTION (CHIA TAB & IP CHECK) ---
+        // --- PROMOTION (MỞ MODAL NHẬP TIỀN & VÒNG CƯỢC) ---
         function loadPromotions() {
             onSnapshot(query(collection(db, "promo_requests"), orderBy("timestamp", "desc")), snap => {
                 allPromos = []; usedIPs.clear();
@@ -588,14 +723,11 @@
 
         function renderPromoList() {
             let mHtml = '', dHtml = '';
-            // Filter by Tab
             const list = allPromos.filter(p => promoTab === 'pending' ? p.status === 'pending' : p.status !== 'pending');
 
             list.forEach(p => {
                 const bonus = p.bonusAmount || (p.type.includes('10') ? 10 : 0);
                 const statusColor = p.status==='pending' ? 'text-yellow-400' : (p.status==='success'?'text-green-400':'text-red-400');
-                
-                // IP CHECK
                 const isDuplicateIP = (p.status === 'pending' && p.ip && usedIPs.has(p.ip));
                 const ipWarning = isDuplicateIP ? `<div class="text-red-500 font-bold text-[10px] animate-pulse mt-1"><i class="fa-solid fa-triangle-exclamation"></i> TRÙNG IP: ${p.ip}</div>` : `<div class="text-[9px] text-slate-500">IP: ${p.ip||'N/A'}</div>`;
 
@@ -612,7 +744,7 @@
                     </div>
                     ${p.status==='pending' ? `<div class="grid grid-cols-2 gap-2">
                         <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger py-1.5 text-[10px]">${isDuplicateIP ? 'HỦY SPAM' : 'Từ chối'}</button>
-                        <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary py-1.5 text-[10px] text-black">Duyệt</button>
+                        <button onclick="window.openPromoModal('${p.id}')" class="btn btn-primary py-1.5 text-[10px] text-black">Duyệt</button>
                     </div>` : ''}
                 </div>`;
 
@@ -629,7 +761,7 @@
                     <td class="text-right">
                         ${p.status==='pending' ? `<div class="flex justify-end gap-2">
                             <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger px-2 py-1 text-[10px] h-7 whitespace-nowrap">${isDuplicateIP ? 'HỦY SPAM' : 'Hủy'}</button>
-                            <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary px-3 py-1 text-[10px] h-7 text-black">Duyệt</button>
+                            <button onclick="window.openPromoModal('${p.id}')" class="btn btn-primary px-3 py-1 text-[10px] h-7 text-black">Duyệt</button>
                         </div>` : ''}
                     </td>
                 </tr>`;
@@ -638,39 +770,91 @@
             document.getElementById('table-promo-desktop').innerHTML = dHtml || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Không có dữ liệu</td></tr>';
         }
 
-        window.approvePromo = async (pid, btn) => {
-            if(btn) { btn.disabled = true; btn.innerHTML = '...'; }
-            try {
-                const pRef = doc(db, "promo_requests", pid); const pSnap = await getDoc(pRef);
-                if(!pSnap.exists() || pSnap.data().status !== 'pending') return;
-                const pData = pSnap.data();
-                const bonus = pData.bonusAmount || 0;
-                const uRef = doc(db, "users", pData.userId); const uSnap = await getDoc(uRef);
-                if(uSnap.exists()) {
-                    await updateDoc(uRef, { balance: (uSnap.data().balance||0) + bonus, requiredTurnover: (uSnap.data().requiredTurnover||0) + (pData.turnoverRequire||0) });
-                    await addDoc(collection(db, "users", pData.userId, "transactions"), { type: "promo", promoId: pid, promoName: pData.type || "Khuyến mãi", amount: bonus, status: "success", timestamp: serverTimestamp() });
-                }
-                await updateDoc(pRef, { status: 'success', approvedAt: serverTimestamp() });
-                window.showToast("Đã duyệt KM!");
-            } catch(e) { alert("Lỗi: "+e.message); if(btn) btn.disabled = false; }
+        // MỞ MODAL DUYỆT KHUYẾN MÃI
+        window.openPromoModal = (pid) => {
+            const p = allPromos.find(x => x.id === pid);
+            if(!p) return;
+            document.getElementById('promo-id-target').value = pid;
+            document.getElementById('promo-user-target').innerText = p.username;
+            document.getElementById('promo-type-target').innerText = p.type;
+            
+            // Default values
+            const defaultBonus = p.bonusAmount || (p.type.includes('10') ? 10 : 0);
+            document.getElementById('promo-amount-input').value = defaultBonus;
+            document.getElementById('promo-turnover-input').value = p.turnoverRequire || defaultBonus; // Mặc định turnover = tiền thưởng nếu ko có
+            
+            document.getElementById('modal-promo-approve').classList.add('active');
         };
+
+        // XÁC NHẬN DUYỆT KHUYẾN MÃI
+        window.confirmPromoApproval = async () => {
+            const pid = document.getElementById('promo-id-target').value;
+            const finalAmount = parseFloat(document.getElementById('promo-amount-input').value) || 0;
+            const finalTurnover = parseFloat(document.getElementById('promo-turnover-input').value) || 0;
+            
+            const p = allPromos.find(x => x.id === pid);
+            if(!p || p.status !== 'pending') return;
+
+            const btn = document.querySelector('#modal-promo-approve .btn-success');
+            btn.innerHTML = '...'; btn.disabled = true;
+
+            try {
+                const uRef = doc(db, "users", p.userId); 
+                const uSnap = await getDoc(uRef);
+                
+                if(uSnap.exists()) {
+                    await updateDoc(uRef, { 
+                        balance: (uSnap.data().balance||0) + finalAmount, 
+                        requiredTurnover: (uSnap.data().requiredTurnover||0) + finalTurnover 
+                    });
+                    await addDoc(collection(db, "users", p.userId, "transactions"), { 
+                        type: "promo", 
+                        promoId: pid, 
+                        promoName: p.type || "Khuyến mãi", 
+                        amount: finalAmount, 
+                        status: "success", 
+                        timestamp: serverTimestamp() 
+                    });
+                }
+                await updateDoc(doc(db, "promo_requests", pid), { 
+                    status: 'success', 
+                    approvedAt: serverTimestamp(),
+                    bonusAmount: finalAmount,
+                    turnoverRequire: finalTurnover
+                });
+                
+                window.closeModal('modal-promo-approve');
+                window.showToast("Đã duyệt KM & Cộng tiền/cược!");
+            } catch(e) { 
+                alert("Lỗi: "+e.message); 
+            } finally {
+                btn.innerHTML = 'XÁC NHẬN DUYỆT'; btn.disabled = false;
+            }
+        };
+
         window.rejectPromo = async (pid) => { if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promo_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() }); };
 
-        // --- USERS (SỬA ĐẦY ĐỦ INFO) ---
+        // --- USERS (ĐÃ THÊM CUỘN NGANG & MODAL CỘNG VÒNG CƯỢC) ---
         function loadUsers() {
             onSnapshot(collection(db, "users"), snap => {
                 allUsers = []; let totalBal = 0; let html = '';
                 snap.forEach(d => {
                     const u = {id: d.id, ...d.data()}; allUsers.push(u); totalBal += (u.balance||0);
                     html += `<tr>
+                        <td class="font-mono text-[10px] text-slate-500">${u.id.substring(0,8)}...</td>
                         <td><div class="font-bold text-white text-xs">${u.fullName||'User'}</div><div class="text-[10px] text-slate-500 font-mono">${u.username||u.phone}</div></td>
                         <td class="font-mono text-green-400 font-bold">$${(u.balance||0).toLocaleString()}</td>
                         <td class="text-xs text-slate-400 font-mono">$${(u.betTurnover||0).toLocaleString()}</td>
-                        <td><div class="text-xs text-slate-300 font-bold">${u.bankName||'-'}</div><div class="text-[10px] text-slate-500">${u.bankNumber||''}</div></td>
+                        <td class="text-xs text-orange-400 font-mono font-bold">$${(u.requiredTurnover||0).toLocaleString()}</td>
+                        <td><div class="text-xs text-slate-300 font-bold">${u.bankName||'-'}</div></td>
+                        <td><div class="text-[10px] font-mono text-[#FCD535]">${u.bankNumber||'-'}</div></td>
+                        <td><div class="text-[9px] text-slate-600">${u.ip||'N/A'}</div></td>
                         <td class="text-right"><button onclick="window.openUserEdit('${u.id}')" class="text-slate-400 hover:text-[#FCD535]"><i class="fa-solid fa-pen-to-square"></i></button></td>
                     </tr>`;
                 });
-                document.getElementById('table-users').innerHTML = html; document.getElementById('stat-users').innerText = allUsers.length; document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
+                document.getElementById('table-users').innerHTML = html; 
+                document.getElementById('stat-users').innerText = allUsers.length; 
+                document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
             });
         }
         window.filterUsers = () => { const k = document.getElementById('searchUser').value.toLowerCase(); document.querySelectorAll('#table-users tr').forEach(r => { r.style.display = r.innerText.toLowerCase().includes(k) ? '' : 'none'; }); };
@@ -681,15 +865,18 @@
             document.getElementById('edit-fullname').value = u.fullName || '';
             document.getElementById('edit-phone').value = u.phone || '';
             document.getElementById('edit-bank').value = u.bankName || '';
-            document.getElementById('edit-bank-num').value = u.bankNumber || ''; // LOAD STK
+            document.getElementById('edit-bank-num').value = u.bankNumber || ''; 
             document.getElementById('edit-current-bal').innerText = "$" + (u.balance || 0).toLocaleString();
             document.getElementById('edit-adjust-bal').value = '';
+            document.getElementById('edit-adjust-turnover').value = ''; // Reset turnover input
             document.getElementById('modal-user-edit').classList.add('active');
         };
 
         window.saveUserEdit = async () => {
             const uid = document.getElementById('edit-user-id').value;
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
+            const turnAdj = parseFloat(document.getElementById('edit-adjust-turnover').value) || 0;
+            
             const u = allUsers.find(x => x.id === uid); if(!u) return;
             if(confirm(`Cập nhật User ${u.username}?`)) {
                 try {
@@ -697,8 +884,9 @@
                         fullName: document.getElementById('edit-fullname').value,
                         phone: document.getElementById('edit-phone').value,
                         bankName: document.getElementById('edit-bank').value,
-                        bankNumber: document.getElementById('edit-bank-num').value, // SAVE STK
-                        balance: (u.balance||0) + balAdj
+                        bankNumber: document.getElementById('edit-bank-num').value,
+                        balance: (u.balance||0) + balAdj,
+                        requiredTurnover: (u.requiredTurnover||0) + turnAdj // Cập nhật cược
                     });
                     if(balAdj !== 0) await addDoc(collection(db, "users", uid, "transactions"), { type: balAdj > 0 ? 'admin_add' : 'admin_sub', amount: Math.abs(balAdj), status: 'success', note: 'Admin Adjust', timestamp: serverTimestamp() });
                     window.closeModal('modal-user-edit'); window.showToast("Cập nhật thành công!");
