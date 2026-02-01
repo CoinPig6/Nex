@@ -451,7 +451,7 @@
                 const currentTurnover = userData.betTurnover || 0;
                 const lastTurnover = userData.lastRefundTurnover || 0;
                 const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
-                const refundAmt = pendingTurnover * 0.0015;
+                const refundAmt = pendingTurnover * 0.015;
 
                 if (refundAmt < 1.0) return showToast("Số dư hoàn trả chưa đủ $1", "error");
 
