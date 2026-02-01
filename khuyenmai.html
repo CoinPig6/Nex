@@ -125,7 +125,7 @@
             </h3>
             <input type="text" id="giftcodeInput" class="input-code" placeholder="NHẬP MÃ CODE TẠI ĐÂY">
             <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">KÍCH HOẠT MÃ</button>
-            <p class="text-[10px] text-center text-gray-500 mt-2 italic">*Yêu cầu sẽ được gửi đến Admin để duyệt</p>
+            <p class="text-[10px] text-center text-gray-500 mt-2 italic">*Mã thưởng sẽ được cộng trực tiếp vào ví</p>
         </div>
 
         <!-- === 2. ĐIỂM DANH 7 NGÀY (UPDATED LOGIC) === -->
@@ -391,7 +391,7 @@
             renderAttendance(data);
         }
 
-        // --- 1. GIFTCODE (FIXED RULES: GỬI REQUEST CHO ADMIN) ---
+        // --- 1. GIFTCODE (DIRECT CLAIM) ---
         window.redeemCode = async () => {
             if (!currentUser) return;
             const codeInput = document.getElementById('giftcodeInput');
@@ -399,26 +399,77 @@
             const btn = document.getElementById('btnRedeem');
 
             if (!code) return showToast("Vui lòng nhập mã!", "error");
-            btn.disabled = true; btn.innerText = "ĐANG GỬI...";
+            btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
 
             try {
-                // THAY VÌ UPDATE GIFTCODE (BỊ CHẶN BỞI RULE), TA TẠO REQUEST CHO ADMIN
-                await addDoc(collection(db, "admin_requests"), {
-                    type: "giftcode",
-                    uid: currentUser.uid,
-                    username: userData?.username || currentUser.email,
-                    code: code,
-                    timestamp: Date.now(),
-                    status: "pending"
+                // 1. Tìm mã trong collection 'giftcodes'
+                const q = query(collection(db, "giftcodes"), where("code", "==", code));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    throw new Error("Mã Giftcode không tồn tại hoặc sai!");
+                }
+
+                const codeDocSnapshot = querySnapshot.docs[0];
+                const codeRef = doc(db, "giftcodes", codeDocSnapshot.id);
+                const userRef = doc(db, "users", currentUser.uid);
+                let receivedAmount = 0;
+
+                // 2. Chạy Transaction để đảm bảo tính nhất quán
+                await runTransaction(db, async (transaction) => {
+                    const sfDoc = await transaction.get(codeRef);
+                    const userSfDoc = await transaction.get(userRef);
+
+                    if (!sfDoc.exists()) throw "Mã không tồn tại!";
+                    
+                    const data = sfDoc.data();
+                    
+                    // Kiểm tra user đã nhập chưa
+                    if (data.usersUsed && data.usersUsed.includes(currentUser.uid)) {
+                        throw "Bạn đã sử dụng mã này rồi!";
+                    }
+
+                    // Kiểm tra giới hạn lượt nhập (nếu có)
+                    if (data.limit && data.usageCount >= data.limit) {
+                        throw "Mã đã hết lượt sử dụng!";
+                    }
+
+                    receivedAmount = Number(data.amount);
+                    const currentBalance = userSfDoc.data().balance || 0;
+
+                    // Cập nhật User Balance
+                    transaction.update(userRef, {
+                        balance: currentBalance + receivedAmount
+                    });
+
+                    // Cập nhật Giftcode (lưu uid người dùng)
+                    transaction.update(codeRef, {
+                        usersUsed: [...(data.usersUsed || []), currentUser.uid],
+                        usageCount: (data.usageCount || 0) + 1
+                    });
                 });
 
-                showToast("Đã gửi mã! Chờ Admin duyệt.", "success");
+                // 3. Ghi lịch sử giao dịch (sau khi transaction thành công)
+                await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+                    type: 'giftcode',
+                    amount: receivedAmount,
+                    code: code,
+                    note: `Nhập Giftcode: ${code}`,
+                    status: 'success',
+                    timestamp: Date.now()
+                });
+
+                showToast(`Thành công! Bạn nhận được $${receivedAmount}`, "success");
                 codeInput.value = "";
-            } catch (e) { 
-                showToast("Lỗi: " + e.message, "error"); 
+
+            } catch (e) {
+                const msg = e.message ? e.message : e;
+                showToast(msg, "error");
                 console.error(e);
-            } 
-            finally { btn.disabled = false; btn.innerText = "KÍCH HOẠT MÃ"; }
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "KÍCH HOẠT MÃ";
+            }
         };
 
         // --- 2. HOÀN TRẢ ---
