@@ -449,11 +449,18 @@
             if(pin === ADMIN_PIN) {
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
                 btn.disabled = true;
-                try {
-                    if(!auth.currentUser) await signInAnonymously(auth);
-                } catch(e) { 
-                    btn.innerHTML = 'TRUY CẬP'; btn.disabled = false;
-                    err.innerText = "Lỗi kết nối: " + e.message; err.classList.remove('hidden');
+                
+                // FIX LOGIC: Nếu đã đăng nhập rồi thì vào luôn, không chờ signin nữa
+                if(auth.currentUser) {
+                    window.loginSuccess(auth.currentUser);
+                } else {
+                    try {
+                        await signInAnonymously(auth);
+                        // onAuthStateChanged sẽ tự xử lý tiếp phần còn lại
+                    } catch(e) { 
+                        btn.innerHTML = 'TRUY CẬP'; btn.disabled = false;
+                        err.innerText = "Lỗi kết nối: " + e.message; err.classList.remove('hidden');
+                    }
                 }
             } else {
                 err.innerText = "MÃ PIN KHÔNG CHÍNH XÁC"; err.classList.remove('hidden');
@@ -461,24 +468,29 @@
             }
         };
 
+        // Hàm xử lý khi đăng nhập thành công
+        window.loginSuccess = (user) => {
+            const btn = document.getElementById('btnLogin');
+            const pin = document.getElementById('adminPin').value;
+            
+            // Chỉ chạy nếu người dùng đã nhập đúng PIN
+            if(pin === ADMIN_PIN) {
+                document.getElementById('uid-text').innerText = user.uid;
+                document.getElementById('uid-display').classList.remove('hidden');
+                
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Success';
+                setTimeout(() => {
+                    document.getElementById('login-screen').classList.add('fade-out');
+                    document.getElementById('app').classList.remove('hidden');
+                    initAdmin();
+                }, 1500);
+            }
+        };
+
         // Listen for auth state
         onAuthStateChanged(auth, async (user) => {
             if(user) {
-                const btn = document.getElementById('btnLogin');
-                const pin = document.getElementById('adminPin').value;
-                if(pin === ADMIN_PIN) {
-                    // Show UID for setup
-                    document.getElementById('uid-text').innerText = user.uid;
-                    document.getElementById('uid-display').classList.remove('hidden');
-                    
-                    // Transition to app
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Success';
-                    setTimeout(() => {
-                        document.getElementById('login-screen').classList.add('fade-out');
-                        document.getElementById('app').classList.remove('hidden');
-                        initAdmin();
-                    }, 1500);
-                }
+                window.loginSuccess(user);
             }
         });
 
