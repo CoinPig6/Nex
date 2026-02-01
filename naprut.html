@@ -155,7 +155,7 @@
             <!-- HIGHLIGHT TỶ GIÁ NẠP -->
             <div class="rate-box">
                 <i class="fa-solid fa-coins text-lg"></i>
-                <span>TỶ GIÁ: 1.000 VNĐ = $10</span>
+                <span>TỶ GIÁ NẠP: 1 USDT = 26.000 VNĐ</span>
             </div>
 
             <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6 shadow-lg">
@@ -186,13 +186,15 @@
             </div>
 
             <div class="mb-4">
-                <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Nhập số $ muốn nạp</label>
-                <input type="number" id="depositAmount" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 10">
-                <p class="text-[10px] text-gray-500 mt-1" id="depositCalcHint">Bạn cần chuyển: 0 VNĐ</p>
+                <!-- NHẬP TIỀN VIỆT -->
+                <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền chuyển khoản (VNĐ)</label>
+                <input type="number" id="depositVND" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 100000">
+                <!-- HIỂN THỊ USDT -->
+                <p class="text-[10px] text-gray-500 mt-1" id="depositCalcHint">Thực nhận: 0 USDT</p>
             </div>
             
             <button onclick="window.createDeposit()" class="btn-action btn-deposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
-            <p class="text-[10px] text-gray-500 mt-3 text-center italic">* Vui lòng chuyển khoản chính xác nội dung để được cộng tiền tự động.</p>
+            <p class="text-[10px] text-gray-500 mt-3 text-center italic">* Hệ thống sẽ tự quy đổi VNĐ sang USDT theo tỷ giá.</p>
         </div>
 
         <!-- TAB 2: RÚT TIỀN -->
@@ -206,10 +208,10 @@
 
             <!-- Form Rút (Hiện khi đã liên kết) -->
             <div id="withdrawForm">
-                <!-- HIGHLIGHT TỶ GIÁ RÚT -->
+                <!-- HIGHLIGHT TỶ GIÁ RÚT (THẤP HƠN NẠP) -->
                 <div class="rate-box rate-box-withdraw">
                     <i class="fa-solid fa-money-bill-wave text-lg"></i>
-                    <span>TỐI THIỂU: 5.000 VNĐ = $50</span>
+                    <span>TỶ GIÁ RÚT: 1 USDT = 25.000 VNĐ</span>
                 </div>
 
                 <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] mb-6">
@@ -231,11 +233,13 @@
                         <input type="text" id="wdBankNumber" class="input-dark bg-[#171b26] font-mono text-[#FCD535] cursor-not-allowed" readonly>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút ($)</label>
+                        <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút (USDT)</label>
                         <div class="relative">
-                            <input type="number" id="wdAmount" class="input-dark font-mono font-bold pr-16" placeholder="Tối thiểu $50">
+                            <input type="number" id="wdAmount" class="input-dark font-mono font-bold pr-16" placeholder="Tối thiểu $1">
                             <button onclick="window.setMaxWithdraw()" class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] bg-[#2d3442] text-[#FCD535] px-2 py-1 rounded font-bold hover:bg-[#374151]">MAX</button>
                         </div>
+                        <!-- HIỂN THỊ SỐ TIỀN NHẬN ĐƯỢC -->
+                        <p class="text-[10px] text-gray-500 mt-1" id="withdrawCalcHint">Thực nhận: 0 VNĐ</p>
                     </div>
                 </div>
 
@@ -288,20 +292,41 @@
         let unsubscribeHistory = null;
         let realBankNumber = "";
         
-        let SETTINGS = { minDeposit: 10, minWithdraw: 50 };
+        // --- CẤU HÌNH TỶ GIÁ & GIỚI HẠN (2026 RATES) ---
+        const EXCHANGE_RATE = {
+            DEPOSIT: 26000, // 26k VND = 1 USDT (User nạp)
+            WITHDRAW: 25000 // 1 USDT = 25k VND (User rút)
+        };
+        
+        // Nạp tối thiểu 50k VND, Rút tối thiểu 1 USD
+        let SETTINGS = { minDepositVND: 50000, minWithdrawUSDT: 1 };
 
-        // --- CALC DEPOSIT HINT ---
-        document.getElementById('depositAmount').addEventListener('input', (e) => {
+        // --- TÍNH TOÁN QUY ĐỔI NẠP (VND -> USDT) ---
+        document.getElementById('depositVND').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value) || 0;
-            const vnd = val * 100; 
-            document.getElementById('depositCalcHint').innerText = `Bạn cần chuyển: ${vnd.toLocaleString()} VNĐ`;
+            // Công thức: VND / Tỷ giá = USDT
+            const usdt = val / EXCHANGE_RATE.DEPOSIT; 
+            document.getElementById('depositCalcHint').innerText = `Thực nhận: ${usdt.toLocaleString('en-US', {maximumFractionDigits: 2})} USDT`;
+        });
+
+        // --- TÍNH TOÁN QUY ĐỔI RÚT (USDT -> VND) ---
+        document.getElementById('wdAmount').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            // Công thức: USDT * Tỷ giá = VND
+            const vnd = val * EXCHANGE_RATE.WITHDRAW; 
+            document.getElementById('withdrawCalcHint').innerText = `Thực nhận: ${vnd.toLocaleString('vi-VN')} VNĐ`;
         });
 
         // --- PUBLIC FUNCTIONS ---
         window.logoutModule = () => { signOut(auth).then(() => window.location.href = "login.html"); };
 
         window.setMaxWithdraw = () => {
-            if(userData) document.getElementById('wdAmount').value = Math.floor(userData.balance);
+            if(userData) {
+                const balance = Math.floor(userData.balance * 100) / 100; // Làm tròn 2 số thập phân
+                document.getElementById('wdAmount').value = balance;
+                // Trigger event input để tính lại số VNĐ
+                document.getElementById('wdAmount').dispatchEvent(new Event('input'));
+            }
         };
 
         window.filterHistory = (type, el) => {
@@ -313,36 +338,50 @@
         };
 
         window.createDeposit = async () => {
-            const amount = parseFloat(document.getElementById('depositAmount').value);
-            if (!amount || amount < SETTINGS.minDeposit) return alert(`Tối thiểu nạp $${SETTINGS.minDeposit} (1.000 VNĐ)`);
+            const vndAmount = parseFloat(document.getElementById('depositVND').value);
+            
+            if (!vndAmount || vndAmount < SETTINGS.minDepositVND) {
+                return alert(`Tối thiểu nạp ${SETTINGS.minDepositVND.toLocaleString()} VNĐ`);
+            }
             
             const btn = document.querySelector('.btn-deposit');
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
+            // Tính số USDT sẽ nhận được
+            const usdtReceived = vndAmount / EXCHANGE_RATE.DEPOSIT;
+
             try {
                 const payload = {
-                    type: 'deposit', amount: amount, status: 'pending',
-                    userId: currentUser.uid, username: userData.username || 'Unknown',
+                    type: 'deposit',
+                    amount: usdtReceived, // Số tiền cộng vào ví (USDT)
+                    vndAmount: vndAmount, // Số tiền user chuyển khoản (VND)
+                    rate: EXCHANGE_RATE.DEPOSIT,
+                    status: 'pending',
+                    userId: currentUser.uid, 
+                    username: userData.username || 'Unknown',
                     content: userData.username ? userData.username.toUpperCase() : '',
                     timestamp: serverTimestamp()
                 };
+                
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
                 await addDoc(collection(db, "admin_requests"), payload);
-                alert("Đã tạo lệnh nạp! Vui lòng chờ hệ thống xác nhận.");
-                document.getElementById('depositAmount').value = "";
-                document.getElementById('depositCalcHint').innerText = "Bạn cần chuyển: 0 VNĐ";
+                
+                alert(`Đã tạo lệnh nạp ${vndAmount.toLocaleString()} VNĐ!\nBạn sẽ nhận được khoảng ${usdtReceived.toFixed(2)} USDT sau khi duyệt.`);
+                
+                document.getElementById('depositVND').value = "";
+                document.getElementById('depositCalcHint').innerText = "Thực nhận: 0 USDT";
                 switchTab('history');
             } catch (e) { alert("Lỗi: " + e.message); } 
             finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP'; }
         };
 
         window.createWithdraw = async () => {
-            const amount = parseFloat(document.getElementById('wdAmount').value);
-            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
-            if (!amount || amount < SETTINGS.minWithdraw) return alert(`Tối thiểu rút $${SETTINGS.minWithdraw} (5.000 VNĐ)`);
-            if (amount > userData.balance) return alert("Số dư không đủ!");
+            const usdtAmount = parseFloat(document.getElementById('wdAmount').value);
             
-            // SỬA LỖI VÒNG CƯỢC: So sánh ĐÃ CƯỢC < YÊU CẦU thì mới chặn
+            if (!realBankNumber) return alert("Vui lòng liên kết ngân hàng trước!");
+            if (!usdtAmount || usdtAmount < SETTINGS.minWithdrawUSDT) return alert(`Tối thiểu rút $${SETTINGS.minWithdrawUSDT}`);
+            if (usdtAmount > userData.balance) return alert("Số dư không đủ!");
+            
             const currentTurnover = parseFloat(userData.betTurnover || 0);
             const requiredTurnover = parseFloat(userData.requiredTurnover || 0);
             if (currentTurnover < requiredTurnover) return alert(`Chưa đủ vòng cược! (${currentTurnover}/${requiredTurnover})`);
@@ -350,25 +389,36 @@
             const btn = document.querySelector('.btn-withdraw');
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
+            // Tính số VND sẽ nhận
+            const vndReceived = usdtAmount * EXCHANGE_RATE.WITHDRAW;
+
             try {
                 const payload = {
-                    type: 'withdraw', amount: amount, status: 'pending',
+                    type: 'withdraw', 
+                    amount: usdtAmount, // Số tiền trừ ví (USDT)
+                    vndAmount: vndReceived, // Số tiền Admin chuyển (VND)
+                    rate: EXCHANGE_RATE.WITHDRAW,
+                    status: 'pending',
                     bankInfo: `${userData.bankName} - ${realBankNumber} - ${userData.bankOwner}`,
-                    userId: currentUser.uid, username: userData.username || 'Unknown',
+                    userId: currentUser.uid, 
+                    username: userData.username || 'Unknown',
                     timestamp: serverTimestamp()
                 };
                 
-                // Khi rút thành công request -> trừ tiền, reset vòng cược
+                // Trừ tiền ngay lập tức
                 await updateDoc(doc(db, "users", currentUser.uid), { 
-                    balance: userData.balance - amount,
+                    balance: userData.balance - usdtAmount,
                     betTurnover: 0,
                     requiredTurnover: 0
                 });
 
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), payload);
                 await addDoc(collection(db, "admin_requests"), payload);
-                alert("Đã gửi yêu cầu rút tiền!");
+                
+                alert(`Đã gửi yêu cầu rút $${usdtAmount}!\nBạn sẽ nhận được ${vndReceived.toLocaleString()} VNĐ.`);
+                
                 document.getElementById('wdAmount').value = "";
+                document.getElementById('withdrawCalcHint').innerText = "Thực nhận: 0 VNĐ";
                 switchTab('history');
             } catch (e) { alert("Lỗi: " + e.message); } 
             finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-money-bill-transfer mr-2"></i> YÊU CẦU RÚT TIỀN'; }
@@ -395,10 +445,6 @@
         });
 
         // --- LOGIC FUNCTIONS ---
-        function checkAutoResetTurnover(data) {
-           // Giữ nguyên logic reset khi rút tiền
-        }
-
         function renderUserData(data) {
             document.getElementById('sidebarUsername').innerText = data.fullName || data.username || "Thành viên";
             document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
@@ -425,7 +471,6 @@
             document.getElementById('requiredTurnover').innerText = required.toLocaleString();
             
             let percent = 0;
-            // Nếu required = 0 hoặc current >= required thì full cây
             if (required === 0 || current >= required) {
                 percent = 100;
                 document.getElementById('turnoverBar').style.background = "#0ECB81"; 
@@ -439,7 +484,6 @@
             document.getElementById('turnoverBar').style.width = percent + "%";
         }
 
-        // --- OPTIMIZED HISTORY LOGIC (STATUS FIX) ---
         function setupHistoryListener(uid) {
             if (unsubscribeHistory) unsubscribeHistory();
 
@@ -469,7 +513,6 @@
 
                     d.dateObj = dateObj;
 
-                    // CHỈ HIỂN THỊ, KHÔNG XOÁ (Client-side filtering)
                     if (now - dateObj.getTime() <= sevenDaysMs) {
                         allHistory.push(d);
                     }
@@ -526,6 +569,11 @@
                 let timeStr = itemDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                 
                 let typeText = 'GIAO DỊCH'; let typeIcon = 'fa-circle'; let colorClass = 'text-white'; let amountSign = '+';
+                let displayAmount = 0;
+
+                // Logic hiển thị lịch sử: Ưu tiên hiển thị số tiền chính (USDT)
+                // Tuy nhiên với Nạp/Rút có thể hiển thị thêm VNĐ nếu cần, ở đây ta hiển thị USDT cho đồng bộ ví
+                displayAmount = parseFloat(data.amount);
                 
                 switch(data.type) {
                     case 'deposit': typeText = 'NẠP TIỀN'; typeIcon = 'fa-arrow-down'; colorClass = 'text-[#0ECB81]'; break;
@@ -536,16 +584,12 @@
                     default: typeText = 'THƯỞNG'; typeIcon = 'fa-gift'; colorClass = 'text-pink-400'; break;
                 }
 
-                // SỬA LỖI UI: BỎ BADGE PENDING KHI ĐÃ THÀNH CÔNG/THẤT BẠI
-                // Đảm bảo chỉ hiện 1 badge duy nhất
                 let badgeHtml = '';
-                
                 if (data.status === 'success') { 
                     badgeHtml = `<span class="badge badge-success mt-1"><i class="fa-solid fa-check mr-1"></i>THÀNH CÔNG</span>`;
                 } else if (data.status === 'rejected' || data.status === 'failed') { 
                     badgeHtml = `<span class="badge badge-reject mt-1"><i class="fa-solid fa-xmark mr-1"></i>THẤT BẠI</span>`;
                 } else {
-                    // Mặc định là pending nếu không phải 2 trạng thái trên
                     badgeHtml = `<span class="badge badge-pending mt-1"><i class="fa-solid fa-clock mr-1"></i>ĐANG XỬ LÝ</span>`;
                 }
 
@@ -564,7 +608,7 @@
                         </div>
                         <div class="text-right">
                             <div class="font-mono font-bold text-sm ${colorClass}">
-                                ${amountSign}$${parseFloat(data.amount).toLocaleString()}
+                                ${amountSign}$${displayAmount.toLocaleString()}
                             </div>
                             ${badgeHtml}
                         </div>
