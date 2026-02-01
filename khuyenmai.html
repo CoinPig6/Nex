@@ -72,7 +72,7 @@
         .step-item.checked .reward-text { color: #0ECB81; }
 
         /* TOAST */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; }
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
     </style>
@@ -123,19 +123,20 @@
             <h3 class="text-sm font-bold text-[#FCD535] mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-ticket"></i> NHẬP GIFTCODE
             </h3>
-            <input type="text" id="giftcodeInput" class="input-code" placeholder="MÃ NHẬN THƯỞNG">
+            <input type="text" id="giftcodeInput" class="input-code" placeholder="NHẬP MÃ CODE TẠI ĐÂY">
             <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">ĐỔI QUÀ NGAY</button>
         </div>
 
-        <!-- === 2. ĐIỂM DANH 7 NGÀY === -->
+        <!-- === 2. ĐIỂM DANH 7 NGÀY (UPDATED LOGIC) === -->
         <div class="promo-card p-4">
             <div class="flex gap-3 mb-3">
                 <div class="w-10 h-10 bg-[#0ECB81]/10 rounded-full flex items-center justify-center text-[#0ECB81] text-xl">
                     <i class="fa-solid fa-calendar-check"></i>
                 </div>
                 <div>
-                    <h3 class="text-white font-bold text-sm">Điểm Danh 7 Ngày ($25)</h3>
-                    <p class="text-[10px] text-gray-400">00:00 Làm mới nhiệm vụ.</p>
+                    <h3 class="text-white font-bold text-sm">Điểm Danh 7 Ngày</h3>
+                    <p class="text-[10px] text-gray-400">Yêu cầu: Nạp $20 & Cược $200 mỗi ngày.</p>
+                    <p class="text-[10px] text-[#F6465D]">Lưu ý: Bỏ lỡ 1 ngày sẽ quay lại Mốc 1.</p>
                 </div>
             </div>
 
@@ -149,7 +150,7 @@
                 <span>Cược hôm nay: <b id="progressBet" class="text-white">0</b>/200</span>
             </div>
 
-            <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐIỂM DANH</button>
+            <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐANG TẢI...</button>
         </div>
 
         <!-- === 3. HOÀN TRẢ VIP (MIN $1) === -->
@@ -161,7 +162,8 @@
                     </div>
                     <div>
                         <h3 class="text-white font-bold text-sm">Hoàn Trả Không Giới Hạn</h3>
-                        <p class="text-[10px] text-gray-400">Tối thiểu <span class="text-white font-bold">$1</span> để nhận.</p>
+                        <p class="text-[10px] text-gray-400">Tỷ lệ 1.5% - Tự động cộng mỗi ngày.</p>
+                        <p class="text-[10px] text-gray-400">Rút tối thiểu: <span class="text-white font-bold">$1</span></p>
                     </div>
                 </div>
             </div>
@@ -189,8 +191,9 @@
                         <i class="fa-solid fa-user-plus"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Quà Tân Thủ</h3>
-                        <p class="text-[10px] text-gray-400">Chỉ nhận 1 lần duy nhất.</p>
+                        <h3 class="text-white font-bold text-sm">Tặng Thưởng Tân Thủ</h3>
+                        <p class="text-[10px] text-gray-400">Dành cho tài khoản mới đăng ký.</p>
+                        <p class="text-[10px] text-gray-500">Hoàn thành KYC + Liên kết ngân hàng.</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -206,12 +209,12 @@
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
                     <div class="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 text-xl">
-                        <i class="fa-solid fa-1"></i>
+                        <i class="fa-solid fa-gem"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Nạp Đầu 100%</h3>
-                        <p class="text-[10px] text-gray-400">Tối thiểu: $200 - Tối đa: $1,000</p>
-                        <p class="text-[10px] text-gray-500">(Tiền nạp + KM) x3 Cược</p>
+                        <h3 class="text-white font-bold text-sm">Thưởng Nạp Đầu 100%</h3>
+                        <p class="text-[10px] text-gray-400">Nạp tối đa: $5</p>
+                        <p class="text-[10px] text-gray-500">Yêu cầu doanh thu: x3 Vòng cược</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -226,12 +229,12 @@
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
                     <div class="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 text-xl">
-                        <i class="fa-solid fa-2"></i>
+                        <i class="fa-solid fa-layer-group"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Nạp Lần 2 (50%)</h3>
-                        <p class="text-[10px] text-gray-400">Thưởng tối đa: $1,000</p>
-                        <p class="text-[10px] text-gray-500">Doanh thu: (Nạp x1) + (KM x5)</p>
+                        <h3 class="text-white font-bold text-sm">Thưởng Nạp Lại (Lần 2)</h3>
+                        <p class="text-[10px] text-gray-400">Thưởng 50% giá trị nạp.</p>
+                        <p class="text-[10px] text-gray-500">Yêu cầu doanh thu: x5 Vòng cược</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -246,11 +249,12 @@
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
                     <div class="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-400 text-xl">
-                        <i class="fa-solid fa-repeat"></i>
+                        <i class="fa-solid fa-calendar-day"></i>
                     </div>
                     <div>
                         <h3 class="text-white font-bold text-sm">Nạp Mỗi Ngày</h3>
-                        <p class="text-[10px] text-gray-400">Thưởng 10% - x2 Vòng cược.</p>
+                        <p class="text-[10px] text-gray-400">Nhận thêm 10% mỗi lần nạp.</p>
+                        <p class="text-[10px] text-gray-500">Không giới hạn số lần nhận.</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -260,18 +264,18 @@
             </div>
         </div>
 
-        <!-- === 8. CUỐI TUẦN T7-CN (UPDATED) === -->
+        <!-- === 8. CUỐI TUẦN T7-CN === -->
         <div class="promo-card p-4 relative overflow-hidden">
-            <div class="promo-tag bg-red-600">T7 - CN</div>
+            <div class="promo-tag bg-red-600">T7 & CN</div>
             <div class="flex justify-between items-center">
                 <div class="flex gap-3">
                     <div class="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-400 text-xl">
-                        <i class="fa-solid fa-calendar-week"></i>
+                        <i class="fa-solid fa-fire"></i>
                     </div>
                     <div>
-                        <h3 class="text-white font-bold text-sm">Siêu Deal Cuối Tuần (50%)</h3>
-                        <p class="text-[10px] text-gray-400">Thưởng tối đa: $1,000</p>
-                        <p class="text-[10px] text-gray-500">Doanh thu: (Nạp + KM) x5</p>
+                        <h3 class="text-white font-bold text-sm">Siêu Deal Cuối Tuần</h3>
+                        <p class="text-[10px] text-gray-400">Thưởng 50% cho giao dịch đầu tiên.</p>
+                        <p class="text-[10px] text-gray-500">Áp dụng: Thứ 7 & Chủ Nhật.</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -313,9 +317,26 @@
             'weekend_50': 'btnWeekend'
         };
 
-        // --- Utils: Time Standardization ---
-        function getTodayString() {
-            return new Date().toDateString(); 
+        // --- Utils ---
+        function getTodayString() { return new Date().toDateString(); }
+        
+        // --- Helper: Check Days Diff ---
+        function checkDayDiff(lastDateMs) {
+            if (!lastDateMs) return { claimedToday: false, isConsecutive: false };
+            
+            const now = new Date();
+            const last = new Date(lastDateMs);
+            
+            // Xóa phần giờ phút giây để so sánh ngày chuẩn
+            const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const lastZero = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+            
+            const diffMs = todayZero - lastZero;
+            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+            if (diffDays === 0) return { claimedToday: true, isConsecutive: true }; // Cùng ngày
+            if (diffDays === 1) return { claimedToday: false, isConsecutive: true }; // Liên tiếp (hôm qua)
+            return { claimedToday: false, isConsecutive: false }; // Đứt quãng (hôm kia hoặc lâu hơn)
         }
 
         // --- Sidebar ---
@@ -351,7 +372,6 @@
         function renderAll(data) {
             renderRefund(data);
             renderAttendance(data);
-            // checkWeekend is handled inside checkPromoRequests now
         }
 
         // --- 1. GIFTCODE ---
@@ -442,15 +462,14 @@
             } catch (e) { console.error(e); }
         };
 
-        // --- 3. ĐIỂM DANH ---
-        const REWARDS_7_DAYS = [1, 1, 2, 3, 4, 5, 9];
+        // --- 3. ĐIỂM DANH (LOGIC MỚI: RESET NẾU NGẮT QUÃNG) ---
+        const REWARDS_7_DAYS = [1, 2, 3, 5, 8, 12, 25]; // Cấu hình phần thưởng hấp dẫn hơn
 
         function renderAttendance(data) {
             const todayStr = getTodayString();
             
             const lastDepDate = data.lastDepositDate ? new Date(data.lastDepositDate).toDateString() : "";
             const lastBetDate = data.lastBetDate ? new Date(data.lastBetDate).toDateString() : "";
-            const lastAttDate = data.lastAttendance ? new Date(data.lastAttendance).toDateString() : "";
 
             const depToday = (lastDepDate === todayStr) ? (data.depositToday || 0) : 0;
             const betToday = (lastBetDate === todayStr) ? (data.betToday || 0) : 0;
@@ -460,13 +479,29 @@
             document.getElementById('progressBet').innerText = betToday;
             document.getElementById('progressBet').className = betToday >= 200 ? "text-[#0ECB81]" : "text-white";
 
-            const streak = data.attendanceStreak || 0;
-            let html = '<div class="step-line"></div>';
+            // LOGIC KIỂM TRA NGẮT QUÃNG
+            const { claimedToday, isConsecutive } = checkDayDiff(data.lastAttendance);
             
+            // Nếu không liên tiếp và chưa nhận hôm nay -> Reset visually về 0
+            // Nếu liên tiếp -> Giữ nguyên streak
+            // Nếu đã nhận hôm nay -> Giữ nguyên streak
+            let displayStreak = data.attendanceStreak || 0;
+            if (!isConsecutive && !claimedToday) {
+                displayStreak = 0; 
+            }
+            if (displayStreak >= 7) displayStreak = 0; // Cycle reset
+
+            let html = '<div class="step-line"></div>';
             for(let i=0; i<7; i++) {
                 let statusClass = '';
-                if (i < streak) statusClass = 'checked';
-                else if (i === streak) statusClass = 'active';
+                // Nếu đã nhận hôm nay: hiển thị active đến mốc hiện tại
+                if (claimedToday) {
+                    if (i < displayStreak) statusClass = 'checked';
+                } else {
+                    // Chưa nhận: hiển thị checked các mốc cũ, mốc tiếp theo là active
+                    if (i < displayStreak) statusClass = 'checked';
+                    else if (i === displayStreak) statusClass = 'active';
+                }
 
                 html += `
                     <div class="step-item ${statusClass}">
@@ -479,15 +514,15 @@
 
             const btnAtt = document.getElementById('btnAttendance');
 
-            if (lastAttDate === todayStr) {
+            if (claimedToday) {
                 btnAtt.disabled = true;
                 btnAtt.innerText = "ĐÃ ĐIỂM DANH HÔM NAY";
+                btnAtt.classList.add('opacity-50');
             } else {
+                btnAtt.classList.remove('opacity-50');
                 if (depToday >= 20 && betToday >= 200) {
                     btnAtt.disabled = false;
-                    let displayRewardIndex = streak;
-                    if (streak >= 7) displayRewardIndex = 0;
-                    btnAtt.innerText = `NHẬN NGAY $${REWARDS_7_DAYS[displayRewardIndex] || 1}`;
+                    btnAtt.innerText = `NHẬN NGAY $${REWARDS_7_DAYS[displayStreak]}`;
                 } else {
                     btnAtt.disabled = true;
                     btnAtt.innerText = "CHƯA ĐỦ ĐIỀU KIỆN";
@@ -502,11 +537,21 @@
             try {
                 btn.disabled = true;
                 
-                let currentStreak = userData.attendanceStreak || 0;
-                if (currentStreak >= 7) currentStreak = 0;
+                // Kiểm tra lại logic ngày khi bấm nút (Server-side simulation)
+                const { isConsecutive } = checkDayDiff(userData.lastAttendance);
+                
+                let streak = userData.attendanceStreak || 0;
+                
+                // NẾU KHÔNG LIÊN TIẾP -> RESET VỀ 0
+                if (!isConsecutive) {
+                    streak = 0;
+                }
 
-                let reward = REWARDS_7_DAYS[currentStreak] || 1;
-                let nextStreak = currentStreak + 1;
+                // Nếu đã full chuỗi 7 ngày -> Reset về 0
+                if (streak >= 7) streak = 0;
+
+                let reward = REWARDS_7_DAYS[streak];
+                let nextStreak = streak + 1; // Tăng streak cho ngày mai
 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: (userData.balance || 0) + reward,
@@ -517,7 +562,7 @@
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
                     type: 'attendance', 
                     amount: reward, 
-                    note: `Điểm danh ngày ${nextStreak}`, 
+                    note: `Điểm danh ngày ${nextStreak} (Chuỗi ${isConsecutive ? 'liên tiếp' : 'mới'})`, 
                     status: 'success', 
                     timestamp: Date.now()
                 });
@@ -533,7 +578,6 @@
         // --- 4. CORE FIX: KHUYẾN MÃI STATUS LOGIC ---
 
         function getStatusPriority(status) {
-            // SUCCESS > PENDING > REJECTED (or others)
             if (status === 'success') return 3;
             if (status === 'pending') return 2;
             return 1; 
@@ -543,7 +587,6 @@
             const q = query(collection(db, "promotion_requests"), where("userId", "==", uid));
             
             onSnapshot(q, (snap) => {
-                // 1. Group Requests By Type
                 let requestsByType = {};
                 
                 snap.forEach(doc => {
@@ -552,25 +595,20 @@
                     requestsByType[r.type].push(r);
                 });
 
-                // 2. Process each known button type
                 Object.keys(BTN_MAP).forEach(type => {
                     const btnId = BTN_MAP[type];
                     const requests = requestsByType[type] || [];
 
-                    // 3. SORT LOGIC: Priority > Timestamp
                     requests.sort((a, b) => {
                         const priA = getStatusPriority(a.status);
                         const priB = getStatusPriority(b.status);
-                        
-                        if (priA !== priB) return priB - priA; // High priority first
-                        return b.timestamp - a.timestamp;      // Newer first
+                        if (priA !== priB) return priB - priA; 
+                        return b.timestamp - a.timestamp;      
                     });
 
-                    // 4. Pick top Request
                     const topReq = requests.length > 0 ? requests[0] : null;
                     const finalStatus = topReq ? topReq.status : null;
 
-                    // 5. Update UI
                     updatePromoBtn(btnId, finalStatus);
                 });
             });
@@ -580,20 +618,17 @@
             const btn = document.getElementById(btnId);
             if (!btn) return;
 
-            // -- Logic cho Nút Weekend --
-            // Nếu là nút Weekend: Nếu KHÔNG có status (hoặc rejected) thì mới check ngày
-            // Nếu đang PENDING hoặc SUCCESS thì phải hiện status đó, bất chấp ngày
+            // Logic Weekend Button
             if (btnId === 'btnWeekend' && (status !== 'pending' && status !== 'success')) {
                 const today = new Date().getDay();
-                if (today !== 0 && today !== 6) {
+                if (today !== 0 && today !== 6) { // 0=Sunday, 6=Saturday
                     btn.className = "btn-claim mt-1 opacity-50";
                     btn.innerText = "CHỈ MỞ T7 - CN";
                     btn.disabled = true;
-                    return; // Dừng luôn, không cho set thành ĐĂNG KÝ
+                    return; 
                 }
             }
 
-            // -- Reset Class Base --
             btn.className = "btn-claim mt-1"; 
 
             if (status === 'pending') {
@@ -607,7 +642,6 @@
                 btn.classList.add('received');
             } 
             else {
-                // Trạng thái: null hoặc rejected -> Cho phép đăng ký lại
                 btn.innerText = "ĐĂNG KÝ";
                 btn.disabled = false;
             }
@@ -618,11 +652,9 @@
             const btnId = BTN_MAP[type];
             const btn = document.getElementById(btnId);
 
-            // Optimistic UI update to prevent double clicks immediately
             if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
 
             try {
-                // Double check server side for existing pending/success
                 const q = query(
                     collection(db, "promotion_requests"), 
                     where("userId", "==", currentUser.uid),
@@ -638,8 +670,7 @@
                 });
 
                 if (isDuplicate) {
-                    showToast("Bạn đang có yêu cầu xử lý hoặc đã nhận!", "error");
-                    // Force re-check to fix UI if needed
+                    showToast("Bạn đang có yêu cầu chờ duyệt hoặc đã nhận!", "error");
                     checkPromoRequests(currentUser.uid);
                     return;
                 }
@@ -657,7 +688,6 @@
             } catch (e) {
                 console.error(e);
                 showToast("Lỗi: " + e.message, "error");
-                // Revert button if error
                 if(btn) { btn.disabled = false; btn.innerText = "ĐĂNG KÝ"; }
             }
         };
