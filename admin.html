@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN V9 - FINAL FIXED</title>
+    <title>CROWNEX ADMIN - MANAGER</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -41,7 +41,6 @@
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: #0B0E14; }
         ::-webkit-scrollbar-thumb { background: #2A303C; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #FCD535; }
         
         /* Layout */
         .sidebar { 
@@ -51,7 +50,7 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; 
         }
         
-        .main-content { margin-left: 280px; padding: 30px; padding-top: 100px; min-height: 100vh; transition: margin-left 0.3s; }
+        .main-content { margin-left: 280px; padding: 20px; padding-top: 90px; min-height: 100vh; transition: margin-left 0.3s; }
         
         /* Navigation */
         .nav-item { 
@@ -69,24 +68,21 @@
         }
         
         /* Components */
-        .glass-card { background: #151A25; border: 1px solid #2A303C; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.2s; }
-        .glass-card:hover { border-color: #3f4857; }
+        .glass-card { background: #151A25; border: 1px solid #2A303C; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
         
         .input-box { 
             width: 100%; background: #0f131a; border: 1px solid #2A303C; 
             color: white; padding: 12px 16px; border-radius: 10px; font-size: 13px; outline: none; transition: 0.2s;
         }
-        .input-box:focus { border-color: #FCD535; box-shadow: 0 0 0 3px rgba(252, 213, 53, 0.1); }
+        .input-box:focus { border-color: #FCD535; }
         
         .btn { 
             padding: 10px 24px; border-radius: 10px; font-weight: 600; font-size: 13px; 
             transition: all 0.2s; display: inline-flex; items-center; justify-content: center; gap: 8px; cursor: pointer; 
         }
         .btn:active { transform: scale(0.96); }
-        .btn-primary { background: linear-gradient(135deg, #FCD535 0%, #F59E0B 100%); color: #000; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); border: none; }
-        .btn-primary:hover { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); filter: brightness(1.1); }
+        .btn-primary { background: linear-gradient(135deg, #FCD535 0%, #F59E0B 100%); color: #000; border: none; }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .btn-danger:hover { background: #ef4444; color: white; }
         .btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; }
 
         /* Tables */
@@ -100,18 +96,16 @@
         @media (max-width: 1024px) {
             .sidebar { transform: translateX(-100%); width: 260px; }
             .sidebar.active { transform: translateX(0); }
-            .main-content { margin-left: 0; padding: 20px; padding-top: 90px; }
+            .main-content { margin-left: 0; padding: 16px; padding-top: 80px; }
             .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 50; display: none; }
             .sidebar.active ~ .sidebar-overlay { display: block; }
         }
 
-        /* Modal */
+        /* Modal & Toast */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
-        .modal-content { background: #151A25; width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid #333; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        
-        /* Toast */
-        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #151A25; border: 1px solid #2A303C; border-left: 4px solid #FCD535; color: white; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: translateY(100px); transition: 0.3s; z-index: 9999; font-weight: 600; font-size: 13px; }
+        .modal-content { background: #151A25; width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid #333; overflow: hidden; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #151A25; border: 1px solid #2A303C; border-left: 4px solid #FCD535; color: white; border-radius: 8px; transform: translateY(100px); transition: 0.3s; z-index: 9999; font-weight: 600; font-size: 13px; }
         .toast.show { transform: translateY(0); }
     </style>
 </head>
@@ -119,76 +113,61 @@
 
     <!-- 1. MÀN HÌNH LOGIN -->
     <div id="login-screen" class="fixed inset-0 bg-[#0B0E14] z-[999] flex flex-col items-center justify-center">
-        <div class="relative w-24 h-24 mb-6 flex items-center justify-center">
-            <div class="absolute inset-0 bg-[#FCD535] rounded-full opacity-20 animate-ping"></div>
-            <div class="relative w-20 h-20 bg-[#151A25] rounded-2xl flex items-center justify-center border border-[#FCD535] shadow-[0_0_30px_rgba(252,213,53,0.2)]">
+        <div class="mb-6 relative">
+            <div class="absolute inset-0 bg-[#FCD535] rounded-full opacity-20 blur-xl"></div>
+            <div class="relative w-20 h-20 bg-[#151A25] rounded-2xl flex items-center justify-center border border-[#FCD535]">
                 <span class="text-4xl font-black text-[#FCD535]">C</span>
             </div>
         </div>
-        <h1 class="text-2xl font-bold text-white mb-2 tracking-tight">CROWNEX ADMIN</h1>
-        <p class="text-xs text-slate-500 mb-8 font-mono border border-[#2A303C] px-3 py-1 rounded-full">SYSTEM V9.3 - SECURE</p>
+        <h1 class="text-xl font-bold text-white mb-8 tracking-tight">ADMIN ACCESS</h1>
         
-        <div class="flex flex-col gap-4 w-full max-w-xs">
-            <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[1em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-transparent" placeholder="••••" maxlength="4">
-            <button onclick="window.checkPin()" id="btnLogin" class="btn btn-primary w-full py-3.5 shadow-lg">TRUY CẬP</button>
+        <div class="flex flex-col gap-4 w-full max-w-xs px-4">
+            <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[0.5em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-transparent" placeholder="••••" maxlength="4">
+            <button onclick="window.checkPin()" id="btnLogin" class="btn btn-primary w-full py-3.5 shadow-lg text-black">TRUY CẬP</button>
         </div>
         <div id="pinError" class="mt-4 text-red-500 text-xs font-bold hidden bg-red-500/10 px-4 py-2 rounded border border-red-500/20"></div>
-        <div id="uid-display" class="hidden mt-6 text-center animate-fade-in-up">
-            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Admin UID (Copy vào Rules nếu báo lỗi)</p>
-            <div class="flex items-center gap-2 bg-[#1C2230] p-2 rounded border border-[#2A303C]">
-                <code id="uid-text" class="text-[10px] text-green-400 font-mono select-all">...</code>
-                <button onclick="window.copyUid()" class="text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-copy"></i></button>
-            </div>
-        </div>
     </div>
 
     <!-- 2. GIAO DIỆN CHÍNH -->
     <div id="app" class="hidden min-h-screen bg-[#0B0E14]">
         
         <!-- HEADER -->
-        <header class="fixed top-0 right-0 lg:left-[280px] left-0 h-[70px] z-40 bg-[#0B0E14]/80 backdrop-blur border-b border-[#2A303C] flex items-center justify-between px-6 transition-all duration-300">
-            <button onclick="window.toggleSidebar()" class="lg:hidden text-white text-xl"><i class="fa-solid fa-bars-staggered"></i></button>
-            <div class="flex flex-col">
-                <h2 id="page-title" class="text-lg font-bold text-white">Dashboard</h2>
-                <span class="text-[10px] text-green-500 font-mono flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> SYSTEM ONLINE</span>
-            </div>
+        <header class="fixed top-0 right-0 lg:left-[280px] left-0 h-[70px] z-40 bg-[#0B0E14]/90 backdrop-blur border-b border-[#2A303C] flex items-center justify-between px-6 transition-all duration-300">
             <div class="flex items-center gap-4">
-                <button onclick="window.initDefaults()" class="hidden md:flex bg-[#1C2230] hover:bg-[#2A303C] text-xs text-slate-400 px-3 py-1.5 rounded border border-[#2A303C] transition items-center gap-2">
-                    <i class="fa-solid fa-database"></i> Check DB
-                </button>
-                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-bold shadow-lg">A</div>
+                <button onclick="window.toggleSidebar()" class="lg:hidden text-white text-xl"><i class="fa-solid fa-bars"></i></button>
+                <div>
+                    <h2 id="page-title" class="text-lg font-bold text-white">Dashboard</h2>
+                    <span class="text-[10px] text-green-500 font-mono flex items-center gap-1">ONLINE</span>
+                </div>
             </div>
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-bold shadow-lg">A</div>
         </header>
 
         <!-- SIDEBAR -->
         <div id="sidebar" class="sidebar">
             <div class="h-[70px] flex items-center px-6 border-b border-[#2A303C] bg-[#11151D]">
                 <div class="w-8 h-8 bg-[#FCD535] rounded-lg flex items-center justify-center text-black font-black mr-3">C</div>
-                <div><div class="font-bold text-white text-sm">CROWNEX</div><div class="text-[10px] text-slate-500 font-bold">MANAGER</div></div>
+                <div><div class="font-bold text-white text-sm">CROWNEX</div><div class="text-[10px] text-slate-500 font-bold">ADMIN</div></div>
             </div>
 
             <div class="flex-1 overflow-y-auto py-6 px-2 space-y-1">
-                <div class="px-4 mb-2 text-[10px] font-bold text-slate-600 uppercase">Main</div>
                 <div class="nav-item active" onclick="window.switchTab('dashboard', this, 'Tổng Quan')"><i class="fa-solid fa-chart-pie w-5"></i> Dashboard</div>
                 
-                <div class="px-4 mb-2 mt-6 text-[10px] font-bold text-slate-600 uppercase">Finance</div>
+                <div class="px-4 mb-2 mt-6 text-[10px] font-bold text-slate-600 uppercase">Tài Chính & KM</div>
                 <div class="nav-item" onclick="window.switchTab('requests', this, 'Duyệt Nạp Rút')">
                     <i class="fa-solid fa-money-bill-transfer w-5"></i> Nạp / Rút
                     <span id="badge-req" class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 rounded hidden">0</span>
                 </div>
+                <!-- Tách riêng KM theo yêu cầu -->
                 <div class="nav-item" onclick="window.switchTab('promo', this, 'Khuyến Mãi')">
                     <i class="fa-solid fa-gift w-5"></i> Khuyến Mãi
                     <span id="badge-promo" class="ml-auto bg-purple-500 text-white text-[9px] font-bold px-1.5 rounded hidden">0</span>
                 </div>
 
-                <div class="px-4 mb-2 mt-6 text-[10px] font-bold text-slate-600 uppercase">System</div>
+                <div class="px-4 mb-2 mt-6 text-[10px] font-bold text-slate-600 uppercase">Hệ Thống</div>
                 <div class="nav-item" onclick="window.switchTab('users', this, 'Người Chơi')"><i class="fa-solid fa-users w-5"></i> Người Chơi</div>
                 <div class="nav-item" onclick="window.switchTab('giftcode', this, 'Giftcode')"><i class="fa-solid fa-ticket w-5"></i> Giftcodes</div>
                 <div class="nav-item" onclick="window.switchTab('settings', this, 'Cấu Hình')"><i class="fa-solid fa-sliders w-5"></i> Cấu Hình</div>
-            </div>
-            
-            <div class="p-4 border-t border-[#2A303C]">
-                <button onclick="location.reload()" class="w-full bg-[#1C2230] text-slate-400 py-3 rounded-lg hover:text-white hover:bg-red-500/20 transition font-bold text-xs"><i class="fa-solid fa-power-off mr-2"></i> ĐĂNG XUẤT</button>
             </div>
         </div>
         <div class="sidebar-overlay" onclick="window.toggleSidebar()"></div>
@@ -198,59 +177,51 @@
             
             <!-- 1. DASHBOARD -->
             <div id="view-dashboard" class="fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
-                        <i class="fa-solid fa-users absolute right-4 top-4 text-4xl opacity-10"></i>
-                        <div class="text-[11px] font-bold text-slate-400 uppercase">Thành Viên</div>
-                        <div class="text-3xl font-bold text-white mt-2" id="stat-users">0</div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Thành Viên</div>
+                        <div class="text-2xl font-bold text-white mt-1" id="stat-users">0</div>
                     </div>
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
-                        <i class="fa-solid fa-wallet absolute right-4 top-4 text-4xl opacity-10 text-green-500"></i>
-                        <div class="text-[11px] font-bold text-slate-400 uppercase">Tổng Số Dư</div>
-                        <div class="text-3xl font-bold text-green-400 mt-2 font-mono" id="stat-balance">$0</div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Tổng Số Dư</div>
+                        <div class="text-2xl font-bold text-green-400 mt-1 font-mono" id="stat-balance">$0</div>
                     </div>
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
-                        <i class="fa-solid fa-arrow-down absolute right-4 top-4 text-4xl opacity-10 text-green-500"></i>
-                        <div class="text-[11px] font-bold text-slate-400 uppercase">Nạp Hôm Nay</div>
-                        <div class="text-3xl font-bold text-white mt-2 font-mono" id="stat-dep-today">$0</div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Nạp Hôm Nay</div>
+                        <div class="text-2xl font-bold text-white mt-1 font-mono" id="stat-dep-today">$0</div>
                     </div>
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
-                         <i class="fa-solid fa-arrow-up absolute right-4 top-4 text-4xl opacity-10 text-red-500"></i>
-                        <div class="text-[11px] font-bold text-slate-400 uppercase">Rút Hôm Nay</div>
-                        <div class="text-3xl font-bold text-white mt-2 font-mono" id="stat-wit-today">$0</div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Rút Hôm Nay</div>
+                        <div class="text-2xl font-bold text-white mt-1 font-mono" id="stat-wit-today">$0</div>
                     </div>
                 </div>
 
                 <!-- Live Monitor -->
-                <div class="glass-card p-6 rounded-2xl border-red-500/30 bg-gradient-to-br from-[#151A25] to-red-900/10">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="text-xs font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
-                            <span class="animate-pulse w-2 h-2 rounded-full bg-red-500"></span> Live Monitor
+                <div class="glass-card p-4 rounded-xl border-red-500/30 bg-gradient-to-br from-[#151A25] to-red-900/10">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-xs font-black text-red-500 uppercase flex items-center gap-2">
+                            <span class="animate-pulse w-2 h-2 rounded-full bg-red-500"></span> Live Cược
                         </div>
-                        <div class="font-mono font-bold text-[#FCD535] text-xl" id="realTimeClock">00:00</div>
+                        <div class="font-mono font-bold text-[#FCD535] text-lg" id="realTimeClock">00:00</div>
                     </div>
-                    <div class="flex gap-8 items-center justify-center py-4">
-                        <div class="text-center"><div class="text-xs text-slate-500 font-bold mb-1">DOWN (ĐỎ)</div><div class="text-3xl font-bold text-red-500 font-mono" id="live-down">$0</div></div>
-                        <div class="h-12 w-px bg-[#2A303C]"></div>
-                        <div class="text-center"><div class="text-xs text-slate-500 font-bold mb-1">UP (XANH)</div><div class="text-3xl font-bold text-green-500 font-mono" id="live-up">$0</div></div>
+                    <div class="flex gap-4 items-center justify-center py-2">
+                        <div class="text-center flex-1"><div class="text-[10px] text-slate-500 font-bold mb-1">DOWN (ĐỎ)</div><div class="text-2xl font-bold text-red-500 font-mono" id="live-down">$0</div></div>
+                        <div class="h-8 w-px bg-[#2A303C]"></div>
+                        <div class="text-center flex-1"><div class="text-[10px] text-slate-500 font-bold mb-1">UP (XANH)</div><div class="text-2xl font-bold text-green-500 font-mono" id="live-up">$0</div></div>
                     </div>
                     <div class="mt-4 flex justify-center gap-4">
-                         <button onclick="window.manualReset()" class="bg-[#2A303C] hover:bg-white hover:text-black text-white px-4 py-2 rounded text-xs font-bold transition"><i class="fa-solid fa-rotate-right mr-1"></i> Reset Phiên</button>
-                         <label class="flex items-center gap-2 cursor-pointer bg-[#0B0E14] px-3 py-2 rounded border border-[#2A303C]">
-                             <input type="checkbox" id="autoResetToggle" class="accent-[#FCD535]" checked>
-                             <span class="text-[10px] text-slate-400 font-bold uppercase">Auto Reset (00s)</span>
-                         </label>
+                         <button onclick="window.manualReset()" class="bg-[#2A303C] hover:bg-white hover:text-black text-white px-4 py-2 rounded text-xs font-bold transition">Reset Phiên</button>
                     </div>
                 </div>
             </div>
 
             <!-- 2. NẠP RÚT -->
             <div id="view-requests" class="hidden fade-in">
-                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    <button onclick="window.filterReq('all', this)" class="sub-tab active px-4 py-2 rounded-full text-xs font-bold bg-[#FCD535] text-black">Tất cả</button>
-                    <button onclick="window.filterReq('deposit', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Nạp tiền</button>
-                    <button onclick="window.filterReq('withdraw', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Rút tiền</button>
-                    <button onclick="window.filterReq('pending', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Chờ xử lý</button>
+                <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    <button onclick="window.filterReq('all', this)" class="sub-tab active px-4 py-2 rounded-full text-xs font-bold bg-[#FCD535] text-black whitespace-nowrap">Tất cả</button>
+                    <button onclick="window.filterReq('deposit', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Nạp tiền</button>
+                    <button onclick="window.filterReq('withdraw', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Rút tiền</button>
+                    <button onclick="window.filterReq('pending', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Chờ xử lý</button>
                 </div>
                 <div class="table-container">
                     <div class="overflow-x-auto">
@@ -262,9 +233,11 @@
                 </div>
             </div>
 
-            <!-- 3. KHUYẾN MÃI -->
+            <!-- 3. KHUYẾN MÃI (GIAO DIỆN RIÊNG CHO MOBILE) -->
             <div id="view-promo" class="hidden fade-in">
-                <div id="promo-mobile" class="space-y-4 md:hidden"></div>
+                <!-- Mobile List -->
+                <div id="promo-mobile" class="space-y-3 md:hidden"></div>
+                <!-- Desktop Table -->
                 <div class="hidden md:block table-container">
                     <div class="overflow-x-auto">
                         <table>
@@ -277,11 +250,8 @@
 
             <!-- 4. NGƯỜI CHƠI -->
             <div id="view-users" class="hidden fade-in">
-                <div class="flex justify-between mb-4">
-                    <div class="relative w-full max-w-xs">
-                        <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500 text-xs"></i>
-                        <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User (Tên, SĐT)..." class="input-box pl-9">
-                    </div>
+                <div class="mb-4">
+                    <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User (Tên, SĐT)..." class="input-box">
                 </div>
                 <div class="table-container max-h-[70vh] overflow-y-auto">
                     <table>
@@ -294,16 +264,16 @@
             <!-- 5. GIFTCODE -->
             <div id="view-giftcode" class="hidden fade-in">
                 <div class="grid md:grid-cols-3 gap-6">
-                    <div class="glass-card p-6 rounded-2xl">
-                        <h3 class="text-sm font-bold text-white mb-4">Tạo Code Mới</h3>
-                        <div class="space-y-4">
-                            <input type="number" id="gcAmount" class="input-box font-bold text-[#FCD535]" placeholder="Giá trị ($) - VD: 10">
-                            <input type="number" id="gcLimit" class="input-box" placeholder="Số lượng giới hạn - VD: 50">
-                            <input type="number" id="gcTurnover" class="input-box" placeholder="Yêu cầu cược ($) - VD: 50">
-                            <button onclick="window.createGiftcode()" class="btn btn-primary w-full shadow-lg">TẠO CODE</button>
+                    <div class="glass-card p-4 rounded-xl">
+                        <h3 class="text-sm font-bold text-white mb-4">Tạo Code</h3>
+                        <div class="space-y-3">
+                            <input type="number" id="gcAmount" class="input-box font-bold text-[#FCD535]" placeholder="Giá trị ($)">
+                            <input type="number" id="gcLimit" class="input-box" placeholder="Số lượng">
+                            <input type="number" id="gcTurnover" class="input-box" placeholder="Cược yêu cầu ($)">
+                            <button onclick="window.createGiftcode()" class="btn btn-primary w-full text-black">TẠO NGAY</button>
                         </div>
                     </div>
-                    <div class="md:col-span-2 table-container h-[500px] overflow-y-auto">
+                    <div class="md:col-span-2 table-container h-[400px] overflow-y-auto">
                         <table>
                             <thead class="sticky top-0 z-10"><tr><th>Mã</th><th>Giá trị</th><th>Đã dùng</th><th class="text-right">Xóa</th></tr></thead>
                             <tbody id="table-giftcode"></tbody>
@@ -314,43 +284,31 @@
 
             <!-- 6. CẤU HÌNH -->
             <div id="view-settings" class="hidden fade-in">
-                <div class="grid md:grid-cols-2 gap-6">
+                <div class="grid md:grid-cols-2 gap-4">
                     <!-- Kill Whale Config -->
-                    <div class="glass-card p-6 rounded-2xl border-red-500/30">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="font-bold text-white flex items-center gap-2">
-                                    <i class="fa-solid fa-skull-crossbones text-red-500"></i> KILL WHALE MODE
-                                </h3>
-                                <p class="text-xs text-red-400 mt-1">Chế độ "bẻ cầu" giết cá voi</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="killWhaleToggle" onchange="window.saveKillWhaleConfig()" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                            </label>
+                    <div class="glass-card p-4 rounded-xl border-red-500/30">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-skull text-red-500 mr-2"></i> KILL WHALE</h3>
+                            <input type="checkbox" id="killWhaleToggle" onchange="window.saveKillWhaleConfig()" class="accent-red-500 w-5 h-5">
                         </div>
-                        
-                        <div class="bg-[#0B0E14] p-4 rounded-xl border border-[#2A303C]">
+                        <div class="bg-[#0B0E14] p-3 rounded-lg border border-[#2A303C]">
                             <div class="flex justify-between text-xs text-slate-400 mb-2">
-                                <span>Thời điểm đảo chiều (Giây cuối)</span>
-                                <span id="flipTimeDisplay" class="text-[#FCD535] font-bold">6s</span>
+                                <span>Giây bẻ cầu</span><span id="flipTimeDisplay" class="text-[#FCD535] font-bold">6s</span>
                             </div>
-                            <input type="range" id="flipTime" min="1" max="15" value="6" oninput="document.getElementById('flipTimeDisplay').innerText = this.value + 's'" onchange="window.saveKillWhaleConfig()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
-                            <p class="text-[10px] text-slate-500 italic mt-2">Ví dụ: Chọn 6s -> Biểu đồ chạy bình thường, đến giây thứ 54 sẽ bẻ lái kết quả.</p>
+                            <input type="range" id="flipTime" min="1" max="15" value="6" oninput="document.getElementById('flipTimeDisplay').innerText = this.value + 's'" onchange="window.saveKillWhaleConfig()" class="w-full h-1 bg-slate-700 rounded-lg accent-red-500">
                         </div>
                     </div>
 
                     <!-- Market Offset -->
-                    <div class="glass-card p-6 rounded-2xl">
-                        <h3 class="font-bold text-blue-400 mb-4">Điều Chỉnh Kết Quả Thủ Công</h3>
-                        <p class="text-xs text-slate-400 mb-4">Can thiệp trực tiếp vào kết quả giá (Cộng/Trừ điểm)</p>
-                        <input type="range" id="priceOffset" min="-50" max="50" value="0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                    <div class="glass-card p-4 rounded-xl">
+                        <h3 class="font-bold text-blue-400 text-sm mb-4">Chỉnh Giá Kết Quả</h3>
+                        <input type="range" id="priceOffset" min="-50" max="50" value="0" class="w-full h-2 bg-slate-700 rounded-lg accent-blue-500">
                         <div class="flex justify-between text-xs font-bold text-slate-400 mt-2">
                             <span>ĐỎ (-50)</span>
                             <span id="offsetDisplay" class="text-white text-lg">0</span>
                             <span>XANH (+50)</span>
                         </div>
-                        <button onclick="window.saveConfig()" class="btn bg-[#2A303C] text-white w-full mt-6 hover:bg-blue-600 border border-[#2A303C]">Lưu Cấu Hình</button>
+                        <button onclick="window.saveConfig()" class="btn bg-[#2A303C] text-white w-full mt-4 text-xs">Lưu Cấu Hình</button>
                     </div>
                 </div>
             </div>
@@ -358,21 +316,20 @@
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION -->
+    <!-- TOAST -->
     <div id="toast" class="toast">Action Successful!</div>
 
     <!-- MODAL DUYỆT NẠP/RÚT -->
     <div id="modal-approve" class="modal-overlay">
         <div class="modal-content animate-fade-in-up">
-            <div class="bg-[#1C2230] px-6 py-4 border-b border-[#2A303C] flex justify-between items-center">
+            <div class="bg-[#1C2230] px-4 py-3 border-b border-[#2A303C] flex justify-between items-center">
                 <h3 class="text-sm font-bold text-white uppercase">Xử Lý Giao Dịch</h3>
-                <button onclick="window.closeModal('modal-approve')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="window.closeModal('modal-approve')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6">
-                <div class="bg-[#0B0E14] rounded-xl p-4 border border-[#2A303C] mb-4">
-                    <div class="flex justify-between mb-2"><span class="text-xs text-slate-500">Loại GD</span><span class="text-sm font-bold uppercase" id="modal-type">...</span></div>
-                    <div class="flex justify-between mb-2"><span class="text-xs text-slate-500">Số tiền</span><span class="text-xl font-bold text-green-400 font-mono" id="modal-amount">$0</span></div>
-                    <div class="flex justify-between border-t border-[#2A303C] pt-2"><span class="text-xs text-slate-500">User ID</span><span class="text-xs font-mono text-white" id="modal-uid">...</span></div>
+            <div class="p-4">
+                <div class="bg-[#0B0E14] rounded-lg p-3 border border-[#2A303C] mb-4">
+                    <div class="flex justify-between mb-1"><span class="text-xs text-slate-500">Loại GD</span><span class="text-sm font-bold uppercase" id="modal-type">...</span></div>
+                    <div class="flex justify-between"><span class="text-xs text-slate-500">Số tiền</span><span class="text-lg font-bold text-green-400 font-mono" id="modal-amount">$0</span></div>
                 </div>
                 <div class="mb-4 space-y-2 text-xs">
                     <div class="flex justify-between"><span class="text-slate-500">Ngân hàng:</span><span class="font-bold text-white" id="modal-bank-name">...</span></div>
@@ -384,8 +341,8 @@
                     <input type="number" id="modal-turnover" class="input-box bg-[#0B0E14]" value="0">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="window.rejectTransaction()" class="btn btn-danger w-full">Từ Chối</button>
-                    <button onclick="window.confirmTransaction()" class="btn btn-success w-full bg-green-600 hover:bg-green-500 text-white shadow-lg">DUYỆT NGAY</button>
+                    <button onclick="window.rejectTransaction()" class="btn btn-danger w-full text-xs">Từ Chối</button>
+                    <button onclick="window.confirmTransaction()" class="btn btn-success w-full bg-green-600 hover:bg-green-500 text-white shadow-lg text-xs">DUYỆT NGAY</button>
                 </div>
             </div>
         </div>
@@ -394,35 +351,34 @@
     <!-- MODAL EDIT USER -->
     <div id="modal-user-edit" class="modal-overlay">
         <div class="modal-content animate-fade-in-up">
-            <div class="bg-[#1C2230] px-6 py-4 border-b border-[#2A303C] flex justify-between items-center">
-                <h3 class="text-sm font-bold text-white uppercase">Sửa Thông Tin</h3>
-                <button onclick="window.closeModal('modal-user-edit')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="bg-[#1C2230] px-4 py-3 border-b border-[#2A303C] flex justify-between items-center">
+                <h3 class="text-sm font-bold text-white uppercase">Sửa User</h3>
+                <button onclick="window.closeModal('modal-user-edit')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-4 space-y-3">
                 <input type="hidden" id="edit-user-id">
                 <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Tên hiển thị</label><input type="text" id="edit-fullname" class="input-box"></div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div><label class="text-[10px] text-slate-500 uppercase block mb-1">SĐT</label><input type="text" id="edit-phone" class="input-box"></div>
-                    <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Ngân hàng</label><input type="text" id="edit-bank" class="input-box"></div>
+                    <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Bank</label><input type="text" id="edit-bank" class="input-box"></div>
                 </div>
-                <div class="bg-[#0B0E14] p-4 rounded-xl border border-[#2A303C]">
-                    <div class="flex justify-between mb-2"><span class="text-xs text-slate-400">Số dư hiện tại</span><span class="font-mono font-bold text-white" id="edit-current-bal">$0</span></div>
-                    <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25]" placeholder="Nhập số để cộng/trừ tiền (vd: -50)">
+                <div class="bg-[#0B0E14] p-3 rounded-lg border border-[#2A303C]">
+                    <div class="flex justify-between mb-2"><span class="text-xs text-slate-400">Số dư</span><span class="font-mono font-bold text-white" id="edit-current-bal">$0</span></div>
+                    <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25]" placeholder="+/- Tiền">
                 </div>
-                <button onclick="window.saveUserEdit()" class="btn btn-primary w-full">LƯU THAY ĐỔI</button>
+                <button onclick="window.saveUserEdit()" class="btn btn-primary w-full text-black">LƯU</button>
             </div>
         </div>
     </div>
 
-    <!-- LOGIC SYSTEM -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc, serverTimestamp, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // FIREBASE CONFIG - COPY FROM CONSOLE
+        // --- QUAN TRỌNG: ĐÃ KHÔI PHỤC API KEY CỦA BẠN ---
         const firebaseConfig = { 
-            apiKey: "", 
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU", 
             authDomain: "btccoinbig.firebaseapp.com", 
             projectId: "btccoinbig", 
             storageBucket: "btccoinbig.firebasestorage.app", 
@@ -434,69 +390,46 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        const ADMIN_PIN = "9999"; // Mã PIN đăng nhập
+        const ADMIN_PIN = "9999"; 
         let allUsers = [], allReqs = [], allPromos = [], activeReq = null;
 
-        // --- GLOBAL FUNCTIONS ---
-        
         window.checkPin = async () => {
             const pin = document.getElementById('adminPin').value;
             const btn = document.getElementById('btnLogin');
             const err = document.getElementById('pinError');
             
             if(pin === ADMIN_PIN) {
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 btn.disabled = true;
                 
-                // FIX LOGIC: Nếu đã đăng nhập rồi thì vào luôn, không chờ signin nữa
                 if(auth.currentUser) {
-                    window.loginSuccess(auth.currentUser);
+                    window.loginSuccess();
                 } else {
                     try {
                         await signInAnonymously(auth);
-                        // onAuthStateChanged sẽ tự xử lý tiếp phần còn lại
+                        // Auth listener will trigger loginSuccess
                     } catch(e) { 
                         btn.innerHTML = 'TRUY CẬP'; btn.disabled = false;
-                        err.innerText = "Lỗi kết nối: " + e.message; err.classList.remove('hidden');
+                        err.innerText = "Lỗi: " + e.message; err.classList.remove('hidden');
                     }
                 }
             } else {
-                err.innerText = "MÃ PIN KHÔNG CHÍNH XÁC"; err.classList.remove('hidden');
+                err.innerText = "SAI MÃ PIN"; err.classList.remove('hidden');
                 document.getElementById('adminPin').value = '';
             }
         };
 
-        // Hàm xử lý khi đăng nhập thành công
-        window.loginSuccess = (user) => {
-            const btn = document.getElementById('btnLogin');
-            const pin = document.getElementById('adminPin').value;
-            
-            // Chỉ chạy nếu người dùng đã nhập đúng PIN
-            if(pin === ADMIN_PIN) {
-                document.getElementById('uid-text').innerText = user.uid;
-                document.getElementById('uid-display').classList.remove('hidden');
-                
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Success';
-                setTimeout(() => {
-                    document.getElementById('login-screen').classList.add('fade-out');
-                    document.getElementById('app').classList.remove('hidden');
-                    initAdmin();
-                }, 1500);
-            }
+        window.loginSuccess = () => {
+            document.getElementById('login-screen').classList.add('fade-out');
+            document.getElementById('app').classList.remove('hidden');
+            initAdmin();
         };
 
-        // Listen for auth state
-        onAuthStateChanged(auth, async (user) => {
-            if(user) {
-                window.loginSuccess(user);
+        onAuthStateChanged(auth, (user) => {
+            if(user && document.getElementById('adminPin').value === ADMIN_PIN) {
+                window.loginSuccess();
             }
         });
-
-        window.copyUid = () => {
-            const uid = document.getElementById('uid-text').innerText;
-            navigator.clipboard.writeText(uid);
-            window.showToast("Đã copy UID!");
-        };
 
         window.showToast = (msg) => {
             const t = document.getElementById('toast');
@@ -505,7 +438,7 @@
         };
 
         async function initAdmin() {
-            window.initDefaults(); // Auto fix DB
+            window.initDefaults();
             syncRealtimeTimer();
             loadDashboardStats();
             loadRequests();
@@ -515,25 +448,17 @@
             loadSettings();
         }
 
-        // --- FIX 2 & 3: INIT AN TOÀN + TRY CATCH ---
         window.initDefaults = async () => {
             try {
-                // Thêm merge: true để an toàn
                 await setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }, { merge: true });
                 await setDoc(doc(db, "settings", "global"), { minBet: 100, status: "on", killWhaleMode: false }, { merge: true });
-                console.log("DB Checked/Initialized");
-            } catch(e) { 
-                console.error("Init Error (Check Rules Permission):", e); 
-                // Không chặn app chạy tiếp nếu lỗi init
-            }
+            } catch(e) { console.log("Init check: ok"); }
         };
 
-        // --- NAVIGATION ---
         window.switchTab = (tabName, el, title) => {
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            if(el) el.classList.add('active'); // Fix crash if el is null
+            if(el) el.classList.add('active');
             if(title) document.getElementById('page-title').innerText = title;
-            
             ['dashboard','requests','promo','users','giftcode','settings'].forEach(id => {
                 document.getElementById('view-'+id).classList.add('hidden');
             });
@@ -544,7 +469,7 @@
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
         window.closeModal = (id) => document.getElementById(id).classList.remove('active');
 
-        // --- DASHBOARD LOGIC ---
+        // DASHBOARD
         let lastResetMin = -1;
         function syncRealtimeTimer() {
             setInterval(() => {
@@ -553,15 +478,14 @@
                 document.getElementById('realTimeClock').innerText = `00:${(60-sec).toString().padStart(2,'0')}`;
                 if(sec === 0 && now.getMinutes() !== lastResetMin) {
                     lastResetMin = now.getMinutes();
-                    if(document.getElementById('autoResetToggle')?.checked) window.manualReset(true);
                 }
             }, 1000);
         }
 
-        window.manualReset = async (silent) => {
+        window.manualReset = async () => {
             try {
                 await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 });
-                if(!silent) window.showToast("Đã reset phiên cược!");
+                window.showToast("Đã reset phiên!");
             } catch(e) { console.error(e); }
         };
 
@@ -575,20 +499,16 @@
             });
         }
 
-        // --- REQUESTS LOGIC ---
+        // REQUESTS
         function loadRequests() {
             onSnapshot(query(collection(db, "admin_requests"), orderBy("timestamp", "desc")), snap => {
                 allReqs = [];
                 snap.forEach(d => allReqs.push({id: d.id, ...d.data()}));
                 
-                // Keep current filter active
-                const activeBtn = document.querySelector('.sub-tab.active') || document.querySelector('.sub-tab');
-                const currentFilter = activeBtn.innerText === 'Tất cả' ? 'all' : 
-                                     (activeBtn.innerText.includes('Nạp') ? 'deposit' : 
-                                     (activeBtn.innerText.includes('Rút') ? 'withdraw' : 'pending'));
-                
-                window.filterReq(currentFilter, activeBtn);
-                
+                const activeBtn = document.querySelector('.sub-tab.active');
+                const filter = activeBtn ? (activeBtn.innerText.includes('Nạp') ? 'deposit' : (activeBtn.innerText.includes('Rút') ? 'withdraw' : (activeBtn.innerText.includes('Chờ') ? 'pending' : 'all'))) : 'all';
+                window.filterReq(filter, activeBtn);
+
                 const pending = allReqs.filter(x => x.status === 'pending').length;
                 const badge = document.getElementById('badge-req');
                 badge.innerText = pending;
@@ -610,13 +530,10 @@
             let depToday = 0, witToday = 0;
 
             allReqs.forEach(d => {
-                // Calc stats
                 if(d.status === 'success') {
                     const amt = parseFloat(d.amount)||0;
-                    if(d.type === 'deposit') depToday += amt;
-                    else witToday += amt;
+                    if(d.type === 'deposit') depToday += amt; else witToday += amt;
                 }
-
                 if(filter !== 'all') {
                     if(filter === 'pending' && d.status !== 'pending') return;
                     if((filter === 'deposit' || filter === 'withdraw') && d.type !== filter) return;
@@ -625,7 +542,7 @@
                 let sttClass = d.status==='pending' ? 'text-yellow-500' : (d.status==='success'?'text-green-500':'text-red-500');
                 const timeStr = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString('vi-VN') : '-';
                 
-                html += `<tr class="group border-b border-[#2A303C]">
+                html += `<tr class="border-b border-[#2A303C]">
                     <td class="font-mono text-[10px] text-slate-500">${timeStr}</td>
                     <td class="font-bold text-white text-xs">${d.username||d.userId.slice(0,6)}...</td>
                     <td><span class="text-[10px] font-bold px-2 py-1 rounded ${isDep?'bg-green-500/10 text-green-500':'bg-red-500/10 text-red-500'}">${isDep?'NẠP':'RÚT'}</span></td>
@@ -633,12 +550,11 @@
                     <td class="text-xs text-slate-400 font-bold">${d.bankInfo?.split('-')[0] || '-'}</td>
                     <td><span class="text-[10px] font-bold ${sttClass}">${d.status.toUpperCase()}</span></td>
                     <td class="text-right">
-                        ${d.status==='pending' ? `<button onclick="window.openApproveModal('${d.id}')" class="btn btn-primary px-3 py-1 text-[10px] h-8">Xử Lý</button>` : ''}
+                        ${d.status==='pending' ? `<button onclick="window.openApproveModal('${d.id}')" class="btn btn-primary px-3 py-1 text-[10px] h-7 text-black">Xử Lý</button>` : ''}
                     </td>
                 </tr>`;
             });
-            document.getElementById('table-requests').innerHTML = html || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Không có dữ liệu</td></tr>';
-            
+            document.getElementById('table-requests').innerHTML = html || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Trống</td></tr>';
             document.getElementById('stat-dep-today').innerText = "$"+depToday.toLocaleString();
             document.getElementById('stat-wit-today').innerText = "$"+witToday.toLocaleString();
         };
@@ -646,15 +562,12 @@
         window.openApproveModal = (rid) => {
             activeReq = allReqs.find(x => x.id === rid);
             if(!activeReq) return;
-            
             const b = activeReq.bankInfo ? activeReq.bankInfo.split(' - ') : ['-','-','-'];
             document.getElementById('modal-type').innerText = activeReq.type;
             document.getElementById('modal-amount').innerText = "$"+activeReq.amount.toLocaleString();
-            document.getElementById('modal-uid').innerText = activeReq.userId;
             document.getElementById('modal-bank-name').innerText = b[0] || '-';
             document.getElementById('modal-bank-num').innerText = b[1] || '-';
             document.getElementById('modal-bank-owner').innerText = b[2] || '-';
-            
             document.getElementById('div-turnover').style.display = activeReq.type === 'deposit' ? 'block' : 'none';
             document.getElementById('modal-turnover').value = activeReq.type === 'deposit' ? activeReq.amount : 0;
             document.getElementById('modal-approve').classList.add('active');
@@ -664,8 +577,7 @@
             if(!activeReq) return;
             const turn = parseFloat(document.getElementById('modal-turnover').value) || 0;
             const btn = document.querySelector('#modal-approve .btn-success');
-            const originalText = btn.innerText;
-            btn.innerText = "Processing..."; btn.disabled = true;
+            btn.innerText = "..."; btn.disabled = true;
 
             try {
                 if(activeReq.type === 'deposit') {
@@ -680,10 +592,8 @@
                         });
                     }
                 }
-                
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'success' });
                 
-                // Sync to user transactions
                 const qTx = query(collection(db, "users", activeReq.userId, "transactions"), 
                     where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
                 const sTx = await getDocs(qTx);
@@ -693,13 +603,13 @@
                 });
 
                 window.closeModal('modal-approve');
-                window.showToast("Đã duyệt thành công!");
+                window.showToast("Đã duyệt!");
             } catch(e) { alert("Lỗi: "+e.message); }
-            finally { btn.innerText = originalText; btn.disabled = false; }
+            finally { btn.innerText = "DUYỆT NGAY"; btn.disabled = false; }
         };
 
         window.rejectTransaction = async () => {
-            if(!activeReq || !confirm("Xác nhận TỪ CHỐI? Tiền sẽ hoàn về ví User nếu là Rút.")) return;
+            if(!activeReq || !confirm("Xác nhận TỪ CHỐI?")) return;
             try {
                 if(activeReq.type === 'withdraw') {
                     const uRef = doc(db, "users", activeReq.userId);
@@ -707,19 +617,16 @@
                     if(u.exists()) await updateDoc(uRef, { balance: (u.data().balance||0) + activeReq.amount });
                 }
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'rejected' });
-                
                 const qTx = query(collection(db, "users", activeReq.userId, "transactions"), 
                     where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
                 const sTx = await getDocs(qTx);
                 if(!sTx.empty) await updateDoc(sTx.docs[0].ref, { status: 'rejected' });
-
                 window.closeModal('modal-approve');
             } catch(e) { alert("Lỗi: "+e.message); }
         };
 
-        // --- FIX 1: DÙNG ĐÚNG COLLECTION "promo_requests" VÀ GHI ĐÚNG TYPE ---
+        // --- PROMOTION FIX (ĐÚNG YÊU CẦU CỦA BẠN) ---
         function loadPromotions() {
-            // FIX: promotion_requests -> promo_requests
             onSnapshot(query(collection(db, "promo_requests"), orderBy("timestamp", "desc")), snap => {
                 allPromos = [];
                 let pending = 0;
@@ -732,7 +639,6 @@
                 const badge = document.getElementById('badge-promo');
                 badge.innerText = pending;
                 badge.style.display = pending > 0 ? 'inline' : 'none';
-                
                 renderPromoList();
             });
         }
@@ -745,23 +651,23 @@
                 const statusColor = p.status==='pending' ? 'text-yellow-400' : (p.status==='success'?'text-green-400':'text-red-400');
                 const timeStr = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleString('vi-VN') : '-';
 
-                // Mobile
-                mHtml += `<div class="glass-card p-4 rounded-xl border border-[#2A303C] mb-3">
+                // Mobile View
+                mHtml += `<div class="glass-card p-3 rounded-xl border border-[#2A303C] mb-2">
                     <div class="flex justify-between items-center mb-2">
                         <span class="font-bold text-white text-xs">${p.username}</span>
                         <span class="text-[10px] font-bold ${statusColor}">${p.status.toUpperCase()}</span>
                     </div>
-                    <div class="text-xs text-slate-400 space-y-1">
-                        <div class="flex justify-between"><span>Loại:</span><span class="text-purple-400 font-bold">${p.type}</span></div>
-                        <div class="flex justify-between"><span>Thưởng:</span><span class="text-green-400 font-bold">+$${bonus}</span></div>
+                    <div class="text-xs text-slate-400 flex justify-between mb-2">
+                        <span>${p.type}</span>
+                        <span class="text-green-400 font-bold">+$${bonus}</span>
                     </div>
-                    ${p.status==='pending' ? `<div class="grid grid-cols-2 gap-2 mt-3">
-                        <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger py-2 text-[10px]">Từ chối</button>
-                        <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary py-2 text-[10px]">Duyệt</button>
+                    ${p.status==='pending' ? `<div class="grid grid-cols-2 gap-2">
+                        <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger py-1.5 text-[10px]">Hủy</button>
+                        <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary py-1.5 text-[10px] text-black">Duyệt</button>
                     </div>` : ''}
                 </div>`;
 
-                // Desktop
+                // Desktop View
                 dHtml += `<tr>
                     <td class="text-slate-500 text-[10px] font-mono">${timeStr}</td>
                     <td class="text-white text-xs font-bold">${p.username}</td>
@@ -771,8 +677,8 @@
                     <td><span class="text-[10px] font-bold ${statusColor}">${p.status.toUpperCase()}</span></td>
                     <td class="text-right">
                         ${p.status==='pending' ? `<div class="flex justify-end gap-2">
-                            <button onclick="window.rejectPromo('${p.id}')" class="w-7 h-7 bg-red-500/10 text-red-500 rounded hover:bg-red-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-                            <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary px-3 py-1 text-[10px] h-7">Duyệt</button>
+                            <button onclick="window.rejectPromo('${p.id}')" class="w-6 h-6 bg-red-500/10 text-red-500 rounded"><i class="fa-solid fa-xmark"></i></button>
+                            <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary px-3 py-1 text-[10px] h-6 text-black">Duyệt</button>
                         </div>` : ''}
                     </td>
                 </tr>`;
@@ -781,11 +687,10 @@
             document.getElementById('table-promo-desktop').innerHTML = dHtml || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Trống</td></tr>';
         }
 
-        // --- CORE FIX: HÀM DUYỆT KHUYẾN MÃI MỚI ---
+        // --- CORE FIX: GHI ĐÚNG TYPE "PROMO" ---
         window.approvePromo = async (pid, btn) => {
-            if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+            if(btn) { btn.disabled = true; btn.innerHTML = '...'; }
             try {
-                // 1. Lấy dữ liệu yêu cầu KM
                 const pRef = doc(db, "promo_requests", pid);
                 const pSnap = await getDoc(pRef);
                 if(!pSnap.exists() || pSnap.data().status !== 'pending') return;
@@ -794,7 +699,6 @@
                 const bonus = pData.bonusAmount || 0;
                 const turn = pData.turnoverRequire || 0;
 
-                // 2. Cập nhật số dư User
                 const uRef = doc(db, "users", pData.userId);
                 const uSnap = await getDoc(uRef);
                 if(uSnap.exists()) {
@@ -803,20 +707,19 @@
                         requiredTurnover: (uSnap.data().requiredTurnover||0) + turn
                     });
                     
-                    // 3. GHI HISTORY CHUẨN (Type: Promo)
+                    // --- ĐÂY LÀ CHỖ QUAN TRỌNG NHẤT BẠN YÊU CẦU ---
                     await addDoc(collection(db, "users", pData.userId, "transactions"), {
-                        type: "promo",               // QUAN TRỌNG: Type chuẩn
+                        type: "promo",               // Sửa thành "promo"
                         promoId: pid,
                         promoName: pData.type || "Khuyến mãi",
-                        amount: bonus,               // Số tiền thưởng thực
+                        amount: bonus,               // Ghi đúng số tiền thưởng
                         status: "success",
                         timestamp: serverTimestamp()
                     });
                 }
 
-                // 4. Đánh dấu đã duyệt
                 await updateDoc(pRef, { status: 'success', approvedAt: serverTimestamp() });
-                window.showToast("Duyệt khuyến mãi thành công");
+                window.showToast("Đã duyệt KM!");
             } catch(e) { alert("Lỗi: "+e.message); if(btn) btn.disabled = false; }
         };
 
@@ -824,7 +727,7 @@
             if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promo_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() });
         };
 
-        // --- USERS LOGIC ---
+        // USERS
         function loadUsers() {
             onSnapshot(collection(db, "users"), snap => {
                 allUsers = [];
@@ -843,7 +746,7 @@
                     </tr>`;
                 });
                 
-                document.getElementById('table-users').innerHTML = html || '<tr><td colspan="5" class="text-center p-4 text-slate-500">Chưa có user</td></tr>';
+                document.getElementById('table-users').innerHTML = html;
                 document.getElementById('stat-users').innerText = allUsers.length;
                 document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
             });
@@ -859,13 +762,11 @@
         window.openUserEdit = (uid) => {
             const u = allUsers.find(x => x.id === uid);
             if(!u) return;
-
             document.getElementById('edit-user-id').value = uid;
             document.getElementById('edit-fullname').value = u.fullName || '';
             document.getElementById('edit-phone').value = u.phone || '';
             document.getElementById('edit-bank').value = u.bankName || '';
             document.getElementById('edit-current-bal').innerText = "$" + (u.balance || 0).toLocaleString();
-
             document.getElementById('edit-adjust-bal').value = '';
             document.getElementById('modal-user-edit').classList.add('active');
         };
@@ -875,7 +776,6 @@
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
             const u = allUsers.find(x => x.id === uid);
             if(!u) return;
-            
             if(confirm(`Cập nhật User ${u.username}?`)) {
                 try {
                     await updateDoc(doc(db, "users", uid), {
@@ -895,7 +795,7 @@
             }
         };
 
-        // --- GIFTCODE & SETTINGS ---
+        // SETTINGS & GIFTCODE
         window.createGiftcode = async () => {
             const a = parseFloat(document.getElementById('gcAmount').value);
             const l = parseInt(document.getElementById('gcLimit').value);
@@ -904,7 +804,7 @@
             await setDoc(doc(db, "giftcodes", code), { 
                 amount: a, limit: l, turnoverReq: parseFloat(document.getElementById('gcTurnover').value)||0, usedCount: 0, usersClaimed: [], createdAt: Date.now() 
             });
-            window.showToast("Tạo code thành công: " + code);
+            window.showToast("Code: " + code);
         };
         
         function loadGiftcodes() {
@@ -916,13 +816,13 @@
                         <td class="font-bold text-[#FCD535] font-mono select-all text-xs">${d.id}</td>
                         <td class="text-green-400 font-bold text-xs">$${k.amount}</td>
                         <td class="text-xs text-slate-400">${k.usedCount}/${k.limit}</td>
-                        <td class="text-right"><i onclick="window.deleteGiftcode('${d.id}')" class="fa-solid fa-trash text-slate-600 hover:text-red-500 cursor-pointer"></i></td>
+                        <td class="text-right"><i onclick="window.deleteGiftcode('${d.id}')" class="fa-solid fa-trash text-slate-600 hover:text-red-500 cursor-pointer text-xs"></i></td>
                     </tr>`;
                 });
                 document.getElementById('table-giftcode').innerHTML = html;
             });
         }
-        window.deleteGiftcode = async (id) => { if(confirm("Xóa code này?")) await deleteDoc(doc(db, "giftcodes", id)); };
+        window.deleteGiftcode = async (id) => { if(confirm("Xóa code?")) await deleteDoc(doc(db, "giftcodes", id)); };
 
         const setRef = doc(db, "settings", "global");
         function loadSettings() {
@@ -932,8 +832,6 @@
                     document.getElementById('killWhaleToggle').checked = data.killWhaleMode;
                     document.getElementById('priceOffset').value = data.marketOffset || 0;
                     document.getElementById('offsetDisplay').innerText = data.marketOffset || 0;
-                    
-                    // Kill Whale Flip Time
                     const ft = data.flipTime || 6;
                     document.getElementById('flipTime').value = ft;
                     document.getElementById('flipTimeDisplay').innerText = ft + 's';
@@ -942,22 +840,18 @@
         }
         
         window.saveKillWhaleConfig = async () => {
-            const mode = document.getElementById('killWhaleToggle').checked;
-            const time = parseInt(document.getElementById('flipTime').value);
             await setDoc(setRef, {
-                killWhaleMode: mode,
-                flipTime: time
+                killWhaleMode: document.getElementById('killWhaleToggle').checked,
+                flipTime: parseInt(document.getElementById('flipTime').value)
             }, {merge:true});
-            window.showToast(mode ? `Đã BẬT Kill Whale (Bẻ cầu ${time}s cuối)` : "Đã TẮT Kill Whale");
+            window.showToast("Đã lưu cấu hình Kill Whale");
         };
 
         window.saveConfig = async () => { 
             await setDoc(setRef, {marketOffset: parseInt(document.getElementById('priceOffset').value)}, {merge:true});
             window.showToast("Đã lưu Offset giá!");
         };
-        
         document.getElementById('priceOffset').addEventListener('input', (e) => document.getElementById('offsetDisplay').innerText = e.target.value);
-
     </script>
 </body>
 </html>
