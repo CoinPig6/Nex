@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN - MANAGER</title>
+    <title>CROWNEX ADMIN - MANAGER V10</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -38,7 +38,7 @@
         @keyframes fadeOut { to { opacity: 0; transform: scale(0.95); pointer-events: none; } }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0B0E14; }
         ::-webkit-scrollbar-thumb { background: #2A303C; border-radius: 4px; }
         
@@ -84,6 +84,7 @@
         .btn-primary { background: linear-gradient(135deg, #FCD535 0%, #F59E0B 100%); color: #000; border: none; }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
         .btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; }
+        .sub-tab.active { background: #FCD535; color: black; border-color: #FCD535; }
 
         /* Tables */
         .table-container { border-radius: 16px; overflow: hidden; border: 1px solid #2A303C; background: #11151D; }
@@ -119,7 +120,7 @@
                 <span class="text-4xl font-black text-[#FCD535]">C</span>
             </div>
         </div>
-        <h1 class="text-xl font-bold text-white mb-8 tracking-tight">ADMIN ACCESS</h1>
+        <h1 class="text-xl font-bold text-white mb-8 tracking-tight">ADMIN ACCESS V10</h1>
         
         <div class="flex flex-col gap-4 w-full max-w-xs px-4">
             <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[0.5em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-transparent" placeholder="••••" maxlength="4">
@@ -158,7 +159,6 @@
                     <i class="fa-solid fa-money-bill-transfer w-5"></i> Nạp / Rút
                     <span id="badge-req" class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 rounded hidden">0</span>
                 </div>
-                <!-- Tách riêng KM theo yêu cầu -->
                 <div class="nav-item" onclick="window.switchTab('promo', this, 'Khuyến Mãi')">
                     <i class="fa-solid fa-gift w-5"></i> Khuyến Mãi
                     <span id="badge-promo" class="ml-auto bg-purple-500 text-white text-[9px] font-bold px-1.5 rounded hidden">0</span>
@@ -218,7 +218,7 @@
             <!-- 2. NẠP RÚT -->
             <div id="view-requests" class="hidden fade-in">
                 <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
-                    <button onclick="window.filterReq('all', this)" class="sub-tab active px-4 py-2 rounded-full text-xs font-bold bg-[#FCD535] text-black whitespace-nowrap">Tất cả</button>
+                    <button onclick="window.filterReq('all', this)" class="sub-tab active px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Tất cả</button>
                     <button onclick="window.filterReq('deposit', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Nạp tiền</button>
                     <button onclick="window.filterReq('withdraw', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Rút tiền</button>
                     <button onclick="window.filterReq('pending', this)" class="sub-tab px-4 py-2 rounded-full text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white whitespace-nowrap">Chờ xử lý</button>
@@ -226,22 +226,28 @@
                 <div class="table-container">
                     <div class="overflow-x-auto">
                         <table>
-                            <thead><tr><th>Thời gian</th><th>User</th><th>Loại</th><th>Số tiền</th><th>Ngân hàng</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
+                            <thead><tr><th>Thời gian</th><th>User</th><th>Loại</th><th>Số tiền</th><th>Ngân hàng / STK</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
                             <tbody id="table-requests"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. KHUYẾN MÃI (GIAO DIỆN RIÊNG CHO MOBILE) -->
+            <!-- 3. KHUYẾN MÃI (CHIA TAB & AUTO REJECT) -->
             <div id="view-promo" class="hidden fade-in">
+                <!-- Tabs -->
+                <div class="flex gap-2 mb-4">
+                    <button onclick="window.filterPromoTab('pending', this)" class="sub-tab-promo active px-6 py-2 rounded-lg text-xs font-bold bg-[#FCD535] text-black">Chờ Duyệt</button>
+                    <button onclick="window.filterPromoTab('history', this)" class="sub-tab-promo px-6 py-2 rounded-lg text-xs font-bold bg-[#151A25] border border-[#2A303C] text-white">Lịch Sử</button>
+                </div>
+
                 <!-- Mobile List -->
                 <div id="promo-mobile" class="space-y-3 md:hidden"></div>
                 <!-- Desktop Table -->
                 <div class="hidden md:block table-container">
                     <div class="overflow-x-auto">
                         <table>
-                            <thead><tr><th>Thời gian</th><th>User</th><th>Loại KM</th><th>Thưởng</th><th>Cược thêm</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
+                            <thead><tr><th>Thời gian</th><th>User / IP</th><th>Loại KM</th><th>Thưởng</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
                             <tbody id="table-promo-desktop"></tbody>
                         </table>
                     </div>
@@ -251,11 +257,12 @@
             <!-- 4. NGƯỜI CHƠI -->
             <div id="view-users" class="hidden fade-in">
                 <div class="mb-4">
-                    <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User (Tên, SĐT)..." class="input-box">
+                    <input type="text" id="searchUser" oninput="window.filterUsers()" placeholder="Tìm User (Tên, SĐT, STK)..." class="input-box">
                 </div>
+                <!-- Bảng lướt ngang được -->
                 <div class="table-container max-h-[70vh] overflow-y-auto">
                     <table>
-                        <thead class="sticky top-0 z-10"><tr><th>User</th><th>Số dư</th><th>Cược / Yêu cầu</th><th>Bank</th><th class="text-right">Sửa</th></tr></thead>
+                        <thead class="sticky top-0 z-10"><tr><th>User</th><th>Số dư</th><th>Tổng Cược</th><th>Ngân hàng</th><th class="text-right">Sửa</th></tr></thead>
                         <tbody id="table-users"></tbody>
                     </table>
                 </div>
@@ -331,9 +338,9 @@
                     <div class="flex justify-between mb-1"><span class="text-xs text-slate-500">Loại GD</span><span class="text-sm font-bold uppercase" id="modal-type">...</span></div>
                     <div class="flex justify-between"><span class="text-xs text-slate-500">Số tiền</span><span class="text-lg font-bold text-green-400 font-mono" id="modal-amount">$0</span></div>
                 </div>
-                <div class="mb-4 space-y-2 text-xs">
+                <div class="mb-4 space-y-2 text-xs border border-[#2A303C] p-2 rounded bg-[#111]">
                     <div class="flex justify-between"><span class="text-slate-500">Ngân hàng:</span><span class="font-bold text-white" id="modal-bank-name">...</span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Số TK:</span><span class="font-bold text-[#FCD535] font-mono select-all" id="modal-bank-num">...</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Số Tài Khoản:</span><span class="font-bold text-[#FCD535] font-mono select-all text-sm" id="modal-bank-num">...</span></div>
                     <div class="flex justify-between"><span class="text-slate-500">Chủ TK:</span><span class="font-bold text-white uppercase" id="modal-bank-owner">...</span></div>
                 </div>
                 <div id="div-turnover" class="mb-4">
@@ -357,16 +364,17 @@
             </div>
             <div class="p-4 space-y-3">
                 <input type="hidden" id="edit-user-id">
-                <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Tên hiển thị</label><input type="text" id="edit-fullname" class="input-box"></div>
+                <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Tên hiển thị (Chủ TK)</label><input type="text" id="edit-fullname" class="input-box"></div>
                 <div class="grid grid-cols-2 gap-3">
                     <div><label class="text-[10px] text-slate-500 uppercase block mb-1">SĐT</label><input type="text" id="edit-phone" class="input-box"></div>
-                    <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Bank</label><input type="text" id="edit-bank" class="input-box"></div>
+                    <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Tên Ngân Hàng</label><input type="text" id="edit-bank" class="input-box"></div>
                 </div>
+                <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Số Tài Khoản (STK)</label><input type="text" id="edit-bank-num" class="input-box font-mono text-[#FCD535]"></div>
                 <div class="bg-[#0B0E14] p-3 rounded-lg border border-[#2A303C]">
                     <div class="flex justify-between mb-2"><span class="text-xs text-slate-400">Số dư</span><span class="font-mono font-bold text-white" id="edit-current-bal">$0</span></div>
                     <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25]" placeholder="+/- Tiền">
                 </div>
-                <button onclick="window.saveUserEdit()" class="btn btn-primary w-full text-black">LƯU</button>
+                <button onclick="window.saveUserEdit()" class="btn btn-primary w-full text-black">LƯU THAY ĐỔI</button>
             </div>
         </div>
     </div>
@@ -376,7 +384,6 @@
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc, serverTimestamp, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // --- QUAN TRỌNG: ĐÃ KHÔI PHỤC API KEY CỦA BẠN ---
         const firebaseConfig = { 
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU", 
             authDomain: "btccoinbig.firebaseapp.com", 
@@ -392,6 +399,8 @@
         
         const ADMIN_PIN = "9999"; 
         let allUsers = [], allReqs = [], allPromos = [], activeReq = null;
+        let promoTab = 'pending'; // 'pending' or 'history'
+        let usedIPs = new Set(); // Store IP of successful promos
 
         window.checkPin = async () => {
             const pin = document.getElementById('adminPin').value;
@@ -401,17 +410,10 @@
             if(pin === ADMIN_PIN) {
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 btn.disabled = true;
-                
-                if(auth.currentUser) {
-                    window.loginSuccess();
-                } else {
-                    try {
-                        await signInAnonymously(auth);
-                        // Auth listener will trigger loginSuccess
-                    } catch(e) { 
-                        btn.innerHTML = 'TRUY CẬP'; btn.disabled = false;
-                        err.innerText = "Lỗi: " + e.message; err.classList.remove('hidden');
-                    }
+                if(auth.currentUser) window.loginSuccess();
+                else {
+                    try { await signInAnonymously(auth); } 
+                    catch(e) { btn.innerHTML = 'TRUY CẬP'; btn.disabled = false; err.innerText = "Lỗi: " + e.message; err.classList.remove('hidden'); }
                 }
             } else {
                 err.innerText = "SAI MÃ PIN"; err.classList.remove('hidden');
@@ -425,17 +427,8 @@
             initAdmin();
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if(user && document.getElementById('adminPin').value === ADMIN_PIN) {
-                window.loginSuccess();
-            }
-        });
-
-        window.showToast = (msg) => {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
-        };
+        onAuthStateChanged(auth, (user) => { if(user && document.getElementById('adminPin').value === ADMIN_PIN) window.loginSuccess(); });
+        window.showToast = (msg) => { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); };
 
         async function initAdmin() {
             window.initDefaults();
@@ -448,20 +441,13 @@
             loadSettings();
         }
 
-        window.initDefaults = async () => {
-            try {
-                await setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }, { merge: true });
-                await setDoc(doc(db, "settings", "global"), { minBet: 100, status: "on", killWhaleMode: false }, { merge: true });
-            } catch(e) { console.log("Init check: ok"); }
-        };
+        window.initDefaults = async () => { try { await setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }, { merge: true }); await setDoc(doc(db, "settings", "global"), { minBet: 100, status: "on", killWhaleMode: false }, { merge: true }); } catch(e) {} };
 
         window.switchTab = (tabName, el, title) => {
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
             if(el) el.classList.add('active');
             if(title) document.getElementById('page-title').innerText = title;
-            ['dashboard','requests','promo','users','giftcode','settings'].forEach(id => {
-                document.getElementById('view-'+id).classList.add('hidden');
-            });
+            ['dashboard','requests','promo','users','giftcode','settings'].forEach(id => document.getElementById('view-'+id).classList.add('hidden'));
             document.getElementById('view-'+tabName).classList.remove('hidden');
             if(window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('active');
         };
@@ -471,83 +457,51 @@
 
         // DASHBOARD
         let lastResetMin = -1;
-        function syncRealtimeTimer() {
-            setInterval(() => {
-                const now = new Date();
-                const sec = now.getSeconds();
-                document.getElementById('realTimeClock').innerText = `00:${(60-sec).toString().padStart(2,'0')}`;
-                if(sec === 0 && now.getMinutes() !== lastResetMin) {
-                    lastResetMin = now.getMinutes();
-                }
-            }, 1000);
-        }
+        function syncRealtimeTimer() { setInterval(() => { const now = new Date(); const sec = now.getSeconds(); document.getElementById('realTimeClock').innerText = `00:${(60-sec).toString().padStart(2,'0')}`; if(sec === 0 && now.getMinutes() !== lastResetMin) lastResetMin = now.getMinutes(); }, 1000); }
+        window.manualReset = async () => { try { await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); window.showToast("Đã reset phiên!"); } catch(e) {} };
+        function loadDashboardStats() { onSnapshot(doc(db, "games", "current"), s => { if(s.exists()) { const d = s.data(); document.getElementById('live-up').innerText = "$"+(d.totalUp||0).toLocaleString(); document.getElementById('live-down').innerText = "$"+(d.totalDown||0).toLocaleString(); } }); }
 
-        window.manualReset = async () => {
-            try {
-                await updateDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 });
-                window.showToast("Đã reset phiên!");
-            } catch(e) { console.error(e); }
-        };
-
-        function loadDashboardStats() {
-            onSnapshot(doc(db, "games", "current"), s => {
-                if(s.exists()) {
-                    const d = s.data();
-                    document.getElementById('live-up').innerText = "$"+(d.totalUp||0).toLocaleString();
-                    document.getElementById('live-down').innerText = "$"+(d.totalDown||0).toLocaleString();
-                }
-            });
-        }
-
-        // REQUESTS
+        // --- REQUESTS (HIỂN THỊ FULL INFO NGÂN HÀNG) ---
         function loadRequests() {
             onSnapshot(query(collection(db, "admin_requests"), orderBy("timestamp", "desc")), snap => {
                 allReqs = [];
                 snap.forEach(d => allReqs.push({id: d.id, ...d.data()}));
-                
                 const activeBtn = document.querySelector('.sub-tab.active');
-                const filter = activeBtn ? (activeBtn.innerText.includes('Nạp') ? 'deposit' : (activeBtn.innerText.includes('Rút') ? 'withdraw' : (activeBtn.innerText.includes('Chờ') ? 'pending' : 'all'))) : 'all';
-                window.filterReq(filter, activeBtn);
-
+                window.filterReq(activeBtn ? (activeBtn.innerText.includes('Nạp') ? 'deposit' : (activeBtn.innerText.includes('Rút') ? 'withdraw' : (activeBtn.innerText.includes('Chờ') ? 'pending' : 'all'))) : 'all', activeBtn);
                 const pending = allReqs.filter(x => x.status === 'pending').length;
                 const badge = document.getElementById('badge-req');
-                badge.innerText = pending;
-                badge.style.display = pending > 0 ? 'inline' : 'none';
+                badge.innerText = pending; badge.style.display = pending > 0 ? 'inline' : 'none';
             });
         }
 
         window.filterReq = (filter, el) => {
-            if(el) {
-                document.querySelectorAll('.sub-tab').forEach(x => {
-                    x.classList.remove('bg-[#FCD535]', 'text-black');
-                    x.classList.add('bg-[#151A25]', 'text-white');
-                });
-                el.classList.remove('bg-[#151A25]', 'text-white');
-                el.classList.add('bg-[#FCD535]', 'text-black');
-            }
-
-            let html = '';
-            let depToday = 0, witToday = 0;
-
+            if(el) { document.querySelectorAll('.sub-tab').forEach(x => { x.classList.remove('bg-[#FCD535]','text-black'); x.classList.add('bg-[#151A25]','text-white'); }); el.classList.remove('bg-[#151A25]','text-white'); el.classList.add('bg-[#FCD535]','text-black'); }
+            
+            let html = '', depToday = 0, witToday = 0;
             allReqs.forEach(d => {
-                if(d.status === 'success') {
-                    const amt = parseFloat(d.amount)||0;
-                    if(d.type === 'deposit') depToday += amt; else witToday += amt;
-                }
-                if(filter !== 'all') {
-                    if(filter === 'pending' && d.status !== 'pending') return;
-                    if((filter === 'deposit' || filter === 'withdraw') && d.type !== filter) return;
-                }
+                if(d.status === 'success') { const amt = parseFloat(d.amount)||0; if(d.type === 'deposit') depToday += amt; else witToday += amt; }
+                if(filter !== 'all') { if(filter === 'pending' && d.status !== 'pending') return; if((filter === 'deposit' || filter === 'withdraw') && d.type !== filter) return; }
+                
                 const isDep = d.type === 'deposit';
-                let sttClass = d.status==='pending' ? 'text-yellow-500' : (d.status==='success'?'text-green-500':'text-red-500');
+                const sttClass = d.status==='pending' ? 'text-yellow-500' : (d.status==='success'?'text-green-500':'text-red-500');
                 const timeStr = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString('vi-VN') : '-';
                 
+                // --- PARSE BANK INFO ---
+                const bankInfoArr = d.bankInfo ? d.bankInfo.split(' - ') : [];
+                const bName = bankInfoArr[0] || '-';
+                const bNum = bankInfoArr[1] || '-';
+                const bOwner = bankInfoArr[2] || '-';
+
                 html += `<tr class="border-b border-[#2A303C]">
                     <td class="font-mono text-[10px] text-slate-500">${timeStr}</td>
                     <td class="font-bold text-white text-xs">${d.username||d.userId.slice(0,6)}...</td>
                     <td><span class="text-[10px] font-bold px-2 py-1 rounded ${isDep?'bg-green-500/10 text-green-500':'bg-red-500/10 text-red-500'}">${isDep?'NẠP':'RÚT'}</span></td>
                     <td class="font-bold text-white font-mono">$${parseFloat(d.amount).toLocaleString()}</td>
-                    <td class="text-xs text-slate-400 font-bold">${d.bankInfo?.split('-')[0] || '-'}</td>
+                    <td>
+                        <div class="text-[11px] font-bold text-white">${bName}</div>
+                        <div class="text-[10px] font-mono text-[#FCD535] select-all">${bNum}</div>
+                        <div class="text-[9px] text-slate-400 uppercase">${bOwner}</div>
+                    </td>
                     <td><span class="text-[10px] font-bold ${sttClass}">${d.status.toUpperCase()}</span></td>
                     <td class="text-right">
                         ${d.status==='pending' ? `<button onclick="window.openApproveModal('${d.id}')" class="btn btn-primary px-3 py-1 text-[10px] h-7 text-black">Xử Lý</button>` : ''}
@@ -578,34 +532,19 @@
             const turn = parseFloat(document.getElementById('modal-turnover').value) || 0;
             const btn = document.querySelector('#modal-approve .btn-success');
             btn.innerText = "..."; btn.disabled = true;
-
             try {
                 if(activeReq.type === 'deposit') {
                     const uRef = doc(db, "users", activeReq.userId);
                     const uSnap = await getDoc(uRef);
-                    if(uSnap.exists()) {
-                        const u = uSnap.data();
-                        await updateDoc(uRef, { 
-                            balance: (u.balance||0) + activeReq.amount, 
-                            requiredTurnover: (u.requiredTurnover||0) + turn,
-                            depositToday: (u.depositToday||0) + activeReq.amount
-                        });
-                    }
+                    if(uSnap.exists()) await updateDoc(uRef, { balance: (uSnap.data().balance||0) + activeReq.amount, requiredTurnover: (uSnap.data().requiredTurnover||0) + turn, depositToday: (uSnap.data().depositToday||0) + activeReq.amount });
                 }
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'success' });
-                
-                const qTx = query(collection(db, "users", activeReq.userId, "transactions"), 
-                    where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
+                const qTx = query(collection(db, "users", activeReq.userId, "transactions"), where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
                 const sTx = await getDocs(qTx);
                 if(!sTx.empty) await updateDoc(sTx.docs[0].ref, { status: 'success' });
-                else await addDoc(collection(db, "users", activeReq.userId, "transactions"), {
-                    type: activeReq.type, amount: activeReq.amount, status: 'success', timestamp: serverTimestamp()
-                });
-
-                window.closeModal('modal-approve');
-                window.showToast("Đã duyệt!");
-            } catch(e) { alert("Lỗi: "+e.message); }
-            finally { btn.innerText = "DUYỆT NGAY"; btn.disabled = false; }
+                else await addDoc(collection(db, "users", activeReq.userId, "transactions"), { type: activeReq.type, amount: activeReq.amount, status: 'success', timestamp: serverTimestamp() });
+                window.closeModal('modal-approve'); window.showToast("Đã duyệt!");
+            } catch(e) { alert("Lỗi: "+e.message); } finally { btn.innerText = "DUYỆT NGAY"; btn.disabled = false; }
         };
 
         window.rejectTransaction = async () => {
@@ -617,155 +556,132 @@
                     if(u.exists()) await updateDoc(uRef, { balance: (u.data().balance||0) + activeReq.amount });
                 }
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'rejected' });
-                const qTx = query(collection(db, "users", activeReq.userId, "transactions"), 
-                    where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
+                const qTx = query(collection(db, "users", activeReq.userId, "transactions"), where("status", "==", "pending"), where("amount", "==", activeReq.amount), limit(1));
                 const sTx = await getDocs(qTx);
                 if(!sTx.empty) await updateDoc(sTx.docs[0].ref, { status: 'rejected' });
                 window.closeModal('modal-approve');
             } catch(e) { alert("Lỗi: "+e.message); }
         };
 
-        // --- PROMOTION FIX (ĐÚNG YÊU CẦU CỦA BẠN) ---
+        // --- PROMOTION (CHIA TAB & IP CHECK) ---
         function loadPromotions() {
             onSnapshot(query(collection(db, "promo_requests"), orderBy("timestamp", "desc")), snap => {
-                allPromos = [];
+                allPromos = []; usedIPs.clear();
                 let pending = 0;
                 snap.forEach(d => {
                     const p = {id: d.id, ...d.data()};
                     allPromos.push(p);
+                    if(p.status === 'success' && p.ip) usedIPs.add(p.ip);
                     if(p.status === 'pending') pending++;
                 });
-                
-                const badge = document.getElementById('badge-promo');
-                badge.innerText = pending;
-                badge.style.display = pending > 0 ? 'inline' : 'none';
+                const badge = document.getElementById('badge-promo'); badge.innerText = pending; badge.style.display = pending > 0 ? 'inline' : 'none';
                 renderPromoList();
             });
         }
 
+        window.filterPromoTab = (tab, el) => {
+            promoTab = tab;
+            document.querySelectorAll('.sub-tab-promo').forEach(x => { x.classList.remove('active','bg-[#FCD535]','text-black'); x.classList.add('bg-[#151A25]','text-white'); });
+            el.classList.remove('bg-[#151A25]','text-white'); el.classList.add('active','bg-[#FCD535]','text-black');
+            renderPromoList();
+        }
+
         function renderPromoList() {
             let mHtml = '', dHtml = '';
-            allPromos.forEach(p => {
-                const bonus = p.bonusAmount || (p.type.includes('10') ? 10 : 0);
-                const turn = p.turnoverRequire || bonus*5;
-                const statusColor = p.status==='pending' ? 'text-yellow-400' : (p.status==='success'?'text-green-400':'text-red-400');
-                const timeStr = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleString('vi-VN') : '-';
+            // Filter by Tab
+            const list = allPromos.filter(p => promoTab === 'pending' ? p.status === 'pending' : p.status !== 'pending');
 
-                // Mobile View
-                mHtml += `<div class="glass-card p-3 rounded-xl border border-[#2A303C] mb-2">
-                    <div class="flex justify-between items-center mb-2">
+            list.forEach(p => {
+                const bonus = p.bonusAmount || (p.type.includes('10') ? 10 : 0);
+                const statusColor = p.status==='pending' ? 'text-yellow-400' : (p.status==='success'?'text-green-400':'text-red-400');
+                
+                // IP CHECK
+                const isDuplicateIP = (p.status === 'pending' && p.ip && usedIPs.has(p.ip));
+                const ipWarning = isDuplicateIP ? `<div class="text-red-500 font-bold text-[10px] animate-pulse mt-1"><i class="fa-solid fa-triangle-exclamation"></i> TRÙNG IP: ${p.ip}</div>` : `<div class="text-[9px] text-slate-500">IP: ${p.ip||'N/A'}</div>`;
+
+                // Mobile
+                mHtml += `<div class="glass-card p-3 rounded-xl border ${isDuplicateIP ? 'border-red-500' : 'border-[#2A303C]'} mb-2">
+                    <div class="flex justify-between items-center mb-1">
                         <span class="font-bold text-white text-xs">${p.username}</span>
                         <span class="text-[10px] font-bold ${statusColor}">${p.status.toUpperCase()}</span>
                     </div>
-                    <div class="text-xs text-slate-400 flex justify-between mb-2">
+                    ${ipWarning}
+                    <div class="text-xs text-slate-400 flex justify-between mt-2 mb-2">
                         <span>${p.type}</span>
                         <span class="text-green-400 font-bold">+$${bonus}</span>
                     </div>
                     ${p.status==='pending' ? `<div class="grid grid-cols-2 gap-2">
-                        <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger py-1.5 text-[10px]">Hủy</button>
+                        <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger py-1.5 text-[10px]">${isDuplicateIP ? 'HỦY SPAM' : 'Từ chối'}</button>
                         <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary py-1.5 text-[10px] text-black">Duyệt</button>
                     </div>` : ''}
                 </div>`;
 
-                // Desktop View
+                // Desktop
                 dHtml += `<tr>
-                    <td class="text-slate-500 text-[10px] font-mono">${timeStr}</td>
-                    <td class="text-white text-xs font-bold">${p.username}</td>
+                    <td class="text-slate-500 text-[10px] font-mono">${p.timestamp?.toDate ? p.timestamp.toDate().toLocaleString('vi-VN') : '-'}</td>
+                    <td>
+                        <div class="text-white text-xs font-bold">${p.username}</div>
+                        ${ipWarning}
+                    </td>
                     <td><span class="text-purple-400 text-[10px] font-bold border border-purple-500/30 px-2 py-1 rounded">${p.type}</span></td>
                     <td class="text-green-400 font-bold text-xs">+$${bonus}</td>
-                    <td class="text-[#FCD535] font-bold text-xs">+${turn}</td>
                     <td><span class="text-[10px] font-bold ${statusColor}">${p.status.toUpperCase()}</span></td>
                     <td class="text-right">
                         ${p.status==='pending' ? `<div class="flex justify-end gap-2">
-                            <button onclick="window.rejectPromo('${p.id}')" class="w-6 h-6 bg-red-500/10 text-red-500 rounded"><i class="fa-solid fa-xmark"></i></button>
-                            <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary px-3 py-1 text-[10px] h-6 text-black">Duyệt</button>
+                            <button onclick="window.rejectPromo('${p.id}')" class="btn btn-danger px-2 py-1 text-[10px] h-7 whitespace-nowrap">${isDuplicateIP ? 'HỦY SPAM' : 'Hủy'}</button>
+                            <button onclick="window.approvePromo('${p.id}', this)" class="btn btn-primary px-3 py-1 text-[10px] h-7 text-black">Duyệt</button>
                         </div>` : ''}
                     </td>
                 </tr>`;
             });
-            document.getElementById('promo-mobile').innerHTML = mHtml || '<div class="text-center text-xs text-slate-500 italic">Trống</div>';
-            document.getElementById('table-promo-desktop').innerHTML = dHtml || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Trống</td></tr>';
+            document.getElementById('promo-mobile').innerHTML = mHtml || '<div class="text-center text-xs text-slate-500 italic py-4">Không có dữ liệu</div>';
+            document.getElementById('table-promo-desktop').innerHTML = dHtml || '<tr><td colspan="7" class="text-center p-4 text-slate-500">Không có dữ liệu</td></tr>';
         }
 
-        // --- CORE FIX: GHI ĐÚNG TYPE "PROMO" ---
         window.approvePromo = async (pid, btn) => {
             if(btn) { btn.disabled = true; btn.innerHTML = '...'; }
             try {
-                const pRef = doc(db, "promo_requests", pid);
-                const pSnap = await getDoc(pRef);
+                const pRef = doc(db, "promo_requests", pid); const pSnap = await getDoc(pRef);
                 if(!pSnap.exists() || pSnap.data().status !== 'pending') return;
                 const pData = pSnap.data();
-
                 const bonus = pData.bonusAmount || 0;
-                const turn = pData.turnoverRequire || 0;
-
-                const uRef = doc(db, "users", pData.userId);
-                const uSnap = await getDoc(uRef);
+                const uRef = doc(db, "users", pData.userId); const uSnap = await getDoc(uRef);
                 if(uSnap.exists()) {
-                    await updateDoc(uRef, {
-                        balance: (uSnap.data().balance||0) + bonus,
-                        requiredTurnover: (uSnap.data().requiredTurnover||0) + turn
-                    });
-                    
-                    // --- ĐÂY LÀ CHỖ QUAN TRỌNG NHẤT BẠN YÊU CẦU ---
-                    await addDoc(collection(db, "users", pData.userId, "transactions"), {
-                        type: "promo",               // Sửa thành "promo"
-                        promoId: pid,
-                        promoName: pData.type || "Khuyến mãi",
-                        amount: bonus,               // Ghi đúng số tiền thưởng
-                        status: "success",
-                        timestamp: serverTimestamp()
-                    });
+                    await updateDoc(uRef, { balance: (uSnap.data().balance||0) + bonus, requiredTurnover: (uSnap.data().requiredTurnover||0) + (pData.turnoverRequire||0) });
+                    await addDoc(collection(db, "users", pData.userId, "transactions"), { type: "promo", promoId: pid, promoName: pData.type || "Khuyến mãi", amount: bonus, status: "success", timestamp: serverTimestamp() });
                 }
-
                 await updateDoc(pRef, { status: 'success', approvedAt: serverTimestamp() });
                 window.showToast("Đã duyệt KM!");
             } catch(e) { alert("Lỗi: "+e.message); if(btn) btn.disabled = false; }
         };
+        window.rejectPromo = async (pid) => { if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promo_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() }); };
 
-        window.rejectPromo = async (pid) => {
-            if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promo_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() });
-        };
-
-        // USERS
+        // --- USERS (SỬA ĐẦY ĐỦ INFO) ---
         function loadUsers() {
             onSnapshot(collection(db, "users"), snap => {
-                allUsers = [];
-                let totalBal = 0;
-                let html = '';
+                allUsers = []; let totalBal = 0; let html = '';
                 snap.forEach(d => {
-                    const u = {id: d.id, ...d.data()};
-                    allUsers.push(u);
-                    totalBal += (u.balance||0);
+                    const u = {id: d.id, ...d.data()}; allUsers.push(u); totalBal += (u.balance||0);
                     html += `<tr>
                         <td><div class="font-bold text-white text-xs">${u.fullName||'User'}</div><div class="text-[10px] text-slate-500 font-mono">${u.username||u.phone}</div></td>
                         <td class="font-mono text-green-400 font-bold">$${(u.balance||0).toLocaleString()}</td>
-                        <td class="text-xs text-slate-400">${(u.betTurnover||0).toLocaleString()} / ${(u.requiredTurnover||0).toLocaleString()}</td>
-                        <td class="text-xs text-slate-400">${u.bankName||'-'}</td>
+                        <td class="text-xs text-slate-400 font-mono">$${(u.betTurnover||0).toLocaleString()}</td>
+                        <td><div class="text-xs text-slate-300 font-bold">${u.bankName||'-'}</div><div class="text-[10px] text-slate-500">${u.bankNumber||''}</div></td>
                         <td class="text-right"><button onclick="window.openUserEdit('${u.id}')" class="text-slate-400 hover:text-[#FCD535]"><i class="fa-solid fa-pen-to-square"></i></button></td>
                     </tr>`;
                 });
-                
-                document.getElementById('table-users').innerHTML = html;
-                document.getElementById('stat-users').innerText = allUsers.length;
-                document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
+                document.getElementById('table-users').innerHTML = html; document.getElementById('stat-users').innerText = allUsers.length; document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
             });
         }
-
-        window.filterUsers = () => {
-            const k = document.getElementById('searchUser').value.toLowerCase();
-            document.querySelectorAll('#table-users tr').forEach(r => {
-                r.style.display = r.innerText.toLowerCase().includes(k) ? '' : 'none';
-            });
-        };
+        window.filterUsers = () => { const k = document.getElementById('searchUser').value.toLowerCase(); document.querySelectorAll('#table-users tr').forEach(r => { r.style.display = r.innerText.toLowerCase().includes(k) ? '' : 'none'; }); };
 
         window.openUserEdit = (uid) => {
-            const u = allUsers.find(x => x.id === uid);
-            if(!u) return;
+            const u = allUsers.find(x => x.id === uid); if(!u) return;
             document.getElementById('edit-user-id').value = uid;
             document.getElementById('edit-fullname').value = u.fullName || '';
             document.getElementById('edit-phone').value = u.phone || '';
             document.getElementById('edit-bank').value = u.bankName || '';
+            document.getElementById('edit-bank-num').value = u.bankNumber || ''; // LOAD STK
             document.getElementById('edit-current-bal').innerText = "$" + (u.balance || 0).toLocaleString();
             document.getElementById('edit-adjust-bal').value = '';
             document.getElementById('modal-user-edit').classList.add('active');
@@ -774,83 +690,31 @@
         window.saveUserEdit = async () => {
             const uid = document.getElementById('edit-user-id').value;
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
-            const u = allUsers.find(x => x.id === uid);
-            if(!u) return;
+            const u = allUsers.find(x => x.id === uid); if(!u) return;
             if(confirm(`Cập nhật User ${u.username}?`)) {
                 try {
                     await updateDoc(doc(db, "users", uid), {
                         fullName: document.getElementById('edit-fullname').value,
                         phone: document.getElementById('edit-phone').value,
                         bankName: document.getElementById('edit-bank').value,
+                        bankNumber: document.getElementById('edit-bank-num').value, // SAVE STK
                         balance: (u.balance||0) + balAdj
                     });
-                    if(balAdj !== 0) {
-                        await addDoc(collection(db, "users", uid, "transactions"), {
-                            type: balAdj > 0 ? 'admin_add' : 'admin_sub', amount: Math.abs(balAdj), status: 'success', note: 'Admin Adjust', timestamp: serverTimestamp()
-                        });
-                    }
-                    window.closeModal('modal-user-edit');
-                    window.showToast("Cập nhật thành công!");
+                    if(balAdj !== 0) await addDoc(collection(db, "users", uid, "transactions"), { type: balAdj > 0 ? 'admin_add' : 'admin_sub', amount: Math.abs(balAdj), status: 'success', note: 'Admin Adjust', timestamp: serverTimestamp() });
+                    window.closeModal('modal-user-edit'); window.showToast("Cập nhật thành công!");
                 } catch(e) { alert("Lỗi: "+e.message); }
             }
         };
 
         // SETTINGS & GIFTCODE
-        window.createGiftcode = async () => {
-            const a = parseFloat(document.getElementById('gcAmount').value);
-            const l = parseInt(document.getElementById('gcLimit').value);
-            if(!a || !l) return alert("Nhập đủ thông tin!");
-            const code = 'CR' + Math.random().toString(36).substring(2,8).toUpperCase();
-            await setDoc(doc(db, "giftcodes", code), { 
-                amount: a, limit: l, turnoverReq: parseFloat(document.getElementById('gcTurnover').value)||0, usedCount: 0, usersClaimed: [], createdAt: Date.now() 
-            });
-            window.showToast("Code: " + code);
-        };
-        
-        function loadGiftcodes() {
-            onSnapshot(collection(db, "giftcodes"), snap => {
-                let html = '';
-                snap.forEach(d => {
-                    const k = d.data();
-                    html += `<tr>
-                        <td class="font-bold text-[#FCD535] font-mono select-all text-xs">${d.id}</td>
-                        <td class="text-green-400 font-bold text-xs">$${k.amount}</td>
-                        <td class="text-xs text-slate-400">${k.usedCount}/${k.limit}</td>
-                        <td class="text-right"><i onclick="window.deleteGiftcode('${d.id}')" class="fa-solid fa-trash text-slate-600 hover:text-red-500 cursor-pointer text-xs"></i></td>
-                    </tr>`;
-                });
-                document.getElementById('table-giftcode').innerHTML = html;
-            });
-        }
+        window.createGiftcode = async () => { const a = parseFloat(document.getElementById('gcAmount').value); const l = parseInt(document.getElementById('gcLimit').value); if(!a || !l) return alert("Nhập đủ thông tin!"); const code = 'CR' + Math.random().toString(36).substring(2,8).toUpperCase(); await setDoc(doc(db, "giftcodes", code), { amount: a, limit: l, turnoverReq: parseFloat(document.getElementById('gcTurnover').value)||0, usedCount: 0, usersClaimed: [], createdAt: Date.now() }); window.showToast("Code: " + code); };
+        function loadGiftcodes() { onSnapshot(collection(db, "giftcodes"), snap => { let html = ''; snap.forEach(d => { const k = d.data(); html += `<tr><td class="font-bold text-[#FCD535] font-mono select-all text-xs">${d.id}</td><td class="text-green-400 font-bold text-xs">$${k.amount}</td><td class="text-xs text-slate-400">${k.usedCount}/${k.limit}</td><td class="text-right"><i onclick="window.deleteGiftcode('${d.id}')" class="fa-solid fa-trash text-slate-600 hover:text-red-500 cursor-pointer text-xs"></i></td></tr>`; }); document.getElementById('table-giftcode').innerHTML = html; }); }
         window.deleteGiftcode = async (id) => { if(confirm("Xóa code?")) await deleteDoc(doc(db, "giftcodes", id)); };
 
         const setRef = doc(db, "settings", "global");
-        function loadSettings() {
-            onSnapshot(setRef, s => {
-                if(s.exists()) {
-                    const data = s.data();
-                    document.getElementById('killWhaleToggle').checked = data.killWhaleMode;
-                    document.getElementById('priceOffset').value = data.marketOffset || 0;
-                    document.getElementById('offsetDisplay').innerText = data.marketOffset || 0;
-                    const ft = data.flipTime || 6;
-                    document.getElementById('flipTime').value = ft;
-                    document.getElementById('flipTimeDisplay').innerText = ft + 's';
-                }
-            });
-        }
-        
-        window.saveKillWhaleConfig = async () => {
-            await setDoc(setRef, {
-                killWhaleMode: document.getElementById('killWhaleToggle').checked,
-                flipTime: parseInt(document.getElementById('flipTime').value)
-            }, {merge:true});
-            window.showToast("Đã lưu cấu hình Kill Whale");
-        };
-
-        window.saveConfig = async () => { 
-            await setDoc(setRef, {marketOffset: parseInt(document.getElementById('priceOffset').value)}, {merge:true});
-            window.showToast("Đã lưu Offset giá!");
-        };
+        function loadSettings() { onSnapshot(setRef, s => { if(s.exists()) { const data = s.data(); document.getElementById('killWhaleToggle').checked = data.killWhaleMode; document.getElementById('priceOffset').value = data.marketOffset || 0; document.getElementById('offsetDisplay').innerText = data.marketOffset || 0; const ft = data.flipTime || 6; document.getElementById('flipTime').value = ft; document.getElementById('flipTimeDisplay').innerText = ft + 's'; } }); }
+        window.saveKillWhaleConfig = async () => { await setDoc(setRef, { killWhaleMode: document.getElementById('killWhaleToggle').checked, flipTime: parseInt(document.getElementById('flipTime').value) }, {merge:true}); window.showToast("Đã lưu cấu hình Kill Whale"); };
+        window.saveConfig = async () => { await setDoc(setRef, {marketOffset: parseInt(document.getElementById('priceOffset').value)}, {merge:true}); window.showToast("Đã lưu Offset giá!"); };
         document.getElementById('priceOffset').addEventListener('input', (e) => document.getElementById('offsetDisplay').innerText = e.target.value);
     </script>
 </body>
