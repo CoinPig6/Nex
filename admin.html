@@ -134,7 +134,7 @@
         </div>
         <div id="pinError" class="mt-4 text-red-500 text-xs font-bold hidden bg-red-500/10 px-4 py-2 rounded border border-red-500/20"></div>
         <div id="uid-display" class="hidden mt-6 text-center animate-fade-in-up">
-            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Admin UID (Dùng cho Rules)</p>
+            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Admin UID (Copy vào Rules nếu báo lỗi)</p>
             <div class="flex items-center gap-2 bg-[#1C2230] p-2 rounded border border-[#2A303C]">
                 <code id="uid-text" class="text-[10px] text-green-400 font-mono select-all">...</code>
                 <button onclick="window.copyUid()" class="text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-copy"></i></button>
@@ -515,19 +515,17 @@
             loadSettings();
         }
 
-        // Auto create missing documents to prevent blank admin
+        // --- FIX 2 & 3: INIT AN TOÀN + TRY CATCH ---
         window.initDefaults = async () => {
             try {
-                const gRef = doc(db, "games", "current");
-                const sRef = doc(db, "settings", "global");
-                
-                const [gSnap, sSnap] = await Promise.all([getDoc(gRef), getDoc(sRef)]);
-                
-                if(!gSnap.exists()) await setDoc(gRef, { totalUp: 0, totalDown: 0 });
-                if(!sSnap.exists()) await setDoc(sRef, { minBet: 100, status: "on", killWhaleMode: false });
-                
+                // Thêm merge: true để an toàn
+                await setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }, { merge: true });
+                await setDoc(doc(db, "settings", "global"), { minBet: 100, status: "on", killWhaleMode: false }, { merge: true });
                 console.log("DB Checked/Initialized");
-            } catch(e) { console.error("Init Error:", e); }
+            } catch(e) { 
+                console.error("Init Error (Check Rules Permission):", e); 
+                // Không chặn app chạy tiếp nếu lỗi init
+            }
         };
 
         // --- NAVIGATION ---
@@ -575,8 +573,6 @@
                     document.getElementById('live-down').innerText = "$"+(d.totalDown||0).toLocaleString();
                 }
             });
-            
-            // Calculate today stats from transactions if needed, strictly from admin_requests usually better for fast loading
         }
 
         // --- REQUESTS LOGIC ---
@@ -721,9 +717,10 @@
             } catch(e) { alert("Lỗi: "+e.message); }
         };
 
-        // --- PROMO LOGIC ---
+        // --- FIX 1: DÙNG ĐÚNG COLLECTION "promo_requests" ---
         function loadPromotions() {
-            onSnapshot(query(collection(db, "promotion_requests"), orderBy("timestamp", "desc")), snap => {
+            // FIX: promotion_requests -> promo_requests
+            onSnapshot(query(collection(db, "promo_requests"), orderBy("timestamp", "desc")), snap => {
                 allPromos = [];
                 let pending = 0;
                 snap.forEach(d => {
@@ -787,7 +784,8 @@
         window.approvePromo = async (pid, btn) => {
             if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
             try {
-                const pRef = doc(db, "promotion_requests", pid);
+                // FIX: promotion_requests -> promo_requests
+                const pRef = doc(db, "promo_requests", pid);
                 const pSnap = await getDoc(pRef);
                 if(!pSnap.exists() || pSnap.data().status !== 'pending') return;
                 const pData = pSnap.data();
@@ -813,7 +811,8 @@
         };
 
         window.rejectPromo = async (pid) => {
-            if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promotion_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() });
+            // FIX: promotion_requests -> promo_requests
+            if(confirm("Từ chối KM này?")) await updateDoc(doc(db, "promo_requests", pid), { status: 'rejected', rejectedAt: serverTimestamp() });
         };
 
         // --- USERS LOGIC ---
@@ -835,7 +834,6 @@
                     </tr>`;
                 });
                 
-                // --- FIX: CODE ĐẦY ĐỦ KHÔNG CẮT ---
                 document.getElementById('table-users').innerHTML = html || '<tr><td colspan="5" class="text-center p-4 text-slate-500">Chưa có user</td></tr>';
                 document.getElementById('stat-users').innerText = allUsers.length;
                 document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
