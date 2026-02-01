@@ -849,14 +849,18 @@
             });
         };
 
+        // --- FIX CRITICAL ERROR HERE ---
+        // Sửa hàm openUserEdit đầy đủ, không bị cắt dở
         window.openUserEdit = (uid) => {
             const u = allUsers.find(x => x.id === uid);
             if(!u) return;
+
             document.getElementById('edit-user-id').value = uid;
             document.getElementById('edit-fullname').value = u.fullName || '';
             document.getElementById('edit-phone').value = u.phone || '';
             document.getElementById('edit-bank').value = u.bankName || '';
-            document.getElementById('edit-current-bal').innerText = "$"+(u.balance||0).toLocaleString();
+            document.getElementById('edit-current-bal').innerText = "$" + (u.balance || 0).toLocaleString();
+
             document.getElementById('edit-adjust-bal').value = '';
             document.getElementById('modal-user-edit').classList.add('active');
         };
