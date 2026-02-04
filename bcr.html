@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Baccarat Pro - Wallet & History Synced</title>
+    <title>Baccarat Pro - Session Recovery</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     
@@ -128,6 +128,7 @@
             <div class="transform scale-90 transition-transform duration-300 text-center" id="resultCard">
                 <div class="text-4xl font-black uppercase tracking-widest drop-shadow-lg mb-2" id="resTitle">WINNER</div>
                 <div class="text-2xl font-mono text-amber-400 font-bold" id="resMoney">+0 ₫</div>
+                <div id="recoveryMsg" class="text-xs text-amber-300 mt-2 font-bold hidden">KẾT QUẢ VÁN TREO</div>
             </div>
         </div>
     </div>
@@ -218,6 +219,15 @@
         const ROUNDS_PER_SHOE = 70;
         const SHUFFLE_ROUNDS = 2;
 
+        // --- LOCAL STORAGE HELPERS FOR RECOVERY ---
+        const RECOVERY_KEY = 'crownex_bcr_pending_bet';
+        const savePendingBet = (data) => localStorage.setItem(RECOVERY_KEY, JSON.stringify(data));
+        const getPendingBet = () => {
+            const data = localStorage.getItem(RECOVERY_KEY);
+            return data ? JSON.parse(data) : null;
+        };
+        const clearPendingBet = () => localStorage.removeItem(RECOVERY_KEY);
+
         function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
 
         class Card {
@@ -271,6 +281,8 @@
         const app = {
             engine: new ShoeEngine(),
             state: 'INIT',
+            currentShoeId: 0,
+            currentRoundInShoe: 0,
             currentRoundStr: "",
             balanceUSD: 0, 
             bet: { P:0, B:0, T:0 },
@@ -284,6 +296,9 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) { currentUser = user; this.listenBalance(user.uid); }
                     else await signInAnonymously(auth);
+                    
+                    // CHECK RECOVERY AFTER LOGIN
+                    this.checkRecovery();
                 });
                 this.loop();
             },
@@ -294,6 +309,59 @@
                     else { setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceUSD = 0; }
                     game.updateBal();
                 });
+            },
+
+            // --- RECOVERY LOGIC ---
+            checkRecovery() {
+                const pending = getPendingBet();
+                if (pending && pending.userId === currentUser.uid) {
+                    console.log("Found pending bet:", pending);
+                    
+                    // RE-CALCULATE RESULT OF THE PENDING ROUND
+                    // We need a temporary engine instance to simulate that specific round state
+                    const tempEngine = new ShoeEngine();
+                    // Rebuild shoe state up to that round
+                    tempEngine.simulateToRound(pending.shoeId, pending.roundInShoe);
+                    // Play the actual pending round
+                    const res = tempEngine.playSingleRound();
+                    
+                    if (res) {
+                        let winVND = 0;
+                        if (res.winner === 'P') winVND = pending.bets.P * 2;
+                        else if (res.winner === 'B') winVND = pending.bets.B * 1.95;
+                        else if (res.winner === 'T') winVND = (pending.bets.T * 9) + pending.bets.P + pending.bets.B;
+                        if (res.winner === 'T' && winVND === 0) winVND = pending.bets.P + pending.bets.B; // Tie refund
+
+                        if (winVND > 0) {
+                            const winUSD = winVND / EXCHANGE_RATE;
+                            this.addWin(winUSD);
+                            
+                            // Show Result Modal
+                            const ov = document.getElementById('resultOverlay');
+                            const t = document.getElementById('resTitle');
+                            const m = document.getElementById('resMoney');
+                            t.innerText = "KẾT QUẢ VÁN TRƯỚC";
+                            m.innerText = "+" + winVND.toLocaleString() + " ₫";
+                            m.className = "text-xl font-mono font-bold text-amber-400";
+                            document.getElementById('recoveryMsg').classList.remove('hidden');
+                            ov.classList.remove('hidden');
+                            setTimeout(()=>{
+                                ov.classList.remove('opacity-0'); 
+                                ov.classList.add('flex','opacity-100');
+                                setTimeout(() => {
+                                    ov.classList.add('hidden');
+                                    document.getElementById('recoveryMsg').classList.add('hidden');
+                                }, 4000);
+                            },10);
+                        }
+                        
+                        // Save History for the recovered round
+                        this.saveHistory(pending.bets, res.winner, pending.roundIdStr);
+                    }
+                    
+                    // Clear pending bet after processing
+                    clearPendingBet();
+                }
             },
 
             getTimeData() {
@@ -311,6 +379,10 @@
             loop() {
                 requestAnimationFrame(() => this.loop());
                 const t = this.getTimeData();
+                
+                // Store current IDs for recovery logic
+                this.currentShoeId = t.shoeId;
+                this.currentRoundInShoe = t.roundInShoe;
 
                 if (t.str !== this.currentRoundStr) {
                     this.currentRoundStr = t.str;
@@ -327,6 +399,7 @@
                         this.bet = {P:0,B:0,T:0};
                         game.renderChips();
                         const cardsLeft = this.engine.simulateToRound(t.shoeId, t.roundInShoe);
+                        // Sync History logic if needed
                         if (this.history.length === 0 || t.roundInShoe === 0) this.generateHistory(t.shoeId, t.roundInShoe);
                     }
                 }
@@ -381,12 +454,13 @@
             resolveRound() {
                 const res = this.engine.playSingleRound();
                 game.playAnimation(res).then(() => {
+                    // CLEAR PENDING BET AS ROUND IS RESOLVED NORMALLY
+                    clearPendingBet();
+
                     let winVND = 0;
                     
-                    // SAVE HISTORY & CALC PROFIT
                     const activeBets = { ...this.bet };
                     
-                    // 1. CALCULATE WINNINGS
                     if (res.winner === 'P') winVND = this.bet.P * 2;
                     else if (res.winner === 'B') winVND = this.bet.B * 1.95;
                     else if (res.winner === 'T') winVND = (this.bet.T * 9) + this.bet.P + this.bet.B;
@@ -399,8 +473,7 @@
                         game.showFloat(document.getElementById(zone), `+${(winVND/1000).toLocaleString()}k`, 'win');
                     }
                     
-                    // 2. SAVE INDIVIDUAL BET HISTORY TO FIREBASE
-                    this.saveHistory(activeBets, res.winner);
+                    this.saveHistory(activeBets, res.winner, this.currentRoundStr);
 
                     const profitVND = winVND - (this.bet.P + this.bet.B + this.bet.T);
                     game.showResult(res.winner, profitVND);
@@ -411,17 +484,16 @@
                 });
             },
 
-            async saveHistory(bets, winner) {
+            async saveHistory(bets, winner, sessionId) {
                 if (!currentUser) return;
                 
-                // Iterate through bets (P, B, T) and save if amount > 0
                 for (const [choice, amount] of Object.entries(bets)) {
                     if (amount > 0) {
                         let winAmount = 0;
                         if (choice === 'P' && winner === 'P') winAmount = amount * 2;
                         else if (choice === 'B' && winner === 'B') winAmount = amount * 1.95;
                         else if (choice === 'T' && winner === 'T') winAmount = amount * 9;
-                        else if (winner === 'T' && choice !== 'T') winAmount = amount; // Refund on Tie
+                        else if (winner === 'T' && choice !== 'T') winAmount = amount; 
 
                         const profit = winAmount - amount;
 
@@ -433,7 +505,7 @@
                                 winner: winner,
                                 winAmount: winAmount,
                                 profit: profit,
-                                sessionId: this.currentRoundStr
+                                sessionId: sessionId
                             });
                         } catch (e) {
                             console.error("Error saving history:", e);
@@ -490,6 +562,19 @@
                 this.showFloat(document.getElementById('balanceContainer'), `-${(totVND/1000).toLocaleString()}k`, 'loss');
                 
                 app.bet.P+=app.pend.P; app.bet.B+=app.pend.B; app.bet.T+=app.pend.T;
+                
+                // --- SAVE PENDING BET FOR RECOVERY ---
+                if (currentUser) {
+                    savePendingBet({
+                        userId: currentUser.uid,
+                        bets: { ...app.bet },
+                        shoeId: app.currentShoeId,
+                        roundInShoe: app.currentRoundInShoe,
+                        roundIdStr: app.currentRoundStr,
+                        timestamp: Date.now()
+                    });
+                }
+
                 app.pend={P:0,B:0,T:0};
                 this.renderChips();
             },
