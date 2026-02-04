@@ -59,7 +59,7 @@
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (Vẫn giữ code để JS cập nhật data ngầm, nhưng không có nút mở) -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
@@ -85,10 +85,13 @@
         </div>
     </div>
 
-    <!-- HEADER (Giữ nguyên cấu trúc: 3 gạch & Ví tiền) -->
+    <!-- HEADER (Đã thay nút Menu bằng nút Back về taikhoan.html) -->
     <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] sticky top-0 z-20">
         <div class="flex items-center gap-4">
-            <button onclick="toggleMenu()" class="text-[#9ca3af] hover:text-white transition"><i class="fa-solid fa-bars-staggered text-xl"></i></button>
+            <!-- NÚT THOÁT VỀ TÀI KHOẢN -->
+            <a href="taikhoan.html" class="text-[#9ca3af] hover:text-white transition w-8 h-8 flex items-center justify-center active:scale-90">
+                <i class="fa-solid fa-chevron-left text-xl"></i>
+            </a>
             <span class="text-white font-bold text-lg tracking-wide">VÍ TIỀN</span>
         </div>
         <div class="bg-[#1e232e] px-3 py-1.5 rounded-lg border border-[#2d3442] flex items-center gap-2">
