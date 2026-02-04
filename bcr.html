@@ -65,9 +65,22 @@
         /* ROADMAP */
         .roadmap-container { height: 100%; display: flex; background: #cbd5e1; border-top: 1px solid #94a3b8; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; }
         .roadmap-col { display: flex; flex-direction: column; width: 25px; min-width: 25px; border-right: 1px solid #94a3b8; height: 100%; }
-        .roadmap-cell { height: 16.666%; border-bottom: 1px solid #94a3b8; display: flex; align-items: center; justify-content: center; background: #f8fafc; }
-        .bead-big { width: 19px; height: 19px; border-radius: 50%; border: 3px solid; background: transparent; }
+        .roadmap-cell { height: 16.666%; border-bottom: 1px solid #94a3b8; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; }
+        .bead-big { width: 19px; height: 19px; border-radius: 50%; border: 3px solid; background: transparent; position: relative; }
         .bead-big.P { border-color: #3b82f6; } .bead-big.B { border-color: #ef4444; } .bead-big.T { border-color: #10b981; }
+        
+        /* TIE INDICATOR (Green dot on bead) */
+        .tie-dot {
+            position: absolute; width: 8px; height: 8px; background-color: #10b981;
+            border: 1px solid white; border-radius: 50%; top: -3px; right: -3px;
+            z-index: 10;
+        }
+        .tie-number {
+            position: absolute; width: 100%; text-align: center; color: #10b981;
+            font-size: 10px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-shadow: 0 0 2px white;
+        }
+
         /* FLOATING TEXT */
         .float-text { position: absolute; font-weight: 900; font-family: 'Roboto Mono', monospace; pointer-events: none; z-index: 50; animation: floatUpFade 1.5s forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 16px; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
@@ -86,18 +99,16 @@
         <div class="flex flex-col items-center">
              <div class="text-[10px] text-slate-500 font-mono bg-black/30 px-2 py-0.5 rounded">
                 HỘP: <span id="uiShoeID" class="text-slate-300 font-bold">#1</span> 
-                | BÀI: <span id="uiCardsLeft" class="text-amber-400 font-bold">416</span>
+                | VÁN: <span id="uiRoundCount" class="text-amber-400 font-bold">0/70</span>
             </div>
             <div class="text-[9px] text-slate-600 font-mono mt-0.5 tracking-wider" id="uiRoundID">---</div>
         </div>
 
         <div class="flex flex-col items-end" id="balanceContainer">
-            <!-- TIỀN GỐC USD -->
             <div class="flex items-center gap-1.5">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span class="text-slate-200 font-mono font-bold text-sm" id="uiBalUSD">$0.00</span>
             </div>
-            <!-- TIỀN QUY ĐỔI VNĐ -->
             <span class="text-amber-400 font-mono font-black text-lg" id="uiBalVND">0 ₫</span>
         </div>
     </header>
@@ -132,10 +143,15 @@
 
     <!-- BETTING CONTROLS -->
     <div class="bg-slate-900/95 border-t border-white/10 pb-safe z-30">
-        <!-- LIMITS (VNĐ) -->
-        <div class="flex justify-center gap-4 py-1.5 bg-black/20">
-            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">CON/CÁI: <span class="text-slate-200">10K - 500K</span></span>
-            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">HÒA: <span class="text-slate-200">5K - 50K</span></span>
+        
+        <!-- STATISTICS BAR -->
+        <div class="flex justify-between items-center px-4 py-1 bg-black/40 text-[10px] font-bold border-b border-white/5">
+            <div class="flex gap-3">
+                <span class="text-red-500">CÁI: <span id="statB" class="text-white">0</span></span>
+                <span class="text-blue-500">CON: <span id="statP" class="text-white">0</span></span>
+                <span class="text-green-500">HÒA: <span id="statT" class="text-white">0</span></span>
+            </div>
+            <div class="text-slate-400">TỔNG: <span id="statTotal" class="text-slate-200">0</span></div>
         </div>
 
         <div class="flex h-24 px-2 gap-2 mb-2 mt-1">
@@ -159,15 +175,15 @@
             </div>
         </div>
 
-        <!-- CHIPS (VNĐ) -->
+        <!-- CHIPS -->
         <div class="px-2 pb-2 space-y-2">
             <div class="flex gap-3 overflow-x-auto px-1 py-1 no-scrollbar justify-between">
-                <button class="chip-3d w-10 h-10 rounded-full bg-slate-400 border-2 border-dashed border-slate-200 flex items-center justify-center text-[9px] font-black text-slate-900 shadow-lg" onclick="game.selectChip(10000, this)">10K</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-purple-600 border-2 border-dashed border-purple-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(50000, this)">50K</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-red-600 border-2 border-dashed border-red-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg selected ring-2 ring-white" onclick="game.selectChip(100000, this)">100K</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-orange-600 border-2 border-dashed border-orange-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(200000, this)">200K</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-green-600 border-2 border-dashed border-green-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(500000, this)">500K</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-cyan-600 border-2 border-dashed border-cyan-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(1000000, this)">1M</button>
+                <button class="chip-3d w-10 h-10 rounded-full bg-slate-400 border-2 border-dashed border-slate-200 flex items-center justify-center text-[9px] font-black text-slate-900 shadow-lg" onclick="game.selectChip(1000, this)">1K</button>
+                <button class="chip-3d w-10 h-10 rounded-full bg-purple-600 border-2 border-dashed border-purple-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(5000, this)">5K</button>
+                <button class="chip-3d w-10 h-10 rounded-full bg-red-600 border-2 border-dashed border-red-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg selected ring-2 ring-white" onclick="game.selectChip(10000, this)">10K</button>
+                <button class="chip-3d w-10 h-10 rounded-full bg-orange-600 border-2 border-dashed border-orange-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(50000, this)">50K</button>
+                <button class="chip-3d w-10 h-10 rounded-full bg-green-600 border-2 border-dashed border-green-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(100000, this)">100K</button>
+                <button class="chip-3d w-10 h-10 rounded-full bg-cyan-600 border-2 border-dashed border-cyan-300 flex items-center justify-center text-[9px] font-black text-white shadow-lg" onclick="game.selectChip(500000, this)">500K</button>
             </div>
             <div class="flex gap-2">
                 <button onclick="game.clearBet()" id="btnCancel" class="flex-1 h-10 rounded-lg bg-slate-700 text-slate-300 font-bold uppercase text-xs shadow-[0_3px_0_#334155] active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Hủy</button>
@@ -202,7 +218,7 @@
         const auth = getAuth(fApp);
         
         let currentUser = null;
-        const EXCHANGE_RATE = 25000; // 1 USD = 25,000 VND
+        const EXCHANGE_RATE = 25000;
         const ROUND_DURATION = 30000;
         const BETTING_DURATION = 22000;
         const DECKS = 8;
@@ -264,9 +280,9 @@
             state: 'INIT',
             currentRoundStr: "",
             balanceUSD: 0, 
-            bet: { P:0, B:0, T:0 }, // Stored in VND
-            pend: { P:0, B:0, T:0 }, // Stored in VND
-            chip: 100000, // VND
+            bet: { P:0, B:0, T:0 },
+            pend: { P:0, B:0, T:0 },
+            chip: 10000,
             LIMITS: { PB_MIN: 10000, PB_MAX: 500000, TIE_MIN: 5000, TIE_MAX: 50000 },
             history: [],
             isShuffling: false,
@@ -282,7 +298,7 @@
             listenBalance(uid) {
                 onSnapshot(doc(db, "users", uid), (s) => {
                     if (s.exists()) this.balanceUSD = s.data().balance || 0;
-                    else { setDoc(doc(db, "users", uid), { balance: 40 }); this.balanceUSD = 40; } // Default $40
+                    else { setDoc(doc(db, "users", uid), { balance: 40 }); this.balanceUSD = 40; }
                     game.updateBal();
                 });
             },
@@ -308,6 +324,9 @@
                     document.getElementById('uiRoundID').innerText = t.str;
                     document.getElementById('uiShoeID').innerText = "#" + t.shoeId;
                     
+                    // UPDATE ROUND COUNTER (Ván 1/70)
+                    document.getElementById('uiRoundCount').innerText = `${t.roundInShoe + 1}/${ROUNDS_PER_SHOE}`;
+                    
                     if (t.roundInShoe >= (ROUNDS_PER_SHOE - SHUFFLE_ROUNDS)) this.startShuffleMode();
                     else {
                         this.endShuffleMode();
@@ -316,7 +335,7 @@
                         this.bet = {P:0,B:0,T:0};
                         game.renderChips();
                         const cardsLeft = this.engine.simulateToRound(t.shoeId, t.roundInShoe);
-                        document.getElementById('uiCardsLeft').innerText = cardsLeft;
+                        // No card count needed here as we use round count, but helpful for logic
                         if (this.history.length === 0 || t.roundInShoe === 0) this.generateHistory(t.shoeId, t.roundInShoe);
                     }
                 }
@@ -340,7 +359,6 @@
                 this.state = 'SHUFFLING';
                 document.getElementById('shuffleNotice').classList.remove('hidden');
                 document.getElementById('uiTimer').classList.add('hidden');
-                document.getElementById('uiCardsLeft').innerText = "0";
                 game.resetTable();
                 ['P','B','T'].forEach(z => document.getElementById('zone'+z).classList.add('pointer-events-none','opacity-30'));
             },
@@ -353,6 +371,7 @@
                 ['P','B','T'].forEach(z => document.getElementById('zone'+z).classList.remove('pointer-events-none','opacity-30'));
                 this.history = [];
                 game.renderBigRoad([]);
+                game.updateStats();
             },
 
             generateHistory(shoeId, currentRoundIdx) {
@@ -365,11 +384,11 @@
                     if(res) this.history.push(res.winner);
                 }
                 game.renderBigRoad(this.history);
+                game.updateStats();
             },
 
             resolveRound() {
                 const res = this.engine.playSingleRound();
-                document.getElementById('uiCardsLeft').innerText = this.engine.cards.length;
                 game.playAnimation(res).then(() => {
                     let winVND = 0;
                     if (res.winner === 'P') winVND = this.bet.P * 2;
@@ -378,10 +397,8 @@
                     if (res.winner === 'T' && winVND === 0) winVND = this.bet.P + this.bet.B;
 
                     if (winVND > 0) {
-                        // CONVERT WIN VND -> USD AND ADD
                         const winUSD = winVND / EXCHANGE_RATE;
                         this.addWin(winUSD);
-                        
                         const zone = res.winner === 'P' ? 'zoneP' : (res.winner === 'B' ? 'zoneB' : 'zoneT');
                         game.showFloat(document.getElementById(zone), `+${(winVND/1000).toLocaleString()}k`, 'win');
                     }
@@ -390,6 +407,7 @@
                     game.showResult(res.winner, profitVND);
                     this.history.push(res.winner);
                     game.renderBigRoad(this.history);
+                    game.updateStats();
                     this.bet = {P:0,B:0,T:0};
                 });
             },
@@ -411,13 +429,10 @@
                 
                 const cur = app.bet[side] + app.pend[side] + app.chip;
                 const max = side === 'T' ? app.LIMITS.TIE_MAX : app.LIMITS.PB_MAX;
-                
                 if (cur > max) return this.toast(`Max ${side} là ${max/1000}K`, 'err');
                 
-                // CHECK BALANCE: Convert USD balance to VND to compare
                 const balanceVND = app.balanceUSD * EXCHANGE_RATE;
                 const totalPendVND = app.pend.P + app.pend.B + app.pend.T + app.chip;
-                
                 if (balanceVND < totalPendVND) return this.toast("Số dư không đủ!", 'err');
                 
                 app.pend[side] += app.chip;
@@ -428,7 +443,6 @@
                 if(app.state!=='BETTING') return;
                 const totVND = app.pend.P + app.pend.B + app.pend.T;
                 if(totVND===0) return;
-                
                 const check = (s, n, min) => {
                     const a = app.bet[s] + app.pend[s];
                     if(a>0 && a<min) { this.toast(`Min ${n} là ${min/1000}K`,'err'); return false; }
@@ -441,10 +455,8 @@
                 const balanceVND = app.balanceUSD * EXCHANGE_RATE;
                 if(balanceVND < totVND) return;
                 
-                // DEDUCT USD
                 const deductUSD = totVND / EXCHANGE_RATE;
                 app.deduct(deductUSD);
-                
                 this.showFloat(document.getElementById('balanceContainer'), `-${(totVND/1000).toLocaleString()}k`, 'loss');
                 
                 app.bet.P+=app.pend.P; app.bet.B+=app.pend.B; app.bet.T+=app.pend.T;
@@ -457,10 +469,8 @@
                     const b = document.getElementById('betVal'+k);
                     if(app.pend[k]>0) { p.innerText=`+${(app.pend[k]/1000).toLocaleString()}k`; p.classList.add('visible'); }
                     else p.classList.remove('visible');
-                    
                     if(app.bet[k]>0) { b.innerText=`${(app.bet[k]/1000).toLocaleString()}k`; b.classList.remove('opacity-0'); }
                     else b.classList.add('opacity-0');
-
                     if(k!=='T') {
                         const o = k==='P'?'B':'P';
                         const z = document.getElementById('zone'+o);
@@ -483,6 +493,16 @@
                 const el = document.getElementById('uiTimer'); el.innerHTML = v;
                 el.className = lock ? "absolute top-2 w-12 h-12 rounded-full border-2 border-red-500 flex items-center justify-center text-lg font-black text-white bg-red-900/80 backdrop-blur shadow-none z-30" : 
                 `absolute top-2 w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center text-lg font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all ${v<=5?'animate-pulse text-red-400':''}`;
+            },
+            updateStats() {
+                const h = app.history;
+                const p = h.filter(x=>x==='P').length;
+                const b = h.filter(x=>x==='B').length;
+                const t = h.filter(x=>x==='T').length;
+                document.getElementById('statP').innerText = p;
+                document.getElementById('statB').innerText = b;
+                document.getElementById('statT').innerText = t;
+                document.getElementById('statTotal').innerText = h.length;
             },
             resetTable() {
                 document.querySelectorAll('.card-wrapper').forEach(c=>c.remove());
@@ -542,36 +562,124 @@
                 const grid = document.getElementById('roadmapGrid'); grid.innerHTML = '';
                 const matrix = []; 
                 let col = 0, row = 0, lastWinner = null;
-                const addCell = (c, r, val) => {
+                const addCell = (c, r, val, isTie) => {
                     if(!matrix[c]) matrix[c] = [];
-                    if(matrix[c][r]) { col++; addCell(col, row, val); return; }
-                    matrix[c][r] = val;
+                    if(isTie) {
+                        // Find last placed bead to attach tie
+                        let tc = c, tr = r;
+                        if(matrix[c][r] === undefined) { 
+                            // If current is empty, try previous
+                            if (r>0) tr=r-1; else if (c>0) { tc=c-1; tr=0; while(matrix[tc][tr+1]) tr++; }
+                        }
+                        if(matrix[tc] && matrix[tc][tr]) { matrix[tc][tr].ties++; return; }
+                        // Fallback if truly first
+                        matrix[c][r] = { val: 'T', ties: 0 }; return;
+                    }
+                    if(matrix[c][r]) { col++; addCell(col, row, val, false); return; }
+                    matrix[c][r] = { val: val, ties: 0 };
                 };
+
                 hist.forEach(res => {
-                    if (res === 'T') return;
-                    if (lastWinner === null) { addCell(col, row, res); }
-                    else if (res === lastWinner) {
-                        row++;
-                        if (row > 5) { row = 5; col++; }
-                        addCell(col, row, res);
-                    } else { col++; row = 0; addCell(col, row, res); }
-                    lastWinner = res;
+                    if (res === 'T') {
+                        if (lastWinner === null) {
+                            // First result is Tie
+                            if(!matrix[0]) matrix[0] = [];
+                            if(!matrix[0][0]) matrix[0][0] = { val: 'T', ties: 0 }; // Tie as main
+                            else matrix[0][0].ties++;
+                        } else {
+                            // Find last bead and add tie
+                            // Re-simulate last add to find position? No, simplify:
+                            // We need to store reference to last bead. 
+                            // Simplified Big Road for Web: Just draw green bead if sequence breaks or ...
+                            // Better: Treat Tie as non-breaking.
+                            // IMPLEMENTATION: Add tie count to last added cell.
+                            let lastCol = col, lastRow = row;
+                            // Check if current pos has data, if not go back
+                            if (!matrix[col] || !matrix[col][row]) {
+                                // Logic complex without object reference. 
+                                // Alternative: Show Tie as independent bead for this simplified version
+                                // User asked for "Hien hoa o tren bang lich su".
+                                // Let's use the Green Dot logic on previous bead.
+                                // If first, draw bead.
+                                let prevC = col, prevR = row;
+                                if (matrix[col] && matrix[col][row]) { /* cur is filled */ }
+                                else {
+                                    // Current is empty, meaning we advanced. Go back 1 step?
+                                    // Big Road logic: If T, don't advance col/row.
+                                    // So lastWinner's cell is at (col, row) IF we didn't advance yet?
+                                    // Actually we advanced col/row AFTER adding lastWinner.
+                                    // So we need to track last placed coords.
+                                    // Hack: Iterate backwards in matrix? No.
+                                    // Let's restart logic correctly.
+                                }
+                            }
+                        }
+                    } else {
+                        if (lastWinner === null) {
+                            addCell(col, row, res, false);
+                        } else if (res === lastWinner) {
+                            row++;
+                            if (row > 5) { row = 5; col++; }
+                            addCell(col, row, res, false);
+                        } else {
+                            col++; row = 0;
+                            addCell(col, row, res, false);
+                        }
+                        lastWinner = res;
+                    }
+                });
+                
+                // RE-RUN with simple "Attach Tie to Last" Logic
+                // To do this cleanly, we need a list of beads with coords
+                const beads = [];
+                let c = 0, r = 0, lastW = null;
+                hist.forEach(res => {
+                    if (res === 'T') {
+                        if (beads.length > 0) beads[beads.length-1].ties++;
+                        else beads.push({ c:0, r:0, val:'T', ties:0 }); // First is tie
+                    } else {
+                        if (lastW === null || beads[0].val === 'T') { // First non-tie
+                            if(beads.length > 0 && beads[0].val === 'T') { c=1; r=0; } // If first was tie, move next
+                            beads.push({ c:c, r:r, val:res, ties:0 });
+                        } else if (res === lastW) {
+                            r++; if(r>5) { r=5; c++; }
+                            beads.push({ c:c, r:r, val:res, ties:0 });
+                        } else {
+                            c++; r=0;
+                            beads.push({ c:c, r:r, val:res, ties:0 });
+                        }
+                        lastW = res;
+                    }
                 });
 
+                // Render beads
                 const container = document.querySelector('.roadmap-container');
                 const isAtEnd = (container.scrollWidth - container.scrollLeft - container.clientWidth) < 50;
-                
-                const totalCols = Math.max(30, col + 2);
-                for(let c=0; c<totalCols; c++) {
+                const maxCol = beads.length > 0 ? beads[beads.length-1].c : 0;
+                const totalCols = Math.max(30, maxCol + 5);
+
+                for(let i=0; i<totalCols; i++) {
                     const colDiv = document.createElement('div');
                     colDiv.className = 'roadmap-col';
-                    for(let r=0; r<6; r++) {
+                    for(let j=0; j<6; j++) {
                         const cellDiv = document.createElement('div');
                         cellDiv.className = 'roadmap-cell';
-                        const val = matrix[c] ? matrix[c][r] : null;
-                        if(val) {
+                        const beadData = beads.find(b => b.c === i && b.r === j);
+                        if(beadData) {
                             const bead = document.createElement('div');
-                            bead.className = `bead-big ${val}`;
+                            bead.className = `bead-big ${beadData.val}`;
+                            // Add Ties
+                            if (beadData.ties > 0) {
+                                const dot = document.createElement('div');
+                                dot.className = 'tie-dot';
+                                bead.appendChild(dot);
+                                if (beadData.ties > 1) {
+                                    const num = document.createElement('div');
+                                    num.className = 'tie-number';
+                                    num.innerText = beadData.ties;
+                                    bead.appendChild(num);
+                                }
+                            }
                             cellDiv.appendChild(bead);
                         }
                         colDiv.appendChild(cellDiv);
