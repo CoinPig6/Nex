@@ -12,8 +12,15 @@
         html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        
+        /* COLORS */
         .text-up { color: #0ECB81; } .bg-up { background-color: #0ECB81; }
         .text-down { color: #F6465D; } .bg-down { background-color: #F6465D; }
+        
+        /* Baccarat Specific Colors */
+        .text-player { color: #3b82f6; } /* Xanh dương */
+        .text-banker { color: #ef4444; } /* Đỏ */
+        .text-tie { color: #10b981; }    /* Xanh lá */
 
         /* SIDEBAR STYLES */
         #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -21,6 +28,21 @@
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
         .menu-item i { width: 20px; text-align: center; }
+
+        /* TABS */
+        .tab-container {
+            display: flex; background: #13161f; padding: 4px; 
+            border-bottom: 1px solid #2d3442;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold;
+            color: #6b7280; border-radius: 8px; transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .tab-btn.active {
+            background: #232836; color: #FCD535; border-color: #2d3442;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
         /* LIST CARD UI */
         .tech-border {
@@ -36,6 +58,7 @@
         }
         .card-win::before { background-color: #0ECB81; }
         .card-lose::before { background-color: #F6465D; }
+        .card-tie::before { background-color: #10b981; }
         
         .loading-spinner {
             border: 3px solid rgba(255,255,255,0.1); border-radius: 50%;
@@ -80,24 +103,26 @@
             <span class="text-white font-bold text-lg tracking-wide">LỊCH SỬ CƯỢC</span>
         </div>
         <div class="bg-[#1e232e] px-3 py-1 rounded border border-[#2d3442]">
-            <span class="text-[10px] text-gray-400 font-bold uppercase">Hôm nay</span>
+            <span class="text-[10px] text-gray-400 font-bold uppercase">Toàn bộ</span>
         </div>
     </header>
+
+    <!-- TABS -->
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('bo')" id="tab-bo">
+            <i class="fa-solid fa-chart-simple mr-1"></i> BO TRADING
+        </button>
+        <button class="tab-btn" onclick="switchTab('bcr')" id="tab-bcr">
+            <i class="fa-solid fa-cards mr-1"></i> BACCARAT
+        </button>
+    </div>
 
     <!-- THỐNG KÊ LỢI NHUẬN RÒNG -->
     <div class="p-4 pb-0 shrink-0 bg-[#0b0f19]">
         <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] flex flex-col items-center shadow-lg relative overflow-hidden">
             <div class="absolute right-0 top-0 p-2 opacity-10"><i class="fa-solid fa-coins text-5xl text-white"></i></div>
-            <span class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1 z-10">Tổng lợi nhuận (All Time)</span>
+            <span class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1 z-10">Lợi nhuận</span>
             <span class="font-mono font-bold text-3xl z-10" id="netProfitDisplay">---</span>
-        </div>
-        
-        <!-- DÒNG LƯU Ý -->
-        <div class="mt-3 flex items-start gap-2 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
-            <i class="fa-solid fa-circle-info text-[#FCD535] text-xs mt-0.5"></i>
-            <p class="text-[10px] text-gray-400 leading-tight">
-                <span class="text-[#FCD535] font-bold">Lưu ý:</span> Hệ thống đang hiển thị toàn bộ lịch sử (Chế độ Debug).
-            </p>
         </div>
     </div>
 
@@ -106,11 +131,10 @@
         <div class="loading-spinner" id="mainSpinner"></div>
     </div>
 
-    <!-- LOGIC ĐÃ SỬA: ROOT COLLECTION + WHERE -->
+    <!-- LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        // Import thêm 'where' để lọc theo uid
         import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -126,6 +150,8 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        let currentUID = null;
+        let currentTab = 'bo'; 
 
         // --- SIDEBAR LOGIC ---
         window.toggleMenu = () => {
@@ -141,53 +167,58 @@
             });
         };
 
-        const localUser = JSON.parse(localStorage.getItem('crownex_user_info'));
-        if(localUser) {
-            document.getElementById('sidebarUsername').innerText = localUser.fullName || localUser.username || "Member";
-        }
+        // --- TAB LOGIC ---
+        window.switchTab = (tab) => {
+            if (currentTab === tab) return;
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            if (currentUID) {
+                document.getElementById('historyList').innerHTML = '<div class="loading-spinner"></div>';
+                loadHistory(currentUID);
+            }
+        };
 
+        // --- AUTH & LOAD ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Tự động load khi có user
+                currentUID = user.uid;
+                const localUser = JSON.parse(localStorage.getItem('crownex_user_info'));
+                if(localUser) document.getElementById('sidebarUsername').innerText = localUser.fullName || localUser.username;
                 loadHistory(user.uid);
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // --- HÀM LOAD HISTORY ĐÃ SỬA ---
+        // --- DATA LOADING ---
         async function loadHistory(uid) {
             const listEl = document.getElementById('historyList');
             const netEl = document.getElementById('netProfitDisplay');
-            const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+            
+            const collectionName = currentTab === 'bo' ? 'betHistory' : 'baccaratHistory';
 
             try {
-                console.log("Đang tải dữ liệu từ betHistory cho uid:", uid);
-                
-                // QUERY MỚI: Truy vấn collection gốc 'betHistory', lọc theo field 'uid'
                 const q = query(
-                    collection(db, "users", uid, "betHistory"),
+                    collection(db, "users", uid, collectionName),
                     orderBy("timestamp", "desc"), 
-                    limit(100)
+                    limit(50)
                 );
                 
                 const querySnapshot = await getDocs(q);
 
-                // Log để kiểm tra (F12)
-                console.log("Số lượng bản ghi tìm thấy:", querySnapshot.size); 
-
                 if (querySnapshot.empty) {
-                    showEmptyState(listEl, netEl, "Chưa tìm thấy lịch sử cược.");
+                    showEmptyState(listEl, netEl, `Chưa có giao dịch ${currentTab.toUpperCase()} nào.`);
                     return;
                 }
 
                 let html = '';
                 let netProfit = 0;
-                let hasDataDisplay = false;
 
                 querySnapshot.forEach((doc) => {
-                    const data = doc.data({ serverTimestamps: 'estimate' });
-                    
+                    const data = doc.data();
                     let ts = Date.now();
                     if (data.timestamp) {
                         if (typeof data.timestamp.toMillis === 'function') ts = data.timestamp.toMillis();
@@ -195,76 +226,120 @@
                         else if (typeof data.timestamp === 'number') ts = data.timestamp;
                     }
 
-                    // Tạm thời comment bộ lọc 24h để đảm bảo hiện dữ liệu
-                    // if (ts < oneDayAgo) return; 
-                    
-                    hasDataDisplay = true;
-
-                    const isWin = data.result === 'win';
                     const amount = parseFloat(data.amount) || 0;
-                    const profit = parseFloat(data.profit) || 0;
-
-                    if(isWin) netProfit += profit;
-                    else netProfit -= amount;
-
-                    const date = new Date(ts);
-                    const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
-                    const dateStr = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
-                    const sessionID = data.sessionId || doc.id.substring(0,6);
-
-                    html += `
-                        <div class="tech-border p-3 flex justify-between items-center ${isWin ? 'card-win' : 'card-lose'}">
-                            <div class="pl-2">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-black text-sm ${data.type === 'up' ? 'text-up' : 'text-down'} uppercase flex items-center gap-1">
-                                        <i class="fa-solid ${data.type === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
-                                        ${data.type === 'up' ? 'MUA' : 'BÁN'}
-                                    </span>
-                                    <span class="text-[9px] bg-[#232836] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-400 font-mono tracking-tight">
-                                        #${sessionID}
-                                    </span>
-                                </div>
-                                <div class="text-[10px] text-gray-500 font-mono flex gap-2">
-                                    <span><i class="fa-regular fa-clock mr-1"></i>${timeStr}</span>
-                                    <span>${dateStr}</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-mono font-bold text-base ${isWin ? 'text-up' : 'text-down'}">
-                                    ${isWin ? '+' : '-'}$${isWin ? profit.toFixed(2) : amount.toFixed(2)}
-                                </div>
-                                <div class="text-[9px] text-gray-400">Cược: $${amount}</div>
-                            </div>
-                        </div>
-                    `;
+                    
+                    if (currentTab === 'bo') {
+                        const isWin = data.result === 'win';
+                        const profit = parseFloat(data.profit) || 0;
+                        if(isWin) netProfit += profit; else netProfit -= amount;
+                        html += renderBOItem(data, ts, isWin, profit, amount, doc.id);
+                    } else {
+                        const winAmount = parseFloat(data.winAmount || 0); 
+                        const profit = winAmount - amount; 
+                        const isWin = profit > 0;
+                        netProfit += profit;
+                        html += renderBaccaratItem(data, ts, profit, amount, doc.id);
+                    }
                 });
 
-                if (!hasDataDisplay) {
-                    showEmptyState(listEl, netEl, "Không hiển thị dữ liệu nào.");
-                } else {
-                    listEl.innerHTML = html;
-                    updateNetProfitDisplay(netEl, netProfit);
-                }
+                listEl.innerHTML = html;
+                updateNetProfitDisplay(netEl, netProfit);
 
             } catch (error) {
-                console.error("Lỗi Firestore:", error);
-                
-                let msg = "Lỗi tải dữ liệu";
-                if(error.message.includes("index")) {
-                    msg = "Thiếu Index (Xem Console lấy link)";
-                }
-
-                netEl.innerText = "$0.00";
-                listEl.innerHTML = `
-                    <div class="flex flex-col items-center justify-center mt-10 p-4 text-center">
-                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 text-red-500"></i>
-                        <span class="text-sm text-red-400 font-bold">${msg}</span>
-                        <span class="text-[10px] text-gray-500 mt-2 font-mono bg-black/30 p-2 rounded break-all">
-                            ${error.message}
-                        </span>
-                        <div class="text-[10px] text-yellow-500 mt-2">Nếu lỗi Index, bấm F12 -> Console -> Click link Firebase</div>
-                    </div>`;
+                console.error(error);
+                let msg = "Lỗi tải dữ liệu. Vui lòng kiểm tra kết nối.";
+                if(error.message.includes("index")) msg = "Đang đồng bộ cơ sở dữ liệu...";
+                showEmptyState(listEl, netEl, msg);
             }
+        }
+
+        // --- RENDER BO ---
+        function renderBOItem(data, ts, isWin, profit, amount, id) {
+            const date = new Date(ts);
+            const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
+            const dateStr = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
+            
+            return `
+                <div class="tech-border p-3 flex justify-between items-center ${isWin ? 'card-win' : 'card-lose'}">
+                    <div class="pl-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-black text-sm ${data.type === 'up' ? 'text-up' : 'text-down'} uppercase flex items-center gap-1">
+                                <i class="fa-solid ${data.type === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
+                                ${data.type === 'up' ? 'MUA' : 'BÁN'}
+                            </span>
+                            <span class="text-[9px] bg-[#232836] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-400 font-mono">#${id.substring(0,6)}</span>
+                        </div>
+                        <div class="text-[10px] text-gray-500 font-mono flex gap-2">
+                            <span><i class="fa-regular fa-clock mr-1"></i>${timeStr}</span>
+                            <span>${dateStr}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-mono font-bold text-base ${isWin ? 'text-up' : 'text-down'}">
+                            ${isWin ? '+' : '-'}$${isWin ? profit.toFixed(2) : amount.toFixed(2)}
+                        </div>
+                        <div class="text-[9px] text-gray-400">Cược: $${amount}</div>
+                    </div>
+                </div>`;
+        }
+
+        // --- RENDER BACCARAT (UPDATED) ---
+        function renderBaccaratItem(data, ts, profit, amount, id) {
+            const date = new Date(ts);
+            const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
+            const dateStr = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
+            
+            let resultClass = 'card-lose';
+            let resultTextClass = 'text-down';
+            let resultSign = '';
+            
+            if (profit > 0) { resultClass = 'card-win'; resultTextClass = 'text-up'; resultSign = '+'; }
+            else if (profit === 0) { resultClass = 'card-tie'; resultTextClass = 'text-white'; }
+            
+            // Xử lý Cửa Cược
+            const bet = data.betChoice || data.bet || '?';
+            let betDisplay = "???";
+            let betColor = "text-gray-400";
+            if (bet === 'P') { betDisplay = "CON (P)"; betColor = "text-player"; }
+            else if (bet === 'B') { betDisplay = "CÁI (B)"; betColor = "text-banker"; }
+            else if (bet === 'T') { betDisplay = "HÒA (T)"; betColor = "text-tie"; }
+
+            // Xử lý Kết Quả Ván (Winner)
+            const winner = data.winner || data.result || '?';
+            let winDisplay = "???";
+            let winColor = "text-gray-500";
+            if (winner === 'P') { winDisplay = "CON"; winColor = "text-player"; }
+            else if (winner === 'B') { winDisplay = "CÁI"; winColor = "text-banker"; }
+            else if (winner === 'T') { winDisplay = "HÒA"; winColor = "text-tie"; }
+
+            return `
+                <div class="tech-border p-3 flex justify-between items-center ${resultClass}">
+                    <div class="pl-2">
+                        <div class="flex flex-col gap-1 mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs text-gray-400">Cược:</span>
+                                <span class="font-black text-sm ${betColor} uppercase">${betDisplay}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs text-gray-400">Về:</span>
+                                <span class="font-black text-sm ${winColor} uppercase">${winDisplay}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[9px] bg-[#232836] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-400 font-mono">#${id.substring(0,6)}</span>
+                            <div class="text-[10px] text-gray-500 font-mono flex gap-2">
+                                <span>${timeStr}</span>
+                                <span>${dateStr}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-mono font-bold text-base ${resultTextClass}">
+                            ${resultSign}$${Math.abs(profit).toFixed(2)}
+                        </div>
+                        <div class="text-[9px] text-gray-400">Vốn: $${amount}</div>
+                    </div>
+                </div>`;
         }
 
         function showEmptyState(listEl, netEl, msg) {
@@ -287,4 +362,5 @@
     </script>
 </body>
 </html>
+
 
