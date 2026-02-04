@@ -69,9 +69,11 @@
             <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch (BO)</a>
+            <!-- THAY ĐỔI: NẠP RÚT -> BACCARAT -->
+            <a href="index.html" class="menu-item"><i class="fa-solid fa-cards"></i> Baccarat</a>
+            
             <a href="taikhoan.html" class="menu-item active"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
-            <a href="naprut.html" class="menu-item"><i class="fa-solid fa-money-bill-transfer"></i> Nạp / Rút tiền</a>
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
             <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
@@ -117,13 +119,16 @@
             <div class="absolute -right-6 -top-6 w-32 h-32 bg-[#FCD535] rounded-full opacity-10 blur-2xl pointer-events-none"></div>
             <div class="relative z-10">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs text-gray-400 font-bold uppercase tracking-widest">Tổng tài sản thực</span>
+                    <span class="text-xs text-gray-400 font-bold uppercase tracking-widest">Tổng tài sản thực (USD)</span>
                     <i class="fa-solid fa-wallet text-[#FCD535]"></i>
                 </div>
-                <div class="text-3xl font-mono font-bold text-white tracking-tight" id="displayBalance">---</div>
+                <div class="text-3xl font-mono font-bold text-white tracking-tight" id="displayBalance">$0.00</div>
+                <div class="text-[10px] text-gray-400 font-mono mt-1" id="displayBalanceVND">≈ 0 VNĐ</div>
+                
                 <div class="mt-4 flex gap-2">
-                    <a href="naprut.html" class="flex-1 bg-[#FCD535] text-[#111] font-bold py-2 rounded text-center text-xs shadow-lg hover:brightness-110 transition">NẠP TIỀN</a>
-                    <a href="naprut.html" class="flex-1 bg-[#1e232e] text-white border border-[#2d3442] font-bold py-2 rounded text-center text-xs hover:bg-[#252b38] transition">RÚT TIỀN</a>
+                    <!-- Link CSKH Telegram cho Nạp/Rút -->
+                    <a href="https://t.me/ad_crownex" target="_blank" class="flex-1 bg-[#FCD535] text-[#111] font-bold py-2 rounded text-center text-xs shadow-lg hover:brightness-110 transition">NẠP TIỀN</a>
+                    <a href="https://t.me/ad_crownex" target="_blank" class="flex-1 bg-[#1e232e] text-white border border-[#2d3442] font-bold py-2 rounded text-center text-xs hover:bg-[#252b38] transition">RÚT TIỀN</a>
                 </div>
             </div>
         </div>
@@ -166,7 +171,7 @@
                 <button onclick="saveBankInfo()" class="btn-save" id="btnSaveBank">
                     <i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH
                 </button>
-                <p class="text-[9px] text-gray-500 mt-2 italic text-center text-red-400">* Lưu ý: Số tài khoản và Ngân hàng không được trùng với tài khoản khác.</p>
+                <p class="text-[9px] text-gray-500 mt-2 italic text-center text-red-400">* Lưu ý: Thông tin ngân hàng không thể thay đổi sau khi lưu.</p>
             </div>
 
             <!-- Thông tin đã lưu -->
@@ -193,7 +198,6 @@
                     <div class="w-8 h-8 rounded-full bg-[#1e232e] flex items-center justify-center text-blue-400"><i class="fa-solid fa-id-card"></i></div>
                     <span class="text-sm font-medium">ID Tài khoản</span>
                 </div>
-                <!-- UPDATED: break-all để hiện full ID -->
                 <span class="text-xs text-gray-400 font-mono break-all text-right w-1/2" id="infoID">...</span>
             </div>
             <div class="list-item">
@@ -235,8 +239,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         let currentUserUID = null;
+        const EXCHANGE_RATE = 25000;
 
-        // Sidebar Logic
         window.toggleMenu = () => {
             const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
             if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
@@ -250,17 +254,12 @@
             });
         };
 
-        // Bank Save Logic
         window.saveBankInfo = async () => {
             const bankName = document.getElementById('bankName').value;
             const bankNumber = document.getElementById('bankNumber').value.trim();
             const bankOwner = document.getElementById('bankOwner').value.trim();
 
-            if (!bankName || !bankNumber) {
-                alert("Vui lòng chọn ngân hàng và nhập số tài khoản!");
-                return;
-            }
-
+            if (!bankName || !bankNumber) { alert("Vui lòng chọn ngân hàng và nhập số tài khoản!"); return; }
             if (!currentUserUID) return;
 
             const btn = document.getElementById('btnSaveBank');
@@ -268,33 +267,25 @@
             btn.disabled = true;
 
             try {
-                // LOGIC KIỂM TRA TRÙNG LẶP: Query xem có ai đã dùng số TK và Ngân hàng này chưa
                 const usersRef = collection(db, "users");
-                // Query tìm người có số tk này (để tối ưu, check số TK trước vì nó unique hơn)
                 const q = query(usersRef, where("bankNumber", "==", bankNumber));
                 const querySnapshot = await getDocs(q);
-
                 let isDuplicate = false;
                 
                 if (!querySnapshot.empty) {
-                    // Nếu tìm thấy số tài khoản này, kiểm tra xem có đúng ngân hàng không
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
-                        // Nếu cùng số tk VÀ cùng tên ngân hàng (và không phải là chính user này đang sửa lại)
-                        if (data.bankName === bankName && doc.id !== currentUserUID) {
-                            isDuplicate = true;
-                        }
+                        if (data.bankName === bankName && doc.id !== currentUserUID) { isDuplicate = true; }
                     });
                 }
 
                 if (isDuplicate) {
-                    alert("LỖI: Số tài khoản này tại ngân hàng " + bankName + " đã được liên kết bởi người khác!");
+                    alert("LỖI: Số tài khoản này đã được liên kết bởi người khác!");
                     btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH';
                     btn.disabled = false;
                     return; 
                 }
 
-                // Nếu không trùng, tiến hành lưu
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG LƯU...';
                 await updateDoc(doc(db, "users", currentUserUID), {
                     bankName: bankName,
@@ -306,7 +297,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Lỗi hệ thống hoặc quyền truy cập. Vui lòng thử lại.");
+                alert("Lỗi hệ thống. Vui lòng thử lại.");
                 btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH';
                 btn.disabled = false;
             }
@@ -314,7 +305,6 @@
 
         document.getElementById('appVersionID').innerText = Math.floor(Math.random()*90000)+10000;
 
-        // Auth & Data Listener
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
@@ -339,23 +329,22 @@
         function renderData(data, uid) {
             document.getElementById('displayFullname').innerText = data.fullName || "User";
             document.getElementById('displayUsername').innerText = "@" + data.username;
-            document.getElementById('displayBalance').innerText = "$" + (data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+            
+            const bal = data.balance || 0;
+            document.getElementById('displayBalance').innerText = "$" + bal.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('displayBalanceVND').innerText = "≈ " + (bal * EXCHANGE_RATE).toLocaleString('vi-VN') + " VNĐ";
             
             document.getElementById('infoPhone').innerText = data.phone || "Chưa cập nhật";
-            
-            // UPDATED: Hiển thị đầy đủ ID
             document.getElementById('infoID').innerText = uid;
 
             const d = new Date(data.createdAt || Date.now());
             document.getElementById('infoDate').innerText = d.toLocaleDateString('vi-VN');
             document.getElementById('sidebarUsername').innerText = data.fullName || data.username;
 
-            // Bank Logic
             if (data.bankNumber) {
                 document.getElementById('bankInputForm').classList.add('hidden');
                 document.getElementById('bankInfoDisplay').classList.remove('hidden');
                 document.getElementById('bankStatusBadge').classList.remove('hidden');
-
                 document.getElementById('displayBankName').innerText = data.bankName;
                 document.getElementById('displayBankNumber').innerText = "****" + data.bankNumber.slice(-3);
                 document.getElementById('displayBankOwner').innerText = data.bankOwner;
@@ -363,14 +352,11 @@
                 document.getElementById('bankInputForm').classList.remove('hidden');
                 document.getElementById('bankInfoDisplay').classList.add('hidden');
                 document.getElementById('bankStatusBadge').classList.add('hidden');
-                
-                // TỰ ĐỘNG ĐIỀN TÊN CHỦ TÀI KHOẢN TỪ HỌ TÊN ĐĂNG KÝ
-                if(data.fullName) {
-                    document.getElementById('bankOwner').value = data.fullName.toUpperCase();
-                }
+                if(data.fullName) document.getElementById('bankOwner').value = data.fullName.toUpperCase();
             }
         }
     </script>
 </body>
 </html>
+
 
