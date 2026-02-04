@@ -20,6 +20,14 @@
             font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden;
             color: white; user-select: none; -webkit-tap-highlight-color: transparent;
         }
+
+        /* SIDEBAR STYLES */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
+        .menu-item:active { background: #1e232e; color: white; }
+        .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
+        .menu-item i { width: 20px; text-align: center; }
+
         /* CARD STYLES */
         .card-wrapper {
             position: absolute; width: 56px; height: 80px; top: 50%; left: 50%;
@@ -80,11 +88,37 @@
 </head>
 <body class="flex flex-col">
 
+    <!-- SIDEBAR -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-[60] hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
+    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-[70] transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
+            <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
+            <span class="font-bold text-lg text-white">CROWNEX</span>
+            <button onclick="toggleMenu()" class="ml-auto text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
+            <a href="bcr.html" class="menu-item active"><i class="fa-solid fa-ranking-star"></i> Bacarat</a>
+            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
+            <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
+            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi</a>
+            <div class="border-t border-[#232836] my-2 mx-2"></div>
+            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
+            <a href="#" onclick="window.logoutModule()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        </nav>
+        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
+                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">Loading...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOP BAR -->
     <header class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50">
-        <button onclick="window.location.href='taikhoan.html'" class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-            <i class="fa-solid fa-chevron-left"></i>
-            <span class="text-xs font-bold uppercase tracking-wider">Thoát</span>
+        <!-- MENU BUTTON -->
+        <button onclick="toggleMenu()" class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-bars-staggered text-xl"></i>
         </button>
 
         <div class="flex flex-col items-center">
@@ -195,7 +229,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // COINPIGBTC CONFIG
         const firebaseConfig = {
@@ -218,6 +252,21 @@
         const DECKS = 8;
         const ROUNDS_PER_SHOE = 70;
         const SHUFFLE_ROUNDS = 2;
+
+        // --- UI HELPERS ---
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { 
+                sb.classList.remove('-translate-x-full'); 
+                ov.classList.remove('hidden', 'opacity-0'); 
+            } else { 
+                sb.classList.add('-translate-x-full'); 
+                ov.classList.add('opacity-0'); 
+                setTimeout(()=>ov.classList.add('hidden'),300); 
+            }
+        };
+        window.logoutModule = () => signOut(auth).then(()=>window.location.href="login.html");
 
         // --- LOCAL STORAGE HELPERS FOR RECOVERY ---
         const RECOVERY_KEY = 'crownex_bcr_pending_bet';
@@ -302,8 +351,15 @@
 
             listenBalance(uid) {
                 onSnapshot(doc(db, "users", uid), (s) => {
-                    if (s.exists()) this.balanceUSD = s.data().balance || 0;
-                    else { setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceUSD = 0; }
+                    if (s.exists()) {
+                        const data = s.data();
+                        this.balanceUSD = data.balance || 0;
+                        // UPDATE SIDEBAR INFO IF EXISTS
+                        const sbUser = document.getElementById('sidebarUsername');
+                        if(sbUser) sbUser.innerText = data.username || data.fullName || "Thành viên";
+                    } else { 
+                        setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceUSD = 0; 
+                    }
                     game.updateBal();
                 });
             },
@@ -484,12 +540,11 @@
 
             async addWin(usd) { if(currentUser) updateDoc(doc(db,"users",currentUser.uid),{balance:increment(usd)}); },
             
-            // --- SỬA LOGIC TẠI ĐÂY: TRỪ TIỀN VÀ CỘNG VÒNG CƯỢC ---
             async deduct(usd) { 
                 if(currentUser) {
                     updateDoc(doc(db,"users",currentUser.uid), {
                         balance: increment(-usd),
-                        betTurnover: increment(usd) // CỘNG DỒN VÒNG CƯỢC
+                        betTurnover: increment(usd) 
                     }); 
                 }
             }
@@ -535,7 +590,7 @@
                 if(balanceVND < totVND) return;
                 
                 const deductUSD = totVND / EXCHANGE_RATE;
-                app.deduct(deductUSD); // GỌI HÀM DEDUCT MỚI (CÓ CỘNG VÒNG CƯỢC)
+                app.deduct(deductUSD);
                 this.showFloat(document.getElementById('balanceContainer'), `-${(totVND/1000).toLocaleString()}k`, 'loss');
                 
                 app.bet.P+=app.pend.P; app.bet.B+=app.pend.B; app.bet.T+=app.pend.T;
@@ -736,4 +791,5 @@
     </script>
 </body>
 </html>
+
 
