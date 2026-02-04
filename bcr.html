@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Baccarat Pro - Smart View</title>
+    <title>Baccarat Pro - Wallet & History Synced</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     
@@ -62,14 +62,8 @@
             transform: scale(0); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
         }
         .floating-chip.visible { transform: scale(1); }
-        
-        /* ROADMAP - SMOOTH SCROLL */
-        .roadmap-container { 
-            height: 100%; display: flex; 
-            background: #cbd5e1; border-top: 1px solid #94a3b8; 
-            overflow-x: auto; overflow-y: hidden; 
-            scroll-behavior: smooth; /* Quan trọng để tránh giật */
-        }
+        /* ROADMAP */
+        .roadmap-container { height: 100%; display: flex; background: #cbd5e1; border-top: 1px solid #94a3b8; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; }
         .roadmap-col { display: flex; flex-direction: column; width: 25px; min-width: 25px; border-right: 1px solid #94a3b8; height: 100%; }
         .roadmap-cell { height: 16.666%; border-bottom: 1px solid #94a3b8; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; }
         .bead-big { width: 19px; height: 19px; border-radius: 50%; border: 3px solid; background: transparent; position: relative; }
@@ -304,7 +298,7 @@
                     else await signInAnonymously(auth);
                     
                     // CHECK RECOVERY AFTER LOGIN
-                    this.checkRecovery();
+                    // this.checkRecovery(); // Moved to loop for real-time check
                 });
                 this.loop();
             },
@@ -317,50 +311,55 @@
                 });
             },
 
-            // --- RECOVERY LOGIC ---
-            checkRecovery() {
+            // --- RECOVERY LOGIC (FIXED) ---
+            checkRecovery(currentTimeData) {
                 const pending = getPendingBet();
-                if (pending && pending.userId === currentUser.uid) {
-                    console.log("Found pending bet:", pending);
-                    
-                    // Simulate that specific round
-                    const tempEngine = new ShoeEngine();
-                    tempEngine.simulateToRound(pending.shoeId, pending.roundInShoe);
-                    const res = tempEngine.playSingleRound();
-                    
-                    if (res) {
-                        let winVND = 0;
-                        if (res.winner === 'P') winVND = pending.bets.P * 2;
-                        else if (res.winner === 'B') winVND = pending.bets.B * 1.95;
-                        else if (res.winner === 'T') winVND = (pending.bets.T * 9) + pending.bets.P + pending.bets.B;
-                        if (res.winner === 'T' && winVND === 0) winVND = pending.bets.P + pending.bets.B;
+                if (!pending || pending.userId !== currentUser?.uid) return;
 
-                        if (winVND > 0) {
-                            const winUSD = winVND / EXCHANGE_RATE;
-                            this.addWin(winUSD);
-                            
-                            const ov = document.getElementById('resultOverlay');
-                            const t = document.getElementById('resTitle');
-                            const m = document.getElementById('resMoney');
-                            t.innerText = "KẾT QUẢ VÁN TRƯỚC";
-                            m.innerText = "+" + winVND.toLocaleString() + " ₫";
-                            m.className = "text-xl font-mono font-bold text-amber-400";
-                            document.getElementById('recoveryMsg').classList.remove('hidden');
-                            ov.classList.remove('hidden');
-                            setTimeout(()=>{
-                                ov.classList.remove('opacity-0'); 
-                                ov.classList.add('flex','opacity-100');
-                                setTimeout(() => {
-                                    ov.classList.add('hidden');
-                                    document.getElementById('recoveryMsg').classList.add('hidden');
-                                }, 4000);
-                            },10);
-                        }
-                        
-                        this.saveHistory(pending.bets, res.winner, pending.roundIdStr);
+                // FIX: Check if the round ID of the pending bet matches current round ID
+                // If they MATCH, it means the round is STILL ACTIVE -> RESTORE BET TO UI
+                // If they DIFFER, it means the round PASSED -> RESOLVE IT
+                
+                if (pending.roundIdStr === currentTimeData.str) {
+                    // Round is still active: Restore UI state
+                    if (this.state === 'BETTING') {
+                        // Restore pending bets to active bets
+                        this.bet = pending.bets;
+                        game.renderChips();
+                        console.log("Restored active bet for current round");
                     }
-                    clearPendingBet();
+                    // Do NOT resolve/pay yet. Main loop handles resolution.
+                    return;
                 }
+
+                // Round has passed: Calculate result and Pay
+                console.log("Resolving past pending bet:", pending.roundIdStr);
+                
+                // Simulate that specific round
+                const tempEngine = new ShoeEngine();
+                tempEngine.simulateToRound(pending.shoeId, pending.roundInShoe);
+                const res = tempEngine.playSingleRound();
+                
+                if (res) {
+                    let winVND = 0;
+                    if (res.winner === 'P') winVND = pending.bets.P * 2;
+                    else if (res.winner === 'B') winVND = pending.bets.B * 1.95;
+                    else if (res.winner === 'T') winVND = (pending.bets.T * 9) + pending.bets.P + pending.bets.B;
+                    if (res.winner === 'T' && winVND === 0) winVND = pending.bets.P + pending.bets.B;
+
+                    if (winVND > 0) {
+                        const winUSD = winVND / EXCHANGE_RATE;
+                        this.addWin(winUSD);
+                        
+                        // Show Delayed Result Toast
+                        game.toast(`Kết quả ván trước: ${res.winner === 'P' ? 'CON' : (res.winner==='B'?'CÁI':'HÒA')} - Thắng ${winVND.toLocaleString()}đ`, 'success');
+                    } else {
+                        game.toast(`Kết quả ván trước: ${res.winner === 'P' ? 'CON' : (res.winner==='B'?'CÁI':'HÒA')} - Thua`, 'err');
+                    }
+                    
+                    this.saveHistory(pending.bets, res.winner, pending.roundIdStr);
+                }
+                clearPendingBet();
             },
 
             getTimeData() {
@@ -382,6 +381,9 @@
                 this.currentShoeId = t.shoeId;
                 this.currentRoundInShoe = t.roundInShoe;
 
+                // CHECK RECOVERY EVERY FRAME (Efficient enough)
+                if (currentUser) this.checkRecovery(t);
+
                 if (t.str !== this.currentRoundStr) {
                     this.currentRoundStr = t.str;
                     document.getElementById('uiRoundID').innerText = t.str;
@@ -394,9 +396,10 @@
                         this.endShuffleMode();
                         this.state = 'BETTING';
                         game.resetTable();
-                        this.bet = {P:0,B:0,T:0};
+                        this.bet = {P:0,B:0,T:0}; // Clear bets for NEW round
                         game.renderChips();
                         const cardsLeft = this.engine.simulateToRound(t.shoeId, t.roundInShoe);
+                        // Sync History logic if needed
                         if (this.history.length === 0 || t.roundInShoe === 0) this.generateHistory(t.shoeId, t.roundInShoe);
                     }
                 }
@@ -451,9 +454,11 @@
             resolveRound() {
                 const res = this.engine.playSingleRound();
                 game.playAnimation(res).then(() => {
+                    // CLEAR PENDING BET AS ROUND IS RESOLVED NORMALLY
                     clearPendingBet();
 
                     let winVND = 0;
+                    
                     const activeBets = { ...this.bet };
                     
                     if (res.winner === 'P') winVND = this.bet.P * 2;
@@ -690,6 +695,8 @@
                         if (lastWinner === null) {
                             if(!matrix[0]) matrix[0] = [];
                             if(!matrix[0][0]) matrix[0][0] = { val: 'T', ties: 0 }; else matrix[0][0].ties++;
+                        } else {
+                            // Simplified Tie logic for web
                         }
                     } else {
                         if (lastWinner === null) { addCell(col, row, res, false); }
@@ -721,7 +728,7 @@
                 const container = document.querySelector('.roadmap-container');
                 const isAtEnd = (container.scrollWidth - container.scrollLeft - container.clientWidth) < 50;
                 const maxCol = beads.length > 0 ? beads[beads.length-1].c : 0;
-                const totalCols = Math.max(30, maxCol + 15);
+                const totalCols = Math.max(30, maxCol + 5);
 
                 for(let i=0; i<totalCols; i++) {
                     const colDiv = document.createElement('div');
