@@ -296,9 +296,6 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) { currentUser = user; this.listenBalance(user.uid); }
                     else await signInAnonymously(auth);
-                    
-                    // CHECK RECOVERY AFTER LOGIN
-                    // this.checkRecovery(); // Moved to loop for real-time check
                 });
                 this.loop();
             },
@@ -311,31 +308,18 @@
                 });
             },
 
-            // --- RECOVERY LOGIC (FIXED) ---
             checkRecovery(currentTimeData) {
                 const pending = getPendingBet();
                 if (!pending || pending.userId !== currentUser?.uid) return;
 
-                // FIX: Check if the round ID of the pending bet matches current round ID
-                // If they MATCH, it means the round is STILL ACTIVE -> RESTORE BET TO UI
-                // If they DIFFER, it means the round PASSED -> RESOLVE IT
-                
                 if (pending.roundIdStr === currentTimeData.str) {
-                    // Round is still active: Restore UI state
                     if (this.state === 'BETTING') {
-                        // Restore pending bets to active bets
                         this.bet = pending.bets;
                         game.renderChips();
-                        console.log("Restored active bet for current round");
                     }
-                    // Do NOT resolve/pay yet. Main loop handles resolution.
                     return;
                 }
 
-                // Round has passed: Calculate result and Pay
-                console.log("Resolving past pending bet:", pending.roundIdStr);
-                
-                // Simulate that specific round
                 const tempEngine = new ShoeEngine();
                 tempEngine.simulateToRound(pending.shoeId, pending.roundInShoe);
                 const res = tempEngine.playSingleRound();
@@ -350,13 +334,10 @@
                     if (winVND > 0) {
                         const winUSD = winVND / EXCHANGE_RATE;
                         this.addWin(winUSD);
-                        
-                        // Show Delayed Result Toast
                         game.toast(`Kết quả ván trước: ${res.winner === 'P' ? 'CON' : (res.winner==='B'?'CÁI':'HÒA')} - Thắng ${winVND.toLocaleString()}đ`, 'success');
                     } else {
                         game.toast(`Kết quả ván trước: ${res.winner === 'P' ? 'CON' : (res.winner==='B'?'CÁI':'HÒA')} - Thua`, 'err');
                     }
-                    
                     this.saveHistory(pending.bets, res.winner, pending.roundIdStr);
                 }
                 clearPendingBet();
@@ -377,18 +358,14 @@
             loop() {
                 requestAnimationFrame(() => this.loop());
                 const t = this.getTimeData();
-                
                 this.currentShoeId = t.shoeId;
                 this.currentRoundInShoe = t.roundInShoe;
-
-                // CHECK RECOVERY EVERY FRAME (Efficient enough)
                 if (currentUser) this.checkRecovery(t);
 
                 if (t.str !== this.currentRoundStr) {
                     this.currentRoundStr = t.str;
                     document.getElementById('uiRoundID').innerText = t.str;
                     document.getElementById('uiShoeID').innerText = "#" + t.shoeId;
-                    
                     document.getElementById('uiRoundCount').innerText = `${t.roundInShoe + 1}/${ROUNDS_PER_SHOE}`;
                     
                     if (t.roundInShoe >= (ROUNDS_PER_SHOE - SHUFFLE_ROUNDS)) this.startShuffleMode();
@@ -396,10 +373,9 @@
                         this.endShuffleMode();
                         this.state = 'BETTING';
                         game.resetTable();
-                        this.bet = {P:0,B:0,T:0}; // Clear bets for NEW round
+                        this.bet = {P:0,B:0,T:0};
                         game.renderChips();
-                        const cardsLeft = this.engine.simulateToRound(t.shoeId, t.roundInShoe);
-                        // Sync History logic if needed
+                        this.engine.simulateToRound(t.shoeId, t.roundInShoe);
                         if (this.history.length === 0 || t.roundInShoe === 0) this.generateHistory(t.shoeId, t.roundInShoe);
                     }
                 }
@@ -454,11 +430,8 @@
             resolveRound() {
                 const res = this.engine.playSingleRound();
                 game.playAnimation(res).then(() => {
-                    // CLEAR PENDING BET AS ROUND IS RESOLVED NORMALLY
                     clearPendingBet();
-
                     let winVND = 0;
-                    
                     const activeBets = { ...this.bet };
                     
                     if (res.winner === 'P') winVND = this.bet.P * 2;
@@ -486,7 +459,6 @@
 
             async saveHistory(bets, winner, sessionId) {
                 if (!currentUser) return;
-                
                 for (const [choice, amount] of Object.entries(bets)) {
                     if (amount > 0) {
                         let winAmount = 0;
@@ -494,9 +466,7 @@
                         else if (choice === 'B' && winner === 'B') winAmount = amount * 1.95;
                         else if (choice === 'T' && winner === 'T') winAmount = amount * 9;
                         else if (winner === 'T' && choice !== 'T') winAmount = amount; 
-
                         const profit = winAmount - amount;
-
                         try {
                             await addDoc(collection(db, "users", currentUser.uid, "baccaratHistory"), {
                                 timestamp: serverTimestamp(),
@@ -507,15 +477,22 @@
                                 profit: profit,
                                 sessionId: sessionId
                             });
-                        } catch (e) {
-                            console.error("Error saving history:", e);
-                        }
+                        } catch (e) { console.error("Error saving history:", e); }
                     }
                 }
             },
 
             async addWin(usd) { if(currentUser) updateDoc(doc(db,"users",currentUser.uid),{balance:increment(usd)}); },
-            async deduct(usd) { if(currentUser) updateDoc(doc(db,"users",currentUser.uid),{balance:increment(-usd)}); }
+            
+            // --- SỬA LOGIC TẠI ĐÂY: TRỪ TIỀN VÀ CỘNG VÒNG CƯỢC ---
+            async deduct(usd) { 
+                if(currentUser) {
+                    updateDoc(doc(db,"users",currentUser.uid), {
+                        balance: increment(-usd),
+                        betTurnover: increment(usd) // CỘNG DỒN VÒNG CƯỢC
+                    }); 
+                }
+            }
         };
 
         window.game = {
@@ -558,7 +535,7 @@
                 if(balanceVND < totVND) return;
                 
                 const deductUSD = totVND / EXCHANGE_RATE;
-                app.deduct(deductUSD);
+                app.deduct(deductUSD); // GỌI HÀM DEDUCT MỚI (CÓ CỘNG VÒNG CƯỢC)
                 this.showFloat(document.getElementById('balanceContainer'), `-${(totVND/1000).toLocaleString()}k`, 'loss');
                 
                 app.bet.P+=app.pend.P; app.bet.B+=app.pend.B; app.bet.T+=app.pend.T;
@@ -759,5 +736,4 @@
     </script>
 </body>
 </html>
-
 
