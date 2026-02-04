@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Baccarat Pro - Wallet Synced</title>
+    <title>Baccarat Pro - Wallet & History Synced</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     
@@ -69,17 +69,8 @@
         .bead-big { width: 19px; height: 19px; border-radius: 50%; border: 3px solid; background: transparent; position: relative; }
         .bead-big.P { border-color: #3b82f6; } .bead-big.B { border-color: #ef4444; } .bead-big.T { border-color: #10b981; }
         
-        /* TIE INDICATOR (Green dot on bead) */
-        .tie-dot {
-            position: absolute; width: 8px; height: 8px; background-color: #10b981;
-            border: 1px solid white; border-radius: 50%; top: -3px; right: -3px;
-            z-index: 10;
-        }
-        .tie-number {
-            position: absolute; width: 100%; text-align: center; color: #10b981;
-            font-size: 10px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-shadow: 0 0 2px white;
-        }
+        .tie-dot { position: absolute; width: 8px; height: 8px; background-color: #10b981; border: 1px solid white; border-radius: 50%; top: -3px; right: -3px; z-index: 10; }
+        .tie-number { position: absolute; width: 100%; text-align: center; color: #10b981; font-size: 10px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); text-shadow: 0 0 2px white; }
 
         /* FLOATING TEXT */
         .float-text { position: absolute; font-weight: 900; font-family: 'Roboto Mono', monospace; pointer-events: none; z-index: 50; animation: floatUpFade 1.5s forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 16px; }
@@ -202,10 +193,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIG KẾT NỐI CHÍNH XÁC VỚI VÍ TIỀN (btccoinbig)
+        // COINPIGBTC CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -298,7 +289,6 @@
             },
 
             listenBalance(uid) {
-                // KẾT NỐI VỚI VÍ NGƯỜI DÙNG TỪ BẢNG USERS
                 onSnapshot(doc(db, "users", uid), (s) => {
                     if (s.exists()) this.balanceUSD = s.data().balance || 0;
                     else { setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceUSD = 0; }
@@ -337,7 +327,6 @@
                         this.bet = {P:0,B:0,T:0};
                         game.renderChips();
                         const cardsLeft = this.engine.simulateToRound(t.shoeId, t.roundInShoe);
-                        // Sync History logic if needed
                         if (this.history.length === 0 || t.roundInShoe === 0) this.generateHistory(t.shoeId, t.roundInShoe);
                     }
                 }
@@ -393,6 +382,11 @@
                 const res = this.engine.playSingleRound();
                 game.playAnimation(res).then(() => {
                     let winVND = 0;
+                    
+                    // SAVE HISTORY & CALC PROFIT
+                    const activeBets = { ...this.bet };
+                    
+                    // 1. CALCULATE WINNINGS
                     if (res.winner === 'P') winVND = this.bet.P * 2;
                     else if (res.winner === 'B') winVND = this.bet.B * 1.95;
                     else if (res.winner === 'T') winVND = (this.bet.T * 9) + this.bet.P + this.bet.B;
@@ -405,6 +399,9 @@
                         game.showFloat(document.getElementById(zone), `+${(winVND/1000).toLocaleString()}k`, 'win');
                     }
                     
+                    // 2. SAVE INDIVIDUAL BET HISTORY TO FIREBASE
+                    this.saveHistory(activeBets, res.winner);
+
                     const profitVND = winVND - (this.bet.P + this.bet.B + this.bet.T);
                     game.showResult(res.winner, profitVND);
                     this.history.push(res.winner);
@@ -412,6 +409,37 @@
                     game.updateStats();
                     this.bet = {P:0,B:0,T:0};
                 });
+            },
+
+            async saveHistory(bets, winner) {
+                if (!currentUser) return;
+                
+                // Iterate through bets (P, B, T) and save if amount > 0
+                for (const [choice, amount] of Object.entries(bets)) {
+                    if (amount > 0) {
+                        let winAmount = 0;
+                        if (choice === 'P' && winner === 'P') winAmount = amount * 2;
+                        else if (choice === 'B' && winner === 'B') winAmount = amount * 1.95;
+                        else if (choice === 'T' && winner === 'T') winAmount = amount * 9;
+                        else if (winner === 'T' && choice !== 'T') winAmount = amount; // Refund on Tie
+
+                        const profit = winAmount - amount;
+
+                        try {
+                            await addDoc(collection(db, "users", currentUser.uid, "baccaratHistory"), {
+                                timestamp: serverTimestamp(),
+                                betChoice: choice,
+                                amount: amount,
+                                winner: winner,
+                                winAmount: winAmount,
+                                profit: profit,
+                                sessionId: this.currentRoundStr
+                            });
+                        } catch (e) {
+                            console.error("Error saving history:", e);
+                        }
+                    }
+                }
             },
 
             async addWin(usd) { if(currentUser) updateDoc(doc(db,"users",currentUser.uid),{balance:increment(usd)}); },
@@ -584,10 +612,7 @@
                             if(!matrix[0]) matrix[0] = [];
                             if(!matrix[0][0]) matrix[0][0] = { val: 'T', ties: 0 }; else matrix[0][0].ties++;
                         } else {
-                            // Find last bead
-                            // Simple logic for web: attach to last known position
-                            // Re-simulating positions is complex without object ref
-                            // Let's use simpler bead array logic below
+                            // Simplified Tie logic for web
                         }
                     } else {
                         if (lastWinner === null) { addCell(col, row, res, false); }
@@ -598,7 +623,6 @@
                     }
                 });
                 
-                // RE-RUN LOGIC WITH BEAD ARRAY FOR TIES
                 const beads = [];
                 let c = 0, r = 0, lastW = null;
                 hist.forEach(res => {
