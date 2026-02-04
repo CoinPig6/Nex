@@ -72,7 +72,7 @@
         .floating-chip.visible { transform: scale(1); }
         /* ROADMAP */
         .roadmap-container { height: 100%; display: flex; background: #cbd5e1; border-top: 1px solid #94a3b8; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; }
-        .roadmap-col { display: flex; flex-direction: column; width: 25px; min-width: 25px; border-right: 1px solid #94a3b8; height: 100%; }
+        .roadmap-col { display: flex; flex-direction: column; width: 25px; min-width: 25px; border-right: 1px solid #94a3b8; height: 100%; flex-shrink: 0; }
         .roadmap-cell { height: 16.666%; border-bottom: 1px solid #94a3b8; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; }
         .bead-big { width: 19px; height: 19px; border-radius: 50%; border: 3px solid; background: transparent; position: relative; }
         .bead-big.P { border-color: #3b82f6; } .bead-big.B { border-color: #ef4444; } .bead-big.T { border-color: #10b981; }
@@ -432,7 +432,15 @@
                         this.bet = {P:0,B:0,T:0};
                         game.renderChips();
                         this.engine.simulateToRound(t.shoeId, t.roundInShoe);
-                        if (this.history.length === 0 || t.roundInShoe === 0) this.generateHistory(t.shoeId, t.roundInShoe);
+                        // Force refresh history on new round
+                        if (this.history.length === 0 || t.roundInShoe === 0) {
+                             this.generateHistory(t.shoeId, t.roundInShoe);
+                        } else {
+                             // Keep history synced if user came late
+                             if (this.history.length < t.roundInShoe) {
+                                this.generateHistory(t.shoeId, t.roundInShoe);
+                             }
+                        }
                     }
                 }
 
@@ -704,77 +712,80 @@
                 ov.classList.remove('hidden');
                 setTimeout(()=>{ov.classList.remove('opacity-0'); ov.classList.add('flex','opacity-100');},10);
             },
+            // FIXED ROADMAP RENDER
             renderBigRoad(hist) {
-                const grid = document.getElementById('roadmapGrid'); grid.innerHTML = '';
-                const matrix = []; 
-                let col = 0, row = 0, lastWinner = null;
-                const addCell = (c, r, val, isTie) => {
-                    if(!matrix[c]) matrix[c] = [];
-                    if(isTie) {
-                        let tc = c, tr = r;
-                        if(matrix[c][r] === undefined) { 
-                            if (r>0) tr=r-1; else if (c>0) { tc=c-1; tr=0; while(matrix[tc][tr+1]) tr++; }
-                        }
-                        if(matrix[tc] && matrix[tc][tr]) { matrix[tc][tr].ties++; return; }
-                        matrix[c][r] = { val: 'T', ties: 0 }; return;
-                    }
-                    if(matrix[c][r]) { col++; addCell(col, row, val, false); return; }
-                    matrix[c][r] = { val: val, ties: 0 };
-                };
+                const grid = document.getElementById('roadmapGrid'); 
+                grid.innerHTML = '';
+
+                // Calculate bead positions
+                const beads = []; // { c: col, r: row, val: 'P'|'B', ties: 0 }
+                let c = 0, r = 0;
+                let lastWinner = null;
+                let pendingTies = 0; // Ties occurring before a P/B or consecutive ties
 
                 hist.forEach(res => {
                     if (res === 'T') {
-                        if (lastWinner === null) {
-                            if(!matrix[0]) matrix[0] = [];
-                            if(!matrix[0][0]) matrix[0][0] = { val: 'T', ties: 0 }; else matrix[0][0].ties++;
+                        // If we have a bead placed, add tie to it
+                        if (beads.length > 0) {
+                            beads[beads.length - 1].ties++;
                         } else {
-                            // Simplified Tie logic for web
+                            // Tie at start of shoe
+                            pendingTies++;
                         }
+                        return; // Ties don't move the cursor
+                    }
+
+                    // Player or Banker
+                    if (lastWinner === null) {
+                        // First Bead
+                        c = 0; r = 0;
+                        beads.push({ c, r, val: res, ties: pendingTies });
+                        pendingTies = 0;
+                        lastWinner = res;
+                    } else if (res === lastWinner) {
+                        // Same Winner -> Go Down
+                        r++;
+                        // Dragon Tail Logic: If bottom reached, go right
+                        if (r > 5) {
+                            r = 5;
+                            c++;
+                        }
+                        beads.push({ c, r, val: res, ties: pendingTies });
+                        lastWinner = res;
                     } else {
-                        if (lastWinner === null) { addCell(col, row, res, false); }
-                        else if (res === lastWinner) {
-                            row++; if (row > 5) { row = 5; col++; } addCell(col, row, res, false);
-                        } else { col++; row = 0; addCell(col, row, res, false); }
+                        // Different Winner -> New Column, Top Row
+                        c++;
+                        r = 0;
+                        beads.push({ c, r, val: res, ties: pendingTies });
+                        pendingTies = 0;
                         lastWinner = res;
                     }
                 });
-                
-                const beads = [];
-                let c = 0, r = 0, lastW = null;
-                hist.forEach(res => {
-                    if (res === 'T') {
-                        if (beads.length > 0) beads[beads.length-1].ties++;
-                        else beads.push({ c:0, r:0, val:'T', ties:0 });
-                    } else {
-                        if (lastW === null || beads[0].val === 'T') {
-                            if(beads.length > 0 && beads[0].val === 'T') { c=1; r=0; }
-                            beads.push({ c:c, r:r, val:res, ties:0 });
-                        } else if (res === lastW) {
-                            r++; if(r>5) { r=5; c++; }
-                            beads.push({ c:c, r:r, val:res, ties:0 });
-                        } else { c++; r=0; beads.push({ c:c, r:r, val:res, ties:0 }); }
-                        lastW = res;
-                    }
-                });
 
-                const container = document.querySelector('.roadmap-container');
-                const isAtEnd = (container.scrollWidth - container.scrollLeft - container.clientWidth) < 50;
-                const maxCol = beads.length > 0 ? beads[beads.length-1].c : 0;
-                const totalCols = Math.max(30, maxCol + 5);
+                // Determine Grid Size
+                const maxCol = beads.length > 0 ? beads[beads.length - 1].c : 0;
+                const totalCols = Math.max(30, maxCol + 6); // Add buffer
 
+                // Render Grid
                 for(let i=0; i<totalCols; i++) {
                     const colDiv = document.createElement('div');
                     colDiv.className = 'roadmap-col';
                     for(let j=0; j<6; j++) {
                         const cellDiv = document.createElement('div');
                         cellDiv.className = 'roadmap-cell';
+                        
                         const beadData = beads.find(b => b.c === i && b.r === j);
                         if(beadData) {
                             const bead = document.createElement('div');
                             bead.className = `bead-big ${beadData.val}`;
                             if (beadData.ties > 0) {
                                 const dot = document.createElement('div'); dot.className = 'tie-dot'; bead.appendChild(dot);
-                                if (beadData.ties > 1) { const num = document.createElement('div'); num.className = 'tie-number'; num.innerText = beadData.ties; bead.appendChild(num); }
+                                if (beadData.ties > 1) { 
+                                    const num = document.createElement('div'); 
+                                    num.className = 'tie-number'; 
+                                    num.innerText = beadData.ties; 
+                                    bead.appendChild(num); 
+                                }
                             }
                             cellDiv.appendChild(bead);
                         }
@@ -783,7 +794,11 @@
                     grid.appendChild(colDiv);
                 }
                 
-                if (isAtEnd || hist.length === 0) container.scrollLeft = container.scrollWidth;
+                // Auto Scroll to End
+                const container = document.querySelector('.roadmap-container');
+                requestAnimationFrame(() => {
+                    container.scrollLeft = container.scrollWidth;
+                });
             }
         };
 
@@ -791,5 +806,4 @@
     </script>
 </body>
 </html>
-
 
