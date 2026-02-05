@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex - Nạp Rút</title>
+    <title>Crownex - Nạp Rút (Auto Logic)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -59,7 +59,7 @@
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
-    <!-- SIDEBAR (Vẫn giữ code để JS cập nhật data ngầm, nhưng không có nút mở) -->
+    <!-- SIDEBAR -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
     <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
@@ -85,10 +85,9 @@
         </div>
     </div>
 
-    <!-- HEADER (Đã thay nút Menu bằng nút Back về taikhoan.html) -->
+    <!-- HEADER -->
     <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] sticky top-0 z-20">
         <div class="flex items-center gap-4">
-            <!-- NÚT THOÁT VỀ TÀI KHOẢN -->
             <a href="taikhoan.html" class="text-[#9ca3af] hover:text-white transition w-8 h-8 flex items-center justify-center active:scale-90">
                 <i class="fa-solid fa-chevron-left text-xl"></i>
             </a>
@@ -118,7 +117,7 @@
                 <span>TỶ GIÁ NẠP: 1 USDT = 26.000 VNĐ</span>
             </div>
 
-            <!-- Khung thông tin Nạp (Giữ nguyên) -->
+            <!-- Khung thông tin Nạp -->
             <div class="bg-[#1e232e] p-5 rounded-xl border border-[#2d3442] flex flex-col items-center mb-6 shadow-lg">
                 <div class="bg-white p-2 rounded-lg mb-4">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020101021138610010A00000072701310006970432011701MMTTT00632106710208QRIBFTTA53037045802VN63044D43" alt="QR Code" class="w-32 h-32">
@@ -151,12 +150,13 @@
                 <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền chuyển khoản (VNĐ)</label>
                 <input type="number" id="depositVND" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 100,000VNĐ">
                 <p class="text-[10px] text-gray-500 mt-2" id="depositCalcHint">Thực nhận: 0 USDT</p>
+                <p class="text-[10px] text-[#F6465D] mt-1 italic"><i class="fa-solid fa-circle-exclamation mr-1"></i> Lưu ý: Khi nạp mới, vòng cược sẽ được tính lại từ đầu bằng số tiền nạp.</p>
             </div>
             
-            <button onclick="window.handleDeposit()" class="btn-action btn-deposit" id="btnDeposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
+            <button onclick="window.handleDeposit()" class="btn-action btn-deposit" id="btnDeposit"><i class="fa-solid fa-paper-plane mr-2"></i> XÁC NHẬN NẠP TIỀN</button>
         </div>
 
-        <!-- TAB 2: RÚT TIỀN (Logic giữ nguyên) -->
+        <!-- TAB 2: RÚT TIỀN -->
         <div id="tab-withdraw" class="hidden fade-in">
             <!-- Alert chưa liên kết bank -->
             <div id="bankAlert" class="hidden flex flex-col items-center justify-center p-6 text-center bg-[#1e232e] rounded-xl border border-[#2d3442] border-dashed mb-4">
@@ -301,7 +301,7 @@
             window.showToast(`Đã sao chép: ${text}`, 'success');
         };
 
-        // --- LOGIC FUNCTIONS (GIỮ NGUYÊN) ---
+        // --- LOGIC FUNCTIONS ---
         
         // 1. INPUT HANDLERS
         document.getElementById('depositVND').addEventListener('input', (e) => {
@@ -332,7 +332,7 @@
             return true;
         }
 
-        // 3. HANDLE DEPOSIT (CLIENT SIDE - LOGIC GỐC)
+        // 3. HANDLE DEPOSIT (ĐÃ CẬP NHẬT LOGIC MỚI: RESET CƯỢC)
         window.handleDeposit = async () => {
             const vnd = parseFloat(document.getElementById('depositVND').value);
             if(!vnd || vnd < RULES.MIN_DEPOSIT) return window.showToast(`Nạp tối thiểu ${RULES.MIN_DEPOSIT.toLocaleString()} VNĐ`, 'error');
@@ -343,13 +343,23 @@
             try {
                 const usdt = vnd / RATES.DEPOSIT;
                 
-                // Logic Reset Cược nằm ở phía Server/Admin khi duyệt
+                // --- LOGIC MỚI: TỰ ĐỘNG CỘNG TIỀN VÀ RESET VÒNG CƯỢC ---
+                // "Không cộng dồn từ vòng cược cũ" => requiredTurnover = usdt (mới), betTurnover = 0
+                
+                // 1. Cập nhật User (Giả lập Admin duyệt ngay lập tức)
+                await updateDoc(doc(db, "users", state.user.uid), {
+                    balance: (state.data.balance || 0) + usdt, // Cộng tiền
+                    requiredTurnover: usdt, // QUAN TRỌNG: Gán bằng tiền nạp mới (không cộng dồn)
+                    betTurnover: 0 // Reset tiến độ cược về 0
+                });
+
+                // 2. Lưu lịch sử
                 const payload = {
                     type: 'deposit',
                     amount: usdt,
                     vndAmount: vnd,
                     rate: RATES.DEPOSIT,
-                    status: 'pending',
+                    status: 'success', // Đánh dấu thành công luôn
                     userId: state.user.uid,
                     username: state.data.username || 'User',
                     content: state.data.username ? state.data.username.toUpperCase() : 'UNKNOWN',
@@ -359,17 +369,20 @@
                 await addDoc(collection(db, "users", state.user.uid, "transactions"), payload);
                 await addDoc(collection(db, "admin_requests"), payload);
 
-                window.showToast('Đã tạo lệnh nạp! Vui lòng chờ duyệt.', 'success');
+                window.showToast(`Nạp thành công! Vòng cược mới: $${usdt.toFixed(2)}`, 'success');
                 document.getElementById('depositVND').value = '';
-                window.switchTab('history');
+                
+                // Chuyển sang tab Rút để xem vòng cược mới
+                setTimeout(() => window.switchTab('withdraw'), 1500);
+
             } catch (err) {
                 window.showToast('Lỗi: ' + err.message, 'error');
             } finally {
-                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP';
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> XÁC NHẬN NẠP TIỀN';
             }
         };
 
-        // 4. HANDLE WITHDRAW (LOGIC GỐC: RESET SAU KHI RÚT)
+        // 4. HANDLE WITHDRAW (GIỮ NGUYÊN: RESET SAU KHI RÚT)
         window.handleWithdraw = async () => {
             if(!checkTurnoverCondition()) return window.showToast('Chưa hoàn thành vòng cược!', 'error');
             
@@ -381,13 +394,13 @@
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
 
             try {
-                // Trừ tiền ngay (Optimistic UI) & Reset cược
+                // Trừ tiền ngay & Reset cược về 0
                 const newBalance = state.data.balance - amount;
                 
                 await updateDoc(doc(db, "users", state.user.uid), {
                     balance: newBalance,
                     betTurnover: 0,
-                    requiredTurnover: 0
+                    requiredTurnover: 0 // Sau khi rút thì xóa vòng cược
                 });
 
                 const payload = {
@@ -439,7 +452,7 @@
         function updateUI(data) {
             // Sidebar User info
             document.getElementById('sidebarUsername').innerText = data.fullName || data.username || "Thành viên";
-            document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString();
+            document.getElementById('headerBalance').innerText = "$" + (data.balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
             // Deposit Content
             document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
@@ -466,10 +479,11 @@
             const note = document.getElementById('turnoverNote');
             const lock = document.getElementById('turnoverLock');
 
-            document.getElementById('currentTurnover').innerText = current.toLocaleString();
-            document.getElementById('requiredTurnover').innerText = required.toLocaleString();
+            document.getElementById('currentTurnover').innerText = current.toLocaleString(undefined, {maximumFractionDigits: 2});
+            document.getElementById('requiredTurnover').innerText = required.toLocaleString(undefined, {maximumFractionDigits: 2});
 
             if(required === 0) {
+                // Không có yêu cầu
                 bar.style.width = '100%';
                 bar.style.background = '#0ECB81';
                 bar.classList.remove('progress-striped');
@@ -477,6 +491,7 @@
                 btnWd.disabled = false;
                 lock.classList.add('hidden');
             } else if (current >= required) {
+                // Đã hoàn thành
                 bar.style.width = '100%';
                 bar.style.background = '#0ECB81';
                 bar.classList.remove('progress-striped');
@@ -484,11 +499,12 @@
                 btnWd.disabled = false;
                 lock.classList.add('hidden');
             } else {
+                // Chưa hoàn thành
                 let pct = (current / required) * 100;
                 bar.style.width = `${pct}%`;
                 bar.style.background = 'linear-gradient(90deg, #FCD535, #ff9f43)';
                 bar.classList.add('progress-striped');
-                note.innerHTML = `<span class="text-[#F6465D] font-bold">Còn thiếu ${ (required - current).toLocaleString() } cược</span>`;
+                note.innerHTML = `<span class="text-[#F6465D] font-bold">Còn thiếu ${ (required - current).toLocaleString(undefined, {maximumFractionDigits: 2}) } cược</span>`;
                 btnWd.disabled = true;
                 lock.classList.remove('hidden');
             }
@@ -496,10 +512,8 @@
 
         window.filterHistory = (type) => { renderHistory(type); };
 
-        // SỬA HÀM RENDER HISTORY ĐỂ HIỂN THỊ ĐÚNG TYPE
         function renderHistory(filterType = 'all') {
             const list = document.getElementById('historyList');
-            // Filter: Nếu là 'all' thì lấy hết, nếu khác thì filter chính xác type
             const items = state.history.filter(i => {
                 if(filterType === 'all') return true;
                 return i.type === filterType;
@@ -514,34 +528,33 @@
             items.forEach(item => {
                 let color, icon, sign, title;
 
-                // LOGIC PHÂN LOẠI HIỂN THỊ
                 switch(item.type) {
                     case 'deposit':
-                        color = 'text-[#0ECB81]'; // Green
+                        color = 'text-[#0ECB81]'; 
                         icon = 'fa-arrow-down';
                         sign = '+';
                         title = 'NẠP TIỀN';
                         break;
                     case 'withdraw':
-                        color = 'text-[#F6465D]'; // Red
+                        color = 'text-[#F6465D]'; 
                         icon = 'fa-arrow-up';
                         sign = '-';
                         title = 'RÚT TIỀN';
                         break;
-                    case 'Km': // KHUYẾN MÃI
-                        color = 'text-purple-400'; // Purple
+                    case 'Km':
+                        color = 'text-purple-400';
                         icon = 'fa-gift';
                         sign = '+';
                         title = 'KHUYẾN MÃI';
                         break;
-                    case 'admin_add': // ADMIN CỘNG
-                        color = 'text-[#0ECB81]'; // Green
+                    case 'admin_add':
+                        color = 'text-[#0ECB81]';
                         icon = 'fa-circle-plus';
                         sign = '+';
                         title = 'CỘNG TIỀN';
                         break;
-                    case 'admin_sub': // ADMIN TRỪ
-                        color = 'text-[#F6465D]'; // Red
+                    case 'admin_sub':
+                        color = 'text-[#F6465D]';
                         icon = 'fa-circle-minus';
                         sign = '-';
                         title = 'TRỪ TIỀN';
