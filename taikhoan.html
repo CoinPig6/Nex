@@ -124,9 +124,9 @@
                 <div class="text-[10px] text-gray-400 font-mono mt-1" id="displayBalanceVND">≈ 0 VNĐ</div>
                 
                 <div class="mt-4 flex gap-2">
-                    <!-- Link CSKH Telegram cho Nạp/Rút -->
-                    <a href="https://t.me/ad_crownex" target="_blank" class="flex-1 bg-[#FCD535] text-[#111] font-bold py-2 rounded text-center text-xs shadow-lg hover:brightness-110 transition">NẠP TIỀN</a>
-                    <a href="https://t.me/ad_crownex" target="_blank" class="flex-1 bg-[#1e232e] text-white border border-[#2d3442] font-bold py-2 rounded text-center text-xs hover:bg-[#252b38] transition">RÚT TIỀN</a>
+                    <!-- LINK SANG TRANG NẠP RÚT -->
+                    <a href="naprut.html?tab=deposit" class="flex-1 bg-[#FCD535] text-[#111] font-bold py-2 rounded text-center text-xs shadow-lg hover:brightness-110 transition">NẠP TIỀN</a>
+                    <a href="naprut.html?tab=withdraw" class="flex-1 bg-[#1e232e] text-white border border-[#2d3442] font-bold py-2 rounded text-center text-xs hover:bg-[#252b38] transition">RÚT TIỀN</a>
                 </div>
             </div>
         </div>
@@ -136,7 +136,7 @@
             <div class="flex items-center justify-between mb-4 border-b border-[#2d3442] pb-2">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-building-columns text-[#0ECB81]"></i>
-                    <span class="font-bold text-sm text-white">XÁC MINH NGÂN HÀNG</span>
+                    <span class="font-bold text-sm text-white">LIÊN KẾT THANH TOÁN</span>
                 </div>
                 <span id="bankStatusBadge" class="hidden verified-badge">ĐÃ LIÊN KẾT</span>
             </div>
@@ -144,9 +144,10 @@
             <!-- Form nhập liệu -->
             <div id="bankInputForm">
                 <div class="mb-2">
-                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Tên Ngân Hàng</label>
-                    <select id="bankName" class="input-dark">
-                        <option value="">Chọn ngân hàng</option>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Chọn Ngân Hàng / Ví</label>
+                    <select id="bankName" class="input-dark" onchange="checkBankType(this)">
+                        <option value="">-- Chọn ngân hàng --</option>
+                        <option value="Momo" class="font-bold text-pink-500">Ví Điện Tử MoMo</option>
                         <option value="Vietcombank">Vietcombank</option>
                         <option value="Techcombank">Techcombank</option>
                         <option value="MBBank">MB Bank</option>
@@ -156,10 +157,18 @@
                         <option value="VPBank">VPBank</option>
                         <option value="Agribank">Agribank</option>
                         <option value="TPBank">TPBank</option>
+                        <option value="Sacombank">Sacombank</option>
+                        <option value="VIB">VIB</option>
+                        <option value="MSB">MSB (Hàng Hải)</option>
+                        <option value="OCB">OCB</option>
+                        <option value="Eximbank">Eximbank</option>
+                        <option value="SHB">SHB</option>
+                        <option value="HDBank">HDBank</option>
+                        <option value="VietCapital">VietCapital (Bản Việt)</option>
                     </select>
                 </div>
                 <div class="mb-2">
-                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Số Tài Khoản</label>
+                    <label id="labelBankNumber" class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Số Tài Khoản</label>
                     <input type="number" id="bankNumber" class="input-dark" placeholder="Nhập số tài khoản">
                 </div>
                 <div class="mb-4">
@@ -175,11 +184,11 @@
             <!-- Thông tin đã lưu -->
             <div id="bankInfoDisplay" class="hidden space-y-3">
                 <div class="flex justify-between border-b border-[#232836] pb-2">
-                    <span class="text-xs text-gray-400">Ngân hàng</span>
+                    <span class="text-xs text-gray-400">Ngân hàng / Ví</span>
                     <span class="text-sm font-bold text-white" id="displayBankName">---</span>
                 </div>
                 <div class="flex justify-between border-b border-[#232836] pb-2">
-                    <span class="text-xs text-gray-400">Số tài khoản</span>
+                    <span class="text-xs text-gray-400" id="labelDisplayNumber">Số tài khoản</span>
                     <span class="text-sm font-bold text-[#FCD535] font-mono" id="displayBankNumber">---</span>
                 </div>
                 <div class="flex justify-between">
@@ -239,6 +248,19 @@
         let currentUserUID = null;
         const EXCHANGE_RATE = 25000;
 
+        // Xử lý thay đổi label khi chọn Ví Momo
+        window.checkBankType = (select) => {
+            const label = document.getElementById('labelBankNumber');
+            const input = document.getElementById('bankNumber');
+            if (select.value === 'Momo') {
+                label.innerText = 'SỐ ĐIỆN THOẠI VÍ MOMO';
+                input.placeholder = 'Nhập số điện thoại ví Momo';
+            } else {
+                label.innerText = 'SỐ TÀI KHOẢN';
+                input.placeholder = 'Nhập số tài khoản ngân hàng';
+            }
+        }
+
         window.toggleMenu = () => {
             const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
             if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
@@ -257,7 +279,7 @@
             const bankNumber = document.getElementById('bankNumber').value.trim();
             const bankOwner = document.getElementById('bankOwner').value.trim();
 
-            if (!bankName || !bankNumber) { alert("Vui lòng chọn ngân hàng và nhập số tài khoản!"); return; }
+            if (!bankName || !bankNumber) { alert("Vui lòng chọn ngân hàng/ví và nhập số tài khoản!"); return; }
             if (!currentUserUID) return;
 
             const btn = document.getElementById('btnSaveBank');
@@ -273,12 +295,13 @@
                 if (!querySnapshot.empty) {
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
+                        // Kiểm tra trùng số tài khoản ở tài khoản khác
                         if (data.bankName === bankName && doc.id !== currentUserUID) { isDuplicate = true; }
                     });
                 }
 
                 if (isDuplicate) {
-                    alert("LỖI: Số tài khoản này đã được liên kết bởi người khác!");
+                    alert("LỖI: Số tài khoản/ví này đã được liên kết bởi người khác!");
                     btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> LƯU XÁC MINH';
                     btn.disabled = false;
                     return; 
@@ -346,6 +369,14 @@
                 document.getElementById('displayBankName').innerText = data.bankName;
                 document.getElementById('displayBankNumber').innerText = "****" + data.bankNumber.slice(-3);
                 document.getElementById('displayBankOwner').innerText = data.bankOwner;
+                
+                // Hiển thị label đúng loại
+                if (data.bankName === 'Momo') {
+                    document.getElementById('labelDisplayNumber').innerText = "Số ví MoMo";
+                } else {
+                    document.getElementById('labelDisplayNumber').innerText = "Số tài khoản";
+                }
+
             } else {
                 document.getElementById('bankInputForm').classList.remove('hidden');
                 document.getElementById('bankInfoDisplay').classList.add('hidden');
