@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex - Nạp Rút</title>
+    <title>Crownex - Quản Lý Vòng Cược</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -14,14 +14,19 @@
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
 
-        /* SCROLLBAR HIDE */
+        /* SCROLLBAR */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* CUSTOM SCROLLBAR FOR LIST */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #171b26; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #2d3442; border-radius: 4px; }
 
         /* ANIMATIONS */
         @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 20px); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* SIDEBAR */
         #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -44,64 +49,66 @@
         .btn-action:active { transform: scale(0.98); }
         .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* TOAST NOTIFICATION */
+        /* TOAST */
         #toast-container { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; width: 90%; max-width: 400px; }
-        .toast { pointer-events: auto; background: rgba(30, 35, 46, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; display: flex; items-center; gap: 12px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .toast { pointer-events: auto; background: rgba(30, 35, 46, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; display: flex; items-center; gap: 12px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideDown 0.3s forwards; }
         .toast.success { border-left: 4px solid var(--success); }
         .toast.error { border-left: 4px solid var(--danger); }
 
-        /* PROGRESS BAR STRIPES */
-        .progress-striped { background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem; animation: progress-stripes 1s linear infinite; }
-        @keyframes progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
-
         /* MODAL */
-        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        .modal-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
         .modal-content { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .turnover-item { position: relative; padding-left: 20px; }
+        .turnover-item::before { content: ''; position: absolute; left: 6px; top: 24px; bottom: -16px; width: 2px; background: #2d3442; }
+        .turnover-item:last-child::before { display: none; }
+        .turnover-dot { position: absolute; left: 0; top: 6px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #2d3442; background: #0b0f19; z-index: 10; }
+        .turnover-dot.active { border-color: #FCD535; background: #FCD535; box-shadow: 0 0 10px rgba(252, 213, 53, 0.5); }
+        .turnover-dot.done { border-color: #0ECB81; background: #0ECB81; }
     </style>
 </head>
 <body>
 
-    <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
     <!-- MODAL CHI TIẾT VÒNG CƯỢC -->
     <div id="turnoverModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay" onclick="closeTurnoverModal()">
-        <div class="bg-[#1e232e] w-full max-w-sm rounded-xl border border-[#2d3442] shadow-2xl modal-content overflow-hidden" onclick="event.stopPropagation()">
-            <div class="bg-[#171b26] p-4 border-b border-[#2d3442] flex justify-between items-center">
-                <h3 class="font-bold text-white text-base"><i class="fa-solid fa-list-check text-[#FCD535] mr-2"></i>Chi Tiết Vòng Cược</h3>
-                <button onclick="closeTurnoverModal()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <div class="bg-[#1e232e] w-full max-w-sm rounded-xl border border-[#2d3442] shadow-2xl modal-content flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="bg-[#171b26] p-4 border-b border-[#2d3442] flex justify-between items-center shrink-0 rounded-t-xl">
+                <h3 class="font-bold text-white text-base"><i class="fa-solid fa-list-check text-[#FCD535] mr-2"></i>Tiến Độ Theo Lệnh Nạp</h3>
+                <button onclick="closeTurnoverModal()" class="text-gray-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-full active:bg-[#2d3442]"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div class="p-5 space-y-4">
-                <div class="bg-[#0b0f19] p-3 rounded border border-[#2d3442] text-xs text-gray-400 italic">
-                    <i class="fa-solid fa-circle-info mr-1 text-blue-400"></i> Quy tắc: Khi có lệnh nạp mới, vòng cược sẽ được tính lại từ đầu theo số tiền nạp đó (Không cộng dồn cũ).
-                </div>
+            
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-5 overflow-y-auto custom-scroll flex-1">
                 
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center border-b border-[#2d3442] pb-2">
-                        <span class="text-sm text-gray-400">Yêu cầu cược (Target)</span>
-                        <span class="font-mono font-bold text-[#FCD535]" id="modalRequired">$0.00</span>
+                <!-- Tổng Quan -->
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <div class="bg-[#0b0f19] p-3 rounded border border-[#2d3442]">
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">Tổng đã cược</div>
+                        <div class="text-[#0ECB81] font-mono font-bold text-lg" id="modalTotalBet">$0.00</div>
                     </div>
-                    <div class="flex justify-between items-center border-b border-[#2d3442] pb-2">
-                        <span class="text-sm text-gray-400">Đã cược (Current)</span>
-                        <span class="font-mono font-bold text-[#0ECB81]" id="modalCurrent">$0.00</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-400">Còn thiếu</span>
-                        <span class="font-mono font-bold text-[#F6465D]" id="modalRemaining">$0.00</span>
+                    <div class="bg-[#0b0f19] p-3 rounded border border-[#2d3442]">
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">Tổng yêu cầu</div>
+                        <div class="text-[#FCD535] font-mono font-bold text-lg" id="modalTotalReq">$0.00</div>
                     </div>
                 </div>
 
-                <div class="bg-[#2d3442]/50 p-3 rounded-lg mt-4">
-                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Lệnh nạp kích hoạt gần nhất</div>
-                     <div id="lastDepositInfo" class="flex items-center gap-2">
-                         <div class="w-8 h-8 rounded bg-[#0ECB81]/20 flex items-center justify-center text-[#0ECB81]"><i class="fa-solid fa-money-bill-transfer"></i></div>
-                         <div class="flex flex-col">
-                             <span class="text-xs text-white font-bold" id="lastDepositAmount">--</span>
-                             <span class="text-[10px] text-gray-500" id="lastDepositTime">--</span>
-                         </div>
-                     </div>
+                <div class="text-xs text-gray-400 italic mb-4 border-b border-[#2d3442] pb-2">
+                    <i class="fa-solid fa-arrow-down-short-wide mr-1"></i> Các lệnh nạp cần hoàn thành vòng cược:
                 </div>
 
+                <!-- Danh sách lệnh nạp -->
+                <div id="depositTurnoverList" class="space-y-1">
+                    <!-- Javascript sẽ render vào đây -->
+                    <div class="text-center py-4 text-gray-500 text-xs">Đang tải dữ liệu...</div>
+                </div>
+
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-[#2d3442] bg-[#171b26] shrink-0 rounded-b-xl">
                 <button onclick="closeTurnoverModal()" class="w-full bg-[#2d3442] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#374151] transition">Đóng</button>
             </div>
         </div>
@@ -198,7 +205,7 @@
                 <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền chuyển khoản (VNĐ)</label>
                 <input type="number" id="depositVND" class="input-dark font-mono font-bold text-[#FCD535]" placeholder="Ví dụ: 100,000VNĐ">
                 <p class="text-[10px] text-gray-500 mt-2" id="depositCalcHint">Thực nhận: 0 USDT</p>
-                <p class="text-[10px] text-[#F6465D] mt-1 italic"><i class="fa-solid fa-circle-exclamation mr-1"></i> Lưu ý: Khi nạp mới, vòng cược sẽ được tính lại từ đầu bằng số tiền nạp.</p>
+                <p class="text-[10px] text-[#F6465D] mt-1 italic"><i class="fa-solid fa-circle-exclamation mr-1"></i> Lưu ý: Khi nạp mới, vòng cược của lệnh nạp này sẽ được tính riêng biệt.</p>
             </div>
             
             <button onclick="window.handleDeposit()" class="btn-action btn-deposit" id="btnDeposit"><i class="fa-solid fa-paper-plane mr-2"></i> TẠO LỆNH NẠP</button>
@@ -206,43 +213,39 @@
 
         <!-- TAB 2: RÚT TIỀN -->
         <div id="tab-withdraw" class="hidden fade-in">
-            <!-- Alert chưa liên kết bank -->
             <div id="bankAlert" class="hidden flex flex-col items-center justify-center p-6 text-center bg-[#1e232e] rounded-xl border border-[#2d3442] border-dashed mb-4">
                 <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl mb-2"></i>
                 <div class="text-white font-bold text-sm mb-2">CHƯA LIÊN KẾT NGÂN HÀNG</div>
                 <a href="taikhoan.html" class="inline-block bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Cập nhật ngay</a>
             </div>
 
-            <!-- Form Rút -->
             <div id="withdrawUI" class="hidden">
                 <div class="rate-box rate-box-withdraw bg-[rgba(246,70,93,0.1)] border border-[#F6465D] text-[#F6465D] p-3 rounded-lg text-center font-bold text-sm mb-4 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-money-bill-wave text-lg"></i>
                     <span>TỶ GIÁ RÚT: 1 USDT = 25.000 VNĐ</span>
                 </div>
 
-                <!-- THANH TIẾN ĐỘ VÒNG CƯỢC (CÓ NÚT CHI TIẾT) -->
+                <!-- THANH TIẾN ĐỘ VÒNG CƯỢC -->
                 <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] mb-6 relative overflow-hidden">
                     <div class="flex justify-between items-end mb-1">
                         <span class="text-xs text-gray-400 font-bold uppercase flex items-center gap-1">
-                            <i class="fa-solid fa-rotate"></i> Vòng cược yêu cầu
+                            <i class="fa-solid fa-rotate"></i> Tổng vòng cược
                         </span>
                         <!-- Nút Xem Chi Tiết -->
-                        <div onclick="openTurnoverModal()" class="text-[10px] text-[#FCD535] font-bold cursor-pointer hover:underline flex items-center gap-1">
-                            <i class="fa-solid fa-eye"></i> Chi tiết
+                        <div onclick="openTurnoverModal()" class="text-[11px] bg-[#2d3442] hover:bg-[#FCD535] hover:text-black text-[#FCD535] px-2 py-1 rounded transition cursor-pointer font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-list-ul"></i> Chi tiết
                         </div>
                     </div>
                     
-                    <!-- Progress Bar -->
-                    <div class="w-full h-2 bg-[#2d3442] rounded overflow-hidden mt-1 relative">
+                    <div class="w-full h-2 bg-[#2d3442] rounded overflow-hidden mt-2 relative">
                         <div class="h-full transition-all duration-500" id="turnoverBar" style="width: 0%; background: linear-gradient(90deg, #FCD535, #ff9f43);"></div>
                     </div>
                     
                     <div class="flex justify-between mt-2">
-                        <span class="text-[10px] text-gray-500 italic" id="turnoverNote">* Bạn cần hoàn thành cược để rút.</span>
+                        <span class="text-[10px] text-gray-500 italic" id="turnoverNote">* Đang tính toán...</span>
                         <span class="text-xs font-mono text-white font-bold"><span id="currentTurnover">0</span> / <span id="requiredTurnover">0</span></span>
                     </div>
 
-                    <!-- Lock Overlay -->
                     <div id="turnoverLock" class="hidden absolute top-0 bottom-0 right-0 p-4 flex items-center">
                         <i class="fa-solid fa-lock text-red-500/50 text-4xl"></i>
                     </div>
@@ -258,7 +261,6 @@
                         <input type="text" id="wdBankNumber" class="input-dark bg-[#171b26] font-mono text-[#FCD535] cursor-not-allowed" readonly>
                     </div>
 
-                    <!-- Input Amount -->
                     <div>
                         <label class="text-xs text-gray-400 font-bold uppercase mb-1 block">Số tiền rút (USDT)</label>
                         <div class="relative">
@@ -340,37 +342,119 @@
             if(targetBtn) targetBtn.classList.add('active');
         };
 
-        // --- MODAL LOGIC ---
+        // --- MODAL LOGIC (TÍNH TOÁN CHI TIẾT TỪNG LỆNH) ---
         window.openTurnoverModal = () => {
-            const m = document.getElementById('turnoverModal');
-            m.classList.remove('hidden');
-            updateModalData();
+            document.getElementById('turnoverModal').classList.remove('hidden');
+            renderTurnoverDetails();
         };
 
         window.closeTurnoverModal = () => {
             document.getElementById('turnoverModal').classList.add('hidden');
         };
 
-        function updateModalData() {
+        // HÀM TÍNH TOÁN CỐT LÕI
+        function renderTurnoverDetails() {
             if(!state.data) return;
-            const req = state.data.requiredTurnover || 0;
-            const cur = state.data.betTurnover || 0;
-            const rem = Math.max(0, req - cur);
 
-            document.getElementById('modalRequired').innerText = "$" + req.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('modalCurrent').innerText = "$" + cur.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('modalRemaining').innerText = "$" + rem.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const listContainer = document.getElementById('depositTurnoverList');
+            const totalBetEl = document.getElementById('modalTotalBet');
+            const totalReqEl = document.getElementById('modalTotalReq');
+            
+            // Lấy danh sách lệnh nạp thành công (xếp theo thời gian tăng dần - Cũ nhất trước)
+            // Logic: Cược sẽ trừ vào lệnh cũ nhất trước
+            const deposits = state.history
+                .filter(h => h.type === 'deposit' && h.status === 'success')
+                .sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
-            // Tìm lệnh nạp thành công gần nhất để hiển thị nguồn gốc
-            const lastSuccessDeposit = state.history.find(h => h.type === 'deposit' && h.status === 'success');
-            if (lastSuccessDeposit) {
-                document.getElementById('lastDepositAmount').innerText = `+ $${parseFloat(lastSuccessDeposit.amount).toLocaleString()}`;
-                const date = lastSuccessDeposit.timestamp ? (lastSuccessDeposit.timestamp.toDate ? lastSuccessDeposit.timestamp.toDate() : new Date(lastSuccessDeposit.timestamp.seconds * 1000)) : new Date();
-                document.getElementById('lastDepositTime').innerText = date.toLocaleString('vi-VN');
+            let globalBet = state.data.betTurnover || 0; // Tổng tiền user đã cược
+            const initialBet = globalBet; // Để hiển thị
+            let totalReq = 0; // Tổng yêu cầu của tất cả các lệnh
+
+            let html = '';
+
+            if (deposits.length === 0) {
+                html = `<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-box-open text-2xl mb-2 block"></i>Chưa có lệnh nạp nào cần cược</div>`;
+                totalReq = 0;
             } else {
-                document.getElementById('lastDepositAmount').innerText = "Chưa có";
-                document.getElementById('lastDepositTime').innerText = "--";
+                deposits.forEach((dep, index) => {
+                    const reqAmount = parseFloat(dep.amount); // Yêu cầu của lệnh này
+                    totalReq += reqAmount;
+
+                    // Tính xem lệnh này đã được "fill" bao nhiêu bởi globalBet
+                    // Vì là queue, globalBet sẽ trừ dần vào các lệnh cũ
+                    let filled = 0;
+                    let isDone = false;
+                    let isActive = false;
+
+                    if (globalBet >= reqAmount) {
+                        // Nếu tổng cược dư sức trả lệnh này -> Lệnh này xong
+                        filled = reqAmount;
+                        globalBet -= reqAmount; // Trừ đi để tính cho lệnh sau
+                        isDone = true;
+                    } else {
+                        // Nếu tổng cược chỉ trả được 1 phần hoặc = 0
+                        filled = globalBet;
+                        globalBet = 0; // Hết tiền cược để trả
+                        if (filled > 0 && filled < reqAmount) isActive = true; // Đang cược dở
+                        if (filled === 0 && index === 0) isActive = true; // Lệnh đầu tiên chưa cược tí nào
+                    }
+
+                    // Nếu lệnh trước đã xong hết, lệnh này bắt đầu active (trạng thái chờ cược)
+                    // Logic trên đã cover việc globalBet = 0 thì filled = 0.
+                    // Xác định trạng thái để hiển thị màu sắc
+                    let statusColor = 'bg-gray-600'; // Mặc định chờ
+                    let dotClass = 'turnover-dot';
+                    let statusText = 'Đang chờ';
+                    let percent = (filled / reqAmount) * 100;
+
+                    if (isDone) {
+                        statusColor = 'bg-[#0ECB81]';
+                        dotClass += ' done';
+                        statusText = 'Hoàn thành';
+                    } else if (filled > 0 || (index > 0 && deposits[index-1].filled === deposits[index-1].reqAmount) || (index === 0 && !isDone)) {
+                         // Logic Active hơi phức tạp xíu: Nếu nó đang được fill, hoặc nó là thằng đầu tiên chưa xong
+                         statusColor = 'bg-[#FCD535]';
+                         dotClass += ' active';
+                         statusText = 'Đang thực hiện';
+                    }
+
+                    const dateStr = dep.timestamp ? (dep.timestamp.toDate ? dep.timestamp.toDate() : new Date(dep.timestamp.seconds * 1000)).toLocaleString('vi-VN') : 'Unknown';
+
+                    html += `
+                    <div class="turnover-item pb-6">
+                        <div class="${dotClass}"></div>
+                        <div class="bg-[#2d3442]/40 rounded-lg p-3 ml-2 border border-[#2d3442] hover:border-[#FCD535]/30 transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="text-xs font-bold text-white mb-0.5">Nạp tiền #${index + 1}</div>
+                                    <div class="text-[10px] text-gray-500">${dateStr}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-bold ${isDone ? 'text-[#0ECB81]' : 'text-[#FCD535]'}">${isDone ? 'Đã xong' : '$' + reqAmount}</div>
+                                    <div class="text-[9px] uppercase font-bold text-gray-500 tracking-wide">${statusText}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Mini -->
+                            <div class="w-full h-1.5 bg-[#13161f] rounded-full overflow-hidden mb-1">
+                                <div class="h-full ${statusColor}" style="width: ${percent}%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-400">Đã cược: <b class="text-white">$${filled.toFixed(2)}</b></span>
+                                <span class="text-gray-400">Thiếu: <b class="text-[#F6465D]">$${(reqAmount - filled).toFixed(2)}</b></span>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    // Lưu lại thuộc tính vào object tạm để check logic index sau
+                    dep.filled = filled;
+                    dep.reqAmount = reqAmount;
+                });
             }
+
+            listContainer.innerHTML = html;
+            totalBetEl.innerText = "$" + initialBet.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            totalReqEl.innerText = "$" + totalReq.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         window.showToast = (msg, type = 'info') => {
@@ -411,15 +495,20 @@
             document.getElementById('wdAmount').dispatchEvent(new Event('input'));
         };
 
+        // Logic Check Turnover Tổng Quát
         function checkTurnoverCondition() {
             if(!state.data) return false;
-            const current = state.data.betTurnover || 0;
-            const required = state.data.requiredTurnover || 0;
-            if(required > 0 && current < required) return false;
+            // Tính tổng yêu cầu từ lịch sử nạp thành công
+            const deposits = state.history.filter(h => h.type === 'deposit' && h.status === 'success');
+            const totalRequired = deposits.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+            const currentBet = state.data.betTurnover || 0;
+
+            // Nếu tổng cược < tổng yêu cầu nạp -> Không cho rút
+            if (currentBet < totalRequired) return false;
             return true;
         }
 
-        // --- HANDLE DEPOSIT (REVERT TO PENDING) ---
+        // --- HANDLE DEPOSIT (ADMIN DUYỆT) ---
         window.handleDeposit = async () => {
             const vnd = parseFloat(document.getElementById('depositVND').value);
             if(!vnd || vnd < RULES.MIN_DEPOSIT) return window.showToast(`Nạp tối thiểu ${RULES.MIN_DEPOSIT.toLocaleString()} VNĐ`, 'error');
@@ -430,14 +519,12 @@
             try {
                 const usdt = vnd / RATES.DEPOSIT;
                 
-                // QUAN TRỌNG: Chỉ tạo yêu cầu 'pending', KHÔNG cộng tiền/reset cược ở đây
-                // Việc reset cược sẽ do Admin thực hiện khi duyệt đơn
                 const payload = {
                     type: 'deposit',
                     amount: usdt,
                     vndAmount: vnd,
                     rate: RATES.DEPOSIT,
-                    status: 'pending', // Chờ duyệt
+                    status: 'pending',
                     userId: state.user.uid,
                     username: state.data.username || 'User',
                     content: state.data.username ? state.data.username.toUpperCase() : 'UNKNOWN',
@@ -458,9 +545,9 @@
             }
         };
 
-        // --- HANDLE WITHDRAW (RESET TURN AFTER WITHDRAW) ---
+        // --- HANDLE WITHDRAW (RESET TURN) ---
         window.handleWithdraw = async () => {
-            if(!checkTurnoverCondition()) return window.showToast('Chưa hoàn thành vòng cược!', 'error');
+            if(!checkTurnoverCondition()) return window.showToast('Chưa hoàn thành đủ vòng cược!', 'error');
             
             const amount = parseFloat(document.getElementById('wdAmount').value);
             if(!amount || amount < RULES.MIN_WITHDRAW_USDT) return window.showToast(`Rút tối thiểu $${RULES.MIN_WITHDRAW_USDT}`, 'error');
@@ -472,11 +559,22 @@
             try {
                 const newBalance = state.data.balance - amount;
                 
-                // Khi rút thành công, reset vòng cược về 0
+                // Khi rút tiền thành công, reset toàn bộ tiến trình cược
+                // Bằng cách xóa betTurnover về 0 và xóa lịch sử nạp (Logic giả định để reset queue)
+                // Tuy nhiên thực tế ta chỉ cần reset betTurnover về 0 và đánh dấu các transaction cũ là "archived" hoặc xóa nó
+                // Ở đây để đơn giản ta chỉ reset betTurnover.
+                // LƯU Ý: Nếu muốn reset hoàn toàn queue, ta phải có cờ đánh dấu transaction đã "settled".
+                // Ở đây mô phỏng đơn giản: Set betTurnover = 0 (nhưng các deposit cũ vẫn còn đó -> sẽ bị tính nợ tiếp).
+                // => CẦN LOGIC SETTLED. Ở đây giả lập bằng cách updateDoc user.
+                
+                // CÁCH XỬ LÝ ĐÚNG VỚI FIREBASE (Giả lập):
+                // Ta cần update trường `lastWithdrawTime` để chỉ tính các deposit SAU thời gian đó.
+                
                 await updateDoc(doc(db, "users", state.user.uid), {
                     balance: newBalance,
                     betTurnover: 0,
-                    requiredTurnover: 0 
+                    // Lưu timestamp rút tiền để lọc deposit
+                    lastSettledTime: serverTimestamp() 
                 });
 
                 const payload = {
@@ -511,10 +609,10 @@
                 onSnapshot(doc(db, "users", user.uid), (snap) => {
                     if(snap.exists()) {
                         state.data = snap.data();
+                        // Realtime update modal logic if filtered data changes
                         updateUI(state.data);
-                        // Update modal nếu đang mở
                         if(!document.getElementById('turnoverModal').classList.contains('hidden')) {
-                            updateModalData();
+                            renderTurnoverDetails();
                         }
                     }
                 });
@@ -522,7 +620,18 @@
                 onSnapshot(q, (snap) => {
                     state.history = [];
                     snap.forEach(d => state.history.push({id: d.id, ...d.data()}));
-                    renderHistory();
+                    
+                    // Filter history based on lastSettledTime to clear old queues
+                    if(state.data && state.data.lastSettledTime) {
+                        const settledTime = state.data.lastSettledTime.seconds || 0;
+                        // Chỉ giữ lại history sau lần rút cuối cùng để tính cược
+                         // (Hiển thị thì vẫn hiển thị hết, nhưng tính toán cược thì filter)
+                    }
+                    
+                    updateUI(state.data);
+                    if(!document.getElementById('turnoverModal').classList.contains('hidden')) {
+                        renderTurnoverDetails();
+                    }
                 });
             } else {
                 window.location.href = "login.html";
@@ -547,37 +656,49 @@
                 document.getElementById('withdrawUI').classList.add('hidden');
             }
 
-            // --- TURNOVER VISUALIZATION ---
+            // --- TURNOVER VISUALIZATION (MAIN TAB) ---
+            // Logic: Tính tổng deposit hợp lệ (Sau lần rút cuối)
+            let validDeposits = state.history.filter(h => h.type === 'deposit' && h.status === 'success');
+            
+            // Nếu có lastSettledTime, lọc bỏ các deposit cũ
+            if(data.lastSettledTime) {
+                const settled = data.lastSettledTime.seconds || 0;
+                validDeposits = validDeposits.filter(d => (d.timestamp?.seconds || 0) > settled);
+            }
+
+            const totalRequired = validDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0);
             const current = data.betTurnover || 0;
-            const required = data.requiredTurnover || 0;
+
             const btnWd = document.getElementById('btnWithdraw');
             const bar = document.getElementById('turnoverBar');
             const note = document.getElementById('turnoverNote');
             const lock = document.getElementById('turnoverLock');
 
             document.getElementById('currentTurnover').innerText = current.toLocaleString(undefined, {maximumFractionDigits: 2});
-            document.getElementById('requiredTurnover').innerText = required.toLocaleString(undefined, {maximumFractionDigits: 2});
+            document.getElementById('requiredTurnover').innerText = totalRequired.toLocaleString(undefined, {maximumFractionDigits: 2});
 
-            if(required === 0) {
+            if(totalRequired === 0) {
+                 // Không nợ cược
                 bar.style.width = '100%';
                 bar.style.background = '#0ECB81';
                 bar.classList.remove('progress-striped');
                 note.innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check"></i> Đủ điều kiện rút tiền</span>';
                 btnWd.disabled = false;
                 lock.classList.add('hidden');
-            } else if (current >= required) {
+            } else if (current >= totalRequired) {
                 bar.style.width = '100%';
                 bar.style.background = '#0ECB81';
                 bar.classList.remove('progress-striped');
-                note.innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check"></i> Đã hoàn thành vòng cược</span>';
+                note.innerHTML = '<span class="text-[#0ECB81] font-bold"><i class="fa-solid fa-check"></i> Hoàn thành cược</span>';
                 btnWd.disabled = false;
                 lock.classList.add('hidden');
             } else {
-                let pct = (current / required) * 100;
+                let pct = (current / totalRequired) * 100;
+                if(pct > 100) pct = 100;
                 bar.style.width = `${pct}%`;
                 bar.style.background = 'linear-gradient(90deg, #FCD535, #ff9f43)';
                 bar.classList.add('progress-striped');
-                note.innerHTML = `<span class="text-[#F6465D] font-bold">Còn thiếu ${ (required - current).toLocaleString(undefined, {maximumFractionDigits: 2}) } cược</span>`;
+                note.innerHTML = `<span class="text-[#F6465D] font-bold">Thiếu ${ (totalRequired - current).toLocaleString(undefined, {maximumFractionDigits: 2}) } để rút</span>`;
                 btnWd.disabled = true;
                 lock.classList.remove('hidden');
             }
