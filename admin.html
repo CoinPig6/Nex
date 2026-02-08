@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN - MANAGER V11.3 (FULL TURNOVER)</title>
+    <title>CROWNEX ADMIN - MANAGER V11.4 (FIX NAME & TURNOVER)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -130,7 +130,7 @@
                 <i class="fa-solid fa-crown text-5xl text-[#FCD535]"></i>
             </div>
         </div>
-        <h1 class="text-2xl font-bold text-white mb-8 tracking-tight">ADMIN MANAGER V11.3</h1>
+        <h1 class="text-2xl font-bold text-white mb-8 tracking-tight">ADMIN MANAGER V11.4</h1>
         
         <div class="flex flex-col gap-4 w-full max-w-[300px] px-4">
             <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[0.5em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-slate-700" placeholder="••••" maxlength="4">
@@ -270,7 +270,7 @@
                 <div class="table-container">
                     <div class="table-scroll-wrapper">
                         <table>
-                            <thead><tr><th>Thời gian</th><th>User</th><th>Số tiền</th><th>Ngân hàng / STK</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
+                            <thead><tr><th>Thời gian</th><th>Tên người chơi</th><th>Số tiền</th><th>Ngân hàng / STK</th><th>Trạng thái</th><th class="text-right">Hành động</th></tr></thead>
                             <tbody id="table-requests"></tbody>
                         </table>
                     </div>
@@ -414,6 +414,10 @@
                 
                 <div class="space-y-3 mb-5">
                     <div class="flex justify-between text-sm border-b border-[#2A303C] pb-2">
+                        <span class="text-slate-500">Người thực hiện</span>
+                        <span class="font-bold text-white uppercase" id="modal-req-user">...</span>
+                    </div>
+                    <div class="flex justify-between text-sm border-b border-[#2A303C] pb-2">
                         <span class="text-slate-500">Ngân hàng</span>
                         <span class="font-bold text-white" id="modal-bank-name">...</span>
                     </div>
@@ -422,7 +426,7 @@
                         <span class="font-bold text-[#FCD535] font-mono select-all cursor-pointer" onclick="window.copyToClipboard(this.innerText)" title="Click to copy" id="modal-bank-num">...</span>
                     </div>
                     <div class="flex justify-between text-sm pb-2">
-                        <span class="text-slate-500">Chủ TK</span>
+                        <span class="text-slate-500">Chủ TK (Bank)</span>
                         <span class="font-bold text-white uppercase" id="modal-bank-owner">...</span>
                     </div>
                 </div>
@@ -604,9 +608,9 @@
             window.initDefaults();
             syncRealtimeTimer();
             loadLiveBets();
+            loadUsers(); // Load users first to map names
             loadRequestsAndStats();
             loadPromotions();
-            loadUsers();
             loadGiftcodes();
             loadSettings();
         }
@@ -703,9 +707,17 @@
                 const timeStr = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString('vi-VN') : '-';
                 const bankInfoArr = d.bankInfo ? d.bankInfo.split(' - ') : [];
                 
+                // Look up user full name
+                const u = allUsers.find(x => x.id === d.userId);
+                const userFullName = u ? (u.fullName || u.username) : (d.username || 'Unknown');
+                const userSub = u ? u.username : d.userId.substring(0,6);
+
                 html += `<tr class="border-b border-[#2A303C]">
                     <td class="font-mono text-[10px] text-slate-500">${timeStr}</td>
-                    <td class="font-bold text-white text-xs">${d.username||d.userId.substring(0,6)}...</td>
+                    <td>
+                        <div class="font-bold text-white text-xs uppercase">${userFullName}</div>
+                        <div class="text-[10px] text-slate-500">${userSub}</div>
+                    </td>
                     <td class="font-bold text-white font-mono ${isDep?'text-green-400':'text-red-400'}">${isDep?'+':'-'}$${parseFloat(d.amount).toLocaleString()}</td>
                     <td>
                         <div class="text-[11px] font-bold text-white">${bankInfoArr[0]||'-'}</div>
@@ -725,8 +737,15 @@
             activeReq = allReqs.find(x => x.id === rid);
             if(!activeReq) return;
             const b = activeReq.bankInfo ? activeReq.bankInfo.split(' - ') : ['-','-','-'];
+            
+            // Get user info for modal
+            const u = allUsers.find(x => x.id === activeReq.userId);
+            const userDisplay = u ? (u.fullName || u.username) : activeReq.username;
+
             document.getElementById('modal-type').innerText = activeReq.type === 'deposit' ? 'NẠP TIỀN' : 'RÚT TIỀN';
             document.getElementById('modal-amount').innerText = "$"+parseFloat(activeReq.amount).toLocaleString();
+            document.getElementById('modal-req-user').innerText = userDisplay;
+            
             document.getElementById('modal-bank-name').innerText = b[0] || '-';
             document.getElementById('modal-bank-num').innerText = b[1] || '-';
             document.getElementById('modal-bank-owner').innerText = b[2] || '-';
@@ -927,6 +946,9 @@
                 document.getElementById('stat-users').innerText = allUsers.length; 
                 document.getElementById('user-count').innerText = allUsers.length;
                 document.getElementById('stat-balance').innerText = "$" + totalBal.toLocaleString();
+                
+                // Reload request table to show names if users loaded later
+                renderRequestTable();
             });
         }
 
