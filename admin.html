@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN - MANAGER V11.2</title>
+    <title>CROWNEX ADMIN - MANAGER V11.2 (FIXED)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -728,14 +728,27 @@
 
         window.confirmTransaction = async () => {
             if(!activeReq) return;
+            // FIX: Ensure turnover is treated as a number
             const turn = parseFloat(document.getElementById('modal-turnover').value) || 0;
+            
             const btn = document.querySelector('#modal-approve .btn-success');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Xử lý...'; btn.disabled = true;
             try {
                 if(activeReq.type === 'deposit') {
                     const uRef = doc(db, "users", activeReq.userId);
                     const uSnap = await getDoc(uRef);
-                    if(uSnap.exists()) await updateDoc(uRef, { balance: (uSnap.data().balance||0) + activeReq.amount, requiredTurnover: (uSnap.data().requiredTurnover||0) + turn, depositToday: (uSnap.data().depositToday||0) + activeReq.amount });
+                    if(uSnap.exists()) {
+                        // FIX: Explicitly convert existing values to numbers to prevent string concatenation
+                        const currentBal = parseFloat(uSnap.data().balance) || 0;
+                        const currentTurnover = parseFloat(uSnap.data().requiredTurnover) || 0;
+                        const depToday = parseFloat(uSnap.data().depositToday) || 0;
+                        
+                        await updateDoc(uRef, { 
+                            balance: currentBal + parseFloat(activeReq.amount), 
+                            requiredTurnover: currentTurnover + turn, 
+                            depositToday: depToday + parseFloat(activeReq.amount) 
+                        });
+                    }
                 }
                 await updateDoc(doc(db, "admin_requests", activeReq.id), { status: 'success' });
                 
@@ -851,7 +864,15 @@
                 const uRef = doc(db, "users", p.userId);
                 const uSnap = await getDoc(uRef);
                 if(uSnap.exists()) {
-                    await updateDoc(uRef, { balance: (uSnap.data().balance||0) + amt, requiredTurnover: (uSnap.data().requiredTurnover||0) + turn });
+                    // FIX: Ensure correct math for turnover addition
+                    const currentBal = parseFloat(uSnap.data().balance) || 0;
+                    const currentTurn = parseFloat(uSnap.data().requiredTurnover) || 0;
+                    
+                    await updateDoc(uRef, { 
+                        balance: currentBal + amt, 
+                        requiredTurnover: currentTurn + turn 
+                    });
+                    
                     await addDoc(collection(db, "users", p.userId, "transactions"), { type: "Km", promoId: pid, amount: amt, status: "success", note: p.type, timestamp: serverTimestamp() });
                 }
                 await updateDoc(doc(db, "promo_requests", pid), { status: 'success', approvedAt: serverTimestamp(), bonusAmount: amt, turnoverRequire: turn });
@@ -944,19 +965,27 @@
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
             const turnAdj = parseFloat(document.getElementById('edit-adjust-turnover').value) || 0;
             
-            const u = allUsers.find(x => x.id === uid); if(!u) return;
+            // FIX: Get fresh data from DB to ensure accurate addition
+            const uRef = doc(db, "users", uid);
+            const uSnap = await getDoc(uRef);
             
-            if(confirm(`Xác nhận cập nhật thông tin cho [${u.username}]?`)) {
+            if(!uSnap.exists()) return alert("User không tồn tại!");
+            const uData = uSnap.data();
+
+            if(confirm(`Xác nhận cập nhật thông tin cho [${uData.username}]?`)) {
                 try {
-                    // Update core info
-                    await updateDoc(doc(db, "users", uid), {
+                    // Update core info + calculate new balance/turnover
+                    const currentBal = parseFloat(uData.balance) || 0;
+                    const currentTurnover = parseFloat(uData.requiredTurnover) || 0;
+
+                    await updateDoc(uRef, {
                         fullName: document.getElementById('edit-fullname').value,
                         phone: document.getElementById('edit-phone').value,
                         password: document.getElementById('edit-password').value,
                         bankName: document.getElementById('edit-bank').value,
                         bankNumber: document.getElementById('edit-bank-num').value,
-                        balance: (u.balance||0) + balAdj,
-                        requiredTurnover: (u.requiredTurnover||0) + turnAdj
+                        balance: currentBal + balAdj,
+                        requiredTurnover: currentTurnover + turnAdj
                     });
                     
                     // Log transaction if money changed
