@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CROWNEX ADMIN - MANAGER V11.2 (FIXED)</title>
+    <title>CROWNEX ADMIN - MANAGER V11.3 (FULL TURNOVER)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -113,7 +113,7 @@
         /* Modal & Toast */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { background: #151A25; width: 95%; max-width: 500px; border-radius: 16px; border: 1px solid #333; overflow: hidden; transform: scale(0.95); transition: transform 0.2s; }
+        .modal-content { background: #151A25; width: 95%; max-width: 550px; border-radius: 16px; border: 1px solid #333; overflow: hidden; transform: scale(0.95); transition: transform 0.2s; }
         .modal-overlay.active .modal-content { transform: scale(1); }
         
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 24px; background: #151A25; border: 1px solid #333; border-left: 4px solid #FCD535; color: white; border-radius: 8px; transform: translateY(100px); transition: 0.3s; z-index: 9999; font-weight: 600; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -130,7 +130,7 @@
                 <i class="fa-solid fa-crown text-5xl text-[#FCD535]"></i>
             </div>
         </div>
-        <h1 class="text-2xl font-bold text-white mb-8 tracking-tight">ADMIN MANAGER V11.2</h1>
+        <h1 class="text-2xl font-bold text-white mb-8 tracking-tight">ADMIN MANAGER V11.3</h1>
         
         <div class="flex flex-col gap-4 w-full max-w-[300px] px-4">
             <input type="password" id="adminPin" class="w-full text-center bg-[#151A25] border border-[#2A303C] text-[#FCD535] text-2xl tracking-[0.5em] py-4 rounded-xl focus:border-[#FCD535] outline-none transition-all placeholder-slate-700" placeholder="••••" maxlength="4">
@@ -488,7 +488,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="col-span-2"><label class="text-[10px] text-slate-500 uppercase block mb-1">Tên hiển thị (Chủ TK)</label><input type="text" id="edit-fullname" class="input-box"></div>
                     <div><label class="text-[10px] text-slate-500 uppercase block mb-1">SĐT</label><input type="text" id="edit-phone" class="input-box"></div>
-                    <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Mật khẩu (Hiển thị)</label><input type="text" id="edit-password" class="input-box text-slate-400"></div>
+                    <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Mật khẩu</label><input type="text" id="edit-password" class="input-box text-slate-400"></div>
                     <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Ngân Hàng</label><input type="text" id="edit-bank" class="input-box"></div>
                     <div><label class="text-[10px] text-slate-500 uppercase block mb-1">Số Tài Khoản</label><input type="text" id="edit-bank-num" class="input-box font-mono text-[#FCD535]"></div>
                 </div>
@@ -500,27 +500,36 @@
                     <!-- Balance -->
                     <div class="flex items-center gap-3">
                         <div class="w-1/3">
-                            <div class="text-[10px] text-slate-500 uppercase">Số dư hiện tại</div>
+                            <div class="text-[10px] text-slate-500 uppercase">Số dư</div>
                             <div class="text-xl font-bold text-white font-mono" id="edit-current-bal">$0</div>
                         </div>
                         <div class="flex-1">
                             <label class="text-[10px] text-slate-500 block mb-1">Cộng / Trừ Tiền ($)</label>
-                            <div class="flex gap-2">
-                                <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25] text-white border-slate-700" placeholder="Nhập số (VD: 100 hoặc -50)">
-                            </div>
-                            <div class="text-[9px] text-slate-500 italic mt-1">*Nhập số dương để cộng, số âm để trừ</div>
+                            <input type="number" id="edit-adjust-bal" class="input-box bg-[#151A25] text-white border-slate-700" placeholder="+/- Số tiền">
                         </div>
                     </div>
 
-                    <!-- Turnover -->
+                    <!-- Bet Turnover (NEW) -->
                     <div class="flex items-center gap-3 pt-2 border-t border-slate-800">
                         <div class="w-1/3">
-                            <div class="text-[10px] text-slate-500 uppercase">Vòng cược yêu cầu</div>
-                            <div class="text-base font-bold text-orange-400 font-mono" id="edit-current-turnover">$0</div>
+                            <div class="text-[10px] text-slate-500 uppercase">Đã cược (Bet)</div>
+                            <div class="text-base font-bold text-white font-mono" id="edit-current-bet-turnover">$0</div>
                         </div>
                         <div class="flex-1">
-                            <label class="text-[10px] text-slate-500 block mb-1">Cộng / Trừ Vòng Cược ($)</label>
-                            <input type="number" id="edit-adjust-turnover" class="input-box bg-[#151A25] text-white border-slate-700" placeholder="VD: 500 hoặc -500">
+                            <label class="text-[10px] text-slate-500 block mb-1">Cộng / Trừ Đã Cược</label>
+                            <input type="number" id="edit-adjust-bet-turnover" class="input-box bg-[#151A25] text-white border-slate-700" placeholder="+/- (VD: 100)">
+                        </div>
+                    </div>
+
+                    <!-- Req Turnover (RENAMED) -->
+                    <div class="flex items-center gap-3 pt-2 border-t border-slate-800">
+                        <div class="w-1/3">
+                            <div class="text-[10px] text-slate-500 uppercase">Yêu cầu (Req)</div>
+                            <div class="text-base font-bold text-orange-400 font-mono" id="edit-current-req-turnover">$0</div>
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] text-slate-500 block mb-1">Cộng / Trừ Yêu Cầu</label>
+                            <input type="number" id="edit-adjust-req-turnover" class="input-box bg-[#151A25] text-white border-slate-700" placeholder="+/- (VD: 100)">
                         </div>
                     </div>
                 </div>
@@ -728,9 +737,7 @@
 
         window.confirmTransaction = async () => {
             if(!activeReq) return;
-            // FIX: Ensure turnover is treated as a number
             const turn = parseFloat(document.getElementById('modal-turnover').value) || 0;
-            
             const btn = document.querySelector('#modal-approve .btn-success');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Xử lý...'; btn.disabled = true;
             try {
@@ -738,7 +745,6 @@
                     const uRef = doc(db, "users", activeReq.userId);
                     const uSnap = await getDoc(uRef);
                     if(uSnap.exists()) {
-                        // FIX: Explicitly convert existing values to numbers to prevent string concatenation
                         const currentBal = parseFloat(uSnap.data().balance) || 0;
                         const currentTurnover = parseFloat(uSnap.data().requiredTurnover) || 0;
                         const depToday = parseFloat(uSnap.data().depositToday) || 0;
@@ -864,7 +870,6 @@
                 const uRef = doc(db, "users", p.userId);
                 const uSnap = await getDoc(uRef);
                 if(uSnap.exists()) {
-                    // FIX: Ensure correct math for turnover addition
                     const currentBal = parseFloat(uSnap.data().balance) || 0;
                     const currentTurn = parseFloat(uSnap.data().requiredTurnover) || 0;
                     
@@ -933,8 +938,6 @@
                 if(prompt("Nhập 'DELETE' để xác nhận xóa:") === "DELETE") {
                     try {
                         await deleteDoc(doc(db, "users", uid));
-                        // Note: Client SDK cannot delete Auth User easily without Cloud Functions.
-                        // However, deleting the Firestore doc effectively removes them from the Admin System.
                         window.showToast("Đã xóa User khỏi cơ sở dữ liệu!");
                     } catch(e) { alert("Lỗi xóa: " + e.message); }
                 }
@@ -946,16 +949,18 @@
             document.getElementById('edit-user-id').value = uid;
             document.getElementById('edit-fullname').value = u.fullName || '';
             document.getElementById('edit-phone').value = u.phone || '';
-            document.getElementById('edit-password').value = u.password || ''; // Assuming password stored for display (risky but requested)
+            document.getElementById('edit-password').value = u.password || ''; 
             document.getElementById('edit-bank').value = u.bankName || '';
             document.getElementById('edit-bank-num').value = u.bankNumber || ''; 
             
             document.getElementById('edit-current-bal').innerText = "$" + (u.balance || 0).toLocaleString();
-            document.getElementById('edit-current-turnover').innerText = "$" + (u.requiredTurnover || 0).toLocaleString();
+            document.getElementById('edit-current-bet-turnover').innerText = "$" + (u.betTurnover || 0).toLocaleString();
+            document.getElementById('edit-current-req-turnover').innerText = "$" + (u.requiredTurnover || 0).toLocaleString();
             
             // Reset adjustments
             document.getElementById('edit-adjust-bal').value = '';
-            document.getElementById('edit-adjust-turnover').value = '';
+            document.getElementById('edit-adjust-bet-turnover').value = '';
+            document.getElementById('edit-adjust-req-turnover').value = '';
             
             document.getElementById('modal-user-edit').classList.add('active');
         };
@@ -963,9 +968,9 @@
         window.saveUserEdit = async () => {
             const uid = document.getElementById('edit-user-id').value;
             const balAdj = parseFloat(document.getElementById('edit-adjust-bal').value) || 0;
-            const turnAdj = parseFloat(document.getElementById('edit-adjust-turnover').value) || 0;
+            const turnBetAdj = parseFloat(document.getElementById('edit-adjust-bet-turnover').value) || 0;
+            const turnReqAdj = parseFloat(document.getElementById('edit-adjust-req-turnover').value) || 0;
             
-            // FIX: Get fresh data from DB to ensure accurate addition
             const uRef = doc(db, "users", uid);
             const uSnap = await getDoc(uRef);
             
@@ -974,9 +979,9 @@
 
             if(confirm(`Xác nhận cập nhật thông tin cho [${uData.username}]?`)) {
                 try {
-                    // Update core info + calculate new balance/turnover
                     const currentBal = parseFloat(uData.balance) || 0;
-                    const currentTurnover = parseFloat(uData.requiredTurnover) || 0;
+                    const currentBet = parseFloat(uData.betTurnover) || 0;
+                    const currentReq = parseFloat(uData.requiredTurnover) || 0;
 
                     await updateDoc(uRef, {
                         fullName: document.getElementById('edit-fullname').value,
@@ -985,10 +990,10 @@
                         bankName: document.getElementById('edit-bank').value,
                         bankNumber: document.getElementById('edit-bank-num').value,
                         balance: currentBal + balAdj,
-                        requiredTurnover: currentTurnover + turnAdj
+                        betTurnover: currentBet + turnBetAdj, // Cập nhật Đã cược
+                        requiredTurnover: currentReq + turnReqAdj // Cập nhật Yêu cầu
                     });
                     
-                    // Log transaction if money changed
                     if(balAdj !== 0) {
                         const isAdd = balAdj > 0;
                         await addDoc(collection(db, "users", uid, "transactions"), { 
