@@ -1,0 +1,352 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Trophy, 
+  XCircle, 
+  RefreshCcw, 
+  Copy, 
+  Check, 
+  Zap,
+  LayoutDashboard,
+  History,
+  TrendingUp,
+  Wallet,
+  Lock,
+  Unlock,
+  Plus,
+  Minus,
+  AlertTriangle
+} from 'lucide-react';
+
+const App = () => {
+  // --- States ---
+  const [activeTab, setActiveTab] = useState('main'); 
+  const [historyNumbers, setHistoryNumbers] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [currentPrediction, setCurrentPrediction] = useState([]);
+  const [currentPeriod, setCurrentPeriod] = useState(1);
+  const [multiplier, setMultiplier] = useState(1);
+  const [totalPoints, setTotalPoints] = useState(0);
+  
+  const [inputVal, setInputVal] = useState('');
+  const [periodInput, setPeriodInput] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [copyStatus, setCopyStatus] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lastResultFeedback, setLastResultFeedback] = useState(null); // { status: 'win'|'loss', points: number, num: number }
+
+  // --- Thuật toán dự đoán ---
+  const generateNumbers = (data) => {
+    const scores = Array.from({ length: 100 }, (_, i) => ({ num: i, score: 0 }));
+    
+    data.forEach((num, index) => {
+      const weight = (index + 1) / data.length;
+      scores[num].score += 40 * weight;
+    });
+
+    const lastNum = data[data.length - 1];
+    if (lastNum !== undefined) {
+      [(lastNum - 1 + 100) % 100, (lastNum + 1) % 100].forEach(n => {
+        scores[n].score += 15;
+      });
+      scores[(lastNum + 50) % 100].score += 12;
+    }
+
+    scores.forEach(s => s.score += Math.random() * 10);
+
+    return scores
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 65)
+      .map(s => s.num)
+      .sort((a, b) => a - b);
+  };
+
+  // --- Actions ---
+  const handleInit = () => {
+    const raw = inputVal.split(/[^0-9]+/).filter(v => v !== '').map(Number).filter(n => n >= 0 && n <= 99);
+    if (raw.length < 5) return alert("Nhập ít nhất 5 số kỳ trước.");
+    
+    setHistoryNumbers(raw);
+    setCurrentPrediction(generateNumbers(raw));
+    setCurrentPeriod(parseInt(periodInput) || 1);
+    setIsInitialized(true);
+    setInputVal('');
+  };
+
+  const handleResult = () => {
+    const res = parseInt(inputVal, 10);
+    if (isNaN(res) || res < 0 || res > 99) return;
+
+    const isHit = currentPrediction.includes(res);
+    const profit = isHit ? (34 * multiplier) : (-65 * multiplier);
+    const newTotal = totalPoints + profit;
+
+    // Hiển thị thông báo kết quả ngay lập tức
+    setLastResultFeedback({
+      status: isHit ? 'win' : 'loss',
+      points: profit,
+      num: res
+    });
+
+    const newRecord = {
+      period: currentPeriod,
+      result: res,
+      isHit: isHit,
+      profit: profit,
+      multiplier: multiplier,
+      isLocked: isLocked,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setRecords([newRecord, ...records]);
+    setTotalPoints(newTotal);
+    
+    const newHistory = [...historyNumbers, res];
+    setHistoryNumbers(newHistory);
+
+    if (isHit) {
+      setIsLocked(true);
+    } else {
+      setIsLocked(false);
+      setCurrentPrediction(generateNumbers(newHistory));
+    }
+
+    setCurrentPeriod(prev => prev + 1);
+    setInputVal('');
+  };
+
+  const copyToClipboard = () => {
+    const text = currentPrediction.map(n => n.toString().padStart(2, '0')).join(' ');
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    setCopyStatus(true);
+    setTimeout(() => setCopyStatus(false), 2000);
+  };
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white p-6 flex flex-col justify-center items-center font-sans">
+        <div className="w-full max-w-sm space-y-8 animate-in fade-in zoom-in-95">
+          <div className="text-center space-y-2">
+            <div className="inline-flex p-4 bg-indigo-600 rounded-3xl mb-2 shadow-2xl">
+              <Zap className="w-10 h-10 fill-white" />
+            </div>
+            <h1 className="text-3xl font-black tracking-tight uppercase">Dự Đoán XSN</h1>
+            <p className="text-slate-400 text-xs font-bold tracking-widest uppercase opacity-70">Hệ thống quản lý vốn v5.1</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest ml-1">Lịch sử kỳ trước</label>
+              <textarea 
+                className="w-full h-32 bg-slate-900 border border-slate-800 rounded-2xl p-4 text-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-700"
+                placeholder="Ví dụ: 01 22 45 78..."
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest ml-1">Số kỳ bắt đầu</label>
+              <input 
+                type="number"
+                className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                placeholder="VD: 100"
+                value={periodInput}
+                onChange={(e) => setPeriodInput(e.target.value)}
+              />
+            </div>
+            <button 
+              onClick={handleInit}
+              className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black text-xl shadow-lg active:scale-[0.98] transition-all"
+            >
+              KÍCH HOẠT
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-28">
+      {/* Fixed Header */}
+      <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-sm font-black text-white">XSN PRO</h2>
+        </div>
+        <div className="text-right">
+          <div className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Tổng Quỹ Lãi/Lỗ</div>
+          <div className={`text-xl font-black leading-none ${totalPoints >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+            {totalPoints > 0 ? `+${totalPoints}` : totalPoints}
+          </div>
+        </div>
+      </header>
+
+      {activeTab === 'main' ? (
+        <main className="p-4 space-y-5 max-w-md mx-auto animate-in slide-in-from-right-4">
+          
+          {/* Metrics & Multiplier Row */}
+          <div className="flex gap-3">
+            <div className="flex-1 bg-slate-900 border border-white/5 p-4 rounded-2xl">
+              <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Kỳ Số</p>
+              <p className="text-xl font-black text-white">#{currentPeriod}</p>
+            </div>
+            <div className="flex-1 bg-slate-900 border border-white/5 p-4 rounded-2xl flex flex-col justify-between">
+              <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Hệ Số Nhân</p>
+              <div className="flex items-center justify-between">
+                <button onClick={() => setMultiplier(m => Math.max(1, m-1))} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg"><Minus className="w-3 h-3" /></button>
+                <span className="text-xl font-black text-indigo-400">x{multiplier}</span>
+                <button onClick={() => setMultiplier(m => Math.min(10, m+1))} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg"><Plus className="w-3 h-3" /></button>
+              </div>
+            </div>
+          </div>
+
+          {/* Input Result Card - FIXED UI */}
+          <section className="bg-slate-900 border border-white/10 rounded-3xl p-5 shadow-xl">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Zap className="w-3 h-3 text-amber-400 fill-amber-400" /> Kết quả kỳ {currentPeriod}
+            </h3>
+            <div className="flex items-stretch gap-2 w-full">
+              <input 
+                type="number"
+                inputMode="numeric"
+                className="flex-1 min-w-0 bg-black border border-white/10 rounded-2xl py-4 text-4xl font-black text-center text-indigo-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                placeholder="00"
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+              />
+              <button 
+                onClick={handleResult}
+                className="px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase text-sm shadow-lg shadow-indigo-500/20 active:scale-90 transition-all"
+              >
+                Xác Nhận
+              </button>
+            </div>
+          </section>
+
+          {/* Result Feedback Banner */}
+          {lastResultFeedback && (
+            <div className={`p-4 rounded-2xl border-2 animate-in zoom-in-95 duration-300 flex items-center justify-between ${
+              lastResultFeedback.status === 'win' 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+              : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+            }`}>
+              <div className="flex items-center gap-3">
+                {lastResultFeedback.status === 'win' ? <Trophy className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+                <div>
+                  <div className="text-[10px] font-black uppercase opacity-60">Kỳ vừa rồi: {lastResultFeedback.num.toString().padStart(2, '0')}</div>
+                  <div className="text-lg font-black">{lastResultFeedback.status === 'win' ? 'BẠN ĐÃ THẮNG!' : 'CHƯA TRÚNG'}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl font-black">{lastResultFeedback.points > 0 ? `+${lastResultFeedback.points}` : lastResultFeedback.points}</div>
+                <div className="text-[9px] font-bold uppercase opacity-60">Điểm Quỹ</div>
+              </div>
+            </div>
+          )}
+
+          {/* Prediction Card */}
+          <section className="bg-slate-900 border border-white/5 rounded-[2rem] p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-black text-white uppercase tracking-tight">Dàn 65 Số Kỳ {currentPeriod}</h3>
+                {isLocked && (
+                  <div className="bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded text-[8px] font-black border border-amber-500/20 flex items-center gap-1">
+                    <Lock className="w-2 h-2" /> GIỮ DÀN
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={copyToClipboard}
+                className={`flex items-center gap-1 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${copyStatus ? 'bg-emerald-600 text-white' : 'bg-white text-black'}`}
+              >
+                {copyStatus ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copyStatus ? 'ĐÃ CHÉP' : 'COPY'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2">
+              {currentPrediction.map(num => (
+                <div key={num} className="aspect-square flex items-center justify-center bg-black/40 border border-white/5 rounded-xl text-sm font-black text-slate-400">
+                  {num.toString().padStart(2, '0')}
+                </div>
+              ))}
+            </div>
+          </section>
+
+        </main>
+      ) : (
+        /* HISTORY TAB */
+        <main className="p-4 space-y-3 max-w-md mx-auto animate-in slide-in-from-left-4">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h3 className="text-sm font-black text-white uppercase">Lịch sử chi tiết</h3>
+            <span className="text-[10px] font-bold text-slate-500 uppercase">{records.length} kỳ gần đây</span>
+          </div>
+          
+          <div className="space-y-3">
+            {records.map((r, i) => (
+              <div key={i} className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-black ${r.isHit ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+                    <span className="text-[8px] opacity-50">#{r.period}</span>
+                    <span className="text-lg leading-none">{r.result.toString().padStart(2, '0')}</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-black ${r.isHit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {r.isHit ? 'THẮNG' : 'THUA'}
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-600 uppercase">x{r.multiplier}</span>
+                      {r.isLocked && <Lock className="w-2.5 h-2.5 text-amber-500 opacity-40" />}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-medium">{r.timestamp}</div>
+                  </div>
+                </div>
+                <div className={`text-lg font-black ${r.profit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                  {r.profit > 0 ? `+${r.profit}` : r.profit}
+                </div>
+              </div>
+            ))}
+            {records.length === 0 && (
+              <div className="py-20 text-center text-slate-600 font-bold uppercase tracking-widest text-xs italic">Chưa có dữ liệu</div>
+            )}
+          </div>
+        </main>
+      )}
+
+      {/* Mobile-Style Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 w-full bg-slate-950/95 border-t border-white/5 p-3 flex justify-around items-center z-50 backdrop-blur-lg">
+        <button 
+          onClick={() => setActiveTab('main')}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'main' ? 'text-indigo-400 scale-110' : 'text-slate-600'}`}
+        >
+          <LayoutDashboard className="w-6 h-6" />
+          <span className="text-[8px] font-black uppercase">Trang Chủ</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('history')}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'history' ? 'text-indigo-400 scale-110' : 'text-slate-600'}`}
+        >
+          <History className="w-6 h-6" />
+          <span className="text-[8px] font-black uppercase">Thống Kê</span>
+        </button>
+        <button 
+          onClick={() => { if(confirm('Làm mới hệ thống từ đầu?')) setIsInitialized(false); }}
+          className="flex flex-col items-center gap-1 text-slate-700 hover:text-rose-500 transition-colors"
+        >
+          <RefreshCcw className="w-6 h-6" />
+          <span className="text-[8px] font-black uppercase">Reset</span>
+        </button>
+      </nav>
+    </div>
+  );
+};
+
+export default App;
+
