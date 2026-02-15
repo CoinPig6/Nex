@@ -3,47 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TITAN XSN v15.0</title>
+    <title>TITAN v17.0 ULTIMATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #020617; color: #f1f5f9; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .active-tab { color: #818cf8 !important; border-bottom: 2px solid #818cf8; font-weight: 900; }
-        .nano-text { font-size: 0.65rem; line-height: 1rem; }
+        .win-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .loss-glow { box-shadow: 0 0 15px rgba(244, 63, 94, 0.2); }
+        #numbers-display { line-height: 2; letter-spacing: 0.1em; }
     </style>
 </head>
 <body class="min-h-screen no-scrollbar overflow-x-hidden select-none">
 
     <!-- MÀN HÌNH KHỞI TẠO -->
-    <div id="init-screen" class="min-h-screen flex items-center justify-center p-4 transition-all duration-300">
+    <div id="init-screen" class="min-h-screen flex items-center justify-center p-6 transition-all duration-300">
         <div class="w-full max-w-xs space-y-6 text-center">
-            <div class="inline-flex p-4 bg-indigo-600 rounded-[2rem] shadow-2xl">
-                <i data-lucide="zap" class="w-10 h-10 text-white fill-white"></i>
+            <div class="inline-flex p-4 bg-indigo-600 rounded-[2rem] shadow-2xl shadow-indigo-500/20">
+                <i data-lucide="brain-circuit" class="w-10 h-10 text-white fill-white"></i>
             </div>
-            <h1 class="text-3xl font-black uppercase italic tracking-tighter">TITAN <span class="text-indigo-500">v15.0</span></h1>
+            <div class="space-y-1">
+                <h1 class="text-3xl font-black uppercase italic tracking-tighter">TITAN <span class="text-indigo-500">v17.0</span></h1>
+                <p class="text-[8px] text-slate-500 font-bold uppercase tracking-[0.4em]">5-Layer Probability Engine</p>
+            </div>
             
-            <div class="glass p-5 rounded-[2.5rem] space-y-4">
-                <div class="space-y-1 text-left text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-2 italic">Kết quả 10 kỳ gần nhất</div>
-                <textarea id="h-input" class="w-full h-24 bg-black/50 border border-white/10 rounded-2xl p-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="77 57 89 43 12..."></textarea>
-                
-                <input id="p-input" type="number" class="w-full bg-black/50 border border-white/10 rounded-xl p-3 font-black text-center text-lg outline-none" placeholder="Số kỳ bắt đầu">
-                
-                <button id="btn-start" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 shadow-lg">KÍCH HOẠT HỆ THỐNG</button>
+            <div class="glass p-5 rounded-[2.5rem] space-y-4 shadow-3xl">
+                <div class="space-y-1 text-left">
+                    <label class="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-2 italic">Kết quả 10-30 kỳ trước</label>
+                    <textarea id="h-input" class="w-full h-24 bg-black/50 border border-white/10 rounded-2xl p-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="77 57 89 43 12..."></textarea>
+                </div>
+                <div class="space-y-1 text-left">
+                    <label class="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-2 italic">Kỳ bắt đầu</label>
+                    <input id="p-input" type="number" inputmode="numeric" class="w-full bg-black/50 border border-white/10 rounded-xl p-3 font-black text-center text-lg outline-none" placeholder="101">
+                </div>
+                <button onclick="TITAN.handleSetup()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 shadow-lg border-t border-white/20">Kích Hoạt Thuật Toán</button>
             </div>
         </div>
     </div>
 
-    <!-- MÀN HÌNH CHÍNH -->
-    <div id="main-screen" class="hidden min-h-screen pb-28 animate-in fade-in duration-500">
-        <!-- Header Nano -->
-        <header class="sticky top-0 z-50 bg-[#020617]/95 backdrop-blur-xl border-b border-white/5 px-4 py-2 flex items-center justify-between shadow-xl">
+    <!-- GIAO DIỆN CHÍNH -->
+    <div id="main-screen" class="hidden min-h-screen pb-32 animate-in fade-in duration-500">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-[#020617]/95 backdrop-blur-xl border-b border-white/5 px-4 py-2.5 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg"><i data-lucide="shield-check" class="w-4 h-4 text-white"></i></div>
-                <span class="text-[10px] font-black uppercase tracking-tighter italic">Titan Nano v15</span>
+                <span class="text-[10px] font-black uppercase tracking-tighter italic">Titan Ultimate v17</span>
             </div>
             <div class="text-right">
                 <p class="text-[7px] font-black text-slate-500 uppercase italic">Tổng Lãi/Lỗ</p>
@@ -51,126 +59,128 @@
             </div>
         </header>
 
-        <div id="view-container" class="max-w-md mx-auto p-3">
+        <div id="view-container" class="max-w-md mx-auto p-4 space-y-4">
             
             <!-- TAB: CHÍNH -->
-            <div id="tab-predict" class="space-y-3">
+            <div id="tab-predict" class="space-y-4">
                 <div class="grid grid-cols-2 gap-2">
                     <div class="glass p-2.5 rounded-xl flex justify-between items-center shadow-sm">
                         <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter italic">Accuracy</span>
                         <span id="ui-winrate" class="text-xs font-black text-emerald-400 italic">0%</span>
                     </div>
                     <div class="glass p-2.5 rounded-xl flex justify-between items-center shadow-sm">
-                        <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter italic">Kỳ Số</span>
+                        <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tighter italic">Kỳ Hiện Tại</span>
                         <span id="ui-period" class="text-xs font-black text-white italic">#--</span>
                     </div>
                 </div>
 
-                <!-- Input Row - SỬA LỖI TRÀN MÀN HÌNH -->
-                <section class="bg-gradient-to-br from-slate-900 to-black border border-white/10 rounded-[2rem] p-4 shadow-2xl relative overflow-hidden">
+                <!-- Input Row (Fixed UI) -->
+                <section class="bg-gradient-to-br from-slate-900 to-black border border-white/10 rounded-[2.2rem] p-4 shadow-2xl relative overflow-hidden">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic">
-                            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i> Kỳ <span id="ui-input-period">--</span>
+                        <h3 class="text-[9px] font-black text-slate-500 uppercase flex items-center gap-1.5 italic">
+                            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i> Nhập Kết Quả Kỳ <span id="ui-input-period">--</span>
                         </h3>
                         <div class="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
-                            <button id="btn-m-minus" class="text-slate-500"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                            <button onclick="TITAN.changeMult(-1)" class="text-slate-500 active:scale-125"><i data-lucide="minus" class="w-3 h-3"></i></button>
                             <span id="ui-mult" class="text-[10px] font-black text-indigo-400 italic min-w-[20px] text-center">x1</span>
-                            <button id="btn-m-plus" class="text-slate-500"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                            <button onclick="TITAN.changeMult(1)" class="text-slate-500 active:scale-125"><i data-lucide="plus" class="w-3 h-3"></i></button>
                         </div>
                     </div>
-                    <div class="flex items-stretch gap-2">
+                    <div class="flex gap-2">
                         <input id="input-val" type="number" inputmode="numeric" class="flex-1 min-w-0 bg-black/50 border border-white/10 rounded-xl py-3 text-4xl font-black text-center text-indigo-400 focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="00">
-                        <button id="btn-submit" class="px-5 bg-indigo-600 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-90 text-white border-t border-white/20">Xác nhận</button>
+                        <button onclick="TITAN.handleSubmit()" class="px-6 bg-indigo-600 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-90 text-white border-t border-white/20">Xác Nhận</button>
                     </div>
                 </section>
 
-                <div id="feedback"></div>
+                <div id="feedback-display"></div>
 
-                <!-- Dàn Số - SỬA LỖI KHÔNG HIỆN DÀN -->
+                <!-- Data Center (Single Box Prediction) -->
                 <section class="glass rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
-                    <div class="p-3 flex items-center justify-between bg-white/5">
+                    <div class="p-3.5 flex items-center justify-between bg-white/5 border-b border-white/5">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="fingerprint" class="w-4 h-4 text-indigo-400"></i>
-                            <span class="text-[10px] font-black uppercase tracking-tighter">Bộ Số Gợi Ý</span>
+                            <i data-lucide="target" class="w-4 h-4 text-indigo-400"></i>
+                            <span class="text-[10px] font-black uppercase tracking-tighter italic">Dàn Dự Đoán 80-90%</span>
                             <div id="ui-lock" class="hidden w-2 h-2 bg-amber-500 rounded-full animate-pulse shadow-[0_0_5px_#f59e0b]"></div>
                         </div>
                         <div class="flex gap-1.5">
-                            <button id="btn-copy" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[9px] font-black uppercase shadow-lg active:scale-95 transition-all">
-                                <i data-lucide="copy" class="w-3 h-3"></i> Copy 65
+                            <button onclick="TITAN.handleCopy()" id="btn-copy" class="flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy 65
                             </button>
-                            <button id="btn-toggle-eye" class="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-white"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-                    <!-- Khung chứa số -->
-                    <div id="data-box" class="hidden p-4 bg-black/60 text-center animate-in slide-in-from-top-2 duration-300">
-                        <div class="p-3 bg-white/5 rounded-2xl border border-white/5">
-                            <p id="ui-numbers" class="text-sm sm:text-base font-black text-slate-200 font-mono tracking-widest leading-loose italic"></p>
-                        </div>
-                        <div class="mt-3 flex justify-center">
-                            <button id="btn-reroll" class="text-[7px] font-black text-slate-500 uppercase flex items-center gap-2 hover:text-indigo-400 transition-all italic tracking-widest">
-                                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Đổi Dàn Mới (Entropy)
+                            <button onclick="TITAN.toggleView()" id="btn-eye" class="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors">
+                                <i data-lucide="eye" class="w-4.5 h-4.5"></i>
                             </button>
                         </div>
                     </div>
-                    <!-- Trạng thái ẩn -->
-                    <div id="data-hidden" class="p-10 flex flex-col items-center justify-center text-slate-800 opacity-20 italic">
-                        <i data-lucide="lock" class="w-8 h-8 mb-1"></i>
-                        <p class="text-[8px] font-black uppercase tracking-[0.4em]">Đã khóa bảo mật</p>
+                    
+                    <div id="view-visible" class="hidden p-5 bg-black/60 text-center animate-in slide-in-from-top-2 duration-300">
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <p id="numbers-display" class="text-sm sm:text-base font-black text-slate-200 font-mono italic leading-loose tracking-widest"></p>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-white/5 flex justify-center">
+                            <button onclick="TITAN.handleReroll()" class="text-[7px] font-black text-slate-600 uppercase flex items-center gap-2 hover:text-indigo-400 active:rotate-180 transition-all duration-500">
+                                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Xáo Trộn Lại Nhịp Số (Entropy)
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="view-hidden" class="p-12 flex flex-col items-center justify-center text-slate-800 opacity-20 italic">
+                        <i data-lucide="lock" class="w-10 h-10 mb-2"></i>
+                        <p class="text-[8px] font-black uppercase tracking-[0.5em]">Mật mã đã được ẩn</p>
                     </div>
                 </section>
             </div>
 
-            <!-- TAB: KHO DÀN (SOI % TRỰC TIẾP) -->
-            <div id="tab-ware" class="hidden space-y-3 animate-in fade-in">
-                <div class="flex justify-between items-center px-1">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-indigo-400 italic">Kho Dàn Chiến Thắng</h3>
-                    <span class="text-[7px] font-bold text-slate-600 uppercase italic">Backtest % Thực Tế</span>
+            <!-- TAB: KHO DÀN (SOI % LỊCH SỬ) -->
+            <div id="tab-warehouse" class="hidden space-y-4 animate-in fade-in">
+                <div class="px-1 flex justify-between items-center">
+                    <h3 class="text-[11px] font-black uppercase tracking-widest text-indigo-400 italic">Thư Viện Dàn Ưu Tú</h3>
+                    <span class="text-[7px] font-bold text-slate-600 uppercase italic">Backtest Win Rate %</span>
                 </div>
-                <div id="ui-warehouse-list" class="space-y-2"></div>
+                <div id="ui-warehouse-list" class="space-y-3"></div>
             </div>
 
-            <!-- TAB: NHẬT KÝ -->
-            <div id="tab-hist" class="hidden space-y-2 animate-in fade-in">
+            <!-- TAB: NHẬT KÝ (XEM LẠI DÀN CŨ) -->
+            <div id="tab-history" class="hidden space-y-3 animate-in fade-in">
                 <div class="flex justify-between items-center mb-2 px-1">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest italic opacity-70">Lịch Sử Giao Dịch</h3>
-                    <div class="flex gap-4 text-[9px] font-black uppercase">
-                        <span class="text-emerald-400">W: <span id="ui-count-win">0</span></span>
-                        <span class="text-rose-500">L: <span id="ui-count-loss">0</span></span>
+                    <h3 class="text-[10px] font-black uppercase tracking-widest italic opacity-70">Nhật Ký Biến Động</h3>
+                    <div class="flex gap-4 text-[9px] font-black">
+                        <span class="text-emerald-400 uppercase">W: <span id="ui-count-win">0</span></span>
+                        <span class="text-rose-500 uppercase">L: <span id="ui-count-loss">0</span></span>
                     </div>
                 </div>
-                <div id="ui-history-list" class="space-y-2"></div>
+                <div id="ui-history-list" class="space-y-2.5"></div>
             </div>
         </div>
 
-        <!-- Bottom Menu -->
+        <!-- Bottom Navigation -->
         <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-sm bg-slate-900/95 backdrop-blur-xl border border-white/5 p-2 rounded-[2.2rem] flex justify-around items-center z-50 shadow-3xl">
-            <button id="nav-predict" class="flex flex-col items-center gap-1 flex-1 transition-all active-tab"><i data-lucide="zap" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase tracking-tighter">Titan</span></button>
-            <button id="nav-ware" class="flex flex-col items-center gap-1 flex-1 text-slate-600 transition-all"><i data-lucide="database" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase tracking-tighter">Kho Dàn</span></button>
-            <button id="nav-hist" class="flex flex-col items-center gap-1 flex-1 text-slate-600 transition-all"><i data-lucide="history" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase tracking-tighter">Nhật Ký</span></button>
+            <button onclick="TITAN.switchTab('predict')" id="nav-predict" class="flex flex-col items-center gap-1 flex-1 transition-all active-tab"><i data-lucide="zap" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase">Titan</span></button>
+            <button onclick="TITAN.switchTab('warehouse')" id="nav-warehouse" class="flex flex-col items-center gap-1 flex-1 text-slate-600 transition-all"><i data-lucide="database" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase">Kho Dàn</span></button>
+            <button onclick="TITAN.switchTab('history')" id="nav-history" class="flex flex-col items-center gap-1 flex-1 text-slate-600 transition-all"><i data-lucide="history" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase">Nhật Ký</span></button>
             <div class="w-[1px] h-6 bg-white/10 mx-1"></div>
-            <button id="btn-modal-reset" class="flex flex-col items-center gap-1 flex-1 text-slate-700 active:text-rose-500"><i data-lucide="refresh-ccw" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase tracking-tighter">Reset</span></button>
+            <button onclick="TITAN.toggleResetModal(true)" class="flex flex-col items-center gap-1 flex-1 text-slate-700 active:text-rose-500 transition-colors"><i data-lucide="refresh-ccw" class="w-5 h-5"></i><span class="text-[7px] font-black uppercase">Reset</span></button>
         </nav>
 
         <!-- Reset Modal -->
-        <div id="reset-modal" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm animate-in fade-in">
-            <div class="glass p-8 rounded-[3rem] w-full max-w-xs text-center space-y-6 shadow-2xl border border-white/10">
+        <div id="reset-modal" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm">
+            <div class="glass p-8 rounded-[3rem] w-full max-w-xs text-center space-y-6 animate-in zoom-in-95 shadow-3xl">
                 <div class="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500"><i data-lucide="alert-triangle" class="w-10 h-10"></i></div>
-                <div class="space-y-1">
-                    <h4 class="text-xl font-black uppercase italic text-white leading-none">Xóa Dữ Liệu?</h4>
-                    <p class="text-slate-500 text-[10px] leading-relaxed italic">Hệ thống sẽ xóa sạch mọi lịch sử và điểm quỹ trên thiết bị.</p>
+                <div class="space-y-1 text-white">
+                    <h4 class="text-xl font-black uppercase italic leading-none">Làm mới Titan?</h4>
+                    <p class="text-slate-500 text-[10px] italic">Mọi lịch sử đánh và điểm quỹ sẽ bị xóa vĩnh viễn.</p>
                 </div>
-                <div class="flex flex-col gap-3 pt-2">
-                    <button id="btn-reset-confirm" class="w-full py-4 bg-rose-600 text-white font-black rounded-2xl active:scale-95 uppercase text-xs tracking-widest shadow-xl shadow-rose-600/20 border-t border-white/20">Xác Nhận Reset</button>
-                    <button id="btn-reset-cancel" class="w-full py-2 text-slate-600 text-[9px] font-bold uppercase tracking-widest italic">Hủy Bỏ</button>
+                <div class="flex flex-col gap-3">
+                    <button onclick="TITAN.fullReset()" class="w-full py-4 bg-rose-600 text-white font-black rounded-2xl active:scale-95 uppercase text-xs tracking-widest shadow-xl">Xác Nhận Xóa</button>
+                    <button onclick="TITAN.toggleResetModal(false)" class="w-full py-2 text-slate-500 text-[9px] font-black uppercase italic">Hủy Bỏ</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CORE ENGINE v15.0 - NANO STABLE
+        // --- ULTIMATE TITAN ENGINE v17.0 ---
         const TITAN = {
-            s: {
+            state: {
                 isInit: false,
                 history: [],
                 records: [],
@@ -179,197 +189,300 @@
                 points: 0,
                 mult: 1,
                 locked: false,
-                tab: 'predict',
-                show: false
+                isVisible: false,
+                activeTab: 'predict'
             },
-            key: 'titan_v15_nano_storage',
+            key: 'titan_v17_ultimate_db',
 
-            // 5-LAYER PROBABILITY ENGINE
+            // 5 LỚP PHÂN TÍCH ĐA TẦNG
             algo(history, entropy = 0) {
                 const scores = Array.from({ length: 100 }, (_, i) => ({ n: i, s: 0 }));
                 const last = history[history.length - 1];
                 const last10 = history.slice(-10);
                 const last20 = history.slice(-20);
-                const freq = {}; history.forEach(n => freq[n] = (freq[n] || 0) + 1);
+
+                // LỚP 1: Tần suất tổng
+                const freq = {};
+                history.forEach(n => freq[n] = (freq[n] || 0) + 1);
 
                 scores.forEach(item => {
                     const n = item.n;
-                    item.s += (freq[n] || 0) * 15; // Tần suất
-                    if (last10.includes(n)) item.s += 75; // Số Rơi (Rất cao)
+                    
+                    // Lớp 1: +12đ mỗi lần xuất hiện trong lịch sử
+                    item.s += (freq[n] || 0) * 12;
+
+                    // Lớp 2: Số Rơi 10 kỳ (+75đ - Quan trọng nhất cho 90%)
+                    if (last10.includes(n)) item.s += 75;
                     if (last20.includes(n)) item.s += 25;
+
+                    // Lớp 3: Cầu Chạm Kép
                     if (last !== undefined) {
                         if (Math.abs(n - last) === 1) item.s += 50; // Chạm sát
-                        if (Math.abs(n - last) === 10) item.s += 35; // Chạm đầu
+                        if (Math.abs(n - last) === 10) item.s += 35; // Chạm đầu đuôi
                     }
+
+                    // Lớp 4: Nhịp Cụm (Cluster)
                     const head = Math.floor(n/10);
-                    if (last10.filter(x => Math.floor(x/10) === head).length >= 2) item.s += 30; // Cluster
+                    if (last10.filter(x => Math.floor(x/10) === head).length >= 2) item.s += 30;
+
+                    // Lớp 5: Cân bằng Equilibrium
                     const evens = last20.filter(x => x % 2 === 0).length;
-                    if (evens > 12 && n % 2 !== 0) item.s += 40; // Equilibrium
-                    if (evens < 8 && n % 2 === 0) item.s += 40;
+                    const odds = last20.length - evens;
+                    const smalls = last20.filter(x => x < 50).length;
+                    const bigs = last20.length - smalls;
+
+                    if (odds > 12 && n % 2 === 0) item.s += 40; // Bù chẵn
+                    if (evens > 12 && n % 2 !== 0) item.s += 40; // Bù lẻ
+                    if (bigs > 12 && n < 50) item.s += 40;     // Bù xỉu
+                    if (smalls > 12 && n >= 50) item.s += 40;   // Bù tài
+
+                    // Entropy xáo trộn
                     item.s += Math.random() * (15 + entropy);
                 });
+
                 return scores.sort((a, b) => b.s - a.s).slice(0, 65).map(i => i.n).sort((a, b) => a - b);
             },
 
-            save() { localStorage.setItem(this.key, JSON.stringify(this.s)); },
+            // --- CORE ACTIONS ---
+            handleSetup() {
+                const text = document.getElementById('h-input').value;
+                const pValue = document.getElementById('p-input').value;
+                const nums = (text.match(/\d+/g) || []).map(Number).filter(n => n >= 0 && n <= 99);
+                
+                if (nums.length < 5) return alert("Vui lòng nhập ít nhất 5-10 kết quả!");
+
+                this.state.isInit = true;
+                this.state.history = nums;
+                this.state.period = parseInt(pValue) || 1;
+                this.state.prediction = this.algo(nums);
+                this.state.isVisible = false;
+                
+                this.save();
+                this.render();
+                
+                document.getElementById('init-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                lucide.createIcons();
+            },
+
+            handleSubmit() {
+                const inputEl = document.getElementById('input-val');
+                const val = parseInt(inputEl.value);
+                if (isNaN(val) || val < 0 || val > 99) return;
+
+                const isHit = this.state.prediction.includes(val);
+                const profit = isHit ? (34 * this.state.mult) : (-65 * this.state.mult);
+                
+                const entry = {
+                    period: this.state.period,
+                    result: val,
+                    hit: isHit,
+                    profit,
+                    multiplier: this.state.mult,
+                    setUsed: [...this.state.prediction],
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+
+                this.state.records.unshift(entry);
+                this.state.points += profit;
+                this.state.history.push(val);
+                this.state.period++;
+                
+                if (isHit) {
+                    this.state.locked = true; // Thắng giữ dàn
+                } else {
+                    this.state.locked = false; // Thua đổi dàn
+                    this.state.prediction = this.algo(this.state.history);
+                }
+
+                this.state.isVisible = false;
+                inputEl.value = '';
+                this.save();
+                this.render();
+                this.renderFeedback(isHit, profit, val);
+            },
+
+            handleReroll() {
+                if(!confirm("Bạn muốn xáo trộn nhịp số để lấy dàn mới?")) return;
+                this.state.prediction = this.algo(this.state.history, 120);
+                this.state.locked = false;
+                this.save();
+                this.render();
+            },
+
+            // --- UI HELPERS ---
+            save() { localStorage.setItem(this.key, JSON.stringify(this.state)); },
             load() {
-                const data = localStorage.getItem(this.key);
-                if (data) {
-                    this.s = JSON.parse(data);
-                    if (this.s.isInit) {
+                const d = localStorage.getItem(this.key);
+                if (d) {
+                    this.state = JSON.parse(d);
+                    if (this.state.isInit) {
                         document.getElementById('init-screen').classList.add('hidden');
                         document.getElementById('main-screen').classList.remove('hidden');
                         this.render();
+                        this.switchTab(this.state.activeTab || 'predict');
                     }
                 }
             },
+            fullReset() { localStorage.removeItem(this.key); location.reload(); },
+            toggleResetModal(show) { document.getElementById('reset-modal').classList.toggle('hidden', !show); },
+            toggleView() { this.state.isVisible = !this.state.isVisible; this.render(); this.save(); },
+            changeMult(v) { this.state.mult = Math.max(1, this.state.mult + v); this.render(); this.save(); },
+
+            switchTab(t) {
+                this.state.activeTab = t;
+                ['predict', 'warehouse', 'history'].forEach(id => {
+                    const el = document.getElementById('tab-' + id);
+                    if (el) el.classList.add('hidden');
+                });
+                document.getElementById('tab-' + t).classList.remove('hidden');
+                
+                ['predict', 'warehouse', 'history'].forEach(id => {
+                    document.getElementById('nav-' + id).classList.remove('active-tab', 'text-indigo-400');
+                    document.getElementById('nav-' + id).classList.add('text-slate-600');
+                });
+                document.getElementById('nav-' + t).classList.add('active-tab', 'text-indigo-400');
+                
+                if(t === 'history') this.renderHistory();
+                if(t === 'warehouse') this.renderWarehouse();
+                this.save();
+            },
+
+            handleCopy() {
+                const text = this.state.prediction.map(n => String(n).padStart(2, '0')).join(' ');
+                const temp = document.createElement('textarea');
+                temp.value = text; document.body.appendChild(temp); temp.select();
+                document.execCommand('copy'); document.body.removeChild(temp);
+                
+                const btn = document.getElementById('btn-copy');
+                const old = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> OK!';
+                btn.className = "flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg";
+                lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = old;
+                    btn.className = "flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-xl text-[10px] font-black uppercase shadow-lg";
+                    lucide.createIcons();
+                }, 1200);
+            },
 
             render() {
-                // Texts
-                document.getElementById('ui-points').innerText = (this.s.points >= 0 ? '+' : '') + this.s.points;
-                document.getElementById('ui-points').className = `text-base font-black italic ${this.s.points >= 0 ? 'text-emerald-400' : 'text-rose-500'}`;
-                document.getElementById('ui-period').innerText = '#' + this.s.period;
-                document.getElementById('ui-input-period').innerText = this.s.period;
-                document.getElementById('ui-mult').innerText = 'x' + this.s.mult;
-                
-                // Prediction UI
-                const pBox = document.getElementById('data-box');
-                const pHidden = document.getElementById('data-hidden');
-                const numText = document.getElementById('ui-numbers');
-                const lockBadge = document.getElementById('ui-lock');
-                const eyeBtn = document.getElementById('btn-toggle-eye');
+                document.getElementById('ui-points').innerText = (this.state.points >= 0 ? '+' : '') + this.state.points;
+                document.getElementById('ui-points').className = `text-base font-black italic ${this.state.points >= 0 ? 'text-emerald-400' : 'text-rose-500'}`;
+                document.getElementById('ui-period').innerText = '#' + this.state.period;
+                document.getElementById('ui-input-period').innerText = this.state.period;
+                document.getElementById('ui-mult').innerText = 'x' + this.state.mult;
+                document.getElementById('ui-lock').classList.toggle('hidden', !this.state.locked);
 
-                pBox.classList.toggle('hidden', !this.s.show);
-                pHidden.classList.toggle('hidden', this.s.show);
-                lockBadge.classList.toggle('hidden', !this.s.locked);
-                numText.innerText = this.s.prediction.map(n => String(n).padStart(2, '0')).join(' ');
-                eyeBtn.innerHTML = this.s.show ? '<i data-lucide="eye-off" class="w-4.5 h-4.5"></i>' : '<i data-lucide="eye" class="w-4.5 h-4.5"></i>';
+                // Dàn số
+                document.getElementById('view-visible').classList.toggle('hidden', !this.state.isVisible);
+                document.getElementById('view-hidden').classList.toggle('hidden', this.state.isVisible);
+                document.getElementById('numbers-display').innerText = this.state.prediction.map(n => String(n).padStart(2, '0')).join(' ');
+                document.getElementById('btn-eye').innerHTML = this.state.isVisible ? '<i data-lucide="eye-off" class="w-4.5 h-4.5"></i>' : '<i data-lucide="eye" class="w-4.5 h-4.5"></i>';
 
-                const wins = this.s.records.filter(r => r.hit).length;
-                document.getElementById('ui-winrate').innerText = (this.s.records.length > 0 ? (wins/this.s.records.length*100).toFixed(0) : 0) + '%';
+                const wins = this.state.records.filter(r => r.hit).length;
+                const rate = this.state.records.length > 0 ? (wins/this.state.records.length*100).toFixed(0) : 0;
+                document.getElementById('ui-winrate').innerText = rate + '%';
+                lucide.createIcons();
+            },
+
+            renderFeedback(hit, pts, val) {
+                const area = document.getElementById('feedback-display');
+                area.innerHTML = `
+                    <div class="p-3 rounded-2xl border flex items-center justify-between animate-in zoom-in-95 ${hit ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400 win-glow' : 'bg-rose-500/5 border-rose-500/20 text-rose-400 loss-glow'} shadow-lg">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="${hit ? 'trophy' : 'x-circle'}" class="w-4 h-4"></i>
+                            <span class="text-[9px] font-black uppercase italic tracking-tight">Kỳ trước về: ${String(val).padStart(2, '0')} → ${hit ? 'TRÚNG LỚN' : 'CHƯA TRÚNG'} (${pts >= 0 ? '+' : ''}${pts})</span>
+                        </div>
+                    </div>
+                `;
                 lucide.createIcons();
             },
 
             renderHistory() {
                 const list = document.getElementById('ui-history-list');
-                document.getElementById('ui-count-win').innerText = this.s.records.filter(r=>r.hit).length;
-                document.getElementById('ui-count-loss').innerText = this.s.records.filter(r=>!r.hit).length;
-                list.innerHTML = this.s.records.map(r => `
-                    <div class="glass p-3 rounded-2xl flex items-center justify-between border-white/5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl flex flex-col items-center justify-center font-black ${r.hit ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} shadow-inner">
-                                <span class="text-[6px] opacity-40 uppercase tracking-tighter">#${r.period}</span>
-                                <span class="text-sm italic">${String(r.result).padStart(2, '0')}</span>
+                document.getElementById('ui-count-win').innerText = this.state.records.filter(r=>r.hit).length;
+                document.getElementById('ui-count-loss').innerText = this.state.records.filter(r=>!r.hit).length;
+                list.innerHTML = this.state.records.map((r, idx) => `
+                    <div class="glass p-3.5 rounded-3xl border-white/5 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl flex flex-col items-center justify-center font-black ${r.hit ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} shadow-inner">
+                                    <span class="text-[6px] opacity-40 uppercase tracking-tighter leading-none mb-0.5">Kỳ ${r.period}</span>
+                                    <span class="text-base italic leading-tight">${String(r.result).padStart(2, '0')}</span>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase italic ${r.hit ? 'text-emerald-400' : 'text-rose-400'}">${r.hit ? 'TRÚNG' : 'TRƯỢT'}</p>
+                                    <p class="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">${r.time} • x${r.multiplier}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-[9px] font-black uppercase italic ${r.hit ? 'text-emerald-400' : 'text-rose-400'}">${r.hit ? 'THẮNG' : 'TRƯỢT'}</p>
-                                <p class="text-[7px] font-bold text-slate-600 uppercase tracking-tighter">${r.time} • x${r.multiplier}</p>
+                            <div class="text-right">
+                                <p class="text-base font-black italic ${r.profit >= 0 ? 'text-emerald-400' : 'text-rose-500'}">${r.profit >= 0 ? '+' : ''}${r.profit}</p>
+                                <button onclick="TITAN.toggleHistDtl(${idx})" class="text-[7px] font-black text-indigo-400 uppercase tracking-widest underline mt-1">Chi tiết dàn</button>
                             </div>
                         </div>
-                        <p class="text-sm font-black italic ${r.profit >= 0 ? 'text-emerald-400' : 'text-rose-500'}">${r.profit > 0 ? '+' : ''}${r.profit}</p>
+                        <div id="hist-dtl-${idx}" class="hidden p-3 bg-black/40 rounded-2xl border border-white/5 animate-in slide-in-from-top-2">
+                             <p class="text-[10px] font-mono text-slate-500 leading-relaxed italic tracking-widest text-center">
+                                ${r.setUsed.map(n => `<span class="${n === r.result ? 'text-emerald-400 font-black underline' : ''}">${String(n).padStart(2, '0')}</span>`).join(' ')}
+                             </p>
+                             <button onclick="TITAN.copyRaw('${r.setUsed.join(',')}')" class="w-full mt-3 py-1.5 bg-white/5 text-slate-500 text-[7px] font-black uppercase rounded-lg">Copy dàn này</button>
+                        </div>
                     </div>
                 `).join('');
-                if(this.s.records.length === 0) list.innerHTML = '<p class="py-20 text-center opacity-20 text-[9px] uppercase italic tracking-widest italic">Nhật ký trống</p>';
+                if(this.state.records.length === 0) list.innerHTML = '<p class="py-20 text-center opacity-20 text-[9px] uppercase tracking-widest italic">Nhật ký trống</p>';
                 lucide.createIcons();
             },
 
-            // TÍNH NĂNG SOI LẠI LỊCH SỬ DÀN VÀ CẬP NHẬT PHẦN TRĂM (%) TRỰC TIẾP
             renderWarehouse() {
                 const list = document.getElementById('ui-warehouse-list');
-                const uniqueSets = new Map();
-                this.s.records.forEach(r => {
-                    const k = r.set.join(',');
-                    if(!uniqueSets.has(k)) uniqueSets.set(k, { s: r.set, w: 0, t: 0 });
+                const setsMap = new Map();
+                this.state.records.forEach(r => {
+                    const k = r.setUsed.join(',');
+                    if(!setsMap.has(k)) setsMap.set(k, { s: r.setUsed, w: 0, t: 0 });
                 });
 
-                // Backtest: Chạy từng dàn cũ qua bộ lịch sử kết quả
-                uniqueSets.forEach(v => {
-                    this.s.history.forEach(res => {
+                const allRes = this.state.history;
+                setsMap.forEach(v => {
+                    allRes.forEach(res => {
                         v.t++; if(v.s.includes(res)) v.w++;
                     });
                 });
 
-                const top = Array.from(uniqueSets.values())
+                const top = Array.from(setsMap.values())
                     .map(i => ({...i, r: (i.w/i.t*100).toFixed(1)}))
                     .sort((a,b)=>b.r-a.r).slice(0, 5);
 
                 list.innerHTML = top.map((item, idx) => `
-                    <div class="glass p-3.5 rounded-3xl flex items-center justify-between relative overflow-hidden shadow-lg border-white/10 group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-20 group-hover:opacity-100 transition-all"></div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 rounded-xl flex items-center justify-center text-[10px] font-black italic shadow-inner">0${idx+1}</div>
+                    <div class="glass p-4 rounded-3xl flex items-center justify-between relative overflow-hidden group border-white/10 shadow-lg">
+                        <div class="flex items-center gap-4 relative z-10">
+                            <div class="w-9 h-9 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 rounded-xl flex items-center justify-center text-[11px] font-black italic shadow-inner">0${idx+1}</div>
                             <div>
-                                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest italic">Soi Backtest thực tế</p>
+                                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest italic">Backtest Win Rate %</p>
                                 <p class="text-base font-black text-emerald-400 italic leading-none">${item.r}%</p>
                             </div>
                         </div>
-                        <button onclick="TITAN.useWareSet('${item.s.join(',')}')" class="px-5 py-2.5 bg-indigo-600 rounded-xl text-[9px] font-black uppercase text-white shadow-xl active:scale-90 transition-all border-t border-white/20">Dùng Lại</button>
+                        <button onclick="TITAN.useWareSet('${item.s.join(',')}')" class="relative z-10 px-5 py-2.5 bg-indigo-600 rounded-xl text-[9px] font-black uppercase text-white shadow-xl active:scale-90 border-t border-white/20 transition-all">Sử dụng lại</button>
                     </div>
                 `).join('');
-                if(top.length === 0) list.innerHTML = '<p class="py-24 text-center opacity-30 italic text-[9px] font-black uppercase tracking-widest leading-loose italic">Dữ liệu backtest đang xử lý...</p>';
+                if(top.length === 0) list.innerHTML = '<p class="py-24 text-center opacity-30 italic text-[9px] uppercase tracking-widest leading-loose">Hệ thống cần thêm dữ liệu kết quả để phân tích % thực tế...</p>';
+            },
+
+            toggleHistDtl(i) { document.getElementById(`hist-dtl-${i}`).classList.toggle('hidden'); },
+            copyRaw(s) {
+                const txt = s.split(',').map(n => String(n).padStart(2, '0')).join(' ');
+                const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+                alert("Đã chép bộ số này!");
+            },
+            useWareSet(s) {
+                this.state.prediction = s.split(',').map(Number);
+                this.state.locked = false;
+                this.state.isVisible = true;
+                this.switchTab('predict');
+                this.save();
+                this.render();
             }
         };
 
-        // --- ATTACH EVENTS ---
-        window.TITAN = TITAN;
-
-        document.getElementById('btn-start').onclick = () => {
-            const h = document.getElementById('h-input').value;
-            const p = document.getElementById('p-input').value;
-            const nums = (h.match(/\d+/g) || []).map(Number).filter(n => n >= 0 && n <= 99);
-            if (nums.length < 5) return alert("Cần ít nhất 5-10 số!");
-            TITAN.s.isInit = true; TITAN.s.history = nums; TITAN.s.period = parseInt(p) || 1;
-            TITAN.s.prediction = TITAN.algo(nums); TITAN.s.show = false; TITAN.save();
-            document.getElementById('init-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.remove('hidden');
-            TITAN.render();
-        };
-
-        document.getElementById('btn-submit').onclick = () => {
-            const inp = document.getElementById('input-val');
-            const v = parseInt(inp.value); if (isNaN(v) || v < 0 || v > 99) return;
-            const hit = TITAN.s.prediction.includes(v);
-            const pts = hit ? (34 * TITAN.s.mult) : (-65 * TITAN.s.mult);
-            TITAN.s.records.unshift({ period: TITAN.s.period, result: v, hit, profit: pts, multiplier: TITAN.s.mult, set: [...TITAN.s.prediction], time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-            TITAN.s.points += pts; TITAN.s.history.push(v); TITAN.s.period++;
-            if (!hit) { TITAN.s.prediction = TITAN.algo(TITAN.s.history); TITAN.s.locked = false; } else { TITAN.s.locked = true; }
-            TITAN.s.show = false; inp.value = ''; TITAN.save(); TITAN.render();
-            // Feedback Alert
-            document.getElementById('feedback').innerHTML = `
-                <div class="p-3 rounded-2xl border flex items-center justify-between animate-in zoom-in-95 ${hit ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/5 border-rose-500/20 text-rose-400'} shadow-lg">
-                    <div class="flex items-center gap-2"><i data-lucide="${hit ? 'trophy' : 'x-circle'}" class="w-4 h-4"></i>
-                    <span class="text-[9px] font-black uppercase italic tracking-tight">Kỳ trước về: ${String(v).padStart(2, '0')} → ${hit ? 'WIN' : 'LOSS'} (${pts >= 0 ? '+' : ''}${pts})</span></div>
-                </div>`;
-            lucide.createIcons();
-        };
-
-        document.getElementById('btn-toggle-eye').onclick = () => { TITAN.s.show = !TITAN.s.show; TITAN.render(); TITAN.save(); };
-        document.getElementById('btn-copy').onclick = () => {
-            const txt = TITAN.s.prediction.map(n => String(n).padStart(2, '0')).join(' ');
-            const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
-            const b = document.getElementById('btn-copy'); const old = b.innerHTML; b.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> OK';
-            b.className = "flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase";
-            lucide.createIcons(); setTimeout(() => { b.innerHTML = old; b.className = "flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-lg text-[9px] font-black uppercase shadow-lg"; lucide.createIcons(); }, 1200);
-        };
-
-        document.getElementById('btn-reroll').onclick = () => { if(!confirm("Đổi dàn mới?")) return; TITAN.s.prediction = TITAN.algo(TITAN.s.history, 110); TITAN.s.locked = false; TITAN.save(); TITAN.render(); };
-        document.getElementById('btn-m-plus').onclick = () => { TITAN.s.mult++; TITAN.render(); TITAN.save(); };
-        document.getElementById('btn-m-minus').onclick = () => { TITAN.s.mult = Math.max(1, TITAN.s.mult - 1); TITAN.render(); TITAN.save(); };
-        document.getElementById('btn-modal-reset').onclick = () => document.getElementById('reset-modal').classList.remove('hidden');
-        document.getElementById('btn-reset-cancel').onclick = () => document.getElementById('reset-modal').classList.add('hidden');
-        document.getElementById('btn-reset-confirm').onclick = () => { localStorage.removeItem(TITAN.key); location.reload(); };
-
-        const tabs = {'nav-predict': 'tab-predict', 'nav-ware': 'tab-ware', 'nav-hist': 'tab-hist'};
-        Object.keys(tabs).forEach(id => {
-            document.getElementById(id).onclick = () => {
-                Object.keys(tabs).forEach(k => { document.getElementById(k).classList.remove('active-tab', 'text-indigo-400'); document.getElementById(k).classList.add('text-slate-600'); document.getElementById(tabs[k]).classList.add('hidden'); });
-                document.getElementById(id).classList.add('active-tab', 'text-indigo-400'); document.getElementById(tabs[id]).classList.remove('hidden');
-                if(id === 'nav-hist') TITAN.renderHistory(); if(id === 'nav-ware') TITAN.renderWarehouse();
-                lucide.createIcons();
-            };
-        });
-
-        TITAN.useWareSet = (s) => { TITAN.s.prediction = s.split(',').map(Number); TITAN.s.locked = false; TITAN.s.show = true; document.getElementById('nav-predict').click(); TITAN.save(); TITAN.render(); };
         window.onload = () => { TITAN.load(); lucide.createIcons(); };
     </script>
 </body>
