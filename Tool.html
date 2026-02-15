@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DỰ ĐOÁN XSN PRO v5.2</title>
+    <title>DỰ ĐOÁN XSN PRO v5.4 - ANALYTICS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,56 +12,47 @@
             font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        .glass {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .hot-num { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.3); }
+        .cold-num { color: #60a5fa; text-shadow: 0 0 8px rgba(96, 165, 250, 0.3); }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen">
+<body class="bg-[#020617] text-slate-200 min-h-screen no-scrollbar">
 
     <div id="app">
         <!-- Màn hình khởi tạo -->
         <div id="init-screen" class="min-h-screen flex items-center justify-center p-6">
-            <div class="w-full max-w-sm space-y-8">
+            <div class="w-full max-w-sm space-y-8 animate-in fade-in zoom-in duration-500">
                 <div class="text-center space-y-2">
-                    <div class="inline-flex p-4 bg-indigo-600 rounded-3xl mb-2 shadow-2xl">
-                        <i data-lucide="zap" class="w-10 h-10 fill-white text-white"></i>
+                    <div class="inline-flex p-4 bg-indigo-600 rounded-3xl mb-2 shadow-2xl shadow-indigo-500/20">
+                        <i data-lucide="line-chart" class="w-10 h-10 text-white"></i>
                     </div>
-                    <h1 class="text-3xl font-black tracking-tight uppercase">Dự Đoán XSN</h1>
-                    <p class="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase">Quản lý vốn & Xác suất v5.2</p>
+                    <h1 class="text-3xl font-black tracking-tight uppercase leading-none">XSN PRO <span class="text-indigo-500">v5.4</span></h1>
+                    <p class="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase">Phân tích Tần suất & Cân bằng</p>
                 </div>
-                <div class="bg-slate-900/50 p-6 rounded-[2.5rem] border border-white/5 space-y-4">
+                <div class="bg-slate-900/50 p-6 rounded-[2.5rem] border border-white/5 space-y-4 shadow-2xl">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest ml-1">Lịch sử kỳ trước</label>
-                        <textarea id="init-history" class="w-full h-32 bg-black border border-white/10 rounded-2xl p-4 text-lg focus:ring-2 focus:ring-indigo-500 outline-none placeholder:text-slate-800" placeholder="Ví dụ: 01 22 45 78..."></textarea>
+                        <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest ml-1">Lịch sử (ít nhất 10 số)</label>
+                        <textarea id="init-history" class="w-full h-32 bg-black border border-white/10 rounded-2xl p-4 text-lg focus:ring-2 focus:ring-indigo-500 outline-none placeholder:text-slate-800" placeholder="77 57 89 43 12..."></textarea>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest ml-1">Số kỳ bắt đầu</label>
-                        <input id="init-period" type="number" class="w-full bg-black border border-white/10 rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="VD: 100">
+                        <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest ml-1">Kỳ số bắt đầu</label>
+                        <input id="init-period" type="number" inputmode="numeric" class="w-full bg-black border border-white/10 rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="VD: 101">
                     </div>
-                    <button onclick="app.init()" class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-all uppercase">Kích Hoạt</button>
+                    <button onclick="app.init()" class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-all uppercase">Phân Tích Ngay</button>
                 </div>
             </div>
         </div>
 
         <!-- Màn hình chính -->
         <div id="main-screen" class="hidden pb-24">
+            <!-- Header -->
             <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                        <i data-lucide="trending-up" class="w-4 h-4 text-white"></i>
+                        <i data-lucide="activity" class="w-4 h-4 text-white"></i>
                     </div>
-                    <h2 class="text-xs font-black text-white tracking-tight">XSN PRO v5.2</h2>
+                    <h2 class="text-[10px] font-black text-white tracking-widest uppercase leading-none">XSN ANALYTICS</h2>
                 </div>
                 <div class="text-right">
                     <div class="text-[8px] font-black text-slate-500 uppercase">Tổng Lãi/Lỗ</div>
@@ -69,19 +60,60 @@
                 </div>
             </header>
 
-            <div id="tab-dashboard" class="p-4 space-y-5 max-w-md mx-auto">
+            <div id="tab-dashboard" class="p-4 space-y-5 max-w-md mx-auto animate-in slide-in-from-right-4">
+                
+                <!-- Bảng phân tích Tần suất Hay ra/Ít ra -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-900 border border-white/5 p-4 rounded-3xl relative overflow-hidden">
+                        <p class="text-[8px] font-black text-rose-400 uppercase mb-2 tracking-widest flex items-center gap-1">
+                            <i data-lucide="flame" class="w-3 h-3 fill-rose-400"></i> Hay Ra
+                        </p>
+                        <div id="hot-list" class="text-sm font-black text-white tracking-tighter">--</div>
+                    </div>
+                    <div class="bg-slate-900 border border-white/5 p-4 rounded-3xl relative overflow-hidden">
+                        <p class="text-[8px] font-black text-blue-400 uppercase mb-2 tracking-widest flex items-center gap-1">
+                            <i data-lucide="snowflake" class="w-3 h-3 fill-blue-400"></i> Ít Ra
+                        </p>
+                        <div id="cold-list" class="text-sm font-black text-white tracking-tighter">--</div>
+                    </div>
+                </div>
+
+                <!-- Bảng phân tích Chẵn/Lẻ Lớn/Nhỏ -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-900 border border-white/5 p-3 rounded-2xl">
+                        <div class="flex justify-between items-center mb-1.5 px-0.5">
+                            <span class="text-[8px] font-black text-slate-500 uppercase">C: <span id="even-val" class="text-indigo-400">0</span></span>
+                            <span class="text-[8px] font-black text-slate-500 uppercase">L: <span id="odd-val" class="text-orange-400">0</span></span>
+                        </div>
+                        <div id="odd-even-ratio" class="flex h-1.5 rounded-full overflow-hidden bg-slate-800">
+                            <div class="bg-indigo-500 h-full" style="width: 50%"></div>
+                            <div class="bg-orange-500 h-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-white/5 p-3 rounded-2xl">
+                        <div class="flex justify-between items-center mb-1.5 px-0.5">
+                            <span class="text-[8px] font-black text-slate-500 uppercase">N: <span id="small-val" class="text-emerald-400">0</span></span>
+                            <span class="text-[8px] font-black text-slate-500 uppercase">L: <span id="big-val" class="text-purple-400">0</span></span>
+                        </div>
+                        <div id="big-small-ratio" class="flex h-1.5 rounded-full overflow-hidden bg-slate-800">
+                            <div class="bg-emerald-500 h-full" style="width: 50%"></div>
+                            <div class="bg-purple-500 h-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Status Row -->
                 <div class="flex gap-3">
                     <div class="flex-1 bg-slate-900 border border-white/5 p-4 rounded-2xl">
                         <p class="text-[8px] font-black text-slate-500 uppercase mb-1">Kỳ Dự Đoán</p>
-                        <p id="display-period" class="text-xl font-black text-white">#1</p>
+                        <p id="display-period" class="text-xl font-black text-white leading-none">#1</p>
                     </div>
-                    <div class="flex-1 bg-slate-900 border border-white/5 p-4 rounded-2xl">
-                        <p class="text-[8px] font-black text-slate-500 uppercase mb-1">Hệ Số Nhân</p>
+                    <div class="flex-1 bg-slate-900 border border-white/5 p-4 rounded-2xl flex flex-col justify-between">
+                        <p class="text-[8px] font-black text-slate-500 uppercase mb-1">Nhân Vốn</p>
                         <div class="flex items-center justify-between">
-                            <button onclick="app.changeMultiplier(-1)" class="w-7 h-7 flex items-center justify-center bg-white/5 rounded-lg active:bg-white/20"><i data-lucide="minus" class="w-3 h-3 text-slate-400"></i></button>
-                            <span id="display-multiplier" class="text-xl font-black text-indigo-400">x1</span>
-                            <button onclick="app.changeMultiplier(1)" class="w-7 h-7 flex items-center justify-center bg-white/5 rounded-lg active:bg-white/20"><i data-lucide="plus" class="w-3 h-3 text-slate-400"></i></button>
+                            <button onclick="app.changeMultiplier(-1)" class="w-7 h-7 flex items-center justify-center bg-white/5 rounded-lg active:bg-white/20 transition-colors"><i data-lucide="minus" class="w-3 h-3 text-slate-400"></i></button>
+                            <span id="display-multiplier" class="text-xl font-black text-indigo-400 leading-none">x1</span>
+                            <button onclick="app.changeMultiplier(1)" class="w-7 h-7 flex items-center justify-center bg-white/5 rounded-lg active:bg-white/20 transition-colors"><i data-lucide="plus" class="w-3 h-3 text-slate-400"></i></button>
                         </div>
                     </div>
                 </div>
@@ -89,58 +121,57 @@
                 <!-- Input Area -->
                 <section class="bg-slate-900 border border-white/10 rounded-3xl p-5 shadow-xl relative overflow-hidden">
                     <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <i data-lucide="zap" class="w-3 h-3 text-amber-400 fill-amber-400"></i> Nhập Kết Quả Kỳ <span id="input-period-label">1</span>
+                        <i data-lucide="zap" class="w-3 h-3 text-amber-400 fill-amber-400"></i> Kết Quả Kỳ <span id="input-period-label">1</span>
                     </h3>
                     <div class="flex items-stretch gap-2 w-full">
-                        <input id="result-input" type="number" class="flex-[2] min-w-0 bg-black border border-white/10 rounded-2xl py-4 text-4xl font-black text-center text-indigo-400 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="00">
+                        <input id="result-input" type="number" inputmode="numeric" class="flex-[2] min-w-0 bg-black border border-white/10 rounded-2xl py-4 text-4xl font-black text-center text-indigo-400 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner" placeholder="00">
                         <button onclick="app.submitResult()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase text-xs active:scale-90 transition-all">Xác Nhận</button>
                     </div>
                 </section>
 
-                <!-- Feedback -->
                 <div id="feedback-container"></div>
 
                 <!-- Numbers List -->
-                <section class="bg-slate-900 border border-white/5 rounded-[2.5rem] p-5">
-                    <div class="flex items-center justify-between mb-4">
+                <section class="bg-slate-900 border border-white/5 rounded-[2.5rem] p-5 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl"></div>
+                    <div class="flex items-center justify-between mb-4 relative z-10">
                         <div class="flex items-center gap-2">
-                            <h3 id="pred-title" class="text-xs font-black text-white uppercase">Dàn 65 Số</h3>
+                            <h3 id="pred-title" class="text-xs font-black text-white uppercase tracking-tight">Dàn 65 Số</h3>
                             <div id="lock-badge" class="hidden bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded text-[8px] font-black border border-amber-500/20 flex items-center gap-1">
                                 <i data-lucide="lock" class="w-2.5 h-2.5"></i> GIỮ DÀN
                             </div>
                         </div>
-                        <button onclick="app.copy()" id="copy-btn" class="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-xs font-black transition-all active:scale-95">
+                        <button onclick="app.copy()" id="copy-btn" class="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-xs font-black transition-all active:scale-95 shadow-lg">
                             <i data-lucide="copy" class="w-4 h-4"></i> SAO CHÉP
                         </button>
                     </div>
-                    <div id="prediction-grid" class="grid grid-cols-5 gap-1.5"></div>
-                    <div class="mt-6 pt-4 border-t border-white/5 flex justify-between text-[9px] font-bold text-slate-600 uppercase">
-                        <span>Đã tối ưu nhịp số</span>
-                        <span class="text-indigo-400">HTML v5.2 FINAL</span>
+                    <div id="prediction-grid" class="grid grid-cols-5 gap-1.5 relative z-10"></div>
+                    <div class="mt-6 pt-4 border-t border-white/5 flex justify-between text-[8px] font-bold text-slate-600 uppercase relative z-10">
+                        <span>Lọc Tần Suất + Cầu Chạm</span>
+                        <span class="text-indigo-400">v5.4 PRO</span>
                     </div>
                 </section>
             </div>
 
-            <!-- Tab Thống kê -->
-            <div id="tab-history" class="hidden p-4 space-y-3 max-w-md mx-auto">
+            <div id="tab-history" class="hidden p-4 space-y-3 max-w-md mx-auto animate-in slide-in-from-left-4">
                 <div class="flex items-center justify-between mb-3 px-1">
                     <h3 class="text-sm font-black text-white uppercase tracking-widest">Lịch sử thống kê</h3>
-                    <span id="record-count" class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter bg-white/5 px-2 py-1 rounded">0 kỳ</span>
+                    <span id="record-count" class="text-[9px] font-bold text-slate-500 uppercase bg-white/5 px-2 py-1 rounded">0 kỳ</span>
                 </div>
                 <div id="records-list" class="space-y-3"></div>
             </div>
 
             <!-- Bottom Nav -->
             <nav class="fixed bottom-0 left-0 w-full bg-slate-950/95 border-t border-white/5 p-3 flex justify-around items-center z-40 backdrop-blur-xl">
-                <button onclick="app.switchTab('dashboard')" id="nav-dash" class="flex flex-col items-center gap-1 flex-1 text-indigo-400 scale-110">
+                <button onclick="app.switchTab('dashboard')" id="nav-dash" class="flex flex-col items-center gap-1 flex-1 text-indigo-400 scale-110 transition-all">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                     <span class="text-[8px] font-black uppercase">Dự Đoán</span>
                 </button>
-                <button onclick="app.switchTab('history')" id="nav-hist" class="flex flex-col items-center gap-1 flex-1 text-slate-600">
+                <button onclick="app.switchTab('history')" id="nav-hist" class="flex flex-col items-center gap-1 flex-1 text-slate-600 transition-all">
                     <i data-lucide="history" class="w-5 h-5"></i>
                     <span class="text-[8px] font-black uppercase">Thống Kê</span>
                 </button>
-                <button onclick="app.toggleResetModal(true)" class="flex flex-col items-center gap-1 flex-1 text-slate-700">
+                <button onclick="app.toggleResetModal(true)" class="flex flex-col items-center gap-1 flex-1 text-slate-700 transition-all">
                     <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
                     <span class="text-[8px] font-black uppercase">Reset</span>
                 </button>
@@ -149,18 +180,18 @@
 
         <!-- Custom Modal Reset -->
         <div id="reset-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-            <div class="relative bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 w-full max-w-xs shadow-2xl text-center space-y-6">
-                <div class="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="app.toggleResetModal(false)"></div>
+            <div class="relative bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 w-full max-w-xs shadow-2xl text-center space-y-6 animate-in zoom-in-95">
+                <div class="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500 shadow-xl shadow-rose-500/10">
                     <i data-lucide="alert-triangle" class="w-10 h-10"></i>
                 </div>
-                <div class="space-y-2">
-                    <h4 class="text-xl font-black text-white uppercase tracking-tight">Xóa Toàn Bộ?</h4>
-                    <p class="text-slate-400 text-sm font-medium leading-tight">Mọi lịch sử và điểm số sẽ bị xóa vĩnh viễn.</p>
+                <div class="space-y-2 text-white">
+                    <h4 class="text-xl font-black uppercase tracking-tight leading-none">Xóa Toàn Bộ?</h4>
+                    <p class="text-slate-400 text-sm font-medium leading-tight">Mọi lịch sử, điểm số và dữ liệu phân tích sẽ biến mất.</p>
                 </div>
                 <div class="flex flex-col gap-3">
-                    <button onclick="app.resetSystem()" class="w-full py-4 bg-rose-600 text-white font-black rounded-2xl active:scale-95 transition-all">XÁC NHẬN RESET</button>
-                    <button onclick="app.toggleResetModal(false)" class="w-full py-3 bg-white/5 text-slate-400 font-bold rounded-xl">HỦY BỎ</button>
+                    <button onclick="app.resetSystem()" class="w-full py-4 bg-rose-600 text-white font-black rounded-2xl active:scale-95 transition-all shadow-lg shadow-rose-500/20">XÁC NHẬN RESET</button>
+                    <button onclick="app.toggleResetModal(false)" class="w-full py-3 bg-white/5 text-slate-400 font-bold rounded-xl transition-all">HỦY BỎ</button>
                 </div>
             </div>
         </div>
@@ -181,18 +212,14 @@
             },
 
             init() {
-                const historyInput = document.getElementById('init-history').value;
-                const periodInput = document.getElementById('init-period').value;
+                const hInput = document.getElementById('init-history').value;
+                const pInput = document.getElementById('init-period').value;
+                const raw = hInput.split(/[^0-9]+/).filter(v => v !== '').map(Number).filter(n => n >= 0 && n <= 99);
                 
-                const raw = historyInput.split(/[^0-9]+/).filter(v => v !== '').map(Number).filter(n => n >= 0 && n <= 99);
-                
-                if (raw.length < 5) {
-                    alert("Hãy nhập ít nhất 5 số kỳ trước.");
-                    return;
-                }
+                if (raw.length < 5) return alert("Nhập ít nhất 5-10 số kỳ trước.");
 
                 this.state.historyNumbers = raw;
-                this.state.currentPeriod = parseInt(periodInput) || 1;
+                this.state.currentPeriod = parseInt(pInput) || 1;
                 this.state.currentPrediction = this.generatePrediction(raw);
                 this.state.isInitialized = true;
 
@@ -201,22 +228,63 @@
                 this.render();
             },
 
+            // LOGIC DỰ ĐOÁN v5.4 (Tần Suất + Cân Bằng)
             generatePrediction(data) {
                 const scores = Array.from({ length: 100 }, (_, i) => ({ num: i, score: 0 }));
                 
-                data.forEach((num, index) => {
-                    const weight = (index + 1) / data.length;
-                    scores[num].score += 40 * weight;
+                // 1. Phân tích Tần Suất (Hay Ra / Ít Ra)
+                const freqMap = {};
+                data.forEach(n => freqMap[n] = (freqMap[n] || 0) + 1);
+                
+                // 2. Phân tích Chẵn/Lẻ Lớn/Nhỏ (15 kỳ gần nhất)
+                const last15 = data.slice(-15);
+                const evens = last15.filter(n => n % 2 === 0).length;
+                const odds = last15.length - evens;
+                const smalls = last15.filter(n => n < 50).length;
+                const bigs = last15.length - smalls;
+
+                // Cập nhật Danh sách Hay ra / Ít ra trên UI
+                this.updateFrequencyUI(freqMap);
+
+                // 3. Tính toán trọng số cho từng số
+                scores.forEach(s => {
+                    const count = freqMap[s.num] || 0;
+                    
+                    // Ưu tiên số "Hay Ra"
+                    s.score += count * 20;
+
+                    // Ưu tiên số mới ra (Độ trễ - Recency)
+                    const lastIndex = data.lastIndexOf(s.num);
+                    if (lastIndex !== -1) {
+                        s.score += (lastIndex / data.length) * 30;
+                    }
+
+                    // Cân bằng Chẵn Lẻ
+                    if (odds > evens + 2) { // Nếu quá nhiều Lẻ -> Ưu tiên Chẵn
+                        if (s.num % 2 === 0) s.score += 15;
+                    } else if (evens > odds + 2) { // Nếu quá nhiều Chẵn -> Ưu tiên Lẻ
+                        if (s.num % 2 !== 0) s.score += 15;
+                    }
+
+                    // Cân bằng Tài Xỉu
+                    if (bigs > smalls + 2) { // Nếu quá nhiều Tài -> Ưu tiên Xỉu
+                        if (s.num < 50) s.score += 15;
+                    } else if (smalls > bigs + 2) { // Nếu quá nhiều Xỉu -> Ưu tiên Tài
+                        if (s.num >= 50) s.score += 15;
+                    }
+
+                    // Cầu chạm lân cận số vừa về
+                    const lastNum = data[data.length - 1];
+                    if (Math.abs(s.num - lastNum) === 1) s.score += 15;
+
+                    // Một chút ngẫu nhiên để dàn số linh hoạt
+                    s.score += Math.random() * 10;
                 });
 
-                const lastNum = data[data.length - 1];
-                if (lastNum !== undefined) {
-                    [(lastNum - 1 + 100) % 100, (lastNum + 1) % 100].forEach(n => scores[n].score += 15);
-                    scores[(lastNum + 50) % 100].score += 12;
-                }
+                // Cập nhật UI tỉ lệ
+                this.updateAnalysisUI(evens, odds, smalls, bigs);
 
-                scores.forEach(s => s.score += Math.random() * 10);
-
+                // Lấy 65 số có điểm cao nhất
                 return scores
                     .sort((a, b) => b.score - a.score)
                     .slice(0, 65)
@@ -224,14 +292,49 @@
                     .sort((a, b) => a - b);
             },
 
+            updateFrequencyUI(freqMap) {
+                // Sắp xếp tần suất
+                const sortedFreq = Object.entries(freqMap)
+                    .map(([num, count]) => ({ num: parseInt(num), count }))
+                    .sort((a, b) => b.count - a.count);
+
+                const hot = sortedFreq.slice(0, 5).map(i => i.num.toString().padStart(2, '0')).join(' ');
+                
+                // Tìm những số chưa ra hoặc ít ra nhất
+                const cold = [];
+                for(let i=0; i<=99; i++) {
+                    if (!freqMap[i]) cold.push(i);
+                    if (cold.length >= 5) break;
+                }
+                const coldDisplay = cold.map(i => i.toString().padStart(2, '0')).join(' ');
+
+                document.getElementById('hot-list').textContent = hot || '--';
+                document.getElementById('cold-list').textContent = coldDisplay || '--';
+            },
+
+            updateAnalysisUI(evens, odds, smalls, bigs) {
+                const total = Math.max(evens + odds, 1);
+                const totalS = Math.max(smalls + bigs, 1);
+                
+                document.getElementById('odd-even-ratio').innerHTML = `
+                    <div class="bg-indigo-500 h-full transition-all duration-500" style="width: ${(evens/total)*100}%"></div>
+                    <div class="bg-orange-500 h-full transition-all duration-500" style="width: ${(odds/total)*100}%"></div>
+                `;
+                document.getElementById('even-val').textContent = evens;
+                document.getElementById('odd-val').textContent = odds;
+
+                document.getElementById('big-small-ratio').innerHTML = `
+                    <div class="bg-emerald-500 h-full transition-all duration-500" style="width: ${(smalls/totalS)*100}%"></div>
+                    <div class="bg-purple-500 h-full transition-all duration-500" style="width: ${(bigs/totalS)*100}%"></div>
+                `;
+                document.getElementById('small-val').textContent = smalls;
+                document.getElementById('big-val').textContent = bigs;
+            },
+
             submitResult() {
                 const inputEl = document.getElementById('result-input');
                 const res = parseInt(inputEl.value, 10);
-                
-                if (isNaN(res) || res < 0 || res > 99) {
-                    alert("Vui lòng nhập số từ 00-99");
-                    return;
-                }
+                if (isNaN(res) || res < 0 || res > 99) return;
 
                 const isHit = this.state.currentPrediction.includes(res);
                 const profit = isHit ? (34 * this.state.multiplier) : (-65 * this.state.multiplier);
@@ -250,7 +353,6 @@
                 this.state.records.unshift(newRecord);
                 this.state.historyNumbers.push(res);
 
-                // Show Feedback
                 this.renderFeedback(isHit, profit, res);
 
                 if (isHit) {
@@ -268,17 +370,21 @@
             renderFeedback(isHit, profit, num) {
                 const container = document.getElementById('feedback-container');
                 container.innerHTML = `
-                    <div class="p-4 rounded-2xl border-2 animate-pulse flex items-center justify-between ${isHit ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="${isHit ? 'trophy' : 'x-circle'}" class="w-6 h-6"></i>
-                            <div>
-                                <div class="text-[9px] font-black uppercase opacity-60">Kỳ trước về: ${num.toString().padStart(2, '0')}</div>
-                                <div class="text-base font-black tracking-tight">${isHit ? 'BẠN ĐÃ CHIẾN THẮNG!' : 'CHƯA TRÚNG KỲ NÀY'}</div>
+                    <div class="p-4 rounded-2xl border-2 animate-in zoom-in-95 duration-300 ${isHit ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center ${isHit ? 'bg-emerald-500/20' : 'bg-rose-500/20'}">
+                                    <i data-lucide="${isHit ? 'trophy' : 'x-circle'}" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] font-black uppercase opacity-60">Kỳ trước: ${num.toString().padStart(2, '0')}</div>
+                                    <div class="text-base font-black">${isHit ? 'BẠN ĐÃ THẮNG!' : 'CHƯA TRÚNG'}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-lg font-black leading-none">${profit > 0 ? '+' + profit : profit}</div>
-                            <div class="text-[8px] font-bold uppercase opacity-60 mt-1">Điểm Quỹ</div>
+                            <div class="text-right">
+                                <div class="text-lg font-black leading-none">${profit > 0 ? '+' + profit : profit}</div>
+                                <div class="text-[8px] font-bold uppercase opacity-50 tracking-tighter">ĐIỂM QUỸ</div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -286,24 +392,19 @@
             },
 
             changeMultiplier(val) {
-                this.state.multiplier = Math.max(1, Math.min(50, this.state.multiplier + val));
+                this.state.multiplier = Math.max(1, Math.min(200, this.state.multiplier + val));
                 this.render();
             },
 
             switchTab(tab) {
                 this.state.activeTab = tab;
-                if (tab === 'dashboard') {
-                    document.getElementById('tab-dashboard').classList.remove('hidden');
-                    document.getElementById('tab-history').classList.add('hidden');
-                    document.getElementById('nav-dash').className = 'flex flex-col items-center gap-1 flex-1 text-indigo-400 scale-110';
-                    document.getElementById('nav-hist').className = 'flex flex-col items-center gap-1 flex-1 text-slate-600';
-                } else {
-                    document.getElementById('tab-dashboard').classList.add('hidden');
-                    document.getElementById('tab-history').classList.remove('hidden');
-                    document.getElementById('nav-dash').className = 'flex flex-col items-center gap-1 flex-1 text-slate-600';
-                    document.getElementById('nav-hist').className = 'flex flex-col items-center gap-1 flex-1 text-indigo-400 scale-110';
-                    this.renderHistory();
-                }
+                document.getElementById('tab-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+                document.getElementById('tab-history').classList.toggle('hidden', tab !== 'history');
+                
+                document.getElementById('nav-dash').className = tab === 'dashboard' ? 'flex flex-col items-center gap-1 flex-1 text-indigo-400 scale-110' : 'flex flex-col items-center gap-1 flex-1 text-slate-600';
+                document.getElementById('nav-hist').className = tab === 'history' ? 'flex flex-col items-center gap-1 flex-1 text-indigo-400 scale-110' : 'flex flex-col items-center gap-1 flex-1 text-slate-600';
+                
+                if (tab === 'history') this.renderHistory();
             },
 
             toggleResetModal(show) {
@@ -311,22 +412,7 @@
             },
 
             resetSystem() {
-                this.state = {
-                    isInitialized: false,
-                    historyNumbers: [],
-                    records: [],
-                    currentPrediction: [],
-                    currentPeriod: 1,
-                    multiplier: 1,
-                    totalPoints: 0,
-                    isLocked: false,
-                    activeTab: 'dashboard'
-                };
-                document.getElementById('feedback-container').innerHTML = '';
-                document.getElementById('init-screen').classList.remove('hidden');
-                document.getElementById('main-screen').classList.add('hidden');
-                this.toggleResetModal(false);
-                lucide.createIcons();
+                location.reload();
             },
 
             copy() {
@@ -340,14 +426,11 @@
                 
                 const btn = document.getElementById('copy-btn');
                 btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> ĐÃ CHÉP`;
-                btn.classList.replace('bg-white', 'bg-emerald-600');
-                btn.classList.replace('text-black', 'text-white');
+                btn.className = "flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black transition-all";
                 lucide.createIcons();
-                
                 setTimeout(() => {
                     btn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i> SAO CHÉP`;
-                    btn.classList.replace('bg-emerald-600', 'bg-white');
-                    btn.classList.replace('text-white', 'text-black');
+                    btn.className = "flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-xs font-black transition-all";
                     lucide.createIcons();
                 }, 2000);
             },
@@ -363,8 +446,8 @@
 
                 const grid = document.getElementById('prediction-grid');
                 grid.innerHTML = this.state.currentPrediction.map(num => `
-                    <div class="aspect-square flex items-center justify-center bg-black/50 border border-white/5 rounded-xl text-sm font-black text-slate-400">
-                        ${num.toString().padStart(2, '0')}
+                    <div class="aspect-square flex items-center justify-center bg-black/50 border border-white/5 rounded-xl text-sm font-black text-slate-400 shadow-inner group transition-all">
+                        <span class="group-hover:text-indigo-400">${num.toString().padStart(2, '0')}</span>
                     </div>
                 `).join('');
 
@@ -378,16 +461,16 @@
                     <div class="bg-slate-900 border border-white/5 rounded-[1.5rem] p-4 flex items-center justify-between shadow-lg">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-black ${r.isHit ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
-                                <span class="text-[8px] opacity-50 font-bold">KỲ ${r.period}</span>
-                                <span class="text-lg leading-none">${r.result.toString().padStart(2, '0')}</span>
+                                <span class="text-[8px] opacity-50 font-bold tracking-tighter uppercase leading-none mb-1">Kỳ ${r.period}</span>
+                                <span class="text-xl leading-none">${r.result.toString().padStart(2, '0')}</span>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-black ${r.isHit ? 'text-emerald-400' : 'text-rose-400'}">${r.isHit ? 'THẮNG' : 'THUA'}</span>
-                                    <span class="text-[9px] font-bold text-slate-600 uppercase">x${r.multiplier}</span>
+                                    <span class="text-[10px] font-black uppercase ${r.isHit ? 'text-emerald-400' : 'text-rose-400'}">${r.isHit ? 'THẮNG' : 'THUA'}</span>
+                                    <span class="text-[9px] font-bold text-slate-600">x${r.multiplier}</span>
                                     ${r.isLocked ? '<i data-lucide="lock" class="w-2.5 h-2.5 text-amber-500 opacity-50"></i>' : ''}
                                 </div>
-                                <div class="text-[10px] text-slate-600 font-bold uppercase mt-0.5">${r.timestamp}</div>
+                                <div class="text-[9px] text-slate-600 font-bold uppercase mt-1 tracking-tighter">${r.timestamp}</div>
                             </div>
                         </div>
                         <div class="text-xl font-black ${r.profit >= 0 ? 'text-emerald-400' : 'text-rose-500'}">
@@ -395,14 +478,11 @@
                         </div>
                     </div>
                 `).join('');
-                if(this.state.records.length === 0) {
-                    list.innerHTML = '<div class="py-24 text-center text-slate-700 font-bold uppercase text-[10px]">Trống</div>';
-                }
+                if(this.state.records.length === 0) list.innerHTML = '<div class="py-24 text-center text-slate-800 font-black uppercase text-[10px] tracking-[0.4em] italic">Dữ liệu trống</div>';
                 lucide.createIcons();
             }
         };
 
-        // Initialize Icons
         window.onload = () => lucide.createIcons();
     </script>
 </body>
