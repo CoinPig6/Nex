@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lì Xì Tết 2026 - Blue & Gold Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-deep: #020617;
+            --blue-accent: #0ea5e9;
+            --gold-light: #fef08a;
+            --gold-main: #eab308;
+            --gold-dark: #854d0e;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--navy-deep);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(14, 165, 233, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(234, 179, 8, 0.1) 0%, transparent 40%);
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+
+        .festive-font { font-family: 'Dancing Script', cursive; }
+        .amount-font { font-family: 'Montserrat', sans-serif; }
+
+        /* Khung vé cố định */
+        .card-frame {
+            position: relative;
+            width: 320px;
+            height: 460px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            border: 4px solid var(--gold-main);
+            box-shadow: 
+                0 0 30px rgba(14, 165, 233, 0.3),
+                inset 0 0 15px rgba(234, 179, 8, 0.2);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Lớp phủ Canvas Metallic Blue */
+        #scratch-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 20;
+            cursor: pointer;
+            touch-action: none;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Vùng hiển thị phần thưởng */
+        .prize-box {
+            text-align: center;
+            z-index: 5;
+            transition: all 0.5s ease;
+        }
+
+        .amount-display {
+            background: linear-gradient(to bottom, var(--blue-accent), #0369a1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 3.5rem;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        /* Hiệu ứng nhảy số */
+        .shuffle-glow {
+            animation: text-pulse 0.1s infinite alternate;
+        }
+
+        @keyframes text-pulse {
+            from { opacity: 0.7; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Nút Premium */
+        .btn-premium {
+            background: linear-gradient(135deg, var(--gold-main) 0%, var(--gold-dark) 100%);
+            color: white;
+            padding: 14px 40px;
+            border-radius: 20px;
+            font-weight: 800;
+            margin-top: 25px;
+            text-transform: uppercase;
+            box-shadow: 0 10px 25px rgba(133, 77, 14, 0.4);
+            border: none;
+            cursor: pointer;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-premium:active { transform: scale(0.92); }
+        .btn-premium.hidden { opacity: 0; pointer-events: none; transform: translateY(20px); }
+
+        /* Hoa rơi chủ đề Blue & Gold */
+        .blossom {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            z-index: 25;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="blossom-container"></div>
+
+<header class="text-center mb-8 z-10 animate-in fade-in slide-in-from-top-4 duration-1000">
+    <h1 class="festive-font text-6xl text-blue-400 drop-shadow-[0_4px_10px_rgba(14,165,233,0.5)]">Tết 2026</h1>
+    <p class="text-yellow-500/80 uppercase tracking-[0.5em] text-[10px] font-black mt-2 italic">Khai Xuân Đại Thắng</p>
+</header>
+
+<div class="card-frame shadow-[0_0_50px_rgba(14,165,233,0.3)]">
+    <div class="card-inner">
+        <!-- Họa tiết trang trí chìm -->
+        <div class="absolute inset-0 bg-slate-50 opacity-40 pointer-events-none"></div>
+        <div class="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none">
+            <svg width="250" height="250" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" stroke="blue" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+            </svg>
+        </div>
+
+        <div id="prize-content" class="prize-box">
+            <div class="text-6xl mb-4">🧧</div>
+            <p class="text-[10px] uppercase font-black text-blue-900/40 tracking-[0.2em] mb-2">Số tiền lộc</p>
+            <div id="amount-text" class="amount-display amount-font shuffle-glow">0₫</div>
+            <div id="wish-tag" class="mt-6 px-6 py-2 bg-slate-400 text-white rounded-full text-xs font-bold italic shadow-lg">
+                Đang tìm lộc...
+            </div>
+        </div>
+
+        <div id="celebration-zone" class="absolute inset-0 pointer-events-none"></div>
+
+        <canvas id="scratch-canvas"></canvas>
+    </div>
+</div>
+
+<button id="reset-btn" class="btn-premium hidden">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
+    Thử Lộc Bao Khác
+</button>
+
+<div class="mt-8 flex flex-col items-center gap-2">
+    <div id="hint-text" class="text-blue-400/50 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+        <span>Cào 50% diện tích để nhận quà</span>
+    </div>
+    <div id="progress-bar" class="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+        <div id="progress-fill" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('scratch-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const amountText = document.getElementById('amount-text');
+    const wishTag = document.getElementById('wish-tag');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressFill = document.getElementById('progress-fill');
+    
+    const prizes = [
+        { val: "6.666₫", wish: "Vạn Sự Như Ý" },
+        { val: "8.888₫", wish: "Phát Tài Phát Lộc" },
+        { val: "9.999₫", wish: "Trường Tồn Vĩnh Cửu" },
+        { val: "16.666₫", wish: "An Khang Thịnh Vượng" },
+        { val: "18.888₫", wish: "Phú Quý Trường Thọ" },
+        { val: "19.999₫", wish: "Sức Khỏe Dồi Dào" },
+        { val: "20.260₫", wish: "Đại Thắng 2026" }
+    ];
+
+    let isDrawing = false;
+    let revealed = false;
+    let isScratching = false;
+    let shuffleTimer = null;
+
+    // Hiệu ứng nhảy số liên tục
+    function startShuffle() {
+        if(shuffleTimer) clearInterval(shuffleTimer);
+        amountText.classList.add('shuffle-glow');
+        wishTag.innerText = "Đang tìm lộc...";
+        wishTag.className = "mt-6 px-6 py-2 bg-slate-400 text-white rounded-full text-xs font-bold italic shadow-lg";
+        
+        shuffleTimer = setInterval(() => {
+            amountText.innerText = prizes[Math.floor(Math.random() * prizes.length)].val;
+        }, 80);
+    }
+
+    // Chốt giải ngay khi chạm tay vào cào
+    function stopShuffle() {
+        if(!isScratching) {
+            isScratching = true;
+            clearInterval(shuffleTimer);
+            amountText.classList.remove('shuffle-glow');
+            
+            // Chốt giải thưởng thực tế
+            const final = prizes[Math.floor(Math.random() * prizes.length)];
+            amountText.innerText = final.val;
+            wishTag.innerText = final.wish;
+            wishTag.className = "mt-6 px-6 py-2 bg-blue-600 text-white rounded-full text-xs font-bold italic shadow-lg animate-bounce";
+        }
+    }
+
+    function initGame() {
+        revealed = false;
+        isScratching = false;
+        resetBtn.classList.add('hidden');
+        progressFill.style.width = '0%';
+        canvas.style.opacity = '1';
+        canvas.style.pointerEvents = 'auto';
+
+        const parent = canvas.parentElement;
+        canvas.width = parent.offsetWidth;
+        canvas.height = parent.offsetHeight;
+        
+        drawScratchLayer();
+        startShuffle();
+    }
+
+    function drawScratchLayer() {
+        // Metallic Blue Gradient cho lớp phủ
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, '#020617');
+        grad.addColorStop(0.3, '#1e293b');
+        grad.addColorStop(0.5, '#334155');
+        grad.addColorStop(0.7, '#1e293b');
+        grad.addColorStop(1, '#020617');
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Kim tuyến lấp lánh (Blue & Gold Glitter)
+        for(let i=0; i<400; i++) {
+            ctx.fillStyle = Math.random() > 0.85 ? '#eab308' : (Math.random() > 0.7 ? '#0ea5e9' : 'rgba(255,255,255,0.05)');
+            ctx.beginPath();
+            ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 0.7, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // LỜI CHÚC TRÊN MẶT VÉ
+        ctx.fillStyle = '#fef08a'; // Màu vàng sáng
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 28px Montserrat';
+        ctx.fillText('VẠN SỰ NHƯ Ý', canvas.width/2, canvas.height/2 - 10);
+        
+        ctx.fillStyle = '#0ea5e9'; // Màu xanh accent
+        ctx.font = 'bold 11px Montserrat';
+        ctx.globalAlpha = 0.6;
+        ctx.fillText('CHẠM ĐỂ NHẬN LỘC', canvas.width/2, canvas.height/2 + 30);
+        ctx.globalAlpha = 1.0;
+
+        // Viền nhũ nhẹ bên trong
+        ctx.strokeStyle = 'rgba(234, 179, 8, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+    }
+
+    function handleScratch(e) {
+        if(!isDrawing || revealed) return;
+        
+        // Dừng vòng quay số ngay lần chạm đầu tiên
+        stopShuffle();
+
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        const x = (clientX - rect.left) * (canvas.width / rect.width);
+        const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, 35, 0, Math.PI * 2);
+        ctx.fill();
+
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+        let clear = 0;
+
+        for (let i = 0; i < pixels.length; i += 256) {
+            if (pixels[i + 3] === 0) clear++;
+        }
+
+        const percent = (clear / (pixels.length / 256)) * 100;
+        progressFill.style.width = Math.min((percent / 50) * 100, 100) + '%';
+
+        if (percent > 48 && !revealed) {
+            revealed = true;
+            canvas.style.opacity = '0';
+            canvas.style.pointerEvents = 'none';
+            resetBtn.classList.remove('hidden');
+            fireCelebration();
+        }
+    }
+
+    function fireCelebration() {
+        const zone = document.getElementById('celebration-zone');
+        const colors = ['#eab308', '#0ea5e9', '#ffffff'];
+        for(let i=0; i<60; i++) {
+            const conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+            conf.style.left = '50%';
+            conf.style.top = '50%';
+            zone.appendChild(conf);
+
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 60 + Math.random() * 140;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+
+            conf.animate([
+                { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) rotate(720deg)`, opacity: 0 }
+            ], {
+                duration: 1200 + Math.random()*1000,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+            setTimeout(() => conf.remove(), 2500);
+        }
+    }
+
+    function spawnBlossoms() {
+        const container = document.getElementById('blossom-container');
+        setInterval(() => {
+            const b = document.createElement('div');
+            b.className = 'blossom';
+            const size = 12 + Math.random() * 15;
+            const isBlue = Math.random() > 0.4;
+            b.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 20 20"><path fill="${isBlue ? '#38bdf8' : '#eab308'}" d="M10 0 C12 5 18 5 18 10 C18 15 12 15 10 20 C8 15 2 15 2 10 C2 5 8 5 10 0"/></svg>`;
+            b.style.left = Math.random() * 100 + 'vw';
+            b.style.animationDuration = (8 + Math.random() * 10) + 's';
+            container.appendChild(b);
+            setTimeout(() => b.remove(), 18000);
+        }, 1000);
+    }
+
+    canvas.addEventListener('mousedown', () => isDrawing = true);
+    canvas.addEventListener('touchstart', (e) => { isDrawing = true; e.preventDefault(); }, {passive: false});
+    window.addEventListener('mouseup', () => isDrawing = false);
+    window.addEventListener('touchend', () => isDrawing = false);
+    
+    canvas.addEventListener('mousemove', handleScratch);
+    canvas.addEventListener('touchmove', (e) => { handleScratch(e); e.preventDefault(); }, {passive: false});
+
+    resetBtn.addEventListener('click', initGame);
+
+    window.onload = () => {
+        initGame();
+        spawnBlossoms();
+    };
+</script>
+
+</body>
+</html>
+
