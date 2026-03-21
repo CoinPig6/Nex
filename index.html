@@ -23,15 +23,6 @@
                         dark: '#0b0f19',
                         card: '#1e232e',
                         border: '#2d3442'
-                    },
-                    animation: {
-                        'slide-down': 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                    },
-                    keyframes: {
-                        slideDown: {
-                            '0%': { opacity: '0', transform: 'translateY(-20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
                     }
                 }
             }
@@ -39,22 +30,21 @@
     </script>
 
     <style>
-        /* --- CẤU HÌNH CỐT LÕI (CHO PHÉP CUỘN MƯỢT MÀ) --- */
+        /* --- HỖ TRỢ LƯỚT LÊN XUỐNG --- */
         html, body {
             min-height: 100dvh; 
             overflow-x: hidden; 
-            overflow-y: auto; /* Cho phép lướt dọc */
+            overflow-y: auto; /* Mở khóa cuộn dọc */
             touch-action: pan-y; 
             -webkit-text-size-adjust: 100%;
             background-color: #0b0f19;
             scroll-behavior: smooth;
         }
         
-        /* BẮT BUỘC FONT-SIZE 16PX CHO INPUT ĐỂ CHỐNG ZOOM TRÊN IOS */
+        /* Chống Zoom iOS */
         input, select, textarea { font-size: 16px !important; appearance: none; -webkit-appearance: none; border-radius: 0; }
         button, a { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* NỀN ĐỘNG (AMBIENT GLOW) - Fixed để không bị lỗi khi cuộn */
         .bg-animate {
             background: radial-gradient(circle at 50% 0%, #1a1f2e 0%, #0b0f19 85%);
             position: fixed; inset: 0; z-index: -1;
@@ -64,7 +54,6 @@
             filter: blur(100px); opacity: 0.1; top: -50px; left: 50%; transform: translateX(-50%);
         }
 
-        /* CARD STYLE */
         .glass-panel {
             background: #1e232e;
             border: 1px solid #2d3442;
@@ -75,7 +64,6 @@
             transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        /* INPUT STYLE - CHUẨN TPIG */
         .input-box { position: relative; margin-bottom: 14px; }
         .input-control {
             width: 100%; background: #0b0f19; border: 1px solid #2d3442;
@@ -85,15 +73,12 @@
         .input-control:focus {
             border-color: #FCD535; background: #13161f; outline: none; box-shadow: 0 0 0 1px #FCD535;
         }
-        .input-control::placeholder { color: #6b7280; font-size: 14px; }
-        
         .input-icon {
             position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
             color: #6b7280; font-size: 16px; transition: 0.2s;
         }
         .input-control:focus ~ .input-icon { color: #FCD535; }
 
-        /* SMOOTH TABS */
         .tab-wrapper {
             display: flex; position: relative; background: #0b0f19; border: 1px solid #2d3442;
             border-radius: 12px; padding: 4px; margin-bottom: 24px;
@@ -103,50 +88,30 @@
             color: #9ca3af; cursor: pointer; z-index: 10; transition: color 0.3s;
         }
         .tab-item.active { color: #111; }
-        
-        /* Sliding Pill Indicator */
         .tab-indicator {
             position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px);
             background: #FCD535; border-radius: 8px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             box-shadow: 0 2px 10px rgba(252, 213, 53, 0.3); z-index: 1;
         }
 
-        /* BUTTON */
         .btn-action {
-            width: 100%; background: gradient-to-r from-[#FCD535] to-[#f59e0b];
-            background: #FCD535; color: #111; font-weight: 900; padding: 14px; border-radius: 12px;
+            width: 100%; background: #FCD535; color: #111; font-weight: 900; padding: 14px; border-radius: 12px;
             font-size: 14px; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;
             box-shadow: 0 5px 15px rgba(252, 213, 53, 0.2); transition: all 0.1s;
         }
         .btn-action:active:not(:disabled) { transform: scale(0.97); }
-        .btn-action:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* FORM SLIDING ANIMATION */
-        .forms-container {
-            position: relative;
-            height: 290px; 
-            overflow: hidden;
-            transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
+        .forms-container { position: relative; height: 290px; overflow: hidden; transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .auth-form {
             position: absolute; top: 0; left: 0; width: 100%;
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             opacity: 0; transform: translateX(50px); pointer-events: none;
         }
-
-        .auth-form.active {
-            opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 20;
-        }
-        
+        .auth-form.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 20; }
         .auth-form.slide-left { transform: translateX(-50px); opacity: 0; }
         .auth-form.slide-right { transform: translateX(50px); opacity: 0; }
 
-        /* TOAST & LOADING */
-        #toast-box {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 9999; width: max-content; max-width: 90vw;
-        }
+        #toast-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: max-content; max-width: 90vw; }
         .toast-msg {
             background: #1e232e; border: 1px solid #2d3442;
             padding: 12px 16px; border-radius: 50px; display: flex; align-items: center; gap: 10px;
@@ -162,28 +127,17 @@
     <div class="orb"></div>
     <div id="toast-box"></div>
 
-    <!-- LOADING SCREEN -->
+    <!-- MÀN HÌNH CHỜ (SẼ TỰ TẮT NHANH) -->
     <div id="loadingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0b0f19] transition-opacity duration-300">
-        <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce" id="loadingLogo">
+        <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce">
             <span class="text-black font-black text-2xl italic tracking-widest pl-1">T</span>
         </div>
-        <div class="flex items-center gap-1.5 mb-6" id="loadingDots">
-            <div class="w-2 h-2 bg-[#FCD535] rounded-full animate-ping" style="animation-delay: 0s;"></div>
-            <div class="w-2 h-2 bg-[#FCD535] rounded-full animate-ping" style="animation-delay: 0.2s;"></div>
-            <div class="w-2 h-2 bg-[#FCD535] rounded-full animate-ping" style="animation-delay: 0.4s;"></div>
-        </div>
-        <p id="loadingText" class="text-[#FCD535] font-bold text-[10px] uppercase tracking-widest font-mono">Kiểm tra kết nối...</p>
-        
-        <button onclick="window.forceLogout()" class="mt-10 px-5 py-2 border border-[#2d3442] rounded-full text-[10px] text-gray-500 hover:bg-[#1e232e] hover:text-white transition-colors font-bold uppercase tracking-wider">
-            Làm mới trang
-        </button>
+        <p id="loadingText" class="text-[#FCD535] font-bold text-[10px] uppercase tracking-widest font-mono">Khởi động hệ thống...</p>
     </div>
 
-    <!-- MAIN INTERFACE -->
-    <div class="p-4 w-full flex justify-center animate-slide-down">
+    <!-- GIAO DIỆN CHÍNH -->
+    <div class="p-4 w-full flex justify-center opacity-0 transform translate-y-4 transition-all duration-700" id="mainContainer">
         <div class="glass-panel p-6">
-            
-            <!-- HEADER / LOGO -->
             <div class="text-center mb-6">
                 <div class="font-black text-3xl text-white tracking-widest italic flex items-center justify-center gap-1 mb-1 drop-shadow-md">
                     <span class="text-[#FCD535]">T</span>PIG
@@ -191,87 +145,69 @@
                 <h1 class="text-xs font-bold text-gray-500 tracking-widest uppercase">Portal Access</h1>
             </div>
 
-            <!-- TABS -->
             <div class="tab-wrapper">
                 <div class="tab-indicator" id="tabIndicator"></div>
                 <div class="tab-item active" id="tabLoginBtn" onclick="window.switchTab('login')">ĐĂNG NHẬP</div>
                 <div class="tab-item" id="tabRegBtn" onclick="window.switchTab('register')">ĐĂNG KÝ</div>
             </div>
 
-            <!-- FORMS CONTAINER -->
             <div class="forms-container" id="formsWrapper">
-                
-                <!-- LOGIN FORM -->
+                <!-- FORM ĐĂNG NHẬP -->
                 <form id="formLogin" class="auth-form active">
                     <div class="input-box">
-                        <input type="text" id="loginUser" class="input-control" placeholder="Tên đăng nhập" required autocomplete="off" autocorrect="off" spellcheck="false">
+                        <input type="text" id="loginUser" class="input-control" placeholder="Tên đăng nhập" required autocomplete="off">
                         <i class="fa-regular fa-user input-icon"></i>
                     </div>
                     <div class="input-box">
                         <input type="password" id="loginPass" class="input-control" placeholder="Mật khẩu" required>
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <i class="fa-regular fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm hover:text-white transition" onclick="window.togglePass('loginPass')"></i>
+                        <i class="fa-regular fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm" onclick="window.togglePass('loginPass')"></i>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-3 mb-5">
                         <div class="col-span-2 relative">
-                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-widest text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:14px;">
+                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-widest text-center" placeholder="XÁC NHẬN" required maxlength="4" style="padding-left:14px;">
                         </div>
-                        <div class="bg-[#0b0f19] border border-[#2d3442] rounded-xl overflow-hidden cursor-pointer relative group" onclick="window.drawCaptcha('login')">
-                            <canvas id="canvasLogin" width="100" height="50" class="w-full h-full opacity-80 group-hover:opacity-100 transition"></canvas>
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
-                                <i class="fa-solid fa-rotate-right text-white"></i>
-                            </div>
+                        <div class="bg-[#0b0f19] border border-[#2d3442] rounded-xl overflow-hidden cursor-pointer" onclick="window.drawCaptcha('login')">
+                            <canvas id="canvasLogin" width="100" height="50" class="w-full h-full"></canvas>
                         </div>
                     </div>
 
-                    <button type="submit" id="btnLogin" class="btn-action">
-                        TRUY CẬP HỆ THỐNG <i class="fa-solid fa-arrow-right ml-1"></i>
-                    </button>
+                    <button type="submit" id="btnLogin" class="btn-action">VÀO GAME</button>
                 </form>
 
-                <!-- REGISTER FORM -->
+                <!-- FORM ĐĂNG KÝ -->
                 <form id="formRegister" class="auth-form slide-right">
                     <div class="input-box">
-                        <input type="text" id="regUser" class="input-control" placeholder="Tên đăng nhập viết liền" required autocomplete="off" autocorrect="off" spellcheck="false">
+                        <input type="text" id="regUser" class="input-control" placeholder="Tên đăng nhập" required>
                         <i class="fa-solid fa-user-tag input-icon"></i>
                     </div>
                     <div class="input-box">
-                        <input type="tel" id="regPhone" class="input-control" placeholder="Số điện thoại" required pattern="[0-9]*" inputmode="numeric">
+                        <input type="tel" id="regPhone" class="input-control" placeholder="Số điện thoại" required inputmode="numeric">
                         <i class="fa-solid fa-phone input-icon"></i>
                     </div>
                     <div class="input-box">
-                        <input type="password" id="regPass" class="input-control" placeholder="Mật khẩu (Tối thiểu 6 ký tự)" required minlength="6">
+                        <input type="password" id="regPass" class="input-control" placeholder="Mật khẩu (6+)" required minlength="6">
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <i class="fa-regular fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm hover:text-white transition" onclick="window.togglePass('regPass')"></i>
                     </div>
                     <div class="input-box">
-                        <input type="text" id="regName" class="input-control" placeholder="Họ và tên hiển thị" required autocomplete="off">
+                        <input type="text" id="regName" class="input-control" placeholder="Họ tên hiển thị" required>
                         <i class="fa-solid fa-id-card input-icon"></i>
                     </div>
 
                     <div class="grid grid-cols-3 gap-3 mb-5">
                         <div class="col-span-2 relative">
-                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-widest text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:14px;">
+                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-widest text-center" placeholder="MÃ" required maxlength="4" style="padding-left:14px;">
                         </div>
-                        <div class="bg-[#0b0f19] border border-[#2d3442] rounded-xl overflow-hidden cursor-pointer relative group" onclick="window.drawCaptcha('reg')">
-                            <canvas id="canvasReg" width="100" height="50" class="w-full h-full opacity-80 group-hover:opacity-100 transition"></canvas>
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
-                                <i class="fa-solid fa-rotate-right text-white"></i>
-                            </div>
+                        <div class="bg-[#0b0f19] border border-[#2d3442] rounded-xl overflow-hidden cursor-pointer" onclick="window.drawCaptcha('reg')">
+                            <canvas id="canvasReg" width="100" height="50" class="w-full h-full"></canvas>
                         </div>
                     </div>
 
-                    <button type="submit" id="btnReg" class="btn-action">
-                        ĐĂNG KÝ TÀI KHOẢN
-                    </button>
+                    <button type="submit" id="btnReg" class="btn-action">ĐĂNG KÝ NGAY</button>
                 </form>
-
             </div>
-
-            <div class="text-center mt-5">
-                <p class="text-[9px] text-[#4b5563] font-mono tracking-widest">SECURED BY FIREBASE &copy; 2024</p>
-            </div>
+            <p class="text-center text-[9px] text-gray-600 font-mono tracking-widest mt-5">SECURED BY FIREBASE &copy; 2024</p>
         </div>
     </div>
 
@@ -279,11 +215,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // CHẶN ZOOM
-        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
-        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -299,144 +231,44 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const EMAIL_PREFIX = "@tpig.com";
-
         let captchaCodes = { login: '', reg: '' };
-        
-        // --- QUẢN LÝ MÀN HÌNH LOADING TRÁNH KẸT ---
-        let isHandlingAuthForm = false; // Flag chặn luồng kiểm tra tự động khi người dùng đang bấm nút
 
-        function showLoading(text) {
-            const overlay = document.getElementById('loadingOverlay');
-            document.getElementById('loadingText').innerText = text;
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-        }
-
-        function hideLoading() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('opacity-0');
-            setTimeout(() => { overlay.style.display = 'none'; }, 300);
-        }
-
-        // --- KIỂM TRA ĐĂNG NHẬP MẶC ĐỊNH (Chỉ chạy lúc mới mở trang) ---
+        // 1. KIỂM TRA ĐĂNG NHẬP VỚI LOGIC CHUYỂN TRANG TỨC THÌ
         onAuthStateChanged(auth, (user) => {
-            if (user && !isHandlingAuthForm) {
-                // Nếu vô trang mà đã có sẵn tài khoản -> Chuyển hướng ngay
-                showLoading("ĐÃ ĐĂNG NHẬP, ĐANG VÀO...");
-                document.getElementById('loadingLogo').classList.remove('animate-bounce');
-                document.getElementById('loadingDots').classList.add('hidden');
-                
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 500);
-            } else if (!isHandlingAuthForm) {
-                // Chưa đăng nhập -> Tắt màn hình chờ để hiện Form
-                hideLoading();
+            if (user) {
+                // Nếu đã đăng nhập -> Chuyển thẳng tới game.html
+                window.location.href = "game.html";
+            } else {
+                // Chưa đăng nhập -> Hiện Form
+                document.getElementById('loadingOverlay').style.display = 'none';
+                const main = document.getElementById('mainContainer');
+                main.classList.remove('opacity-0', 'translate-y-4');
             }
         });
 
-        // --- SMOOTH TAB LOGIC ---
-        window.switchTab = (tab) => {
-            const loginForm = document.getElementById('formLogin');
-            const regForm = document.getElementById('formRegister');
-            const indicator = document.getElementById('tabIndicator');
-            const btnLogin = document.getElementById('tabLoginBtn');
-            const btnReg = document.getElementById('tabRegBtn');
-            const wrapper = document.getElementById('formsWrapper');
-
-            if (tab === 'login') {
-                indicator.style.transform = 'translateX(0)';
-                btnLogin.classList.add('active'); btnReg.classList.remove('active');
-                
-                loginForm.classList.remove('slide-left', 'slide-right');
-                loginForm.classList.add('active');
-                
-                regForm.classList.remove('active', 'slide-left');
-                regForm.classList.add('slide-right');
-
-                wrapper.style.height = '290px'; 
-                window.drawCaptcha('login');
-            } else {
-                indicator.style.transform = 'translateX(calc(100% + 8px))';
-                btnLogin.classList.remove('active'); btnReg.classList.add('active');
-
-                regForm.classList.remove('slide-right', 'slide-left');
-                regForm.classList.add('active');
-
-                loginForm.classList.remove('active', 'slide-right');
-                loginForm.classList.add('slide-left');
-
-                wrapper.style.height = '430px'; 
-                window.drawCaptcha('reg');
-            }
-        };
-
-        // Khởi tạo chiều cao mặc định
-        document.addEventListener('DOMContentLoaded', () => {
-             document.getElementById('formsWrapper').style.height = '290px';
-        });
-
-        window.togglePass = (id) => {
-            const el = document.getElementById(id);
-            const icon = el.nextElementSibling.nextElementSibling;
-            if (el.type === 'password') {
-                el.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash', 'text-white');
-            } else {
-                el.type = 'password';
-                icon.classList.remove('fa-eye-slash', 'text-white');
-                icon.classList.add('fa-eye');
-            }
-        };
-
-        window.forceLogout = () => {
-            signOut(auth).then(() => { localStorage.clear(); location.reload(); });
-        };
-
-        // --- SUBMIT LOGIN LOGIC TRỰC TIẾP CHUYỂN TRANG ---
+        // 2. LOGIC ĐĂNG NHẬP
         document.getElementById('formLogin').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnLogin');
-            const user = document.getElementById('loginUser').value.trim().toLowerCase().replace(/\s/g,'');
+            const user = document.getElementById('loginUser').value.trim().toLowerCase();
             const pass = document.getElementById('loginPass').value;
             const cap = document.getElementById('loginCaptcha').value.toUpperCase();
 
-            if (cap !== captchaCodes.login) {
-                window.toast('error', 'Mã xác nhận không chính xác!');
-                window.drawCaptcha('login');
-                document.getElementById('loginCaptcha').value = '';
-                return;
-            }
+            if (cap !== captchaCodes.login) { window.toast('error', 'Mã xác nhận sai!'); return; }
 
-            // Bật cờ chặn không cho onAuthStateChanged nhảy vào phá bĩnh
-            isHandlingAuthForm = true; 
-            btn.disabled = true; 
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG XÁC THỰC...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG VÀO...`;
             
             try {
+                // Đăng nhập xong là onAuthStateChanged ở trên sẽ tự đẩy đi game.html
                 await signInWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
-                
-                // NẾU THÀNH CÔNG: Chuyển trang trực tiếp bằng code
-                btn.innerHTML = `<i class="fa-solid fa-check"></i> THÀNH CÔNG! ĐANG VÀO...`;
-                btn.classList.add('bg-green-500'); // Đổi màu nút để báo hiệu
-                
-                setTimeout(() => {
-                    window.location.href = "index.html"; // Chuyển thẳng về trang chủ Kho Game
-                }, 800);
-
             } catch (err) {
-                // NẾU THẤT BẠI: Nhả nút bấm ra
-                isHandlingAuthForm = false; 
-                window.toast('error', 'Sai tài khoản hoặc mật khẩu!');
-                btn.disabled = false; 
-                btn.innerHTML = `TRUY CẬP HỆ THỐNG <i class="fa-solid fa-arrow-right ml-1"></i>`;
+                window.toast('error', 'Tài khoản hoặc mật khẩu không đúng!');
+                btn.disabled = false; btn.innerHTML = `VÀO GAME`;
                 window.drawCaptcha('login');
-                document.getElementById('loginCaptcha').value = '';
             }
         });
 
-        // --- SUBMIT REGISTER LOGIC TRỰC TIẾP CHUYỂN TRANG ---
+        // 3. LOGIC ĐĂNG KÝ
         document.getElementById('formRegister').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnReg');
@@ -446,126 +278,85 @@
             const name = document.getElementById('regName').value.trim();
             const cap = document.getElementById('regCaptcha').value.toUpperCase();
 
-            if (cap !== captchaCodes.reg) {
-                window.toast('error', 'Mã xác nhận không chính xác!');
-                window.drawCaptcha('reg');
-                document.getElementById('regCaptcha').value = '';
-                return;
-            }
+            if (cap !== captchaCodes.reg) { window.toast('error', 'Mã xác nhận sai!'); return; }
 
-            if (!/^[a-zA-Z0-9]+$/.test(user)) {
-                window.toast('error', 'Tên đăng nhập không được chứa ký tự đặc biệt!');
-                return;
-            }
-
-            // Bật cờ chặn onAuthStateChanged
-            isHandlingAuthForm = true; 
-            btn.disabled = true; 
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO DỮ LIỆU...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO...`;
             
             try {
                 const cred = await createUserWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
                 await updateProfile(cred.user, { displayName: name });
                 
-                // Ghi dữ liệu vào database
-                const newData = {
-                    username: user, 
-                    phone: phone, 
-                    fullName: name,
-                    balance: 0, 
-                    betTurnover: 0,
-                    createdAt: new Date().toISOString(), 
-                    role: 'user', 
-                    status: 'active'
-                };
-                await setDoc(doc(db, "users", cred.user.uid), newData);
-                
-                // NẾU THÀNH CÔNG: Chuyển trang trực tiếp bằng code
-                window.toast('success', 'Đăng ký thành công!');
-                btn.innerHTML = `<i class="fa-solid fa-check"></i> THÀNH CÔNG! ĐANG VÀO...`;
-                btn.classList.add('bg-green-500');
-                
-                setTimeout(() => {
-                    window.location.href = "index.html"; 
-                }, 1000);
+                // Ghi dữ liệu người dùng
+                await setDoc(doc(db, "users", cred.user.uid), {
+                    username: user, phone: phone, fullName: name,
+                    balance: 0, betTurnover: 0, createdAt: new Date().toISOString()
+                });
 
+                window.toast('success', 'Đăng ký thành công!');
+                // firebase tự động login sau khi đăng ký thành công, onAuthStateChanged sẽ lo việc chuyển trang
             } catch (err) {
-                // NẾU THẤT BẠI: Nhả nút bấm
-                isHandlingAuthForm = false; 
                 let msg = 'Lỗi tạo tài khoản!';
-                if(err.code.includes('email-already-in-use')) msg = 'Tên đăng nhập này đã có người sử dụng!';
-                if(err.code.includes('weak-password')) msg = 'Mật khẩu quá ngắn (Yêu cầu 6 ký tự)!';
+                if(err.code.includes('already-in-use')) msg = 'Tên đăng nhập đã tồn tại!';
                 window.toast('error', msg);
-                btn.disabled = false; 
-                btn.innerHTML = `ĐĂNG KÝ TÀI KHOẢN`;
-                window.drawCaptcha('reg');
+                btn.disabled = false; btn.innerHTML = `ĐĂNG KÝ NGAY`;
             }
         });
 
-        // --- UTILS: CAPTCHA & TOAST ---
+        // --- HÀM TIỆN ÍCH ---
+        window.switchTab = (tab) => {
+            const loginForm = document.getElementById('formLogin');
+            const regForm = document.getElementById('formRegister');
+            const indicator = document.getElementById('tabIndicator');
+            const wrapper = document.getElementById('formsWrapper');
+
+            if (tab === 'login') {
+                indicator.style.transform = 'translateX(0)';
+                loginForm.classList.add('active'); loginForm.classList.remove('slide-left');
+                regForm.classList.remove('active'); regForm.classList.add('slide-right');
+                wrapper.style.height = '290px';
+                window.drawCaptcha('login');
+            } else {
+                indicator.style.transform = 'translateX(calc(100% + 8px))';
+                regForm.classList.add('active'); regForm.classList.remove('slide-right');
+                loginForm.classList.remove('active'); loginForm.classList.add('slide-left');
+                wrapper.style.height = '430px';
+                window.drawCaptcha('reg');
+            }
+        };
+
+        window.togglePass = (id) => {
+            const el = document.getElementById(id);
+            el.type = el.type === 'password' ? 'text' : 'password';
+        };
+
         window.drawCaptcha = (type) => {
             const canvas = document.getElementById(type === 'login' ? 'canvasLogin' : 'canvasReg');
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            
-            for(let i=0; i<30; i++) {
-                ctx.fillStyle = `rgba(252, 213, 53, ${Math.random()*0.3})`;
-                ctx.beginPath();
-                ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*3, 0, Math.PI*2);
-                ctx.fill();
-            }
-
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             let code = ''; for(let i=0; i<4; i++) code += chars[Math.floor(Math.random()*chars.length)];
             captchaCodes[type] = code;
-
-            ctx.font = 'bold 22px IBM Plex Mono';
-            ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+            ctx.font = 'bold 24px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#FCD535';
             for(let i=0; i<4; i++) {
                 ctx.save();
-                ctx.translate(20 + i*20, 25);
-                ctx.rotate((Math.random()-0.5)*0.6);
-                ctx.fillStyle = '#FCD535';
-                ctx.fillText(code[i], 0, 0);
-                ctx.restore();
+                ctx.translate(20 + i*20, 25); ctx.rotate((Math.random()-0.5)*0.4);
+                ctx.fillText(code[i], 0, 0); ctx.restore();
             }
-            
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(0, Math.random()*canvas.height); ctx.lineTo(canvas.width, Math.random()*canvas.height); ctx.stroke();
         };
 
         window.toast = (type, msg) => {
             const box = document.getElementById('toast-box');
             const div = document.createElement('div');
-            
-            let color, iconClass, bgIcon;
-            if(type === 'error') {
-                color = 'text-[#F6465D]'; let border = 'border-[#F6465D]'; 
-                iconClass = 'fa-triangle-exclamation'; bgIcon = 'bg-[#F6465D]/20';
-            } else {
-                color = 'text-[#0ECB81]'; let border = 'border-[#0ECB81]'; 
-                iconClass = 'fa-check'; bgIcon = 'bg-[#0ECB81]/20';
-            }
-
-            div.className = `toast-msg border ${type==='error'?'border-[#F6465D]':'border-[#0ECB81]'}`;
-            div.innerHTML = `
-                <div class="w-8 h-8 rounded-full ${bgIcon} flex items-center justify-center shrink-0">
-                    <i class="fa-solid ${iconClass} ${color} text-sm"></i>
-                </div>
-                <span class="text-white font-bold text-sm leading-tight">${msg}</span>
-            `;
+            const color = type === 'error' ? '#F6465D' : '#0ECB81';
+            div.className = `toast-msg border border-[${color}]`;
+            div.innerHTML = `<i class="fa-solid fa-circle-info" style="color:${color}"></i><span class="text-white font-bold text-sm">${msg}</span>`;
             box.appendChild(div);
-            setTimeout(() => { 
-                div.style.opacity = '0';
-                setTimeout(() => div.remove(), 300);
-            }, 2500);
+            setTimeout(() => div.remove(), 2500);
         };
 
-        // Init
         window.drawCaptcha('login');
     </script>
 </body>
 </html>
-
 
