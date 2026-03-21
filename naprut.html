@@ -50,7 +50,7 @@
         .btn-action:active { transform: scale(0.98); }
         .btn-action:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* TOAST (ĐÃ FIX LỖI LỆCH) */
+        /* TOAST */
         #toast-container { position: fixed; top: 20px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 9999; pointer-events: none; }
         .toast { pointer-events: auto; background: rgba(30, 35, 46, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 90vw; width: max-content; animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .toast.success { border-left: 4px solid var(--success); }
@@ -145,10 +145,10 @@
         <div class="relative z-10">
             <!-- TAB 1: NẠP TIỀN -->
             <div id="tab-deposit" class="fade-in">
-                <!-- Tỷ giá -->
+                <!-- Tỷ giá ĐÃ CẬP NHẬT-->
                 <div class="bg-[rgba(252,213,53,0.1)] border border-[#FCD535]/50 text-[#FCD535] p-3.5 rounded-xl text-center font-bold text-sm mb-5 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(252,213,53,0.1)]">
                     <i class="fa-solid fa-coins text-lg"></i>
-                    <span>TỶ GIÁ NẠP: 1 T = 10.000 VNĐ</span>
+                    <span>TỶ GIÁ NẠP: 1 T = 1.000 VNĐ</span>
                 </div>
 
                 <!-- Khung thông tin Nạp -->
@@ -211,9 +211,10 @@
                 </div>
 
                 <div id="withdrawUI" class="hidden">
+                    <!-- Tỷ giá ĐÃ CẬP NHẬT-->
                     <div class="bg-[rgba(246,70,93,0.1)] border border-[#F6465D]/50 text-[#F6465D] p-3.5 rounded-xl text-center font-bold text-sm mb-5 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(246,70,93,0.1)]">
                         <i class="fa-solid fa-money-bill-wave text-lg"></i>
-                        <span>TỶ GIÁ RÚT: 1 T = 10.000 VNĐ</span>
+                        <span>TỶ GIÁ RÚT: 1 T = 1.000 VNĐ</span>
                     </div>
 
                     <!-- THANH TIẾN ĐỘ VÒNG CƯỢC -->
@@ -263,7 +264,7 @@
                         <div class="pt-2 border-t border-[#2d3442]">
                             <label class="text-xs text-gray-400 font-bold uppercase mb-2 block tracking-wider pl-1">Số lượng Rút (T)</label>
                             <div class="relative">
-                                <input type="text" id="wdAmount" class="input-dark font-mono font-bold pr-20 text-[#0ECB81] text-lg" placeholder="Ví dụ: 1,000.5" inputmode="decimal">
+                                <input type="text" id="wdAmount" class="input-dark font-mono font-bold pr-20 text-[#0ECB81] text-lg" placeholder="Tối thiểu 50 T" inputmode="decimal">
                                 <button onclick="window.setMaxWithdraw()" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-[#2d3442] text-[#FCD535] px-3 py-1.5 rounded-lg font-bold hover:bg-[#374151] active:scale-95 transition shadow-sm border border-[#4b5563]">MAX</button>
                             </div>
                             <div class="flex justify-between items-center mt-2 px-1">
@@ -347,9 +348,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // TỶ GIÁ: 1 T = 10,000 VNĐ
-        const RATES = { DEPOSIT: 10000, WITHDRAW: 10000 };
-        const RULES = { MIN_DEPOSIT: 50000, MIN_WITHDRAW: 5 };
+        // TỶ GIÁ MỚI: 1 T = 1,000 VNĐ
+        const RATES = { DEPOSIT: 1000, WITHDRAW: 1000 };
+        // Điều kiện tối thiểu: Nạp min 50k VND (50 T), Rút min 50 T
+        const RULES = { MIN_DEPOSIT: 50000, MIN_WITHDRAW: 50 };
 
         let state = { user: null, data: null, history: [] };
 
