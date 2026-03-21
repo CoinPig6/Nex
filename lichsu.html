@@ -2,178 +2,217 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex - Lịch sử cược</title>
+    <!-- CẤM ZOOM TUYỆT ĐỐI TRÊN MOBILE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tpig - Lịch Sử Cược</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS CORE */
-        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
+        /* CSS CORE & NGĂN CHẶN ZOOM/CUỘN THỪA */
+        html, body { 
+            touch-action: pan-y; 
+            overscroll-behavior-y: none; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: #0b0f19; 
+            -webkit-text-size-adjust: 100%;
+        }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
         
-        /* COLORS */
+        /* Cấm zoom khi double-tap vào các nút bấm */
+        a, button, input { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent;}
+        
+        /* Ẩn thanh cuộn nhưng vẫn cho phép cuộn */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* MÀU SẮC LỊCH SỬ */
         .text-up { color: #0ECB81; } .bg-up { background-color: #0ECB81; }
         .text-down { color: #F6465D; } .bg-down { background-color: #F6465D; }
+        .text-tie { color: #f59e0b; }
         
         /* Baccarat Specific Colors */
         .text-player { color: #3b82f6; } /* Xanh dương */
         .text-banker { color: #ef4444; } /* Đỏ */
-        .text-tie { color: #10b981; }    /* Xanh lá */
 
-        /* SIDEBAR STYLES */
-        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
-        .menu-item:active { background: #1e232e; color: white; }
-        .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
-        .menu-item i { width: 20px; text-align: center; }
+        /* BOTTOM NAV */
+        .bottom-nav { background: rgba(19, 22, 31, 0.95); backdrop-filter: blur(10px); padding-bottom: env(safe-area-inset-bottom, 10px); }
+        .nav-item { transition: all 0.2s; text-decoration: none; cursor: pointer; }
+        .nav-item.active { color: #FCD535; }
+        .nav-item.active i { transform: translateY(-2px); }
 
-        /* TABS */
-        .tab-container {
-            display: flex; background: #13161f; padding: 4px; 
-            border-bottom: 1px solid #2d3442;
-        }
-        .tab-btn {
-            flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold;
-            color: #6b7280; border-radius: 8px; transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-        .tab-btn.active {
-            background: #232836; color: #FCD535; border-color: #2d3442;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        /* LIST CARD UI */
-        .tech-border {
-            background: #13161f; border: 1px solid #2a2e39; 
-            border-radius: 12px; margin-bottom: 10px; position: relative; overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            animation: fadeIn 0.3s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .tech-border::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-        }
-        .card-win::before { background-color: #0ECB81; }
-        .card-lose::before { background-color: #F6465D; }
-        .card-tie::before { background-color: #10b981; }
-        
+        /* LOADING SPINNER */
         .loading-spinner {
             border: 3px solid rgba(255,255,255,0.1); border-radius: 50%;
-            border-top: 3px solid #FCD535; width: 24px; height: 24px;
+            border-top: 3px solid #FCD535; width: 28px; height: 28px;
             animation: spin 1s linear infinite; margin: 30px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* TABS CATEGORY */
+        .category-tab { transition: all 0.2s; white-space: nowrap; cursor: pointer; }
+        .category-tab.active { background-color: #FCD535; color: #111; font-weight: bold; border-color: #FCD535; }
+
+        /* HISTORY CARD */
+        .history-card {
+            background: #1e232e; border: 1px solid #2d3442; 
+            border-radius: 16px; margin-bottom: 12px; position: relative; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .history-card:active { transform: scale(0.98); }
+        .history-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .card-win::before { background-color: #0ECB81; }
+        .card-lose::before { background-color: #F6465D; }
+        .card-tie::before { background-color: #f59e0b; }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR MENU -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
-    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
-        <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
-            <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
-            <span class="font-bold text-lg text-white">CROWNEX</span>
-            <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-        </div>
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
-            <a href="bcr.html" class="menu-item"><i class="fa-solid fa-ranking-star"></i> Bacarat</a>
-            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
-            <a href="lichsu.html" class="menu-item active"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
-            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
-            <div class="border-t border-[#232836] my-2 mx-2"></div>
-            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
-            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
-        </nav>
-        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
-                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
+    <!-- HEADER BAR -->
+    <header class="flex items-center justify-between px-4 h-16 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 sticky top-0">
+        <div class="flex items-center gap-3">
+            <a href="cskh.html" class="bg-[#1e232e] border border-[#2d3442] px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition-transform shadow-sm text-white">
+                <i class="fa-solid fa-headset text-blue-400"></i>
+                <span class="text-xs font-bold">CSKH</span>
+            </a>
+            <div class="font-black text-xl text-white tracking-widest italic flex items-center gap-1 ml-1">
+                <span class="text-[#FCD535]">T</span>PIG
             </div>
         </div>
-    </div>
 
-    <!-- HEADER -->
-    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
-        <div class="flex items-center gap-4">
-            <button onclick="toggleMenu()"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
-            <span class="text-white font-bold text-lg tracking-wide">LỊCH SỬ CƯỢC</span>
-        </div>
-        <div class="bg-[#1e232e] px-3 py-1 rounded border border-[#2d3442]">
-            <span class="text-[10px] text-gray-400 font-bold uppercase">Toàn bộ</span>
-        </div>
+        <a href="taikhoan.html" class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner transition-colors active:bg-[#2d3442]">
+            <div class="flex flex-col items-end leading-none">
+                <span class="text-[9px] text-[#6b7280] font-bold uppercase mb-0.5">SỐ DƯ</span>
+                <span id="balanceDisplayHeader" class="text-[#EAECEF] font-mono text-sm font-bold animate-pulse">...</span>
+            </div>
+            <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center text-[14px] font-black text-black shadow-lg">
+                T
+            </div>
+        </a>
     </header>
 
-    <!-- TABS -->
-    <div class="tab-container">
-        <button class="tab-btn active" onclick="switchTab('bo')" id="tab-bo">
-            <i class="fa-solid fa-chart-simple mr-1"></i> BO TRADING
-        </button>
-        <button class="tab-btn" onclick="switchTab('bcr')" id="tab-bcr">
-            <i class="fa-solid fa-cards mr-1"></i> BACCARAT
-        </button>
-    </div>
-
-    <!-- THỐNG KÊ LỢI NHUẬN RÒNG -->
-    <div class="p-4 pb-0 shrink-0 bg-[#0b0f19]">
-        <div class="bg-[#1e232e] p-4 rounded-xl border border-[#2d3442] flex flex-col items-center shadow-lg relative overflow-hidden">
-            <div class="absolute right-0 top-0 p-2 opacity-10"><i class="fa-solid fa-coins text-5xl text-white"></i></div>
-            <span class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1 z-10">Lợi nhuận</span>
-            <span class="font-mono font-bold text-3xl z-10" id="netProfitDisplay">---</span>
+    <!-- TABS PHÂN LOẠI SẢNH GAME -->
+    <div class="flex items-center gap-2.5 overflow-x-auto hide-scroll px-4 py-3 bg-[#13161f] border-b border-[#2d3442] shrink-0 shadow-sm z-10 sticky top-16">
+        <div class="category-tab active bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5" onclick="window.switchTab('all')" id="tab-all">
+            <i class="fa-solid fa-border-all"></i> Tất Cả
+        </div>
+        <div class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5" onclick="window.switchTab('cripto')" id="tab-cripto">
+            <i class="fa-brands fa-bitcoin"></i> Cripto
+        </div>
+        <div class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5" onclick="window.switchTab('casino')" id="tab-casino">
+            <i class="fa-solid fa-dharmachakra"></i> Casino
+        </div>
+        <div class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5" onclick="window.switchTab('nohu')" id="tab-nohu">
+            <i class="fa-solid fa-coins"></i> Nổ Hũ
+        </div>
+        <div class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5" onclick="window.switchTab('gamebai')" id="tab-gamebai">
+            <i class="fa-solid fa-diamond"></i> Game Bài
+        </div>
+        <div class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5" onclick="window.switchTab('minigame')" id="tab-minigame">
+            <i class="fa-solid fa-dice"></i> Mini Game
         </div>
     </div>
 
-    <!-- LIST CONTAINER -->
-    <div class="flex-1 overflow-y-auto px-4 py-4" id="historyList">
-        <div class="loading-spinner" id="mainSpinner"></div>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto hide-scroll bg-[#0b0f19] pb-24 relative flex flex-col">
+        
+        <!-- THỐNG KÊ LỢI NHUẬN RÒNG -->
+        <div class="p-4 pb-2 shrink-0">
+            <div class="bg-[#1e232e] p-4 rounded-2xl border border-[#2d3442] flex justify-between items-center shadow-lg relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-[#FCD535] opacity-[0.03] rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex flex-col z-10">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Lợi nhuận (7 Ngày)</span>
+                    <div class="flex items-baseline gap-1.5">
+                        <span class="font-mono font-black text-2xl" id="netProfitDisplay">0.00</span>
+                        <span class="text-[#FCD535] font-black text-sm">T</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-[#13161f] border border-[#2d3442] flex items-center justify-center shadow-inner z-10">
+                    <i class="fa-solid fa-chart-pie text-[#FCD535] text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIST CONTAINER -->
+        <div class="flex-1 px-4 py-2" id="historyList">
+            <div class="loading-spinner" id="mainSpinner"></div>
+        </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[68px] border-t border-[#232836] flex items-center justify-around px-2 z-30">
+        <a href="game.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] font-bold">Trang chủ</span>
+        </a>
+        <a href="khuyenmai.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-gift text-xl"></i>
+            <span class="text-[10px] font-bold">Khuyến mãi</span>
+        </a>
+        <a href="naprut.html" class="relative -top-5 flex flex-col items-center justify-center w-16 text-decoration-none group">
+            <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_5px_20px_rgba(252,213,53,0.4)] border-4 border-[#0b0f19] group-active:scale-95 transition-transform">
+                <i class="fa-solid fa-plus text-2xl text-black"></i>
+            </div>
+            <span class="text-[10px] font-bold text-[#FCD535] mt-1">Nạp T</span>
+        </a>
+        <a href="lichsu.html" class="nav-item active flex flex-col items-center justify-center w-16 h-full gap-1">
+            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+            <span class="text-[10px] font-bold">Lịch sử</span>
+        </a>
+        <a href="taikhoan.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-[10px] font-bold">Tài khoản</span>
+        </a>
     </div>
 
-    <!-- LOGIC -->
+    <!-- FIREBASE & LOGIC SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // CẤM ZOOM
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
+
+        // CONFIG FIREBASE
+        const app = initializeApp({
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
             projectId: "btccoinbig",
             storageBucket: "btccoinbig.firebasestorage.app",
             messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
-        };
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
+        });
 
-        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
         let currentUID = null;
-        let currentTab = 'bo'; 
-
-        // --- SIDEBAR LOGIC ---
-        window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
-            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
-            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
-        };
-
-        window.logout = () => {
-            signOut(auth).then(() => {
-                localStorage.removeItem('crownex_user_info');
-                window.location.href = "login.html";
-            });
-        };
+        let currentTab = 'all'; 
 
         // --- TAB LOGIC ---
         window.switchTab = (tab) => {
             if (currentTab === tab) return;
             currentTab = tab;
             
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
+            // Xử lý giao diện nút Tab
+            const allTabs = ['all', 'cripto', 'casino', 'nohu', 'gamebai', 'minigame'];
+            allTabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if(btn) {
+                    btn.classList.remove('active', 'bg-[#FCD535]', 'text-[#111]');
+                    btn.classList.add('bg-[#1e232e]', 'text-[#9ca3af]');
+                }
+            });
+            
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-[#1e232e]', 'text-[#9ca3af]');
+                activeBtn.classList.add('active');
+            }
             
             if (currentUID) {
                 document.getElementById('historyList').innerHTML = '<div class="loading-spinner"></div>';
@@ -181,44 +220,56 @@
             }
         };
 
-        // --- AUTH & LOAD ---
+        // --- AUTH & LOAD DỮ LIỆU CHUNG ---
         onAuthStateChanged(auth, (user) => {
-            if (user) {
+            if (user && !user.isAnonymous) {
                 currentUID = user.uid;
-                const localUser = JSON.parse(localStorage.getItem('crownex_user_info'));
-                if(localUser) document.getElementById('sidebarUsername').innerText = localUser.fullName || localUser.username;
+                
+                // Đồng bộ số dư góc trên
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const balDisplay = document.getElementById('balanceDisplayHeader');
+                        balDisplay.innerText = (data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                        balDisplay.classList.remove('animate-pulse');
+                    }
+                });
+
                 loadHistory(user.uid);
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // --- DATA LOADING ---
+        // --- HÀM TẢI LỊCH SỬ (7 NGÀY) ---
         async function loadHistory(uid) {
             const listEl = document.getElementById('historyList');
             const netEl = document.getElementById('netProfitDisplay');
+            let allHistory = [];
             
-            const collectionName = currentTab === 'bo' ? 'betHistory' : 'baccaratHistory';
-
+            // Tính mốc thời gian 7 ngày
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const yesterdayStart = todayStart - 86400000;
+            const sevenDaysAgoStart = todayStart - (6 * 86400000); // Hôm nay + 6 ngày trước = 7 ngày
+            
             try {
-                const q = query(
-                    collection(db, "users", uid, collectionName),
-                    orderBy("timestamp", "desc"), 
-                    limit(50)
-                );
-                
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    showEmptyState(listEl, netEl, `Chưa có giao dịch ${currentTab.toUpperCase()} nào.`);
-                    return;
+                // Fetch 100 record mới nhất (để bù trừ những record cũ vượt quá 7 ngày bị loại bỏ)
+                if (currentTab === 'all' || currentTab === 'cripto') {
+                    const qCripto = query(collection(db, "users", uid, "betHistory"), orderBy("timestamp", "desc"), limit(100));
+                    const snapCripto = await getDocs(qCripto);
+                    snapCripto.forEach(doc => allHistory.push({ id: doc.id, sdtType: 'cripto', ...doc.data() }));
                 }
 
-                let html = '';
-                let netProfit = 0;
+                if (currentTab === 'all' || currentTab === 'casino') {
+                    const qCasino = query(collection(db, "users", uid, "baccaratHistory"), orderBy("timestamp", "desc"), limit(100));
+                    const snapCasino = await getDocs(qCasino);
+                    snapCasino.forEach(doc => allHistory.push({ id: doc.id, sdtType: 'casino', ...doc.data() }));
+                }
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
+                // Tiền xử lý: Lọc các giao dịch trong 7 ngày và chuẩn hóa timestamp
+                let validHistory = [];
+                allHistory.forEach(data => {
                     let ts = Date.now();
                     if (data.timestamp) {
                         if (typeof data.timestamp.toMillis === 'function') ts = data.timestamp.toMillis();
@@ -226,19 +277,53 @@
                         else if (typeof data.timestamp === 'number') ts = data.timestamp;
                     }
 
+                    // Chỉ lấy dữ liệu trong phạm vi 7 ngày
+                    if (ts >= sevenDaysAgoStart) {
+                        data._ts = ts; 
+                        validHistory.push(data);
+                    }
+                });
+
+                if (validHistory.length === 0) {
+                    showEmptyState(listEl, netEl, "Chưa có giao dịch nào trong 7 ngày qua.");
+                    return;
+                }
+
+                // Sắp xếp mảng gộp theo thời gian giảm dần và chỉ lấy 50 giao dịch
+                validHistory.sort((a, b) => b._ts - a._ts);
+                validHistory = validHistory.slice(0, 50);
+
+                let html = '';
+                let netProfit = 0;
+
+                validHistory.forEach(data => {
+                    const ts = data._ts;
                     const amount = parseFloat(data.amount) || 0;
                     
-                    if (currentTab === 'bo') {
+                    // --- FORMAT HIỂN THỊ THỜI GIAN THÔNG MINH ---
+                    let dateLabel = "";
+                    const date = new Date(ts);
+                    const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
+                    
+                    if (ts >= todayStart) {
+                        dateLabel = `Hôm nay • ${timeStr}`;
+                    } else if (ts >= yesterdayStart) {
+                        dateLabel = `Hôm qua • ${timeStr}`;
+                    } else {
+                        dateLabel = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)} • ${timeStr}`;
+                    }
+                    
+                    // --- TÍNH LỢI NHUẬN & RENDER HTML ---
+                    if (data.sdtType === 'cripto') {
                         const isWin = data.result === 'win';
                         const profit = parseFloat(data.profit) || 0;
                         if(isWin) netProfit += profit; else netProfit -= amount;
-                        html += renderBOItem(data, ts, isWin, profit, amount, doc.id);
-                    } else {
+                        html += renderCriptoItem(data, dateLabel, isWin, profit, amount, data.id);
+                    } else if (data.sdtType === 'casino') {
                         const winAmount = parseFloat(data.winAmount || 0); 
                         const profit = winAmount - amount; 
-                        const isWin = profit > 0;
                         netProfit += profit;
-                        html += renderBaccaratItem(data, ts, profit, amount, doc.id);
+                        html += renderCasinoItem(data, dateLabel, profit, amount, data.id);
                     }
                 });
 
@@ -247,119 +332,113 @@
 
             } catch (error) {
                 console.error(error);
-                let msg = "Lỗi tải dữ liệu. Vui lòng kiểm tra kết nối.";
-                if(error.message.includes("index")) msg = "Đang đồng bộ cơ sở dữ liệu...";
-                showEmptyState(listEl, netEl, msg);
+                showEmptyState(listEl, netEl, "Lỗi tải dữ liệu. Đang đồng bộ hoặc đứt kết nối.");
             }
         }
 
-        // --- RENDER BO ---
-        function renderBOItem(data, ts, isWin, profit, amount, id) {
-            const date = new Date(ts);
-            const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
-            const dateStr = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
-            
+        // --- RENDER HTML CHO CRIPTO ---
+        function renderCriptoItem(data, dateLabel, isWin, profit, amount, id) {
             return `
-                <div class="tech-border p-3 flex justify-between items-center ${isWin ? 'card-win' : 'card-lose'}">
-                    <div class="pl-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="font-black text-sm ${data.type === 'up' ? 'text-up' : 'text-down'} uppercase flex items-center gap-1">
-                                <i class="fa-solid ${data.type === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
-                                ${data.type === 'up' ? 'MUA' : 'BÁN'}
-                            </span>
-                            <span class="text-[9px] bg-[#232836] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-400 font-mono">#${id.substring(0,6)}</span>
+                <div class="history-card p-3.5 flex justify-between items-center ${isWin ? 'card-win' : 'card-lose'}">
+                    <div class="pl-2 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#0b0f19] border border-[#2d3442] shadow-inner shrink-0">
+                            <i class="fa-brands fa-bitcoin text-[20px] text-[#FCD535]"></i>
                         </div>
-                        <div class="text-[10px] text-gray-500 font-mono flex gap-2">
-                            <span><i class="fa-regular fa-clock mr-1"></i>${timeStr}</span>
-                            <span>${dateStr}</span>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-black text-[13px] text-white uppercase tracking-wide">Cripto Trade</span>
+                                <span class="text-[9px] bg-[#0b0f19] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-500 font-mono tracking-widest">#${id.substring(0,6)}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-400 font-mono flex items-center gap-1.5">
+                                <span class="font-bold uppercase ${data.type === 'up' ? 'text-up' : 'text-down'} flex items-center gap-1 bg-[#13161f] px-1.5 py-0.5 rounded">
+                                    <i class="fa-solid ${data.type === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
+                                    ${data.type === 'up' ? 'MUA' : 'BÁN'}
+                                </span>
+                                <span>• ${dateLabel}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="font-mono font-bold text-base ${isWin ? 'text-up' : 'text-down'}">
-                            ${isWin ? '+' : '-'}$${isWin ? profit.toFixed(2) : amount.toFixed(2)}
+                    <div class="text-right flex flex-col items-end">
+                        <div class="font-mono font-black text-[15px] ${isWin ? 'text-up' : 'text-down'} tracking-wide">
+                            ${isWin ? '+' : '-'}${isWin ? profit.toLocaleString('en-US', {maximumFractionDigits:2}) : amount.toLocaleString('en-US', {maximumFractionDigits:2})} T
                         </div>
-                        <div class="text-[9px] text-gray-400">Cược: $${amount}</div>
+                        <div class="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-wider">Cược: ${amount.toLocaleString()} T</div>
                     </div>
                 </div>`;
         }
 
-        // --- RENDER BACCARAT (UPDATED) ---
-        function renderBaccaratItem(data, ts, profit, amount, id) {
-            const date = new Date(ts);
-            const timeStr = `${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}`;
-            const dateStr = `${('0'+date.getDate()).slice(-2)}/${('0'+(date.getMonth()+1)).slice(-2)}`;
-            
+        // --- RENDER HTML CHO CASINO (BACCARAT) ---
+        function renderCasinoItem(data, dateLabel, profit, amount, id) {
             let resultClass = 'card-lose';
             let resultTextClass = 'text-down';
             let resultSign = '';
             
             if (profit > 0) { resultClass = 'card-win'; resultTextClass = 'text-up'; resultSign = '+'; }
-            else if (profit === 0) { resultClass = 'card-tie'; resultTextClass = 'text-white'; }
+            else if (profit === 0) { resultClass = 'card-tie'; resultTextClass = 'text-tie'; }
             
-            // Xử lý Cửa Cược
             const bet = data.betChoice || data.bet || '?';
-            let betDisplay = "???";
-            let betColor = "text-gray-400";
+            let betDisplay = "???"; let betColor = "text-gray-400";
             if (bet === 'P') { betDisplay = "CON (P)"; betColor = "text-player"; }
             else if (bet === 'B') { betDisplay = "CÁI (B)"; betColor = "text-banker"; }
             else if (bet === 'T') { betDisplay = "HÒA (T)"; betColor = "text-tie"; }
 
-            // Xử lý Kết Quả Ván (Winner)
             const winner = data.winner || data.result || '?';
-            let winDisplay = "???";
-            let winColor = "text-gray-500";
+            let winDisplay = "???"; let winColor = "text-gray-500";
             if (winner === 'P') { winDisplay = "CON"; winColor = "text-player"; }
             else if (winner === 'B') { winDisplay = "CÁI"; winColor = "text-banker"; }
             else if (winner === 'T') { winDisplay = "HÒA"; winColor = "text-tie"; }
 
             return `
-                <div class="tech-border p-3 flex justify-between items-center ${resultClass}">
-                    <div class="pl-2">
-                        <div class="flex flex-col gap-1 mb-1">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs text-gray-400">Cược:</span>
-                                <span class="font-black text-sm ${betColor} uppercase">${betDisplay}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs text-gray-400">Về:</span>
-                                <span class="font-black text-sm ${winColor} uppercase">${winDisplay}</span>
-                            </div>
+                <div class="history-card p-3.5 flex justify-between items-center ${resultClass}">
+                    <div class="pl-2 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#0b0f19] border border-[#2d3442] shadow-inner shrink-0">
+                            <i class="fa-solid fa-dharmachakra text-[20px] text-green-400"></i>
                         </div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[9px] bg-[#232836] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-400 font-mono">#${id.substring(0,6)}</span>
-                            <div class="text-[10px] text-gray-500 font-mono flex gap-2">
-                                <span>${timeStr}</span>
-                                <span>${dateStr}</span>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-black text-[13px] text-white uppercase tracking-wide">Baccarat</span>
+                                <span class="text-[9px] bg-[#0b0f19] px-1.5 py-0.5 rounded border border-[#2d3442] text-gray-500 font-mono tracking-widest">#${id.substring(0,6)}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-400 font-mono flex items-center gap-1.5">
+                                <span class="bg-[#13161f] px-1.5 py-0.5 rounded border border-[#2d3442]">
+                                    C: <b class="${betColor}">${betDisplay}</b>
+                                </span>
+                                <span class="bg-[#13161f] px-1.5 py-0.5 rounded border border-[#2d3442]">
+                                    V: <b class="${winColor}">${winDisplay}</b>
+                                </span>
+                                <span>• ${dateLabel}</span>
                             </div>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="font-mono font-bold text-base ${resultTextClass}">
-                            ${resultSign}$${Math.abs(profit).toFixed(2)}
+                    <div class="text-right flex flex-col items-end">
+                        <div class="font-mono font-black text-[15px] ${resultTextClass} tracking-wide">
+                            ${resultSign}${Math.abs(profit).toLocaleString('en-US', {maximumFractionDigits:2})} T
                         </div>
-                        <div class="text-[9px] text-gray-400">Vốn: $${amount}</div>
+                        <div class="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-wider">Cược: ${amount.toLocaleString()} T</div>
                     </div>
                 </div>`;
         }
 
+        // --- HELPERS HIỂN THỊ ---
         function showEmptyState(listEl, netEl, msg) {
-            netEl.innerText = "$0.00";
-            netEl.className = "font-mono font-bold text-3xl z-10 text-white";
+            netEl.innerText = "0.00";
+            netEl.className = "font-mono font-black text-2xl text-white";
             listEl.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-40 opacity-40 mt-4">
-                    <i class="fa-regular fa-folder-open text-4xl mb-2 text-gray-500"></i>
-                    <span class="text-xs text-gray-500">${msg}</span>
+                <div class="flex flex-col items-center justify-center py-16 opacity-50 bg-[#1e232e] rounded-2xl border border-[#2d3442] border-dashed">
+                    <i class="fa-solid fa-box-open text-5xl mb-4 text-gray-500"></i>
+                    <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">${msg}</span>
                 </div>`;
         }
 
         function updateNetProfitDisplay(netEl, netProfit) {
             const sign = netProfit > 0 ? "+" : "";
-            netEl.innerText = sign + "$" + netProfit.toFixed(2);
-            if(netProfit > 0) netEl.className = "font-mono font-bold text-3xl z-10 text-up";
-            else if (netProfit < 0) netEl.className = "font-mono font-bold text-3xl z-10 text-down";
-            else netEl.className = "font-mono font-bold text-3xl z-10 text-gray-400";
+            netEl.innerText = sign + netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if(netProfit > 0) netEl.className = "font-mono font-black text-2xl text-up";
+            else if (netProfit < 0) netEl.className = "font-mono font-black text-2xl text-down";
+            else netEl.className = "font-mono font-black text-2xl text-white";
         }
     </script>
 </body>
 </html>
+
 
