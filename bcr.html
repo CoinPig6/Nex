@@ -80,20 +80,13 @@
         .float-text { position: absolute; font-weight: 900; font-family: 'Roboto Mono', monospace; pointer-events: none; z-index: 50; animation: floatUpFade 1.5s forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 16px; white-space: nowrap; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .float-win { color: #4ade80; } .float-loss { color: #ef4444; }
-
-        /* GLOBAL STATS */
-        .global-stat-box {
-            position: absolute; top: 4px; left: 6px; display: flex; flex-direction: column; align-items: flex-start; z-index: 10; pointer-events: none;
-        }
-        .global-stat-row {
-            display: flex; items-center; gap: 4px; font-family: 'Roboto Mono', monospace; font-size: 8.5px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.8));
-        }
     </style>
 </head>
 <body class="flex flex-col">
 
     <!-- TOP BAR -->
     <header class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50">
+        <!-- NÚT THOÁT -->
         <a href="game.html" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
             <i class="fa-solid fa-arrow-left"></i> <span class="font-bold text-sm tracking-wide">Thoát</span>
         </a>
@@ -118,8 +111,10 @@
     <!-- GAME AREA -->
     <div class="flex-1 relative flex flex-col items-center justify-center py-1">
         
+        <!-- Đếm ngược -->
         <div id="uiTimer" class="absolute top-2 w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center text-xl font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all">--</div>
 
+        <!-- Trạng thái Shuffle -->
         <div id="shuffleNotice" class="hidden absolute top-16 bg-black/80 px-6 py-2 rounded-full border border-amber-500/50 z-40 backdrop-blur-md">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-arrows-rotate text-amber-500 animate-spin"></i>
@@ -127,6 +122,7 @@
             </div>
         </div>
 
+        <!-- Area chứa lá bài -->
         <div class="w-full max-w-md flex justify-between px-4 mt-6 relative h-36">
             <div id="handP" class="hand-p w-1/2 relative h-full">
                 <div id="scoreP" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-0.5 rounded-full text-xs font-bold opacity-0 transition-opacity shadow-lg z-20 whitespace-nowrap">CON: 0</div>
@@ -136,6 +132,7 @@
             </div>
         </div>
 
+        <!-- Màn che kết quả -->
         <div id="resultOverlay" class="absolute inset-0 bg-black/60 z-40 hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm pointer-events-none">
             <div class="transform scale-90 transition-transform duration-300 text-center" id="resultCard">
                 <div class="text-4xl font-black uppercase tracking-widest drop-shadow-lg mb-2" id="resTitle">WINNER</div>
@@ -171,35 +168,18 @@
             <!-- Top Row: Đôi Con - Hòa - Đôi Cái -->
             <div class="flex h-14 gap-2">
                 <div id="zonePP" onclick="game.placeBet('PP')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <!-- Global Stats -->
-                    <div class="global-stat-box">
-                        <div class="global-stat-row text-slate-300"><i class="fa-solid fa-user text-[7px] opacity-70"></i> <span id="globalUsers_PP">0</span></div>
-                        <div class="global-stat-row text-amber-400"><i class="fa-solid fa-coins text-[7px] opacity-70"></i> <span id="globalAmt_PP">0</span></div>
-                    </div>
                     <span class="text-blue-300 font-bold text-xs tracking-wider">ĐÔI CON</span>
                     <span class="text-[9px] text-blue-300/50">1 : 11</span>
                     <div id="betValPP" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/60 px-2 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
                     <div id="pendPP" class="floating-chip">+0</div>
                 </div>
-                
                 <div id="zoneT" onclick="game.placeBet('T')" class="bet-zone flex-1 bg-gradient-to-br from-emerald-900/40 to-emerald-900/20 border border-emerald-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <!-- Global Stats -->
-                    <div class="global-stat-box">
-                        <div class="global-stat-row text-slate-300"><i class="fa-solid fa-user text-[7px] opacity-70"></i> <span id="globalUsers_T">0</span></div>
-                        <div class="global-stat-row text-amber-400"><i class="fa-solid fa-coins text-[7px] opacity-70"></i> <span id="globalAmt_T">0</span></div>
-                    </div>
                     <span class="text-emerald-400 font-bold text-xs tracking-wider">HÒA</span>
                     <span class="text-[9px] text-emerald-300/50">1 : 8</span>
                     <div id="betValT" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/60 px-2 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
                     <div id="pendT" class="floating-chip">+0</div>
                 </div>
-                
                 <div id="zoneBP" onclick="game.placeBet('BP')" class="bet-zone flex-1 bg-gradient-to-br from-red-900/40 to-red-900/20 border border-red-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <!-- Global Stats -->
-                    <div class="global-stat-box">
-                        <div class="global-stat-row text-slate-300"><i class="fa-solid fa-user text-[7px] opacity-70"></i> <span id="globalUsers_BP">0</span></div>
-                        <div class="global-stat-row text-amber-400"><i class="fa-solid fa-coins text-[7px] opacity-70"></i> <span id="globalAmt_BP">0</span></div>
-                    </div>
                     <span class="text-red-300 font-bold text-xs tracking-wider">ĐÔI CÁI</span>
                     <span class="text-[9px] text-red-300/50">1 : 11</span>
                     <div id="betValBP" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/60 px-2 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
@@ -210,23 +190,12 @@
             <!-- Bottom Row: Con - Cái -->
             <div class="flex h-20 gap-2">
                 <div id="zoneP" onclick="game.placeBet('P')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <!-- Global Stats -->
-                    <div class="global-stat-box">
-                        <div class="global-stat-row text-slate-300"><i class="fa-solid fa-user text-[7px] opacity-70"></i> <span id="globalUsers_P">0</span></div>
-                        <div class="global-stat-row text-amber-400"><i class="fa-solid fa-coins text-[7px] opacity-70"></i> <span id="globalAmt_P">0</span></div>
-                    </div>
                     <span class="text-blue-400 font-black text-xl tracking-wider drop-shadow-md">CON</span>
                     <span class="text-[11px] text-blue-300/50">1 : 1</span>
                     <div id="betValP" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-sm font-bold opacity-0 bg-black/80 px-3 py-0.5 rounded-full border border-amber-500/50 whitespace-nowrap shadow-lg">0 T</div>
                     <div id="pendP" class="floating-chip">+0</div>
                 </div>
-                
                 <div id="zoneB" onclick="game.placeBet('B')" class="bet-zone flex-1 bg-gradient-to-br from-red-900/40 to-red-900/20 border border-red-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <!-- Global Stats -->
-                    <div class="global-stat-box">
-                        <div class="global-stat-row text-slate-300"><i class="fa-solid fa-user text-[7px] opacity-70"></i> <span id="globalUsers_B">0</span></div>
-                        <div class="global-stat-row text-amber-400"><i class="fa-solid fa-coins text-[7px] opacity-70"></i> <span id="globalAmt_B">0</span></div>
-                    </div>
                     <span class="text-red-400 font-black text-xl tracking-wider drop-shadow-md">CÁI</span>
                     <span class="text-[11px] text-red-300/50">0.95 : 1</span>
                     <div id="betValB" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-sm font-bold opacity-0 bg-black/80 px-3 py-0.5 rounded-full border border-amber-500/50 whitespace-nowrap shadow-lg">0 T</div>
@@ -281,12 +250,14 @@
         
         let currentUser = null;
         
+        // Cấu hình Thời gian: 60s/ván, 42s để cược
         const ROUND_DURATION = 60000;
         const BETTING_DURATION = 42000;
         const DECKS = 8;
         const ROUNDS_PER_SHOE = 70;
         const SHUFFLE_ROUNDS = 2;
 
+        // Unlock AI Audio (SpeechSynthesis)
         document.body.addEventListener('click', () => {
             if(!app.audioUnlocked && window.speechSynthesis) {
                 const u = new SpeechSynthesisUtterance('');
@@ -295,6 +266,7 @@
             }
         }, {once: true});
 
+        // Local Storage cho Backup cược
         const RECOVERY_KEY = 'crownex_bcr_pending_bet_v2';
         const savePendingBet = (data) => localStorage.setItem(RECOVERY_KEY, JSON.stringify(data));
         const getPendingBet = () => {
@@ -303,6 +275,7 @@
         };
         const clearPendingBet = () => localStorage.removeItem(RECOVERY_KEY);
 
+        // Random cố định hạt giống
         function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
 
         class Card {
@@ -363,13 +336,11 @@
             balanceT: 0, 
             bet: { P:0, B:0, T:0, PP:0, BP:0 },
             pend: { P:0, B:0, T:0, PP:0, BP:0 },
-            hasBetThisRound: { P:false, B:false, T:false, PP:false, BP:false }, // Đánh dấu đã cược để đếm user
-            chip: 1, 
+            chip: 1, // Default 1T
             LIMITS: { PB_MIN: 10, PB_MAX: 100000, TIE_MIN: 10, TIE_MAX: 10000, PAIR_MIN: 5, PAIR_MAX: 10000 },
             history: [],
             isShuffling: false,
             audioUnlocked: false,
-            globalStatsUnsubscribe: null,
 
             init() {
                 onAuthStateChanged(auth, async (user) => {
@@ -377,13 +348,6 @@
                     else await signInAnonymously(auth);
                 });
                 this.loop();
-            },
-
-            formatShort(num) {
-                if (!num) return "0";
-                if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-                if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-                return num.toString();
             },
 
             listenBalance(uid) {
@@ -395,34 +359,6 @@
                         setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceT = 0; 
                     }
                     game.updateBal();
-                });
-            },
-
-            listenGlobalStats(roundStr) {
-                if (this.globalStatsUnsubscribe) {
-                    this.globalStatsUnsubscribe();
-                }
-                
-                // Reset UI counters immediately
-                ['P', 'B', 'T', 'PP', 'BP'].forEach(zone => {
-                    document.getElementById(`globalAmt_${zone}`).innerText = "0";
-                    document.getElementById(`globalUsers_${zone}`).innerText = "0";
-                });
-
-                // Listen to the public round document
-                const roundRef = doc(db, "baccarat_rounds_sync", roundStr);
-                this.globalStatsUnsubscribe = onSnapshot(roundRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        ['P', 'B', 'T', 'PP', 'BP'].forEach(zone => {
-                            const amt = data[`${zone}_amt`] || 0;
-                            const users = data[`${zone}_users`] || 0;
-                            document.getElementById(`globalAmt_${zone}`).innerText = this.formatShort(amt);
-                            document.getElementById(`globalUsers_${zone}`).innerText = users;
-                        });
-                    }
-                }, (error) => {
-                    console.log("Error listening to global stats:", error);
                 });
             },
 
@@ -472,6 +408,7 @@
                 const timeInRound = now.getTime() % ROUND_DURATION;
                 
                 const y = now.getFullYear(); const m = String(now.getMonth()+1).padStart(2,'0'); const d = String(now.getDate()).padStart(2,'0'); const h = String(now.getHours()).padStart(2,'0'); const min = String(now.getMinutes()).padStart(2,'0');
+                // Mã ván không còn a hoặc b nữa vì mỗi ván bằng 1 phút
                 const str = `${y}${m}${d}${h}${min}`;
                 return { shoeId, roundInShoe, timeInRound, str };
             },
@@ -489,10 +426,6 @@
                     document.getElementById('uiShoeID').innerText = "#" + t.shoeId;
                     document.getElementById('uiRoundCount').innerText = `${t.roundInShoe + 1}/${ROUNDS_PER_SHOE}`;
                     
-                    // Khởi tạo lại theo dõi cược toàn ván
-                    this.hasBetThisRound = { P:false, B:false, T:false, PP:false, BP:false };
-                    this.listenGlobalStats(t.str);
-
                     if (t.roundInShoe >= (ROUNDS_PER_SHOE - SHUFFLE_ROUNDS)) this.startShuffleMode();
                     else {
                         this.endShuffleMode();
@@ -573,6 +506,7 @@
 
                     if (winT > 0) {
                         this.addWin(winT);
+                        // Show floating win text per zone
                         if (res.winner === 'P' && this.bet.P>0) game.showFloat(document.getElementById('zoneP'), `+${(this.bet.P*2).toLocaleString()} T`, 'win');
                         if (res.winner === 'B' && this.bet.B>0) game.showFloat(document.getElementById('zoneB'), `+${(this.bet.B*1.95).toLocaleString()} T`, 'win');
                         if (res.winner === 'T' && this.bet.T>0) game.showFloat(document.getElementById('zoneT'), `+${(this.bet.T*9).toLocaleString()} T`, 'win');
@@ -582,6 +516,7 @@
                     
                     this.saveHistory(activeBets, res.winner, isPP, isBP, this.currentRoundStr);
 
+                    // Setup Final Text for AI
                     let finalMsg = `Kết quả: ${winMsg}.`;
                     if(isPP && isBP) finalMsg += " Cả hai đôi.";
                     else if(isPP) finalMsg += " Đôi con.";
@@ -660,6 +595,7 @@
                 document.querySelectorAll('.chip-3d').forEach(c=>c.classList.remove('selected','ring-2','ring-white'));
                 el.classList.add('selected','ring-2','ring-white');
                 
+                // Kích hoạt audio nếu chưa
                 if(!app.audioUnlocked && window.speechSynthesis) {
                     window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
                     app.audioUnlocked = true;
@@ -701,6 +637,7 @@
                     return true;
                 };
 
+                // Validate minimums theo yêu cầu
                 if(!check('P','CON',app.LIMITS.PB_MIN)) return;
                 if(!check('B','CÁI',app.LIMITS.PB_MIN)) return;
                 if(!check('T','HÒA',app.LIMITS.TIE_MIN)) return;
@@ -712,30 +649,6 @@
                 app.deduct(totT);
                 this.showFloat(document.getElementById('balanceContainer'), `-${totT.toLocaleString()} T`, 'loss');
                 
-                // --- UPDATE GLOBAL SYNC STATS TO FIREBASE ---
-                if (currentUser) {
-                    const syncRef = doc(db, "baccarat_rounds_sync", app.currentRoundStr);
-                    const updates = {};
-                    let hasSyncUpdates = false;
-
-                    ['P', 'B', 'T', 'PP', 'BP'].forEach(zone => {
-                        if (app.pend[zone] > 0) {
-                            updates[`${zone}_amt`] = increment(app.pend[zone]);
-                            // Chỉ đếm số lượng user 1 lần mỗi ván cho mỗi cửa
-                            if (!app.hasBetThisRound[zone]) {
-                                updates[`${zone}_users`] = increment(1);
-                                app.hasBetThisRound[zone] = true;
-                            }
-                            hasSyncUpdates = true;
-                        }
-                    });
-
-                    if (hasSyncUpdates) {
-                        setDoc(syncRef, updates, { merge: true }).catch(console.error);
-                    }
-                }
-                // ------------------------------------------
-
                 app.bet.P+=app.pend.P; app.bet.B+=app.pend.B; app.bet.T+=app.pend.T;
                 app.bet.PP+=app.pend.PP; app.bet.BP+=app.pend.BP;
                 
@@ -827,9 +740,11 @@
                     document.getElementById('hand'+z).appendChild(div);
                     void div.offsetWidth;
                     setTimeout(()=>div.classList.add('active'),50);
+                    // Tăng thời gian chờ lật thẻ để khớp với animation chậm
                     setTimeout(()=>div.querySelector('.card-inner').classList.add('flipped'), 600);
                 };
                 
+                // Hàm đọc chỉ còn đọc điểm (Rank), không đọc chất
                 const cardName = (c) => {
                     const ranks = {'A':'Át', 'J':'Bồi', 'Q':'Đầm', 'K':'Già'};
                     return ranks[c.r] || c.r;
@@ -841,6 +756,7 @@
                 this.aiSpeak('Bắt đầu chia bài');
                 await w(1500);
 
+                // Tăng delay đọc lên 1.5s để AI kịp đọc rõ ràng và bài lật chậm hơn
                 c(res.pHand[0],0,'P'); this.aiSpeak(`Con ${cardName(res.pHand[0])}`); await w(1500); 
                 c(res.bHand[0],0,'B'); this.aiSpeak(`Cái ${cardName(res.bHand[0])}`); await w(1500);
                 
@@ -852,7 +768,7 @@
                 upS('scoreB',(res.bHand[0].v+res.bHand[1].v)%10);
                 
                 this.aiSpeak(`Con ${(res.pHand[0].v+res.pHand[1].v)%10} điểm. Cái ${(res.bHand[0].v+res.bHand[1].v)%10} điểm.`);
-                await w(2000);
+                await w(2000); // Cho AI đọc xong tổng điểm
 
                 if(res.pHand[2]) { 
                     c(res.pHand[2],2,'P'); 
