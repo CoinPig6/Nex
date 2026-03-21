@@ -39,28 +39,32 @@
     </script>
 
     <style>
-        /* --- CẤU HÌNH CỐT LÕI & CHỐNG ZOOM --- */
+        /* --- CẤU HÌNH CỐT LÕI (CHO PHÉP CUỘN LÊN XUỐNG) --- */
         html, body {
-            height: 100%; overflow: hidden; touch-action: pan-y;
+            min-height: 100dvh; /* Chiều cao tối thiểu 100% màn hình */
+            overflow-x: hidden; 
+            overflow-y: auto; /* Cho phép lướt dọc */
+            touch-action: pan-y; /* Cho phép thao tác cuộn trên cảm ứng */
             -webkit-text-size-adjust: 100%;
             background-color: #0b0f19;
+            scroll-behavior: smooth;
         }
         
         /* BẮT BUỘC FONT-SIZE 16PX CHO INPUT ĐỂ CHỐNG ZOOM TRÊN IOS */
         input, select, textarea { font-size: 16px !important; appearance: none; -webkit-appearance: none; border-radius: 0; }
         button, a { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* NỀN ĐỘNG (AMBIENT GLOW) */
+        /* NỀN ĐỘNG (AMBIENT GLOW) - Sửa thành Fixed để khi cuộn không bị lỗi viền */
         .bg-animate {
             background: radial-gradient(circle at 50% 0%, #1a1f2e 0%, #0b0f19 85%);
-            position: absolute; inset: 0; z-index: -1;
+            position: fixed; inset: 0; z-index: -1;
         }
         .orb {
             position: absolute; width: 250px; height: 250px; background: #FCD535;
             filter: blur(100px); opacity: 0.1; top: -50px; left: 50%; transform: translateX(-50%);
         }
 
-        /* CARD STYLE - CỐ ĐỊNH PHẦN TRÊN */
+        /* CARD STYLE */
         .glass-panel {
             background: #1e232e;
             border: 1px solid #2d3442;
@@ -153,7 +157,8 @@
         @keyframes slideDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
-<body class="flex justify-center items-start pt-[10vh]">
+<!-- Đã đổi class phần padding/margin để lướt mượt hơn -->
+<body class="flex flex-col items-center justify-start pt-[8vh] pb-[5vh] relative">
 
     <div class="bg-animate"></div>
     <div class="orb"></div>
@@ -278,17 +283,9 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CHẶN ZOOM
+        // CHẶN ZOOM NHƯNG KHÔNG CHẶN LƯỚT
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); });
-        
-        // Ngăn cuộn tự động gây lag khi bấm input trên iOS
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                setTimeout(() => { document.body.scrollTop = 0; }, 50);
-            });
-        });
 
         // CONFIG
         const firebaseConfig = {
@@ -304,7 +301,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const EMAIL_PREFIX = "@tpig.com"; // Đã cập nhật hậu tố email
+        const EMAIL_PREFIX = "@tpig.com"; // Hậu tố email ảo
 
         let captchaCodes = { login: '', reg: '' };
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -326,6 +323,7 @@
                             phone: "0000000000",
                             fullName: user.displayName || "Thành viên",
                             balance: 0,
+                            betTurnover: 0,
                             createdAt: new Date().toISOString(),
                             role: 'user',
                             status: 'active'
@@ -347,8 +345,7 @@
         function saveAndGo(data, uid) {
             data.uid = uid;
             localStorage.setItem('crownex_user_info', JSON.stringify(data));
-            // Đăng nhập thành công -> Chuyển về Kho Game (index.html)
-            window.location.href = "index.html";
+            window.location.href = "index.html"; // Chuyển về Kho Game
         }
 
         // --- SMOOTH TAB LOGIC & CHỈNH CHIỀU CAO ĐỘNG ---
@@ -555,4 +552,5 @@
     </script>
 </body>
 </html>
+
 
