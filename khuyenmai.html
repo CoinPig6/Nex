@@ -2,298 +2,392 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex - Khuyến Mãi</title>
+    <!-- CẤM ZOOM TUYỆT ĐỐI TRÊN MOBILE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tpig - Khuyến Mãi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS CORE */
-        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; background-color: #0b0f19; }
+        /* CSS CORE & NGĂN CHẶN ZOOM/CUỘN THỪA */
+        html, body { 
+            touch-action: pan-y; 
+            overscroll-behavior-y: none; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: #0b0f19; 
+            -webkit-text-size-adjust: 100%;
+        }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        
+        /* Cấm zoom khi double-tap vào các nút bấm */
+        a, button, input, select { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent;}
+        
+        /* Ẩn thanh cuộn nhưng vẫn cho phép cuộn */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* SIDEBAR */
-        #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .menu-item { display: flex; items-center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
-        .menu-item:active { background: #1e232e; color: white; }
-        .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
-        .menu-item i { width: 20px; text-align: center; }
+        /* BOTTOM NAV */
+        .bottom-nav { background: rgba(19, 22, 31, 0.95); backdrop-filter: blur(10px); padding-bottom: env(safe-area-inset-bottom, 10px); }
+        .nav-item { transition: all 0.2s; text-decoration: none; cursor: pointer; }
+        .nav-item.active { color: #FCD535; }
+        .nav-item.active i { transform: translateY(-2px); }
 
-        /* PROMO CARDS */
-        .promo-card { 
-            background: linear-gradient(145deg, #13161f, #171b26); 
-            border: 1px solid #2d3442; border-radius: 12px; 
-            overflow: hidden; margin-bottom: 16px; position: relative; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        /* PROMO CARDS STYLES */
+        .tech-card {
+            background: #1e232e;
+            border: 1px solid #2d3442; 
+            border-radius: 16px; 
+            padding: 20px; 
+            position: relative; 
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+            margin-bottom: 16px;
         }
+
+        .promo-list-card {
+            background: #1e232e; border: 1px solid #2d3442; border-radius: 16px; 
+            padding: 16px; display: flex; align-items: center; gap: 12px;
+            position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 12px;
+        }
+        
         .promo-tag {
             position: absolute; top: 0; right: 0;
             background: #F6465D; color: white;
             font-size: 9px; font-weight: bold;
-            padding: 4px 8px; border-bottom-left-radius: 8px;
+            padding: 4px 10px; border-bottom-left-radius: 12px; z-index: 10;
         }
-        
-        .btn-claim { 
-            background: #0ECB81; color: white; border-radius: 6px; 
-            padding: 8px 12px; font-size: 11px; font-weight: bold; 
-            text-transform: uppercase; transition: 0.2s; min-width: 90px;
-            text-align: center; display: inline-block;
-        }
-        .btn-claim.pending { background: #F59E0B; color: black; cursor: wait; opacity: 1 !important; }
-        .btn-claim.received { background: #374151; color: #9CA3AF; cursor: not-allowed; opacity: 0.8; }
-        .btn-claim:active:not(:disabled) { transform: scale(0.95); }
-        .btn-claim:disabled { cursor: not-allowed; }
 
-        /* GIFTCODE INPUT */
-        .input-code { 
-            width: 100%; background: #0b0f19; border: 1px solid #2d3442; color: #FCD535; 
-            padding: 12px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; 
-            text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: center;
+        /* BUTTONS */
+        .btn-claim { 
+            background: #2d3442; color: white; border: 1px solid #4b5563;
+            border-radius: 50px; padding: 6px 16px; font-size: 10px; font-weight: bold; 
+            text-transform: uppercase; transition: 0.2s; min-width: 80px; text-align: center;
         }
-        .input-code:focus { border-color: #FCD535; outline: none; box-shadow: 0 0 0 2px rgba(252, 213, 53, 0.2); }
-        .btn-redeem { 
-            width: 100%; background: #FCD535; color: #111; font-weight: bold; 
-            padding: 12px; border-radius: 8px; margin-top: 10px; 
-            box-shadow: 0 4px 15px rgba(252, 213, 53, 0.2); transition: 0.2s; 
+        .btn-claim:active:not(:disabled) { transform: scale(0.95); background: #374151; }
+        .btn-claim.pending { background: #f59e0b; color: #111; border-color: #f59e0b; cursor: wait; }
+        .btn-claim.received { background: #13161f; color: #6b7280; border-color: #232836; cursor: not-allowed; }
+
+        .btn-primary-large {
+            width: 100%; background: #2d3442; color: #9ca3af; font-weight: bold;
+            padding: 12px; border-radius: 12px; font-size: 13px; text-transform: uppercase;
+            border: 1px solid #4b5563; transition: 0.2s;
         }
-        .btn-redeem:active { transform: scale(0.98); }
+        .btn-primary-large.active {
+            background: #0ECB81; color: white; border-color: #0ECB81;
+            box-shadow: 0 4px 15px rgba(14, 203, 129, 0.3);
+        }
+        .btn-primary-large.active:active { transform: scale(0.98); }
 
         /* ATTENDANCE 7 DAYS */
         .step-container { display: flex; justify-content: space-between; margin-top: 15px; position: relative; padding: 0 5px; }
-        .step-line { position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #2d3442; z-index: 0; }
-        .step-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 14%; }
-        .step-circle { width: 20px; height: 20px; border-radius: 50%; background: #1e232e; border: 2px solid #2d3442; color: #6b7280; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
+        .step-line { position: absolute; top: 12px; left: 15px; right: 15px; height: 3px; background: #2d3442; z-index: 0; border-radius: 3px;}
+        .step-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 14%; }
+        .step-circle { width: 26px; height: 26px; border-radius: 50%; background: #13161f; border: 2px solid #4b5563; color: #9ca3af; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
         
-        .step-item.active .step-circle { background: #FCD535; border-color: #FCD535; color: #111; box-shadow: 0 0 8px rgba(252, 213, 53, 0.4); transform: scale(1.2); }
+        .step-item.active .step-circle { background: #FCD535; border-color: #FCD535; color: #111; box-shadow: 0 0 10px rgba(252, 213, 53, 0.5); transform: scale(1.15); }
         .step-item.checked .step-circle { background: #0ECB81; border-color: #0ECB81; color: white; }
-        .reward-text { font-size: 9px; font-weight: bold; color: #6b7280; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+        .reward-text { font-size: 10px; font-weight: bold; color: #6b7280; font-family: 'IBM Plex Mono', monospace; }
         .step-item.active .reward-text { color: #FCD535; }
         .step-item.checked .reward-text { color: #0ECB81; }
 
         /* TOAST */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 12px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999; opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; width: max-content; max-width: 90vw;}
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
     </style>
 </head>
 <body>
 
     <!-- TOAST -->
-    <div id="toast"><i class="fa-solid fa-circle-check text-lg"></i><span class="text-sm font-bold text-white" id="toastMsg">...</span></div>
-
-    <!-- SIDEBAR -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleMenu()"></div>
-    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
-        <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
-            <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
-            <span class="font-bold text-lg text-white">CROWNEX</span>
-            <button onclick="toggleMenu()" class="ml-auto text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="toast">
+        <div class="w-8 h-8 rounded-full bg-[#0ECB81]/20 flex items-center justify-center shrink-0" id="toastIconBg">
+            <i class="fa-solid fa-circle-check text-[#0ECB81] text-sm" id="toastIcon"></i>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="game.html" class="menu-item"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
-            <a href="bcr.html" class="menu-item"><i class="fa-solid fa-ranking-star"></i> Bacarat</a>
-            <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
-            <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
-            <a href="khuyenmai.html" class="menu-item active"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
-            <div class="border-t border-[#232836] my-2 mx-2"></div>
-            <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
-            <a href="#" onclick="logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
-        </nav>
-        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
-                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
-            </div>
-        </div>
+        <span class="text-sm font-bold text-white leading-tight" id="toastMsg">...</span>
     </div>
 
-    <!-- HEADER -->
-    <header class="flex items-center px-4 h-14 bg-[#13161f] border-b border-[#232836] sticky top-0 z-20">
-        <button onclick="toggleMenu()" class="mr-4"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
-        <h1 class="flex-1 text-center font-bold text-white text-lg tracking-wide">TRUNG TÂM SỰ KIỆN</h1>
-        <div class="w-8"></div>
+    <!-- HEADER BAR -->
+    <header class="flex items-center justify-between px-4 h-16 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 sticky top-0">
+        <div class="flex items-center gap-3">
+            <a href="cskh.html" class="bg-[#1e232e] border border-[#2d3442] px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition-transform shadow-sm text-white">
+                <i class="fa-solid fa-headset text-blue-400"></i>
+                <span class="text-xs font-bold">CSKH</span>
+            </a>
+            <div class="font-black text-xl text-white tracking-widest italic flex items-center gap-1 ml-1">
+                <span class="text-[#FCD535]">T</span>PIG
+            </div>
+        </div>
+
+        <a href="taikhoan.html" class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner transition-colors active:bg-[#2d3442]">
+            <div class="flex flex-col items-end leading-none">
+                <span class="text-[9px] text-[#6b7280] font-bold uppercase mb-0.5">SỐ DƯ</span>
+                <span id="balanceDisplayHeader" class="text-[#EAECEF] font-mono text-sm font-bold animate-pulse">...</span>
+            </div>
+            <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center text-[14px] font-black text-black shadow-lg">
+                T
+            </div>
+        </a>
     </header>
 
-    <div class="p-4 flex-1 overflow-y-auto pb-10">
-        
-        <!-- === 1. NHẬP GIFTCODE === -->
-        <div class="bg-[#1e232e] p-5 rounded-xl border border-[#FCD535] border-dashed mb-6 relative overflow-hidden shadow-lg">
-            <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
-            <h3 class="text-sm font-bold text-[#FCD535] mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-ticket"></i> NHẬP GIFTCODE
-            </h3>
-            <input type="text" id="giftcodeInput" class="input-code" placeholder="NHẬP MÃ CODE TẠI ĐÂY">
-            <button onclick="redeemCode()" class="btn-redeem" id="btnRedeem">KÍCH HOẠT MÃ</button>
-            <p class="text-[10px] text-center text-gray-500 mt-2 italic">*Mã thưởng sẽ được cộng trực tiếp vào ví</p>
-        </div>
-
-        <!-- === 2. ĐIỂM DANH 7 NGÀY (UPDATED LOGIC) === -->
-        <div class="promo-card p-4">
-            <div class="flex gap-3 mb-3">
-                <div class="w-10 h-10 bg-[#0ECB81]/10 rounded-full flex items-center justify-center text-[#0ECB81] text-xl">
-                    <i class="fa-solid fa-calendar-check"></i>
-                </div>
-                <div>
-                    <h3 class="text-white font-bold text-sm">Điểm Danh 7 Ngày</h3>
-                    <p class="text-[10px] text-gray-400">Yêu cầu: Nạp $20 & Cược $200 mỗi ngày.</p>
-                    <p class="text-[10px] text-[#F6465D]">Lưu ý: Bỏ lỡ 1 ngày sẽ quay lại Mốc 1.</p>
-                </div>
-            </div>
-
-            <!-- Steps 7 Days -->
-            <div class="step-container mb-4" id="attendanceSteps">
-                <!-- Rendered by JS -->
-            </div>
-
-            <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-2 border-t border-[#2d3442] pt-2">
-                <span>Nạp hôm nay: <b id="progressDep" class="text-white">0</b>/20</span>
-                <span>Cược hôm nay: <b id="progressBet" class="text-white">0</b>/200</span>
-            </div>
-
-            <button id="btnAttendance" onclick="claimAttendance()" class="w-full btn-claim py-3" disabled>ĐANG TẢI...</button>
-        </div>
-
-        <!-- === 3. HOÀN TRẢ VIP (Fixed 0.15%) === -->
-        <div class="promo-card p-4">
-            <div class="flex justify-between items-start mb-2">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 text-xl">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Hoàn Trả Không Giới Hạn</h3>
-                        <p class="text-[10px] text-gray-400">Tỷ lệ <span class="text-[#FCD535] font-bold">0.15%</span> - Tự động cộng mỗi ngày.</p>
-                        <p class="text-[10px] text-gray-400">Rút tối thiểu: <span class="text-white font-bold">$1</span></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-[#0b0f19] p-3 rounded-lg border border-[#2d3442] mb-3">
-                <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>Tổng cược tích lũy</span>
-                    <span class="text-white font-mono" id="refundTurnover">$0.00</span>
-                </div>
-                <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>Hoàn trả khả dụng (0.15%)</span>
-                    <span class="text-[#0ECB81] font-mono font-bold" id="refundAmount">$0.00</span>
-                </div>
-            </div>
-            
-            <button id="btnRefund" onclick="claimRefund()" class="w-full btn-claim py-3" disabled>CHƯA ĐỦ MỐC $1</button>
-        </div>
-
-        <!-- === 4. QUÀ TÂN THỦ === -->
-        <div class="promo-card p-4 relative overflow-hidden" id="cardNewbie">
-            <div class="absolute -right-4 -top-4 w-16 h-16 bg-[#FCD535] opacity-20 rounded-full blur-xl"></div>
-            <div class="flex justify-between items-center">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-[#FCD535]/10 rounded-full flex items-center justify-center text-[#FCD535] text-xl">
-                        <i class="fa-solid fa-user-plus"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Tặng Thưởng Tân Thủ</h3>
-                        <p class="text-[10px] text-gray-400">Dành cho tài khoản mới đăng ký.</p>
-                        <p class="text-[10px] text-gray-500">Hoàn thành KYC + Liên kết ngân hàng.</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="block text-[#FCD535] font-black font-mono text-lg">FREE</span>
-                    <button id="btnNewbie" onclick="requestPromo('newbie')" class="btn-claim mt-1">ĐĂNG KÝ</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- === 5. KHUYẾN MÃI NẠP ĐẦU === -->
-        <div class="promo-card p-4 relative overflow-hidden">
-            <div class="promo-tag">HOT</div>
-            <div class="flex justify-between items-center">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 text-xl">
-                        <i class="fa-solid fa-gem"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Thưởng Nạp Đầu 100%</h3>
-                        <p class="text-[10px] text-gray-400">Nạp tối đa: $5</p>
-                        <p class="text-[10px] text-gray-500">Yêu cầu doanh thu: x3 Vòng cược</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="block text-purple-400 font-black font-mono text-lg">100%</span>
-                    <button id="btnDep1" onclick="requestPromo('deposit_1')" class="btn-claim mt-1">ĐĂNG KÝ</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- === 6. KHUYẾN MÃI NẠP LẦN 2 === -->
-        <div class="promo-card p-4 relative overflow-hidden">
-            <div class="flex justify-between items-center">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 text-xl">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Thưởng Nạp Lại (Lần 2)</h3>
-                        <p class="text-[10px] text-gray-400">Thưởng 50% giá trị nạp.</p>
-                        <p class="text-[10px] text-gray-500">Yêu cầu doanh thu: x5 Vòng cược</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="block text-indigo-400 font-black font-mono text-lg">50%</span>
-                    <button id="btnDep2" onclick="requestPromo('deposit_2')" class="btn-claim mt-1">ĐĂNG KÝ</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- === 7. NẠP HÀNG NGÀY === -->
-        <div class="promo-card p-4 relative overflow-hidden">
-            <div class="flex justify-between items-center">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-400 text-xl">
-                        <i class="fa-solid fa-calendar-day"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Nạp Mỗi Ngày</h3>
-                        <p class="text-[10px] text-gray-400">Nhận thêm 10% mỗi lần nạp.</p>
-                        <p class="text-[10px] text-gray-500">Không giới hạn số lần nhận.</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="block text-teal-400 font-black font-mono text-lg">10%</span>
-                    <button id="btnDaily" onclick="requestPromo('daily_10')" class="btn-claim mt-1">ĐĂNG KÝ</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- === 8. CUỐI TUẦN T7-CN === -->
-        <div class="promo-card p-4 relative overflow-hidden">
-            <div class="promo-tag bg-red-600">T7 & CN</div>
-            <div class="flex justify-between items-center">
-                <div class="flex gap-3">
-                    <div class="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-400 text-xl">
-                        <i class="fa-solid fa-fire"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-sm">Siêu Deal Cuối Tuần</h3>
-                        <p class="text-[10px] text-gray-400">Thưởng 50% cho giao dịch đầu tiên.</p>
-                        <p class="text-[10px] text-gray-500">Áp dụng: Thứ 7 & Chủ Nhật.</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="block text-red-400 font-black font-mono text-lg">50%</span>
-                    <button id="btnWeekend" onclick="requestPromo('weekend_50')" class="btn-claim mt-1">ĐĂNG KÝ</button>
-                </div>
-            </div>
-        </div>
-
+    <!-- TABS NAVIGATION -->
+    <div class="flex border-b border-[#2d3442] bg-[#13161f] z-10 sticky top-[64px]">
+        <button onclick="window.switchPromoTab('daily')" id="btnTabDaily" class="flex-1 py-3 text-sm font-bold text-[#FCD535] border-b-2 border-[#FCD535] transition-colors">
+            NHIỆM VỤ & QUÀ
+        </button>
+        <button onclick="window.switchPromoTab('promo')" id="btnTabPromo" class="flex-1 py-3 text-sm font-bold text-[#9ca3af] border-b-2 border-transparent transition-colors">
+            ƯU ĐÃI ĐẶC BIỆT
+        </button>
     </div>
 
-    <!-- LOGIC -->
+    <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-24 relative bg-[#0b0f19]">
+        <!-- GLOW BACKGROUND -->
+        <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FCD535]/5 to-transparent pointer-events-none"></div>
+
+        <div class="relative z-10">
+            
+            <!-- ================= TAB 1: NHIỆM VỤ & QUÀ (NHẬP CODE, HOÀN TRẢ, ĐIỂM DANH) ================= -->
+            <div id="tabContentDaily" class="space-y-5">
+                
+                <!-- === 1. NHẬP GIFTCODE === -->
+                <div class="tech-card border-[#FCD535]/40 shadow-[0_0_20px_rgba(252,213,53,0.1)]">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#FCD535] opacity-10 rounded-full blur-2xl"></div>
+                    <h3 class="text-sm font-bold text-[#FCD535] mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-ticket text-lg"></i> NHẬP GIFTCODE TỪ ADMIN
+                    </h3>
+                    <input type="text" id="giftcodeInput" class="w-full bg-[#0b0f19] border border-[#2d3442] text-[#FCD535] text-[16px] rounded-xl px-4 py-3.5 mb-3 text-center uppercase tracking-widest font-mono font-bold focus:border-[#FCD535] focus:outline-none transition-all placeholder-[#4b5563]" placeholder="NHẬP MÃ CODE TẠI ĐÂY">
+                    <button onclick="window.redeemCode()" class="w-full bg-gradient-to-r from-[#FCD535] to-[#f59e0b] text-[#111] font-black py-3.5 rounded-xl text-center text-sm shadow-[0_4px_15px_rgba(252,213,53,0.3)] hover:brightness-110 active:scale-95 transition-all" id="btnRedeem">
+                        KÍCH HOẠT MÃ NGAY
+                    </button>
+                </div>
+
+                <!-- === 2. ĐIỂM DANH 7 NGÀY === -->
+                <div class="tech-card">
+                    <div class="flex gap-4 mb-5 items-center">
+                        <div class="w-12 h-12 shrink-0 bg-[#0ECB81]/10 rounded-2xl flex items-center justify-center text-[#0ECB81] text-2xl border border-[#0ECB81]/20 shadow-inner">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-[15px] mb-1">Điểm Danh 7 Ngày</h3>
+                            <p class="text-[11px] text-[#9ca3af] leading-snug">Yêu cầu: Nạp <span class="text-white font-bold">20 T</span> & Cược <span class="text-white font-bold">200 T</span> mỗi ngày.</p>
+                            <p class="text-[10px] text-[#F6465D] mt-1.5 bg-[#F6465D]/10 inline-block px-1.5 py-0.5 rounded border border-[#F6465D]/20"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Bỏ lỡ 1 ngày sẽ quay lại Mốc 1.</p>
+                        </div>
+                    </div>
+
+                    <!-- Steps 7 Days -->
+                    <div class="step-container mb-6" id="attendanceSteps">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-[#9ca3af] mb-4 bg-[#0b0f19] p-3 rounded-xl border border-[#2d3442]">
+                        <div class="flex flex-col">
+                            <span class="mb-1 uppercase tracking-wider font-bold text-[9px]">Nạp hôm nay</span>
+                            <span><b id="progressDep" class="text-white text-sm font-mono">0</b> / 20</span>
+                        </div>
+                        <div class="w-px h-8 bg-[#2d3442]"></div>
+                        <div class="flex flex-col text-right">
+                            <span class="mb-1 uppercase tracking-wider font-bold text-[9px]">Cược hôm nay</span>
+                            <span><b id="progressBet" class="text-white text-sm font-mono">0</b> / 200</span>
+                        </div>
+                    </div>
+
+                    <button id="btnAttendance" onclick="window.claimAttendance()" class="btn-primary-large" disabled>ĐANG TẢI...</button>
+                </div>
+
+                <!-- === 3. HOÀN TRẢ VIP === -->
+                <div class="tech-card">
+                    <div class="flex justify-between items-start mb-5">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-12 h-12 shrink-0 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 text-2xl border border-blue-500/20 shadow-inner">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold text-[15px] mb-1">Hoàn Trả Không Giới Hạn</h3>
+                                <p class="text-[11px] text-[#9ca3af]">Tỷ lệ <span class="text-[#FCD535] font-bold text-sm bg-[#FCD535]/10 px-1 rounded ml-1">0.15%</span></p>
+                                <p class="text-[10px] text-[#9ca3af] mt-1">Rút tối thiểu: <span class="text-white font-bold">1 T</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[#0b0f19] p-4 rounded-xl border border-[#2d3442] mb-4">
+                        <div class="flex justify-between items-center text-[11px] text-[#9ca3af] mb-3 border-b border-[#1e232e] pb-3">
+                            <span class="uppercase font-bold tracking-wider text-[10px]">Cược Tích Lũy</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-white font-mono font-bold text-[15px]" id="refundTurnover">0.00</span>
+                                <span class="text-[#FCD535] font-black text-xs">T</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] text-[#9ca3af]">
+                            <span class="uppercase font-bold tracking-wider text-[10px]">Hoàn Trả Nhận Được</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-[#0ECB81] font-mono font-black text-lg" id="refundAmount">0.00</span>
+                                <span class="text-[#FCD535] font-black text-xs">T</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="btnRefund" onclick="window.claimRefund()" class="btn-primary-large" disabled>CHƯA ĐỦ MỐC 1 T</button>
+                </div>
+
+            </div>
+
+            <!-- ================= TAB 2: ƯU ĐÃI ĐẶC BIỆT (ĐĂNG KÝ KM) ================= -->
+            <div id="tabContentPromo" class="space-y-4 hidden pt-2">
+                
+                <!-- === 4. QUÀ TÂN THỦ === -->
+                <div class="promo-list-card">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 border-2 border-[#1e232e] shadow-lg">
+                        <i class="fa-solid fa-user-shield text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-[14px] mb-0.5">Tặng Thưởng Tân Thủ</h4>
+                        <p class="text-[#9ca3af] text-[10px] leading-snug">Dành cho tài khoản mới đăng ký.<br>Xác thực + Liên kết ngân hàng.</p>
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end">
+                        <span class="text-[#0ECB81] font-black text-lg drop-shadow-md mb-1.5">FREE</span>
+                        <button id="btnNewbie" onclick="window.requestPromo('newbie')" class="btn-claim">ĐĂNG KÝ</button>
+                    </div>
+                </div>
+
+                <!-- === 5. KHUYẾN MÃI NẠP ĐẦU === -->
+                <div class="promo-list-card">
+                    <div class="promo-tag">HOT</div>
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shrink-0 border-2 border-[#1e232e] shadow-lg">
+                        <i class="fa-solid fa-wallet text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-[14px] mb-0.5">Thưởng Nạp Đầu</h4>
+                        <p class="text-[#9ca3af] text-[10px] leading-snug">Nạp tối đa: 5 T<br>Doanh thu: x3 Vòng cược</p>
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end pr-1">
+                        <span class="text-[#F6465D] font-black text-xl drop-shadow-md mb-1.5">100%</span>
+                        <button id="btnDep1" onclick="window.requestPromo('deposit_1')" class="btn-claim">ĐĂNG KÝ</button>
+                    </div>
+                </div>
+
+                <!-- === 6. KHUYẾN MÃI NẠP LẦN 2 === -->
+                <div class="promo-list-card">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shrink-0 border-2 border-[#1e232e] shadow-lg">
+                        <i class="fa-solid fa-money-bill-transfer text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-[14px] mb-0.5">Thưởng Nạp Lại (Lần 2)</h4>
+                        <p class="text-[#9ca3af] text-[10px] leading-snug">Thưởng 50% giá trị nạp.<br>Doanh thu: x5 Vòng cược</p>
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end pr-1">
+                        <span class="text-[#a855f7] font-black text-xl drop-shadow-md mb-1.5">50%</span>
+                        <button id="btnDep2" onclick="window.requestPromo('deposit_2')" class="btn-claim">ĐĂNG KÝ</button>
+                    </div>
+                </div>
+
+                <!-- === 7. NẠP HÀNG NGÀY === -->
+                <div class="promo-list-card">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 border-2 border-[#1e232e] shadow-lg">
+                        <i class="fa-solid fa-calendar-day text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-[14px] mb-0.5">Nạp Mỗi Ngày</h4>
+                        <p class="text-[#9ca3af] text-[10px] leading-snug">Nhận thêm 10% mỗi lần nạp.<br>Không giới hạn số lần nhận.</p>
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end pr-1">
+                        <span class="text-[#10b981] font-black text-xl drop-shadow-md mb-1.5">10%</span>
+                        <button id="btnDaily" onclick="window.requestPromo('daily_10')" class="btn-claim">ĐĂNG KÝ</button>
+                    </div>
+                </div>
+
+                <!-- === 8. CUỐI TUẦN T7-CN === -->
+                <div class="promo-list-card">
+                    <div class="promo-tag bg-[#FCD535] text-black">T7 & CN</div>
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shrink-0 border-2 border-[#1e232e] shadow-lg">
+                        <i class="fa-solid fa-champagne-glasses text-black text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-[#FCD535] font-bold text-[14px] mb-0.5">Siêu Deal Cuối Tuần</h4>
+                        <p class="text-[#9ca3af] text-[10px] leading-snug">Thưởng 50% giao dịch đầu tiên.<br>Áp dụng: Thứ 7 & Chủ Nhật.</p>
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end pr-1">
+                        <span class="text-[#FCD535] font-black text-xl drop-shadow-md mb-1.5">50%</span>
+                        <button id="btnWeekend" onclick="window.requestPromo('weekend_50')" class="btn-claim">ĐĂNG KÝ</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[68px] border-t border-[#232836] flex items-center justify-around px-2 z-30">
+        <a href="game.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] font-bold">Trang chủ</span>
+        </a>
+        <a href="khuyenmai.html" class="nav-item active flex flex-col items-center justify-center w-16 h-full gap-1">
+            <i class="fa-solid fa-gift text-xl"></i>
+            <span class="text-[10px] font-bold">Khuyến mãi</span>
+        </a>
+        <a href="naprut.html" class="relative -top-5 flex flex-col items-center justify-center w-16 text-decoration-none group">
+            <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_5px_20px_rgba(252,213,53,0.4)] border-4 border-[#0b0f19] group-active:scale-95 transition-transform">
+                <i class="fa-solid fa-plus text-2xl text-black"></i>
+            </div>
+            <span class="text-[10px] font-bold text-[#FCD535] mt-1">Nạp T</span>
+        </a>
+        <a href="lichsu.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+            <span class="text-[10px] font-bold">Lịch sử</span>
+        </a>
+        <a href="taikhoan.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-[10px] font-bold">Tài khoản</span>
+        </a>
+    </div>
+
+    <!-- FIREBASE & LOGIC SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot, addDoc, collection, query, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // 1. NGĂN CHẶN ZOOM IOS/ANDROID
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
+
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                setTimeout(() => { document.body.scrollTop = 0; }, 50);
+            });
+        });
+
+        // 2. LOGIC ĐỔI TAB KHUYẾN MÃI
+        window.switchPromoTab = function(tabName) {
+            const tabDaily = document.getElementById('tabContentDaily');
+            const tabPromo = document.getElementById('tabContentPromo');
+            const btnDaily = document.getElementById('btnTabDaily');
+            const btnPromo = document.getElementById('btnTabPromo');
+
+            if (tabName === 'daily') {
+                tabDaily.classList.remove('hidden');
+                tabPromo.classList.add('hidden');
+                
+                btnDaily.classList.add('text-[#FCD535]', 'border-[#FCD535]');
+                btnDaily.classList.remove('text-[#9ca3af]', 'border-transparent');
+                
+                btnPromo.classList.remove('text-[#FCD535]', 'border-[#FCD535]');
+                btnPromo.classList.add('text-[#9ca3af]', 'border-transparent');
+            } else {
+                tabDaily.classList.add('hidden');
+                tabPromo.classList.remove('hidden');
+                
+                btnPromo.classList.add('text-[#FCD535]', 'border-[#FCD535]');
+                btnPromo.classList.remove('text-[#9ca3af]', 'border-transparent');
+                
+                btnDaily.classList.remove('text-[#FCD535]', 'border-[#FCD535]');
+                btnDaily.classList.add('text-[#9ca3af]', 'border-transparent');
+            }
+        }
+
+        // 3. FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -309,7 +403,6 @@
         let currentUser = null;
         let userData = null;
 
-        // --- MAP: Type to Button ID ---
         const BTN_MAP = {
             'newbie': 'btnNewbie',
             'deposit_1': 'btnDep1',
@@ -321,64 +414,56 @@
         // --- Utils ---
         function getTodayString() { return new Date().toDateString(); }
         
-        // --- Helper: Check Days Diff ---
         function checkDayDiff(lastDateMs) {
             if (!lastDateMs) return { claimedToday: false, isConsecutive: false };
-            
             const now = new Date();
             const last = new Date(lastDateMs);
-            
-            // Đặt giờ về 00:00:00 để so sánh chính xác theo ngày
             const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const lastZero = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
-            
-            const diffMs = todayZero - lastZero;
-            // Làm tròn để tránh lỗi lệch mili giây
-            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 0) return { claimedToday: true, isConsecutive: true }; // Cùng ngày (Đã nhận hôm nay)
-            if (diffDays === 1) return { claimedToday: false, isConsecutive: true }; // Cách 1 ngày (Liên tiếp)
-            return { claimedToday: false, isConsecutive: false }; // Cách > 1 ngày (Đứt quãng)
+            const diffDays = Math.round((todayZero - lastZero) / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return { claimedToday: true, isConsecutive: true }; 
+            if (diffDays === 1) return { claimedToday: false, isConsecutive: true }; 
+            return { claimedToday: false, isConsecutive: false };
         }
 
-        // --- Sidebar ---
-        window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
-            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
-            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'),300); }
-        };
-        window.logout = () => { signOut(auth).then(() => { localStorage.removeItem('crownex_user_info'); window.location.href = "login.html"; }); };
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            const icon = document.getElementById('toastIcon');
+            const iconBg = document.getElementById('toastIconBg');
+            
+            if(type === 'error') { 
+                icon.className = 'fa-solid fa-triangle-exclamation text-[#F6465D] text-sm'; 
+                iconBg.className = 'w-8 h-8 rounded-full bg-[#F6465D]/20 flex items-center justify-center shrink-0';
+                t.style.borderColor = '#F6465D'; 
+            } else { 
+                icon.className = 'fa-solid fa-circle-check text-[#0ECB81] text-sm'; 
+                iconBg.className = 'w-8 h-8 rounded-full bg-[#0ECB81]/20 flex items-center justify-center shrink-0';
+                t.style.borderColor = '#0ECB81'; 
+            }
+            t.classList.add('show'); 
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
 
         // --- Auth & Data ---
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
+            if (user && !user.isAnonymous) {
                 currentUser = user;
-                const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
-                if(localData) document.getElementById('sidebarUsername').innerText = localData.fullName || localData.username;
-
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
                 
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        uid: user.uid,
-                        username: user.email,
-                        balance: 0,
-                        attendanceStreak: 0,
-                        betTurnover: 0,
-                        createdAt: Date.now()
-                    });
-                }
-
-                // Listen to User Data
+                // Đồng bộ hiển thị góc phải
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         userData = docSnap.data();
+                        
+                        // Header Balance
+                        const balDisplay = document.getElementById('balanceDisplayHeader');
+                        balDisplay.innerText = (userData.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                        balDisplay.classList.remove('animate-pulse');
+
                         renderAll(userData);
                     }
                 });
 
-                // Check pending requests status
                 checkPromoRequests(user.uid);
             } else {
                 window.location.href = "login.html";
@@ -390,7 +475,7 @@
             renderAttendance(data);
         }
 
-        // --- 1. GIFTCODE (FIXED: LẤY TRỰC TIẾP THEO ID) ---
+        // --- 1. GIFTCODE ---
         window.redeemCode = async () => {
             if (!currentUser) return;
             const codeInput = document.getElementById('giftcodeInput');
@@ -401,27 +486,21 @@
             btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
 
             try {
-                // FIX: Admin lưu Giftcode bằng ID (code là document ID)
-                // Nên ta dùng doc() để lấy trực tiếp, thay vì query()
                 const codeRef = doc(db, "giftcodes", code);
                 const userRef = doc(db, "users", currentUser.uid);
                 let receivedAmount = 0;
 
-                // 2. Chạy Transaction
                 await runTransaction(db, async (transaction) => {
                     const sfDoc = await transaction.get(codeRef);
                     const userSfDoc = await transaction.get(userRef);
 
                     if (!sfDoc.exists()) throw "Mã không tồn tại hoặc sai!";
-                    
                     const data = sfDoc.data();
                     
-                    // Kiểm tra user đã nhập chưa
                     if (data.usersUsed && data.usersUsed.includes(currentUser.uid)) {
                         throw "Bạn đã sử dụng mã này rồi!";
                     }
 
-                    // Kiểm tra giới hạn lượt nhập (nếu có)
                     if (data.limit && data.usageCount >= data.limit) {
                         throw "Mã đã hết lượt sử dụng!";
                     }
@@ -429,29 +508,19 @@
                     receivedAmount = Number(data.amount);
                     const currentBalance = userSfDoc.data().balance || 0;
 
-                    // Cập nhật User Balance
-                    transaction.update(userRef, {
-                        balance: currentBalance + receivedAmount
-                    });
-
-                    // Cập nhật Giftcode (lưu uid người dùng)
+                    transaction.update(userRef, { balance: currentBalance + receivedAmount });
                     transaction.update(codeRef, {
                         usersUsed: [...(data.usersUsed || []), currentUser.uid],
                         usageCount: (data.usageCount || 0) + 1
                     });
                 });
 
-                // 3. Ghi lịch sử giao dịch
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'giftcode',
-                    amount: receivedAmount,
-                    code: code,
-                    note: `Nhập Giftcode: ${code}`,
-                    status: 'success',
-                    timestamp: Date.now()
+                    type: 'giftcode', amount: receivedAmount, code: code,
+                    note: `Nhập Giftcode: ${code}`, status: 'success', timestamp: Date.now()
                 });
 
-                showToast(`Thành công! Bạn nhận được $${receivedAmount}`, "success");
+                showToast(`Thành công! Bạn nhận được ${receivedAmount} T`, "success");
                 codeInput.value = "";
 
             } catch (e) {
@@ -460,31 +529,29 @@
                 console.error(e);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "KÍCH HOẠT MÃ";
+                btn.innerHTML = "KÍCH HOẠT MÃ NGAY";
             }
         };
 
-        // --- 2. HOÀN TRẢ (FIXED: 0.15% = 0.0015) ---
+        // --- 2. HOÀN TRẢ ---
         function renderRefund(data) {
             const currentTurnover = data.betTurnover || 0;
             const lastTurnover = data.lastRefundTurnover || 0;
             const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
-            
-            // FIX: Đúng 0.15% (nhân 0.0015)
             const refundAmt = pendingTurnover * 0.0015;
 
-            document.getElementById('refundTurnover').innerText = "$" + currentTurnover.toLocaleString();
-            document.getElementById('refundAmount').innerText = "$" + refundAmt.toFixed(4);
+            document.getElementById('refundTurnover').innerText = currentTurnover.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('refundAmount').innerText = refundAmt.toFixed(4);
 
             const btnRefund = document.getElementById('btnRefund');
             if (refundAmt >= 1.0) {
                 btnRefund.disabled = false;
-                btnRefund.innerText = `RÚT NGAY $${refundAmt.toFixed(2)}`;
-                btnRefund.classList.remove('opacity-50');
+                btnRefund.innerText = `RÚT NGAY ${refundAmt.toFixed(2)} T`;
+                btnRefund.classList.add('active');
             } else {
                 btnRefund.disabled = true;
-                btnRefund.innerText = "CHƯA ĐỦ MỐC $1";
-                btnRefund.classList.add('opacity-50');
+                btnRefund.innerText = "CHƯA ĐỦ MỐC 1 T";
+                btnRefund.classList.remove('active');
             }
         }
 
@@ -496,11 +563,9 @@
                 const currentTurnover = userData.betTurnover || 0;
                 const lastTurnover = userData.lastRefundTurnover || 0;
                 const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
-                
-                // FIX: Đúng 0.15% khi claim
                 const refundAmt = pendingTurnover * 0.0015;
 
-                if (refundAmt < 1.0) return showToast("Số dư hoàn trả chưa đủ $1", "error");
+                if (refundAmt < 1.0) return showToast("Số dư hoàn trả chưa đủ 1 T", "error");
 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     balance: (userData.balance || 0) + refundAmt,
@@ -509,16 +574,15 @@
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
                     type: 'refund', amount: refundAmt, note: 'Hoàn trả 0.15%', status: 'success', timestamp: Date.now()
                 });
-                showToast(`Đã nhận hoàn trả $${refundAmt.toFixed(2)}`, "success");
+                showToast(`Đã nhận hoàn trả ${refundAmt.toFixed(2)} T`, "success");
             } catch (e) { console.error(e); }
         };
 
-        // --- 3. ĐIỂM DANH (FIXED: RESET KHI QUA NGÀY) ---
+        // --- 3. ĐIỂM DANH ---
         const REWARDS_7_DAYS = [1, 2, 3, 5, 8, 12, 25]; 
 
         function renderAttendance(data) {
             const todayStr = getTodayString();
-            
             const lastDepDate = data.lastDepositDate ? new Date(data.lastDepositDate).toDateString() : "";
             const lastBetDate = data.lastBetDate ? new Date(data.lastBetDate).toDateString() : "";
 
@@ -526,19 +590,14 @@
             const betToday = (lastBetDate === todayStr) ? (data.betToday || 0) : 0;
 
             document.getElementById('progressDep').innerText = depToday;
-            document.getElementById('progressDep').className = depToday >= 20 ? "text-[#0ECB81]" : "text-white";
+            document.getElementById('progressDep').className = depToday >= 20 ? "text-[#0ECB81] text-sm font-mono" : "text-white text-sm font-mono";
             document.getElementById('progressBet').innerText = betToday;
-            document.getElementById('progressBet').className = betToday >= 200 ? "text-[#0ECB81]" : "text-white";
+            document.getElementById('progressBet').className = betToday >= 200 ? "text-[#0ECB81] text-sm font-mono" : "text-white text-sm font-mono";
 
-            // LOGIC RESET: Nếu không liên tiếp và chưa nhận hôm nay -> Reset visually về 0
             const { claimedToday, isConsecutive } = checkDayDiff(data.lastAttendance);
-            
             let displayStreak = data.attendanceStreak || 0;
             
-            // FIX: Nếu đứt quãng (qua 00h hôm sau mà chưa điểm danh của hôm qua)
-            if (!isConsecutive && !claimedToday) {
-                displayStreak = 0; 
-            }
+            if (!isConsecutive && !claimedToday) displayStreak = 0; 
             if (displayStreak >= 7) displayStreak = 0; 
 
             let html = '<div class="step-line"></div>';
@@ -554,7 +613,7 @@
                 html += `
                     <div class="step-item ${statusClass}">
                         <div class="step-circle">${i+1}</div>
-                        <span class="reward-text">$${REWARDS_7_DAYS[i]}</span>
+                        <span class="reward-text">${REWARDS_7_DAYS[i]}T</span>
                     </div>
                 `;
             }
@@ -565,15 +624,16 @@
             if (claimedToday) {
                 btnAtt.disabled = true;
                 btnAtt.innerText = "ĐÃ ĐIỂM DANH HÔM NAY";
-                btnAtt.classList.add('opacity-50');
+                btnAtt.classList.remove('active');
             } else {
-                btnAtt.classList.remove('opacity-50');
                 if (depToday >= 20 && betToday >= 200) {
                     btnAtt.disabled = false;
-                    btnAtt.innerText = `NHẬN NGAY $${REWARDS_7_DAYS[displayStreak]}`;
+                    btnAtt.innerText = `NHẬN NGAY ${REWARDS_7_DAYS[displayStreak]} T`;
+                    btnAtt.classList.add('active');
                 } else {
                     btnAtt.disabled = true;
                     btnAtt.innerText = "CHƯA ĐỦ ĐIỀU KIỆN";
+                    btnAtt.classList.remove('active');
                 }
             }
         }
@@ -581,18 +641,11 @@
         window.claimAttendance = async () => {
             if (!currentUser) return;
             const btn = document.getElementById('btnAttendance');
-            
             try {
                 btn.disabled = true;
-                
                 const { isConsecutive } = checkDayDiff(userData.lastAttendance);
                 let streak = userData.attendanceStreak || 0;
-                
-                // FIX: Nếu không liên tiếp (bị đứt quãng) -> Reset về 0
-                if (!isConsecutive) {
-                    streak = 0;
-                }
-
+                if (!isConsecutive) streak = 0;
                 if (streak >= 7) streak = 0;
 
                 let reward = REWARDS_7_DAYS[streak];
@@ -605,14 +658,11 @@
                 });
 
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
-                    type: 'attendance', 
-                    amount: reward, 
-                    note: `Điểm danh ngày ${nextStreak} (Chuỗi ${isConsecutive ? 'liên tiếp' : 'mới'})`, 
-                    status: 'success', 
-                    timestamp: Date.now()
+                    type: 'attendance', amount: reward, 
+                    note: `Điểm danh ngày ${nextStreak}`, status: 'success', timestamp: Date.now()
                 });
 
-                showToast(`Điểm danh thành công! Nhận $${reward}`, "success");
+                showToast(`Điểm danh thành công! Nhận ${reward} T`, "success");
             } catch (e) { 
                 console.error(e);
                 showToast("Lỗi xử lý điểm danh", "error"); 
@@ -621,7 +671,6 @@
         };
 
         // --- 4. KHUYẾN MÃI KHÁC ---
-
         function getStatusPriority(status) {
             if (status === 'success') return 3;
             if (status === 'pending') return 2;
@@ -633,7 +682,6 @@
             
             onSnapshot(q, (snap) => {
                 let requestsByType = {};
-                
                 snap.forEach(doc => {
                     const r = doc.data();
                     if (!requestsByType[r.type]) requestsByType[r.type] = [];
@@ -643,17 +691,14 @@
                 Object.keys(BTN_MAP).forEach(type => {
                     const btnId = BTN_MAP[type];
                     const requests = requestsByType[type] || [];
-
                     requests.sort((a, b) => {
                         const priA = getStatusPriority(a.status);
                         const priB = getStatusPriority(b.status);
                         if (priA !== priB) return priB - priA; 
                         return b.timestamp - a.timestamp;      
                     });
-
                     const topReq = requests.length > 0 ? requests[0] : null;
                     const finalStatus = topReq ? topReq.status : null;
-
                     updatePromoBtn(btnId, finalStatus);
                 });
             });
@@ -666,17 +711,17 @@
             if (btnId === 'btnWeekend' && (status !== 'pending' && status !== 'success')) {
                 const today = new Date().getDay();
                 if (today !== 0 && today !== 6) { 
-                    btn.className = "btn-claim mt-1 opacity-50";
-                    btn.innerText = "CHỈ MỞ T7 - CN";
+                    btn.className = "btn-claim opacity-50";
+                    btn.innerText = "T7 & CN";
                     btn.disabled = true;
                     return; 
                 }
             }
 
-            btn.className = "btn-claim mt-1"; 
+            btn.className = "btn-claim"; 
 
             if (status === 'pending') {
-                btn.innerText = "ĐANG XÉT DUYỆT";
+                btn.innerText = "CHỜ DUYỆT";
                 btn.disabled = true;
                 btn.classList.add('pending');
             } 
@@ -695,8 +740,7 @@
             if (!currentUser) return;
             const btnId = BTN_MAP[type];
             const btn = document.getElementById(btnId);
-
-            if(btn) { btn.disabled = true; btn.innerText = "ĐANG GỬI..."; }
+            if(btn) { btn.disabled = true; btn.innerText = "GỬI..."; }
 
             try {
                 const q = query(
@@ -707,7 +751,6 @@
                 
                 const querySnap = await getDocs(q);
                 let isDuplicate = false;
-                
                 querySnap.forEach((doc) => {
                     const s = doc.data().status;
                     if (s === 'pending' || s === 'success') isDuplicate = true;
@@ -726,25 +769,15 @@
                     status: 'pending',
                     timestamp: Date.now()
                 });
-                
                 showToast("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.", "success");
-                
             } catch (e) {
                 console.error(e);
                 showToast("Lỗi: " + e.message, "error");
                 if(btn) { btn.disabled = false; btn.innerText = "ĐĂNG KÝ"; }
             }
         };
-
-        function showToast(msg, type) {
-            const t = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            const i = t.querySelector('i');
-            if(type === 'error') { i.className = 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]'; t.style.borderColor = '#F6465D'; }
-            else { i.className = 'fa-solid fa-circle-check text-lg text-[#0ECB81]'; t.style.borderColor = '#0ECB81'; }
-            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
-        }
     </script>
 </body>
 </html>
+
 
