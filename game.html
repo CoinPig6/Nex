@@ -61,7 +61,7 @@
     <!-- TOAST THÔNG BÁO -->
     <div id="toast">
         <div class="w-8 h-8 rounded-full bg-[#FCD535]/20 flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-gamepad text-[#FCD535] text-sm"></i>
+            <i class="fa-solid fa-gamepad text-[#FCD535] text-sm" id="toastIcon"></i>
         </div>
         <span class="text-sm font-bold text-white leading-tight" id="toastMsg">...</span>
     </div>
@@ -82,10 +82,10 @@
         </div>
 
         <!-- HIỂN THỊ SỐ DƯ ĐỒNG T -->
-        <a href="taikhoan.html" class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner">
+        <a href="taikhoan.html" class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner transition-colors active:bg-[#2d3442]">
             <div class="flex flex-col items-end leading-none">
                 <span class="text-[9px] text-[#6b7280] font-bold uppercase mb-0.5">SỐ DƯ</span>
-                <span id="balanceDisplay" class="text-[#EAECEF] font-mono text-sm font-bold">1,250.00</span>
+                <span id="balanceDisplay" class="text-[#EAECEF] font-mono text-sm font-bold animate-pulse">...</span>
             </div>
             <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center text-[14px] font-black text-black shadow-lg">
                 T
@@ -133,7 +133,7 @@
                 <a href="casino.html" class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
                     <i class="fa-solid fa-dharmachakra text-green-400"></i> CASINO
                 </a>
-                <a href="crypto.html" class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
+                <a href="cripto.html" class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
                     <i class="fa-brands fa-bitcoin text-[#FCD535]"></i> CRIPTO
                 </a>
                 <a href="blockchain.html" class="category-tab bg-[#1e232e] border border-[#2d3442] text-[#9ca3af] px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
@@ -161,14 +161,12 @@
                 <!-- GAME GRID -->
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="gameGrid">
                     
-                    <!-- 1. Crypto (HOẠT ĐỘNG) -->
+                    <!-- 1. Crypto -->
                     <a href="crypto.html" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="crypto cripto trade bo bitcoin">
                         <div class="aspect-square rounded-xl bg-gradient-to-br from-[#111827] to-[#1f2937] relative overflow-hidden shadow-inner border border-[#374151]">
                             <div class="absolute top-2 left-2 bg-black/60 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-bold border border-white/10 z-10">HOT</div>
-                            
                             <i class="fa-brands fa-bitcoin absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl text-[#FCD535]/30"></i>
                             <i class="fa-solid fa-chart-line absolute bottom-2 left-2 text-2xl text-[#0ECB81]/40"></i>
-                            
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity backdrop-blur-sm z-20">
                                 <div class="w-10 h-10 bg-[#FCD535] rounded-full flex items-center justify-center text-black shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
                             </div>
@@ -179,16 +177,14 @@
                         </div>
                     </a>
 
-                    <!-- 2. Baccarat (HOẠT ĐỘNG) -->
+                    <!-- 2. Baccarat -->
                     <a href="bcr.html" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="baccarat bài casino">
                         <div class="aspect-square rounded-xl bg-gradient-to-br from-emerald-800 to-green-950 relative overflow-hidden shadow-inner border border-green-800">
                             <div class="absolute top-2 left-2 bg-black/60 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-bold border border-white/10 z-10">LIVE</div>
-                            
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-1">
                                 <i class="fa-solid fa-diamond text-red-500 text-4xl rotate-[-10deg]"></i>
                                 <i class="fa-solid fa-spade text-black text-4xl rotate-[10deg] drop-shadow-[0_0_2px_rgba(255,255,255,0.5)]"></i>
                             </div>
-                            
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity backdrop-blur-sm z-20">
                                 <div class="w-10 h-10 bg-[#FCD535] rounded-full flex items-center justify-center text-black shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
                             </div>
@@ -199,13 +195,11 @@
                         </div>
                     </a>
 
-                    <!-- 3. Drop the boss (HOẠT ĐỘNG) -->
+                    <!-- 3. Drop the boss -->
                     <a href="drop01.html" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="drop the boss diệt quái hành động">
                         <div class="aspect-square rounded-xl bg-gradient-to-br from-gray-900 to-black relative overflow-hidden shadow-inner border border-orange-500/50">
                             <div class="absolute top-2 left-2 bg-orange-600 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-bold z-10 border border-orange-400">EVENT</div>
-                            
                             <i class="fa-solid fa-ghost text-orange-500 text-5xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"></i>
-                            
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity backdrop-blur-sm z-20">
                                 <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(249,115,22,0.8)]"><i class="fa-solid fa-play ml-1"></i></div>
                             </div>
@@ -216,13 +210,11 @@
                         </div>
                     </a>
 
-                    <!-- 4. Tài Xỉu (CHƯA CÓ HTML -> HIỆN THÔNG BÁO) -->
-                    <a href="javascript:void(0)" onclick="showMaintenanceToast('Tài Xỉu')" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="tài xỉu tai xiu sicbo xúc xắc">
+                    <!-- 4. Tài Xỉu (CHƯA CÓ HTML) -->
+                    <a href="javascript:void(0)" onclick="window.showMaintenanceToast('Tài Xỉu')" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="tài xỉu tai xiu sicbo xúc xắc">
                         <div class="aspect-square rounded-xl bg-gradient-to-br from-purple-800 to-indigo-950 relative overflow-hidden shadow-inner border border-purple-800">
                             <div class="absolute top-2 left-2 bg-black/60 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-bold border border-white/10 z-10">MINI</div>
-                            
                             <i class="fa-solid fa-dice text-white/50 text-5xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 drop-shadow-lg"></i>
-                            
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity backdrop-blur-sm z-20">
                                 <div class="w-10 h-10 bg-[#FCD535] rounded-full flex items-center justify-center text-black shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
                             </div>
@@ -233,8 +225,8 @@
                         </div>
                     </a>
 
-                    <!-- 5. Xóc Đĩa (CHƯA CÓ HTML -> HIỆN THÔNG BÁO) -->
-                    <a href="javascript:void(0)" onclick="showMaintenanceToast('Xóc Đĩa')" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="xóc đĩa xoc dia chẵn lẻ chan le">
+                    <!-- 5. Xóc Đĩa (CHƯA CÓ HTML) -->
+                    <a href="javascript:void(0)" onclick="window.showMaintenanceToast('Xóc Đĩa')" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="xóc đĩa xoc dia chẵn lẻ chan le">
                         <div class="aspect-square rounded-xl bg-gradient-to-br from-red-800 to-red-950 relative overflow-hidden shadow-inner border border-red-800">
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 relative">
                                 <i class="fa-solid fa-compact-disc text-white/20 text-6xl"></i>
@@ -243,7 +235,6 @@
                                     <div class="w-3 h-3 rounded-full bg-red-500 shadow-md border border-white/50"></div>
                                 </div>
                             </div>
-                            
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity backdrop-blur-sm z-20">
                                 <div class="w-10 h-10 bg-[#FCD535] rounded-full flex items-center justify-center text-black shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
                             </div>
@@ -254,13 +245,11 @@
                         </div>
                     </a>
 
-                    <!-- 6. Nổ Hũ (CHƯA CÓ HTML -> HIỆN THÔNG BÁO) -->
-                    <a href="javascript:void(0)" onclick="showMaintenanceToast('Nổ Hũ Tpig')" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="nổ hũ no hu slot jackpot">
+                    <!-- 6. Nổ Hũ (CHƯA CÓ HTML) -->
+                    <a href="javascript:void(0)" onclick="window.showMaintenanceToast('Nổ Hũ Tpig')" class="bg-[#1e232e] rounded-2xl p-2 border border-[#2d3442] flex-col gap-2 game-card item-game" data-name="nổ hũ no hu slot jackpot">
                         <div class="aspect-square rounded-xl bg-gradient-to-br from-yellow-600 to-amber-900 relative overflow-hidden shadow-inner border border-yellow-600">
                             <div class="absolute top-2 left-2 bg-black/60 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-bold border border-white/10 z-10 text-[#FCD535]">JACKPOT</div>
-                            
                             <i class="fa-solid fa-coins text-yellow-300 text-5xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_10px_rgba(253,224,71,0.5)]"></i>
-                            
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity backdrop-blur-sm z-20">
                                 <div class="w-10 h-10 bg-[#FCD535] rounded-full flex items-center justify-center text-black shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
                             </div>
@@ -286,93 +275,142 @@
 
     <!-- BOTTOM NAVIGATION -->
     <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[68px] border-t border-[#232836] flex items-center justify-around px-2 z-30">
-        
-        <!-- TRANG CHỦ -->
         <a href="game.html" class="nav-item active flex flex-col items-center justify-center w-16 h-full gap-1">
             <i class="fa-solid fa-house text-xl"></i>
             <span class="text-[10px] font-bold">Trang chủ</span>
         </a>
-        
-        <!-- KHUYẾN MÃI -->
         <a href="khuyenmai.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
             <i class="fa-solid fa-gift text-xl"></i>
             <span class="text-[10px] font-bold">Khuyến mãi</span>
         </a>
-        
-        <!-- NÚT NẠP T -->
         <a href="naprut.html" class="relative -top-5 flex flex-col items-center justify-center w-16 text-decoration-none game-card group">
             <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_5px_20px_rgba(252,213,53,0.4)] border-4 border-[#0b0f19] group-active:scale-95 transition-transform">
                 <i class="fa-solid fa-plus text-2xl text-black"></i>
             </div>
             <span class="text-[10px] font-bold text-[#FCD535] mt-1">Nạp T</span>
         </a>
-        
-        <!-- LỊCH SỬ -->
         <a href="lichsu.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
             <i class="fa-solid fa-clock-rotate-left text-xl"></i>
             <span class="text-[10px] font-bold">Lịch sử</span>
         </a>
-        
-        <!-- TÀI KHOẢN -->
         <a href="taikhoan.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
             <i class="fa-solid fa-user text-xl"></i>
             <span class="text-[10px] font-bold">Tài khoản</span>
         </a>
     </div>
 
-    <!-- SCRIPTS -->
-    <script>
-        // NGĂN CHẶN CÁC THAO TÁC ZOOM BẰNG 2 NGÓN TAY TRÊN CẢ IOS VÀ ANDROID
-        document.addEventListener('gesturestart', function (e) {
-            e.preventDefault();
-        });
-        document.addEventListener('dblclick', function(e) { 
-            e.preventDefault(); 
+    <!-- FIREBASE & LOGIC SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // 1. NGĂN CHẶN ZOOM
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
+
+        // 2. FIREBASE CONFIG (Sử dụng config từ project gốc)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664",
+            measurementId: "G-7Q1GBFNQ37"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // 3. ĐỒNG BỘ SỐ DƯ REAL-TIME
+        const balanceDisplay = document.getElementById('balanceDisplay');
+
+        function updateBalanceUI(balance) {
+            // Hiển thị dạng định dạng tiền tệ có 2 số thập phân
+            balanceDisplay.innerText = balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            balanceDisplay.classList.remove('animate-pulse');
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (!user.isAnonymous) {
+                    // Nếu đã đăng nhập tài khoản thực: Lắng nghe số dư từ Firestore
+                    onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            updateBalanceUI(data.balance || 0);
+                        } else {
+                            updateBalanceUI(0);
+                        }
+                    }, (error) => {
+                        console.log("Lỗi đồng bộ số dư:", error);
+                        balanceDisplay.innerText = "Lỗi tải";
+                    });
+                } else {
+                    // Nếu là khách ẩn danh: Lấy từ localStorage (hoặc mặc định)
+                    let userStr = localStorage.getItem('crownex_user_info');
+                    if (userStr) {
+                         const userData = JSON.parse(userStr);
+                         updateBalanceUI(userData.balance || 1000); 
+                    } else {
+                         updateBalanceUI(1000); // Tặng 1000T trải nghiệm cho khách
+                    }
+                }
+            } else {
+                // Nếu chưa có auth nào, tự động đăng nhập ẩn danh (Khách)
+                signInAnonymously(auth).catch(e => console.error(e));
+                updateBalanceUI(0);
+            }
         });
 
-        // HÀM HIỆN THÔNG BÁO KHI CLICK VÀO GAME CHƯA CÓ HTML
+        // 4. HÀM HIỆN THÔNG BÁO BẢO TRÌ/CHƯA CÓ HTML
         let toastTimeout;
         window.showMaintenanceToast = function(gameName) {
             const t = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            
+            icon.className = 'fa-solid fa-triangle-exclamation text-[#F6465D] text-sm';
+            t.querySelector('div').className = 'w-8 h-8 rounded-full bg-[#F6465D]/20 flex items-center justify-center shrink-0';
             document.getElementById('toastMsg').innerText = `Game đang được cập nhật. Vui lòng thử lại sau!`;
             
             t.classList.add('show');
             
-            // Xóa timeout cũ nếu người dùng click liên tục
             if(toastTimeout) clearTimeout(toastTimeout);
-            
             toastTimeout = setTimeout(() => {
                 t.classList.remove('show');
             }, 3000);
         }
 
-        // CHỨC NĂNG TÌM KIẾM GAME THỜI GIAN THỰC
+        // 5. TÌM KIẾM GAME
         const searchInput = document.getElementById('searchGame');
         const gameItems = document.querySelectorAll('.item-game');
         const noResultDiv = document.getElementById('noResult');
 
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            let foundCount = 0;
+        if(searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                let foundCount = 0;
 
-            gameItems.forEach(item => {
-                const gameKeywords = item.getAttribute('data-name');
-                if (gameKeywords.includes(searchTerm)) {
-                    item.style.display = 'flex';
-                    foundCount++;
+                gameItems.forEach(item => {
+                    const gameKeywords = item.getAttribute('data-name');
+                    if (gameKeywords.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                        foundCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                if (foundCount === 0) {
+                    noResultDiv.classList.remove('hidden');
+                    noResultDiv.classList.add('flex');
                 } else {
-                    item.style.display = 'none';
+                    noResultDiv.classList.add('hidden');
+                    noResultDiv.classList.remove('flex');
                 }
             });
-
-            if (foundCount === 0) {
-                noResultDiv.classList.remove('hidden');
-                noResultDiv.classList.add('flex');
-            } else {
-                noResultDiv.classList.add('hidden');
-                noResultDiv.classList.remove('flex');
-            }
-        });
+        }
     </script>
 </body>
 </html>
