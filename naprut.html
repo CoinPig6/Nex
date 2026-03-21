@@ -356,7 +356,6 @@
         // --- FORMAT INPUT VỚI DẤU PHẨY (THOUSAND SEPARATOR) ---
         function formatCurrencyInput(inputElem) {
             let value = inputElem.value;
-            // Chỉ cho phép số và 1 dấu chấm thập phân
             value = value.replace(/[^0-9.]/g, '');
             
             const parts = value.split('.');
@@ -365,14 +364,11 @@
                 value = parts.join('.');
             }
 
-            // Thêm dấu phẩy vào phần nguyên
             if (parts[0]) {
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
             
             inputElem.value = parts.join('.');
-            
-            // Trả về số thực nguyên thủy để dùng trong tính toán
             return parseFloat(value.replace(/,/g, '')) || 0;
         }
 
@@ -393,7 +389,6 @@
             const max = Math.floor(state.data.balance * 100) / 100;
             const input = document.getElementById('wdAmount');
             input.value = max.toLocaleString('en-US', {maximumFractionDigits: 2});
-            // Gọi event input để update dòng "Thực nhận VNĐ"
             input.dispatchEvent(new Event('input'));
         };
 
@@ -431,7 +426,6 @@
 
             validDeposits.forEach(dep => {
                 let req = parseFloat(dep.amount); // Đơn vị T
-                
                 if (globalBet >= req) {
                     globalBet -= req;
                 } else {
@@ -592,7 +586,6 @@
             try {
                 const newBalance = state.data.balance - amount;
                 
-                // Trừ tiền ngay và reset vòng cược
                 await updateDoc(doc(db, "users", state.user.uid), {
                     balance: newBalance,
                     betTurnover: 0,
@@ -652,7 +645,13 @@
         });
 
         function updateUI(data) {
-            document.getElementById('headerBalance').innerText = (data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            // FIX LỖI Ở ĐÂY: Dùng ID đúng của Header mới (balanceDisplayHeader)
+            const balHeader = document.getElementById('balanceDisplayHeader');
+            if (balHeader) {
+                balHeader.innerText = (data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                balHeader.classList.remove('animate-pulse');
+            }
+            
             document.getElementById('depositContent').innerText = data.username ? data.username.toUpperCase() : "...";
 
             if(data.bankNumber) {
