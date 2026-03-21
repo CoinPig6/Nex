@@ -39,9 +39,9 @@
     </script>
 
     <style>
-        /* --- CẤU HÌNH CỐT LÕI (CHO PHÉP CUỘN LÊN XUỐNG) --- */
+        /* --- CẤU HÌNH CỐT LÕI (ĐÃ CHO PHÉP CUỘN) --- */
         html, body {
-            min-height: 100dvh; /* Chiều cao tối thiểu 100% màn hình */
+            min-height: 100dvh; 
             overflow-x: hidden; 
             overflow-y: auto; /* Cho phép lướt dọc */
             touch-action: pan-y; /* Cho phép thao tác cuộn trên cảm ứng */
@@ -54,7 +54,7 @@
         input, select, textarea { font-size: 16px !important; appearance: none; -webkit-appearance: none; border-radius: 0; }
         button, a { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* NỀN ĐỘNG (AMBIENT GLOW) - Sửa thành Fixed để khi cuộn không bị lỗi viền */
+        /* NỀN ĐỘNG (AMBIENT GLOW) */
         .bg-animate {
             background: radial-gradient(circle at 50% 0%, #1a1f2e 0%, #0b0f19 85%);
             position: fixed; inset: 0; z-index: -1;
@@ -72,7 +72,6 @@
             border-radius: 24px;
             width: 100%; max-width: 360px;
             position: relative; overflow: hidden;
-            /* Transition height mượt mà để form không bị giật */
             transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
@@ -157,8 +156,7 @@
         @keyframes slideDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
-<!-- Đã đổi class phần padding/margin để lướt mượt hơn -->
-<body class="flex flex-col items-center justify-start pt-[8vh] pb-[5vh] relative">
+<body class="flex flex-col items-center justify-start pt-[8vh] pb-[20vh] relative">
 
     <div class="bg-animate"></div>
     <div class="orb"></div>
@@ -307,10 +305,14 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const loadingText = document.getElementById('loadingText');
 
-        // --- KIỂM TRA ĐĂNG NHẬP (AUTH) ---
+        // --- KIỂM TRA ĐĂNG NHẬP (AUTH) VÀ FIX LỖI KẸT VÒNG XOAY ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                loadingText.innerText = "ĐANG TẢI DỮ LIỆU...";
+                // Đảm bảo loading được hiện lên khi Auth thay đổi
+                loadingOverlay.style.display = 'flex';
+                setTimeout(() => loadingOverlay.classList.remove('opacity-0'), 10);
+                loadingText.innerText = "ĐANG ĐỒNG BỘ DỮ LIỆU...";
+                
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
@@ -332,11 +334,22 @@
                         saveAndGo(fixData, user.uid);
                     }
                 } catch (e) {
-                    window.toast('error', 'Lỗi kết nối máy chủ!');
-                    loadingText.innerText = "MẤT KẾT NỐI MẠNG";
+                    console.error("Lỗi lấy dữ liệu:", e);
+                    window.toast('error', 'Cơ sở dữ liệu quá tải, vui lòng thử lại!');
+                    loadingText.innerText = "LỖI KẾT NỐI MÁY CHỦ";
+                    
+                    // NẾU BỊ LỖI, PHẢI NHẢ NÚT BẤM VÀ ẨN LOADING
+                    resetButtons();
+                    setTimeout(() => {
+                        loadingOverlay.classList.add('opacity-0');
+                        setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+                    }, 2000);
+                    
+                    // Tự động thoát để tránh bị kẹt auth state lỗi
+                    signOut(auth);
                 }
             } else {
-                // Fade out hiệu ứng màn hình tải
+                // Tắt màn hình tải khi không có user
                 loadingOverlay.classList.add('opacity-0');
                 setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
             }
@@ -345,7 +358,21 @@
         function saveAndGo(data, uid) {
             data.uid = uid;
             localStorage.setItem('crownex_user_info', JSON.stringify(data));
-            window.location.href = "index.html"; // Chuyển về Kho Game
+            // Đăng nhập thành công -> Chuyển về Kho Game (index.html)
+            window.location.href = "index.html";
+        }
+
+        function resetButtons() {
+            const btnLogin = document.getElementById('btnLogin');
+            if(btnLogin) {
+                btnLogin.disabled = false; 
+                btnLogin.innerHTML = `TRUY CẬP HỆ THỐNG <i class="fa-solid fa-arrow-right ml-1"></i>`;
+            }
+            const btnReg = document.getElementById('btnReg');
+            if(btnReg) {
+                btnReg.disabled = false; 
+                btnReg.innerHTML = `ĐĂNG KÝ TÀI KHOẢN`;
+            }
         }
 
         // --- SMOOTH TAB LOGIC & CHỈNH CHIỀU CAO ĐỘNG ---
@@ -367,7 +394,7 @@
                 regForm.classList.remove('active', 'slide-left');
                 regForm.classList.add('slide-right');
 
-                wrapper.style.height = '290px'; // Chiều cao form Đăng nhập
+                wrapper.style.height = '290px'; 
                 window.drawCaptcha('login');
             } else {
                 indicator.style.transform = 'translateX(calc(100% + 8px))';
@@ -379,7 +406,7 @@
                 loginForm.classList.remove('active', 'slide-right');
                 loginForm.classList.add('slide-left');
 
-                wrapper.style.height = '430px'; // Chiều cao form Đăng ký (đủ chỗ cho 5 input)
+                wrapper.style.height = '430px'; 
                 window.drawCaptcha('reg');
             }
         };
@@ -422,13 +449,17 @@
                 return;
             }
 
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG KIỂM TRA...`;
+            btn.disabled = true; 
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG KIỂM TRA...`;
+            
             try {
                 await signInWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
-                // OnAuthStateChanged sẽ tự chuyển hướng
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> THÀNH CÔNG! ĐANG VÀO...`;
+                // OnAuthStateChanged sẽ tự xử lý chuyển trang
             } catch (err) {
                 window.toast('error', 'Sai tài khoản hoặc mật khẩu!');
-                btn.disabled = false; btn.innerHTML = `TRUY CẬP HỆ THỐNG <i class="fa-solid fa-arrow-right ml-1"></i>`;
+                btn.disabled = false; 
+                btn.innerHTML = `TRUY CẬP HỆ THỐNG <i class="fa-solid fa-arrow-right ml-1"></i>`;
                 window.drawCaptcha('login');
                 document.getElementById('loginCaptcha').value = '';
             }
@@ -451,13 +482,14 @@
                 return;
             }
 
-            // Validate Username không có ký tự đặc biệt
             if (!/^[a-zA-Z0-9]+$/.test(user)) {
                 window.toast('error', 'Tên đăng nhập không được chứa ký tự đặc biệt!');
                 return;
             }
 
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO TÀI KHOẢN...`;
+            btn.disabled = true; 
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO TÀI KHOẢN...`;
+            
             try {
                 const cred = await createUserWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
                 await updateProfile(cred.user, { displayName: name });
@@ -473,13 +505,15 @@
                 };
                 await setDoc(doc(db, "users", cred.user.uid), newData);
                 window.toast('success', 'Đăng ký thành công!');
-                // OnAuthStateChanged sẽ tự chuyển hướng
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> THÀNH CÔNG! ĐANG VÀO...`;
+                // OnAuthStateChanged sẽ tự xử lý chuyển trang
             } catch (err) {
                 let msg = 'Lỗi tạo tài khoản!';
                 if(err.code.includes('email-already-in-use')) msg = 'Tên đăng nhập này đã có người sử dụng!';
                 if(err.code.includes('weak-password')) msg = 'Mật khẩu quá ngắn (Yêu cầu 6 ký tự)!';
                 window.toast('error', msg);
-                btn.disabled = false; btn.innerHTML = `ĐĂNG KÝ TÀI KHOẢN`;
+                btn.disabled = false; 
+                btn.innerHTML = `ĐĂNG KÝ TÀI KHOẢN`;
                 window.drawCaptcha('reg');
             }
         });
@@ -526,14 +560,14 @@
             
             let color, iconClass, bgIcon;
             if(type === 'error') {
-                color = 'text-[#F6465D]'; border = 'border-[#F6465D]'; 
+                color = 'text-[#F6465D]'; let border = 'border-[#F6465D]'; 
                 iconClass = 'fa-triangle-exclamation'; bgIcon = 'bg-[#F6465D]/20';
             } else {
-                color = 'text-[#0ECB81]'; border = 'border-[#0ECB81]'; 
+                color = 'text-[#0ECB81]'; let border = 'border-[#0ECB81]'; 
                 iconClass = 'fa-check'; bgIcon = 'bg-[#0ECB81]/20';
             }
 
-            div.className = `toast-msg border ${border}`;
+            div.className = `toast-msg border ${type==='error'?'border-[#F6465D]':'border-[#0ECB81]'}`;
             div.innerHTML = `
                 <div class="w-8 h-8 rounded-full ${bgIcon} flex items-center justify-center shrink-0">
                     <i class="fa-solid ${iconClass} ${color} text-sm"></i>
