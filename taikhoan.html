@@ -345,7 +345,7 @@
             if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                 signOut(auth).then(() => {
                     localStorage.removeItem('crownex_user_info');
-                    window.location.href = "login.html";
+                    window.location.href = "index.html";
                 });
             }
         };
@@ -427,7 +427,7 @@
                 });
             } else {
                 // Chưa đăng nhập thực sự (hoặc là ẩn danh) thì đẩy về trang Login
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             }
         });
 
