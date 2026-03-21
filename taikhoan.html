@@ -325,8 +325,8 @@
         const db = getFirestore(app);
         let currentUserUID = null;
         
-        // Tỷ giá quy đổi
-        const EXCHANGE_RATE = 25000;
+        // TỶ GIÁ QUY ĐỔI ĐÃ ĐƯỢC CẬP NHẬT 1T = 1.000 VNĐ
+        const EXCHANGE_RATE = 1000;
 
         // Xử lý thay đổi label khi chọn Ví Momo
         window.checkBankType = (select) => {
@@ -345,7 +345,7 @@
             if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                 signOut(auth).then(() => {
                     localStorage.removeItem('crownex_user_info');
-                    window.location.href = "index.html";
+                    window.location.href = "login.html";
                 });
             }
         };
