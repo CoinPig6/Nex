@@ -138,12 +138,15 @@
             <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
         
+        <!-- Khu vực chia đôi -->
         <div class="flex-1 flex overflow-hidden">
+            <!-- Left: Bóng Lịch Sử -->
             <div class="w-[55%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
                 <div class="history-wrapper hide-scroll" id="historyWrapper">
                     <div class="history-container" id="historyContainer"></div>
                 </div>
             </div>
+            <!-- Right: Cột KẾT QUẢ PHIÊN (Real) -->
             <div class="w-[45%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
                 <div class="text-[8px] text-[#FCD535] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">KẾT QUẢ PHIÊN VỪA RỒI</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
@@ -156,6 +159,7 @@
     <!-- BẢNG ĐIỀU KHIỂN & CHIP CƯỢC -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
+            
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
                 <button onclick="window.setBetAmount(10)" class="chip selected">10</button>
                 <button onclick="window.setBetAmount(50)" class="chip">50</button>
@@ -165,6 +169,7 @@
                 <button onclick="window.setAllIn()" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
             </div>
 
+            <!-- Ô NHẬP TIỀN -->
             <div class="flex items-center justify-center gap-3 w-full">
                 <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-minus"></i></button>
                 
@@ -179,6 +184,7 @@
             <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.60 T</span></div>
         </div>
         
+        <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
         <div class="flex justify-between items-center gap-3 h-14 w-full max-w-sm mx-auto">
             <button id="btnSell" onclick="window.selectSide('down')" class="relative flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-xl flex items-center justify-center shadow-lg">
                 <span class="font-black text-xl text-white tracking-wide z-10">BÁN</span>
@@ -316,7 +322,7 @@
             return { macroMove, getNoise, finalChange };
         }
 
-        // TẠO NẾN VÀ BẢO TOÀN RÂU (PRESERVE WICKS)
+        // TẠO NẾN VÀ BẢO TOÀN RÂU TỪ TỪ (PRESERVE WICKS)
         function buildBaseCandles(existingCandles = []) {
             const currentEpoch = Math.floor(Date.now() / 30000);
             let simPrice = 98100;
@@ -327,15 +333,29 @@
                 const open = simPrice;
                 const close = open + params.finalChange;
                 
-                // Mặc định tạo râu nến vừa phải
-                let high = Math.max(open, close) + 25;
-                let low = Math.min(open, close) - 25;
-                
-                // KHÓA CHẶT ĐỈNH/ĐÁY THỰC TẾ CỦA NẾN ĐÃ CHẠY QUA
-                const existing = existingCandles.find(c => c.epoch === e);
-                if (existing) {
-                    high = Math.max(high, existing.high, open, close);
-                    low = Math.min(low, existing.low, open, close);
+                let high, low;
+
+                if (e === currentEpoch) {
+                    // NẾN HIỆN TẠI (LIVE): Khởi tạo đỉnh đáy bám sát giá mở cửa, để nó tự vẽ râu dần dần
+                    const existing = existingCandles.find(c => c.epoch === e);
+                    if (existing) {
+                        high = existing.high;
+                        low = existing.low;
+                    } else {
+                        high = open;
+                        low = open;
+                    }
+                } else {
+                    // NẾN QUÁ KHỨ ĐÃ CHỐT: Dựng râu giả lập
+                    high = Math.max(open, close) + seededRandom(e*321) * 15 + 5;
+                    low = Math.min(open, close) - seededRandom(e*456) * 15 - 5;
+                    
+                    // NẾU CÓ DATA CŨ CỦA NẾN NÀY LÚC CÒN LIVE -> LẤY ĐÚNG ĐỈNH ĐÁY THỰC ĐỂ KHÔNG BỊ TỤT RÂU
+                    const existing = existingCandles.find(c => c.epoch === e);
+                    if (existing) {
+                        high = Math.max(high, existing.high, open, close);
+                        low = Math.min(low, existing.low, open, close);
+                    }
                 }
                 
                 cands.push({ epoch: e, open, close, high, low, change: params.finalChange });
@@ -489,7 +509,7 @@
                 ticker.innerHTML = '';
                 
                 if (sessionResults.length === 0) {
-                    ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Phiên này chưa có ai cược</div>';
+                    ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Phiên này không có ai cược</div>';
                     return;
                 }
                 
@@ -571,7 +591,7 @@
                 try {
                     await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
                     
-                    // GHI LẠI CƯỢC ĐỂ CHỜ HẾT PHIÊN LẤY DỮ LIỆU
+                    // GHI LẠI CƯỢC VÀO PUBLIC COLLECTION ĐỂ HIỂN THỊ Ở LỊCH SỬ PHIÊN
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'latestBets', state.userData.uid), {
                         uid: state.userData.uid,
                         name: state.userData.username || "Khách",
@@ -750,12 +770,12 @@
             const params = getCandleParams(currentEpoch);
             const t = progress; 
             
-            // Lấy đà tự nhiên bằng SmoothStep
+            // Lấy đà tự nhiên bằng SmoothStep. Nến sẽ đi nhanh ở giữa, bắt đầu và kết thúc rất êm.
             const smoothT = t * t * (3 - 2 * t);
             
             // Quỹ đạo giá trị: Khởi điểm từ Open, lượn theo Sóng, và kết thúc đúng mục tiêu
-            // Vì noise(0) = 0 -> t=0 nến xuất phát đúng ở Open, không giật móp.
-            // Vì noise(1) được cộng gộp sẵn vào params.finalChange -> t=1 giá khớp 100% không bóp méo.
+            // Vì noise(0) = 0 -> t=0 nến xuất phát đúng ở Open, mọc ra từ từ rất chân thực.
+            // Vì noise(1.0) đã được cộng gộp sẵn vào params.finalChange -> Không cần ép giá, nến dừng cực kỳ sắc nét.
             let baseTrajectory = liveCandle.open + params.macroMove * smoothT;
             state.visualPrice = baseTrajectory + params.getNoise(t);
 
@@ -771,7 +791,7 @@
                 liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
             }
 
-            // 3. RENDER CANVAS (AUTO-SCALE + PADDING TO CHỐNG LẸM RÂU)
+            // 3. RENDER CANVAS (AUTO-SCALE + PADDING CHỐNG LẸM RÂU)
             const VISIBLE_CANDLES = 22; 
             const w = (cvs.width - CONFIG.chartPaddingRight) / VISIBLE_CANDLES; 
             
@@ -783,7 +803,7 @@
                 if (state.baseCandles[i].low < lowestVisible) lowestVisible = state.baseCandles[i].low;
             }
             
-            // Tăng vùng đệm an toàn lên 40px để bao trọn mọi đỉnh râu
+            // Tăng vùng đệm an toàn lên 40px để bao trọn mọi đỉnh râu kể cả khi nến vọt cực mạnh
             let priceDiff = highestVisible - lowestVisible;
             if (priceDiff < 60) { 
                 let mid = (highestVisible + lowestVisible) / 2;
@@ -798,7 +818,14 @@
 
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
-            for(let p = Math.floor(min / 10) * 10; p < min + r; p += 10) {
+            // Chia lưới hiển thị ngang
+            let gridStep = 10;
+            if (r > 400) gridStep = 100;
+            else if (r > 200) gridStep = 50;
+            else if (r > 100) gridStep = 20;
+
+            let startYGrid = Math.floor(min / gridStep) * gridStep;
+            for(let p = startYGrid; p < min + r; p += gridStep) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
                 ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 50, y + 4);
