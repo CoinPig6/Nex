@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Baccarat Pro - Wallet & AI Synced</title>
-    <!-- Thêm maximum-scale=1.0 và user-scalable=no để chống zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     
@@ -25,7 +24,6 @@
             background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
             font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden;
             color: white; user-select: none; -webkit-tap-highlight-color: transparent;
-            /* Chống pull-to-refresh và hành vi zoom mặc định */
             touch-action: none;
         }
 
@@ -94,13 +92,13 @@
         /* MARQUEE CHAT CHẠY NGANG */
         .chat-marquee-container {
             width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box;
-            background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.05);
-            height: 24px; display: flex; align-items: center;
+            background: rgba(0,0,0,0.6); border-bottom: 1px solid rgba(255,255,255,0.05);
+            height: 26px; display: flex; align-items: center; position: relative;
         }
         .chat-marquee-content {
             display: inline-block; padding-left: 100%;
-            animation: marquee 15s linear infinite;
-            font-size: 11px; color: #cbd5e1;
+            animation: marquee 20s linear infinite;
+            font-size: 11px;
         }
         @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
     </style>
@@ -178,9 +176,11 @@
         
         <!-- CHAT MARQUEE (Chạy ngang 3 chat mới nhất) -->
         <div class="chat-marquee-container">
+            <div class="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/80 to-transparent z-10 pointer-events-none"></div>
             <div id="marqueeContent" class="chat-marquee-content">
-                <span class="text-slate-500 italic">Chào mừng đến với Baccarat Pro. Khung chat đang trống.</span>
+                <span class="text-slate-400 italic">Hệ thống: Chào mừng bạn đến với Baccarat Pro.</span>
             </div>
+            <div class="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/80 to-transparent z-10 pointer-events-none"></div>
         </div>
 
         <!-- STATISTICS BAR -->
@@ -195,7 +195,6 @@
 
         <!-- BETTING ZONES -->
         <div class="flex flex-col gap-1.5 px-2 mb-2 mt-1.5">
-            <!-- Top Row: Đôi Con - Hòa - Đôi Cái -->
             <div class="flex h-12 gap-1.5">
                 <div id="zonePP" onclick="game.placeBet('PP')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
                     <span class="text-blue-300 font-bold text-[10px] tracking-wider">ĐÔI CON</span>
@@ -217,7 +216,6 @@
                 </div>
             </div>
             
-            <!-- Bottom Row: Con - Cái -->
             <div class="flex h-16 gap-1.5">
                 <div id="zoneP" onclick="game.placeBet('P')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
                     <span class="text-blue-400 font-black text-lg tracking-wider drop-shadow-md">CON</span>
@@ -255,27 +253,23 @@
         </div>
     </div>
 
-    <!-- Chat Modal Overlay (Lịch sử + Input) -->
+    <!-- Chat Modal Overlay -->
     <div id="chatModal" class="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end hidden backdrop-blur-sm transition-opacity">
-        <!-- Đóng khi ấn bên ngoài -->
         <div class="flex-1" onclick="game.toggleChat()"></div>
         
         <div class="w-full h-[65vh] bg-slate-800 flex flex-col rounded-t-2xl shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-            <!-- Header Modal Chat -->
             <div class="flex justify-between items-center px-4 py-3 border-b border-slate-700 bg-slate-800 rounded-t-2xl shrink-0">
-                <span class="text-white font-bold text-sm"><i class="fa-solid fa-comments text-blue-400 mr-2"></i> Kênh Chat Chung</span>
+                <span class="text-white font-bold text-sm"><i class="fa-solid fa-comments text-blue-400 mr-2"></i> Kênh Chat</span>
                 <button onclick="game.toggleChat()" class="text-slate-400 hover:text-white w-6 h-6 flex items-center justify-center"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <!-- Lịch sử Chat hiển thị tạm thời -->
             <div id="chatHistory" class="flex-1 overflow-y-auto p-3 flex flex-col gap-3 bg-slate-900/50">
                 <div class="text-center text-[10px] text-slate-500 italic my-2">Lịch sử chat chỉ lưu trong phiên hiện tại.</div>
             </div>
 
-            <!-- Input Box -->
             <div class="p-3 bg-slate-800 border-t border-slate-700 pb-safe shrink-0">
                 <div class="flex gap-2">
-                    <!-- THIẾT LẬP TEXT-[16px] ĐỂ CHỐNG IOS ZOOM -->
+                    <!-- Text 16px để chống auto-zoom trên iOS Safari -->
                     <input type="text" id="chatInput" class="flex-1 bg-slate-900 text-white rounded-lg px-4 py-2.5 text-[16px] border border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') game.sendChat()">
                     <button onclick="game.sendChat()" class="bg-blue-600 text-white px-5 rounded-lg font-bold shadow-lg active:scale-95 transition-transform"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -308,14 +302,12 @@
         
         let currentUser = null;
         
-        // Cấu hình Thời gian: 60s/ván, 42s để cược
         const ROUND_DURATION = 60000;
         const BETTING_DURATION = 42000;
         const DECKS = 8;
         const ROUNDS_PER_SHOE = 70;
         const SHUFFLE_ROUNDS = 2;
 
-        // Unlock AI Audio (SpeechSynthesis)
         document.body.addEventListener('click', () => {
             if(!app.audioUnlocked && window.speechSynthesis) {
                 const u = new SpeechSynthesisUtterance('');
@@ -326,10 +318,7 @@
 
         const RECOVERY_KEY = 'crownex_bcr_pending_bet_v2';
         const savePendingBet = (data) => localStorage.setItem(RECOVERY_KEY, JSON.stringify(data));
-        const getPendingBet = () => {
-            const data = localStorage.getItem(RECOVERY_KEY);
-            return data ? JSON.parse(data) : null;
-        };
+        const getPendingBet = () => { const data = localStorage.getItem(RECOVERY_KEY); return data ? JSON.parse(data) : null; };
         const clearPendingBet = () => localStorage.removeItem(RECOVERY_KEY);
 
         function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
@@ -398,57 +387,79 @@
             isShuffling: false,
             audioUnlocked: false,
             
-            // Chứa 3 chat mới nhất cho Marquee
-            latestChats: [],
+            latestChats: [], // Lưu trữ 3 chat gần nhất
 
             init() {
                 onAuthStateChanged(auth, async (user) => {
                     if (user) { 
                         currentUser = user; 
                         this.listenBalance(user.uid); 
-                        this.listenChat();
+                        this.listenChat(); // Gọi lắng nghe chat
                     } else await signInAnonymously(auth);
                 });
                 this.loop();
             },
 
             listenChat() {
-                // Chỉ lấy dữ liệu mới nhất. initialLoad = true bỏ qua các dữ liệu cũ trong DB
+                // Tải tối đa 5 tin nhắn gần nhất và tiếp tục lắng nghe
                 const q = query(collection(db, "globalChat"), orderBy("timestamp", "desc"), limit(5));
-                let initialLoad = true;
                 
                 onSnapshot(q, (snapshot) => {
-                    if (initialLoad) { 
-                        initialLoad = false; 
-                        return; // Bỏ qua lịch sử cũ khi vừa load trang
-                    }
-                    
-                    // Xử lý các tin nhắn mới vừa được thêm
-                    // Đảo ngược để tin cũ hơn xử lý trước (do query desc)
-                    const changes = snapshot.docChanges().reverse();
-                    changes.forEach((change) => {
+                    let newDocs = [];
+                    snapshot.docChanges().forEach((change) => {
                         if (change.type === "added") {
-                            const data = change.doc.data();
-                            if(data.text) {
-                                // Lấy thời gian hiện tại nếu serverTimestamp chưa có
-                                const timeDate = data.timestamp ? data.timestamp.toDate() : new Date();
-                                const timeStr = `${String(timeDate.getHours()).padStart(2, '0')}:${String(timeDate.getMinutes()).padStart(2, '0')}:${String(timeDate.getSeconds()).padStart(2, '0')}`;
-                                
-                                game.appendChatHistory(data.text, timeStr, data.uid === currentUser?.uid);
-                                this.updateMarquee(data.text);
-                            }
+                            newDocs.push(change.doc.data());
+                        }
+                    });
+
+                    // Sắp xếp lại từ cũ đến mới (để append vào chat đúng thứ tự)
+                    newDocs.sort((a, b) => {
+                        const tA = a.timestamp ? a.timestamp.toMillis() : 0;
+                        const tB = b.timestamp ? b.timestamp.toMillis() : 0;
+                        return tA - tB;
+                    });
+
+                    newDocs.forEach(data => {
+                        if(data.text) {
+                            // Tạo định dạng Ngày/Giờ
+                            const timeDate = data.timestamp ? data.timestamp.toDate() : new Date();
+                            const d = String(timeDate.getDate()).padStart(2, '0');
+                            const mo = String(timeDate.getMonth() + 1).padStart(2, '0');
+                            const y = timeDate.getFullYear();
+                            const h = String(timeDate.getHours()).padStart(2, '0');
+                            const min = String(timeDate.getMinutes()).padStart(2, '0');
+                            const s = String(timeDate.getSeconds()).padStart(2, '0');
+                            
+                            const timeStr = `${d}/${mo}/${y} ${h}:${min}:${s}`;
+                            
+                            // Tạo Tên tài khoản từ UID (Cắt 5 ký tự đầu)
+                            const userName = (!data.uid || data.uid === 'anon') ? 'Khách' : `Người chơi ${data.uid.substring(0,5).toUpperCase()}`;
+                            const isMe = currentUser && data.uid === currentUser.uid;
+
+                            game.appendChatHistory(userName, data.text, timeStr, isMe);
+                            this.updateMarquee(userName, data.text);
                         }
                     });
                 });
             },
 
-            updateMarquee(text) {
-                this.latestChats.unshift(text); // Thêm lên đầu
-                if(this.latestChats.length > 3) this.latestChats.pop(); // Giữ tối đa 3
+            updateMarquee(userName, text) {
+                // Tạo chuỗi HTML cho Marquee
+                const displayStr = `<span class="text-amber-400 font-bold">${userName}:</span> <span class="text-white">${text}</span>`;
+                
+                // Tránh trùng lặp khi re-render
+                if (!this.latestChats.includes(displayStr)) {
+                    this.latestChats.push(displayStr);
+                    if(this.latestChats.length > 3) this.latestChats.shift(); // Chỉ giữ lại 3
+                }
                 
                 const mContainer = document.getElementById('marqueeContent');
                 if(this.latestChats.length > 0) {
-                    mContainer.innerHTML = this.latestChats.map(t => `<span class="text-white">${t}</span>`).join(' &nbsp; • &nbsp; ');
+                    mContainer.innerHTML = this.latestChats.join(' &nbsp; <span class="text-slate-500">|</span> &nbsp; ');
+                    // Khởi động lại animation để nó trượt mượt
+                    mContainer.style.animation = 'none';
+                    mContainer.offsetHeight; // trigger reflow
+                    mContainer.style.animation = null; 
                 }
             },
 
@@ -681,7 +692,7 @@
                 const modal = document.getElementById('chatModal');
                 if (modal.classList.contains('hidden')) {
                     modal.classList.remove('hidden');
-                    // setTimeout để mượt animation trước khi focus
+                    // setTimeout để UI render xong mới focus chống giật
                     setTimeout(() => document.getElementById('chatInput').focus(), 100);
                 } else {
                     modal.classList.add('hidden');
@@ -694,23 +705,23 @@
                 if (text) {
                     app.sendChatMessage(text);
                     input.value = '';
-                    input.focus(); // Giữ focus sau khi gửi để nhập tiếp
+                    input.focus(); // Gửi xong vẫn focus để gõ tiếp
                 }
             },
-            appendChatHistory(text, timeStr, isMe) {
+            appendChatHistory(userName, text, timeStr, isMe) {
                 const historyBox = document.getElementById('chatHistory');
                 const div = document.createElement('div');
-                div.className = `flex flex-col max-w-[80%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`;
+                div.className = `flex flex-col max-w-[85%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`;
                 
                 div.innerHTML = `
-                    <div class="px-3 py-1.5 rounded-xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-700 text-slate-100 rounded-tl-sm'} shadow-md">
+                    <span class="text-[10px] text-slate-400 mb-0.5 px-1 font-bold tracking-wide">${userName}</span>
+                    <div class="px-3 py-2 rounded-xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-700 text-slate-100 rounded-tl-sm'} shadow-md">
                         ${text}
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-0.5">${timeStr}</span>
+                    <span class="text-[9px] text-slate-500 mt-0.5 px-1">${timeStr}</span>
                 `;
                 
                 historyBox.appendChild(div);
-                // Cuộn xuống dòng cuối
                 historyBox.scrollTop = historyBox.scrollHeight;
             },
             aiSpeak(text) {
