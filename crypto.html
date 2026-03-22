@@ -150,7 +150,7 @@
             <div class="w-[32%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
                 <div class="text-[8px] text-[#0ECB81] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
-                    <div class="text-gray-600 text-center text-[9px] mt-3 font-bold">Đang tải...</div>
+                    <div class="text-gray-500 text-center text-[9px] mt-3 font-bold px-2">Đang tải người chơi thật...</div>
                 </div>
             </div>
         </div>
@@ -262,7 +262,8 @@
         const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
         const state = {
             balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
-            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false
+            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false,
+            lastTickTime: 0, targetVisualPrice: 98100
         };
 
         // --- MATH & SEED LOGIC (ABSOLUTE SYNC 100%) ---
@@ -315,7 +316,7 @@
                 currentUser = user;
                 if (user) {
                     loadUserData(user.uid);
-                    setupTickerListener(); // Bật Listener đọc lịch sử người thắng realtime
+                    setupTickerListener(); // Kích hoạt lắng nghe người thắng thời gian thực
                 } else {
                     window.location.href = "login.html";
                 }
@@ -443,7 +444,6 @@
         // --- REAL-TIME TICKER (LẮNG NGHE NGƯỜI CHƠI THẬT) ---
         function setupTickerListener() {
             if (!currentUser) return;
-            // Listen on public channel for recent wins globally
             const winsRef = collection(db, 'artifacts', appId, 'public', 'data', 'recentWins');
             
             onSnapshot(winsRef, (snapshot) => {
@@ -469,7 +469,7 @@
             ticker.innerHTML = '';
             
             if (wins.length === 0) {
-                ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase">Chưa có dữ liệu</div>';
+                ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Đang chờ người chiến thắng...</div>';
                 return;
             }
 
@@ -477,21 +477,13 @@
                 let el = document.createElement('div');
                 let isLocal = state.userData && w.uid === state.userData.uid;
                 
-                // Highlight nếu là tài khoản của chính mình
                 el.className = 'winner-item' + (isLocal ? ' bg-[#0ECB81]/20 border-l-[3px] border-[#0ECB81]' : '');
-                el.style.animationDelay = `${index * 0.1}s`; 
                 
                 let nameColor = isLocal ? 'text-white font-black' : 'text-gray-400 font-bold';
-                
-                // XỬ LÝ MASK TÊN THEO YÊU CẦU: "Tên ở lịch sử cũng phải ***"
                 let safeName = w.name || "Khách";
-                let maskedName = "";
                 
-                if (isLocal) {
-                    maskedName = "Bạn (Me)"; 
-                } else {
-                    maskedName = safeName.length > 3 ? safeName.substring(0, 3) + '***' : safeName + '***';
-                }
+                // XỬ LÝ TÊN: Người thật hiển thị "Bạn (Me)", người khác sẽ bị che ***
+                let maskedName = isLocal ? "Bạn (Me)" : (safeName.length > 3 ? safeName.substring(0, 3) + '***' : safeName + '***');
                 
                 el.innerHTML = `
                     <span class="${nameColor} truncate w-[60%]">${maskedName}</span>
@@ -634,18 +626,18 @@
                 let profit = 0; let totalReturn = 0;
                 
                 if (win) {
-                    totalReturn = b.amount * 1.96; profit = b.amount * 0.96; // Lãi thuần 96%
+                    totalReturn = b.amount * 1.96; profit = b.amount * 0.96; 
                     state.balance += totalReturn; 
                     showPopup(true, profit); 
                     
-                    // NẾU THẮNG: Đẩy dữ liệu lên máy chủ Ticker chung của sàn
+                    // Đẩy dữ liệu Thắng lên máy chủ Ticker chung của sàn
                     if(currentUser && state.userData) {
                         try {
                             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'recentWins'), {
                                 uid: state.userData.uid,
                                 name: state.userData.username || "Khách",
                                 amount: profit,
-                                timestamp: Date.now() // Dùng timestamp để sắp xếp
+                                timestamp: Date.now() 
                             });
                         } catch(e) { console.error("Lỗi đẩy Ticker", e); }
                     }
@@ -679,7 +671,6 @@
             const isResultPhase = currentEpoch % 2 !== 0; 
             const progress = (now % 30000) / 30000;
 
-            // 1. Chuyển Phiên (Epoch mới)
             if (state.lastEpoch !== currentEpoch) {
                 state.baseCandles = buildBaseCandles(); 
                 state.lastEpoch = currentEpoch;
@@ -714,27 +705,37 @@
                 regenerateHistory(); 
             }
 
-            // 2. THUẬT TOÁN NẾN MỚI: SÓNG MƯỢT TẦN SỐ THẤP (Low-freq Sine/Cosine Waves)
+            // 2. THUẬT TOÁN KHỚP LỆNH CHÂN THỰC (ORDER BOOK TICK SIMULATOR)
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
-            const tSec = now / 1000;
             
-            // Hàm Ease Out Quintic: Trượt mượt chốt giá trị đích vào giây cuối
-            const easeProgress = 1 - Math.pow(1 - progress, 5); 
-            
-            // Xây dựng biến động gợn sóng (Wiggle) không xài Random
-            // - Sóng chính: Tần số cực thấp (0.5), biên độ siêu lớn (20) -> Lên xuống từ từ, sâu và cao.
-            // - Sóng phụ: Tần số vừa (1.2), biên độ vừa (8) -> Tạo độ trượt uốn lượn.
-            // - Sóng tăm: Tần số hơi nhanh (3.0), biên độ bé (3) -> Tạo cảm giác live.
-            let wave1 = Math.sin(tSec * 0.5) * 20; 
-            let wave2 = Math.cos(tSec * 1.2) * 8;
-            let wave3 = Math.sin(tSec * 3.0) * 3;
-            
-            // Càng về cuối biên độ càng bị triệt tiêu về 0 nhờ nhân với (1 - progress)
-            let currentWiggle = (wave1 + wave2 + wave3) * (1 - progress);
-            
-            // Ép giá về mục tiêu đích của thuật toán
-            state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
+            // Nếu chưa có biến lưu trữ tạm, khởi tạo giá trị đầu tiên
+            if (!state.targetVisualPrice) state.targetVisualPrice = liveCandle.open;
+            if (!state.lastTickTime) state.lastTickTime = 0;
 
+            // Xử lý tạo Tick: Cứ mỗi 200ms tạo ra 1 mức giá mới (Giống biểu đồ tick của sàn)
+            if (now - state.lastTickTime > 200) {
+                state.lastTickTime = now;
+                
+                // Trục cơ sở chạy từ Open tới Close (hơi bẻ cong nhẹ đoạn cuối cho tự nhiên)
+                let basePrice = liveCandle.open + (liveCandle.change * Math.pow(progress, 0.8));
+                
+                // Tạo độ vọt/sập ngẫu nhiên (Biên độ lớn 8 giá)
+                let tickWiggle = (Math.random() - 0.5) * 8; 
+                
+                if (progress > 0.9) {
+                    // Ở 3 giây cuối (progress > 0.9): Dần dần bóp nhẹ tickWiggle và kéo BasePrice về sát Close
+                    // Điều này giúp tránh việc nến giật xa rồi hút ngược lại trong mili-giây cuối.
+                    let forceClose = (progress - 0.9) * 10; // Chạy từ 0 -> 1
+                    state.targetVisualPrice = (basePrice * (1 - forceClose)) + (liveCandle.close * forceClose) + (tickWiggle * (1 - forceClose));
+                } else {
+                    state.targetVisualPrice = basePrice + tickWiggle;
+                }
+            }
+            
+            // LÀM MƯỢT GIỮA 2 TICK: Biến đổi dần về giá Target (Giúp nến di chuyển trơn tru nhưng vẫn có nhịp vọt)
+            state.visualPrice += (state.targetVisualPrice - state.visualPrice) * 0.25;
+
+            // Cập nhật dữ liệu nến realtime để râu nến mọc ra
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
@@ -746,11 +747,25 @@
                 liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
             }
 
-            // 3. Render Canvas (Đã tối ưu nến to và không cắt lẹm râu)
-            const VISIBLE_CANDLES = 22; // Nến to, tràn lề
+            // 3. Render Canvas (Đã tối ưu AUTO-SCALE chống mất râu)
+            const VISIBLE_CANDLES = 22; // Nến to vừa đủ màn hình
             const w = (cvs.width - CONFIG.chartPaddingRight) / VISIBLE_CANDLES; 
-            const r = 110; // Cố định khoảng không gian rộng 110 để bắt mọi râu nến dài nhất
-            const min = state.visualPrice - r / 2;
+            
+            // DYNAMIC SCALE: Quét High/Low của các nến đang hiển thị
+            let highestVisible = state.visualPrice;
+            let lowestVisible = state.visualPrice;
+            const startIndex = Math.max(0, state.baseCandles.length - VISIBLE_CANDLES);
+            for (let i = startIndex; i < state.baseCandles.length; i++) {
+                if (state.baseCandles[i].high > highestVisible) highestVisible = state.baseCandles[i].high;
+                if (state.baseCandles[i].low < lowestVisible) lowestVisible = state.baseCandles[i].low;
+            }
+            
+            // Đảm bảo khung hình bao trọn đỉnh và đáy + lề 15 giá
+            const padding = 15; 
+            // Giữ mức tối thiểu r=80 để khi nến đi ngang không bị zoom phóng đại quá mức
+            const r = Math.max(80, (highestVisible - lowestVisible) + padding * 2); 
+            const min = lowestVisible - padding;
+
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
             for(let p = Math.floor(min / 10) * 10; p < min + r; p += 10) {
@@ -783,9 +798,11 @@
                 ctx.fillStyle = c.close >= c.open ? '#0ECB81' : '#F6465D'; 
                 ctx.strokeStyle = ctx.fillStyle;
 
+                // Tăng độ dày râu nến
                 ctx.lineWidth = 2.0;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
                 
+                // Tăng bề ngang thân nến
                 const bodyH = Math.max(Math.abs(yC - yO), 3);
                 const candleWidth = w * 0.75;
                 ctx.fillRect(x - (candleWidth/2), Math.min(yO, yC), candleWidth, bodyH);
