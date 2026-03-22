@@ -19,7 +19,7 @@
             overscroll-behavior-y: contain;
         }
 
-        /* Chống zoom di động: Cỡ chữ tối thiểu 16px */
+        /* Ngăn phóng to trên mobile */
         input, textarea, button { font-size: 16px !important; }
 
         .message-bubble { max-width: 85%; word-wrap: break-word; }
@@ -27,7 +27,8 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .gold-text { color: #fbbf24; }
         .gold-btn { background-color: #fbbf24; color: #0f172a; }
-        .secondary-btn { background-color: #334155; color: #94a3b8; }
+        .gold-btn:disabled { background-color: #475569; color: #94a3b8; cursor: not-allowed; }
+        .secondary-btn { background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; }
         
         .quick-chat-btn {
             background: #1e293b;
@@ -50,18 +51,17 @@
                 <span class="text-slate-900 text-3xl font-black">TP</span>
             </div>
             <h1 class="text-2xl font-bold gold-text mb-2 tracking-tight uppercase">TPIG CENTER</h1>
-            <p class="text-slate-400 text-sm mb-8">Trung tâm hỗ trợ khách hàng</p>
+            <p class="text-slate-400 text-sm mb-8">Hệ thống hỗ trợ game trực tuyến</p>
             
             <div class="space-y-4">
-                <input type="text" id="login-input" placeholder="Nhập tên tài khoản game..." 
-                    class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-4 px-6 focus:border-amber-500 outline-none transition-all font-medium text-white placeholder-slate-500">
+                <input type="text" id="login-input" placeholder="Nhập tên tài khoản..." 
+                    class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-4 px-6 focus:border-amber-400 outline-none transition-all font-medium text-white placeholder-slate-500">
                 
-                <button id="btn-login" class="w-full gold-btn font-bold py-4 rounded-xl shadow-md transition-all transform active:scale-95 uppercase tracking-wider">
-                    Bắt đầu chat
+                <button id="btn-login" disabled class="w-full gold-btn font-bold py-4 rounded-xl shadow-md transition-all transform active:scale-95 uppercase tracking-wider">
+                    Đang kết nối...
                 </button>
 
-                <!-- Nút quay về trang chủ game -->
-                <button onclick="window.location.href='game.html'" class="w-full secondary-btn font-bold py-4 rounded-xl transition-all transform active:scale-95 uppercase tracking-wider text-sm">
+                <button onclick="window.location.href='game.html'" class="w-full secondary-btn font-bold py-4 rounded-xl transition-all transform active:scale-95 uppercase tracking-wider text-xs">
                     Quay lại Trang chủ
                 </button>
             </div>
@@ -72,10 +72,10 @@
     <div id="user-interface" class="hidden flex flex-col h-screen">
         <header class="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-slate-900 font-bold shrink-0 shadow-lg">CS</div>
+                <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-slate-900 font-bold shrink-0">CS</div>
                 <div>
                     <h2 class="font-bold gold-text text-sm uppercase leading-none mb-1">Hỗ trợ TPIG</h2>
-                    <div id="queue-status" class="text-[10px] text-slate-400 font-medium">Đang kết nối hệ thống...</div>
+                    <div id="queue-status" class="text-[10px] text-slate-400 font-medium">Đang kiểm tra...</div>
                 </div>
             </div>
             <button onclick="window.location.href='game.html'" class="bg-slate-800 hover:bg-red-900/40 text-slate-300 py-2 px-4 rounded-xl border border-slate-700 text-[10px] font-bold uppercase transition-colors">
@@ -87,7 +87,7 @@
 
         <div class="p-4 bg-slate-900 border-t border-slate-800 shrink-0">
             <div class="flex items-center gap-2 bg-slate-800 p-2 rounded-2xl border border-slate-700">
-                <input type="text" id="user-msg-input" placeholder="Nhập câu hỏi..." 
+                <input type="text" id="user-msg-input" placeholder="Nhập câu hỏi tại đây..." 
                     class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white">
                 <button id="btn-send-user" class="gold-btn p-3 rounded-xl shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
@@ -100,44 +100,42 @@
     <div id="admin-interface" class="hidden flex h-screen overflow-hidden bg-slate-950">
         <!-- Sidebar -->
         <div class="w-20 md:w-72 border-r border-slate-800 flex flex-col bg-slate-900 shrink-0">
-            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                <h3 class="font-bold gold-text text-[10px] uppercase hidden md:block tracking-widest">Hàng chờ hỗ trợ</h3>
-                <button onclick="location.reload()" class="text-slate-500 hover:text-white transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold gold-text text-[10px] uppercase hidden md:block">Khách hàng đợi</h3>
+                <button onclick="location.reload()" class="text-slate-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
             </div>
             <div id="admin-user-list" class="flex-grow overflow-y-auto hide-scroll"></div>
         </div>
 
         <!-- Khung Chat Admin -->
         <div class="flex-grow flex flex-col relative bg-slate-900">
-            <div id="admin-chat-header" class="p-4 border-b border-slate-800 flex justify-between items-center shrink-0 min-h-[73px] bg-slate-900">
+            <div id="admin-chat-header" class="p-4 border-b border-slate-800 flex justify-between items-center shrink-0 min-h-[73px]">
                 <div class="flex items-center gap-3">
                     <div id="active-user-avatar" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-bold text-amber-500 hidden border border-slate-700">?</div>
-                    <div class="font-bold text-slate-300 text-sm tracking-tight" id="header-user-name">Quản lý hỗ trợ</div>
+                    <div class="font-bold text-slate-300 text-sm" id="header-user-name">Chọn cuộc trò chuyện</div>
                 </div>
-                <button id="btn-end-session" class="hidden bg-red-600/90 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg">
+                <button id="btn-end-session" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg">
                     Kết thúc phiên
                 </button>
             </div>
             
-            <!-- Quick Chat Bar -->
             <div id="quick-chat-bar" class="bg-slate-800/50 p-2 border-b border-slate-700 flex gap-2 overflow-x-auto hide-scroll hidden">
-                <button class="quick-chat-btn" onclick="quickSend('Chào bạn! Tôi là CSKH của TPIG, tôi có thể giúp gì cho bạn?')">Chào hỏi</button>
-                <button class="quick-chat-btn" onclick="quickSend('Vui lòng cung cấp chính xác Tên tài khoản Game của bạn.')">Hỏi tên TK</button>
-                <button class="quick-chat-btn" onclick="quickSend('Vấn đề của bạn đã được ghi nhận và chuyển cho kỹ thuật xử lý.')">Báo kỹ thuật</button>
-                <button class="quick-chat-btn" onclick="quickSend('Giao dịch/Nạp tiền của bạn đã thành công. Chúc bạn vui vẻ!')">Nạp xong</button>
-                <button class="quick-chat-btn" onclick="quickSend('Cảm ơn bạn. Tôi xin phép đóng phiên hỗ trợ, chúc bạn một ngày tốt lành!')">Tạm biệt</button>
+                <button class="quick-chat-btn" onclick="quickSend('Chào bạn! CSKH TPIG xin nghe, bạn cần hỗ trợ gì?')">Chào hỏi</button>
+                <button class="quick-chat-btn" onclick="quickSend('Vui lòng cung cấp Tên tài khoản Game để mình kiểm tra.')">Hỏi tên TK</button>
+                <button class="quick-chat-btn" onclick="quickSend('Vấn đề đã được chuyển bộ phận kỹ thuật, bạn vui lòng đợi.')">Báo lỗi</button>
+                <button class="quick-chat-btn" onclick="quickSend('Xong rồi nha bạn! Chúc bạn chơi game vui vẻ.')">Hoàn tất</button>
+                <button class="quick-chat-btn" onclick="quickSend('Cảm ơn bạn đã liên hệ. Hẹn gặp lại!')">Tạm biệt</button>
             </div>
 
             <div id="admin-messages" class="flex-grow overflow-y-auto p-4 space-y-4 user-bg hide-scroll">
                 <div class="flex flex-col items-center justify-center h-full text-slate-500 opacity-50 text-center px-10">
-                    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                    <p class="text-sm">Vui lòng chọn khách hàng đang đợi để bắt đầu phiên hỗ trợ.</p>
+                    <p class="text-sm">Vui lòng chọn khách hàng để hỗ trợ.</p>
                 </div>
             </div>
 
             <div id="admin-input-container" class="p-4 bg-slate-900 border-t border-slate-800 hidden shrink-0">
                 <div class="flex items-center gap-2 bg-slate-800 p-2 rounded-2xl border border-slate-700">
-                    <input type="text" id="admin-msg-input" placeholder="Phản hồi khách hàng..." 
+                    <input type="text" id="admin-msg-input" placeholder="Nhập tin nhắn..." 
                         class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white">
                     <button id="btn-send-admin" class="gold-btn px-6 py-2 rounded-xl text-sm font-bold uppercase shadow-lg">Gửi</button>
                 </div>
@@ -145,13 +143,13 @@
         </div>
     </div>
 
-    <!-- Custom Confirm Modal -->
+    <!-- Confirm Modal -->
     <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden p-6 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center shadow-2xl">
-            <p id="modal-text" class="text-white mb-6 text-sm font-medium leading-relaxed"></p>
+            <p id="modal-text" class="text-white mb-6 text-sm font-medium"></p>
             <div class="flex gap-3 justify-center">
-                <button id="modal-cancel" class="bg-slate-700 text-white flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider">Hủy</button>
-                <button id="modal-confirm" class="bg-red-600 text-white flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-lg">Xác nhận</button>
+                <button id="modal-cancel" class="bg-slate-700 text-white flex-1 py-3 rounded-xl text-[10px] font-bold uppercase">Hủy</button>
+                <button id="modal-confirm" class="bg-red-600 text-white flex-1 py-3 rounded-xl text-[10px] font-bold uppercase shadow-lg">Xác nhận</button>
             </div>
         </div>
     </div>
@@ -165,7 +163,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tpig_support_final_prod';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tpig_support_fix_v1';
 
         let currentUser = null;
         let isAdmin = false;
@@ -173,8 +171,19 @@
         let myName = "";
         let hasAutoReplied = false;
 
-        onAuthStateChanged(auth, (u) => { if (u) currentUser = u; else signInAnonymously(auth); });
+        // AUTH & Readiness check
+        onAuthStateChanged(auth, (u) => { 
+            if (u) {
+                currentUser = u;
+                const btn = document.getElementById('btn-login');
+                btn.disabled = false;
+                btn.innerText = "BẮT ĐẦU CHAT";
+            } else {
+                signInAnonymously(auth);
+            }
+        });
 
+        // UI HELPERS
         const showModal = (text, onConfirm) => {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-text').innerText = text;
@@ -183,9 +192,10 @@
             document.getElementById('modal-cancel').onclick = () => { modal.classList.add('hidden'); };
         };
 
+        // LOGIN
         const handleLogin = () => {
             const val = document.getElementById('login-input').value.trim();
-            if (!val) return;
+            if (!val || !currentUser) return;
 
             if (val === "cskhtpig123") {
                 isAdmin = true;
@@ -202,8 +212,8 @@
         };
         document.getElementById('btn-login').onclick = handleLogin;
 
+        // USER LOGIC
         function initUserChat() {
-            if (!currentUser) return setTimeout(initUserChat, 500);
             const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'chats', currentUser.uid);
             setDoc(userDocRef, { name: myName, created: serverTimestamp(), agentJoined: false, active: true }, { merge: true });
 
@@ -220,7 +230,7 @@
                     const data = docSnap.data();
                     const statusEl = document.getElementById('queue-status');
                     if (data && data.agentJoined) {
-                        statusEl.innerHTML = `<span class="text-green-400 font-bold tracking-tight">● Đang trò chuyện cùng CSKH</span>`;
+                        statusEl.innerHTML = `<span class="text-green-400 font-bold tracking-tight">● Đang trò chuyện với CSKH</span>`;
                     } else {
                         statusEl.innerText = rank > 0 ? `Hàng chờ số: ${rank}` : `Đang kết nối...`;
                     }
@@ -237,6 +247,7 @@
             });
         }
 
+        // ADMIN LOGIC
         function initAdminDashboard() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'chats'), (snap) => {
                 const list = document.getElementById('admin-user-list');
@@ -256,7 +267,7 @@
                             </div>
                             <div class="hidden md:block overflow-hidden flex-grow">
                                 <p class="font-bold text-xs text-slate-200 truncate">${data.name}</p>
-                                <p class="text-[9px] ${data.agentJoined ? 'text-slate-500' : 'text-amber-500 font-extrabold uppercase'} truncate mt-1 tracking-tighter">
+                                <p class="text-[9px] ${data.agentJoined ? 'text-slate-500' : 'text-amber-500 font-extrabold uppercase'} mt-1 truncate">
                                     ${data.agentJoined ? 'Đang hỗ trợ' : 'Đang chờ đợi'}
                                 </p>
                             </div>
@@ -280,7 +291,7 @@
                 const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'chats', uid);
                 await updateDoc(userDocRef, { agentJoined: true });
                 const msgCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats', uid, 'messages');
-                await addDoc(msgCol, { text: "Xin chào! Chuyên viên TPIG đã vào hỗ trợ. Bạn cần giúp gì ạ?", role: 'admin', time: serverTimestamp() });
+                await addDoc(msgCol, { text: "Xin chào! Đã có CSKH TPIG vào hỗ trợ. Bạn cần giúp gì ạ?", role: 'admin', time: serverTimestamp() });
             }
 
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'chats', uid, 'messages'), orderBy('time', 'asc'));
@@ -310,7 +321,7 @@
                         hasAutoReplied = true;
                         setTimeout(async () => {
                             await addDoc(msgCol, { 
-                                text: `Chào ${myName}! Hệ thống đã nhận được tín hiệu từ bạn. Vui lòng giữ kết nối, nhân viên CSKH sẽ phản hồi bạn trong giây lát theo số thứ tự hàng chờ.`, 
+                                text: `Chào ${myName}! Hệ thống đã ghi nhận yêu cầu. Bạn đang ở hàng chờ, CSKH sẽ phản hồi bạn sớm nhất có thể.`, 
                                 role: 'admin', 
                                 time: serverTimestamp() 
                             });
@@ -325,7 +336,7 @@
 
         const endSession = () => {
             if (!selectedUserId) return;
-            showModal("Bạn có chắc muốn KẾT THÚC PHIÊN và XÓA sạch toàn bộ dữ liệu chat này?", async () => {
+            showModal("Bạn muốn kết thúc và XÓA TOÀN BỘ dữ liệu chat của khách hàng này?", async () => {
                 const msgCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats', selectedUserId, 'messages');
                 const snap = await getDocs(msgCol);
                 await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
@@ -341,7 +352,7 @@
         function renderMessage(container, text, pos) {
             const div = document.createElement('div');
             div.className = `flex ${pos === 'right' ? 'justify-end' : 'justify-start'}`;
-            const color = pos === 'right' ? 'bg-amber-500 text-slate-950 rounded-tr-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none shadow-sm';
+            const color = pos === 'right' ? 'bg-amber-500 text-slate-950 rounded-tr-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none';
             div.innerHTML = `<div class="${color} message-bubble px-4 py-3 rounded-2xl shadow-lg text-[14px] font-medium leading-tight">${text}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
