@@ -8,37 +8,95 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
-        body { font-family: 'Roboto', sans-serif; background-color: #0b0f19; height: 100vh; display: flex; flex-direction: column; margin: 0; color: #d1d5db; overscroll-behavior-y: contain; }
+        
+        :root {
+            --bg-color: #0b0f19;
+            --card-color: #13161f;
+            --gold-primary: #FCD535;
+            --gold-dark: #f59e0b;
+            --border-color: #232836;
+        }
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: var(--bg-color); 
+            height: 100vh; 
+            height: -webkit-fill-available;
+            display: flex; 
+            flex-direction: column; 
+            margin: 0; 
+            color: #d1d5db;
+            overflow: hidden;
+        }
+
+        /* Chống zoom mobile */
         input, textarea, button { font-size: 16px !important; touch-action: manipulation; }
-        .message-bubble { max-width: 85%; word-wrap: break-word; line-height: 1.5; }
-        .chat-bg { background-color: #0b0f19; background-image: radial-gradient(#1e232e 0.5px, transparent 0.5px); background-size: 15px 15px; }
+
+        .chat-bg { 
+            background-color: var(--bg-color); 
+            background-image: radial-gradient(#1e232e 0.5px, transparent 0.5px); 
+            background-size: 15px 15px; 
+        }
+
+        .message-bubble { 
+            max-width: 85%; 
+            word-wrap: break-word; 
+            line-height: 1.5; 
+            border-radius: 18px; 
+            position: relative;
+        }
+
         .hide-scroll::-webkit-scrollbar { display: none; }
-        .gold-text { color: #FCD535; }
-        .gold-btn { background: linear-gradient(to right, #FCD535, #f59e0b); color: #000; font-weight: 900; }
-        .gold-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-        .admin-item-active { background-color: #1e232e; border-left: 4px solid #FCD535; }
-        .quick-chat-btn { background: #1e232e; padding: 8px 12px; border-radius: 12px; font-size: 11px !important; white-space: nowrap; border: 1px solid #2d3442; color: #fff; flex-shrink: 0; }
+        
+        .gold-btn { 
+            background: linear-gradient(to right, var(--gold-primary), var(--gold-dark)); 
+            color: #000; 
+            font-weight: 900; 
+        }
+
+        /* Sidebar di động */
+        @media (max-width: 768px) {
+            .admin-sidebar { 
+                width: 100%; 
+                position: absolute; 
+                inset: 0;
+                z-index: 40; 
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            }
+            .admin-sidebar.hidden-mobile { transform: translateX(-100%); }
+            .chat-main { width: 100%; height: 100%; }
+        }
+
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .waiting-badge {
+            background: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 800;
+        }
     </style>
 </head>
-<body class="overflow-hidden">
+<body class="fade-in">
 
     <!-- MÀN HÌNH ĐĂNG NHẬP -->
-    <div id="login-container" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0f19] p-6">
+    <div id="login-container" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#0b0f19] p-6">
         <div class="bg-[#13161f] w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center border border-[#232836]">
-            <div class="w-20 h-20 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(252,213,53,0.3)]">
+            <div class="w-20 h-20 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/20">
                 <span class="text-black text-3xl font-black italic">TP</span>
             </div>
-            <h1 class="text-2xl font-black gold-text mb-1 tracking-widest uppercase italic">TPIG CENTER</h1>
-            <p class="text-gray-500 text-[10px] mb-8 font-bold uppercase tracking-widest">Hỗ trợ khách hàng 24/7</p>
+            <h1 class="text-2xl font-black text-[#FCD535] mb-1 tracking-widest uppercase italic">TPIG CENTER</h1>
+            <p class="text-gray-500 text-[10px] mb-8 font-bold uppercase tracking-widest">Trung tâm hỗ trợ Gamer</p>
             
             <div class="space-y-4">
-                <input type="text" id="login-input" placeholder="Nhập tên tài khoản game..." 
+                <input type="text" id="login-input" placeholder="Tên tài khoản game..." 
                     class="w-full bg-[#0b0f19] border-2 border-[#2d3442] rounded-2xl py-4 px-6 focus:border-[#FCD535] outline-none transition-all text-white placeholder-gray-600 font-bold">
                 
                 <button id="btn-login" disabled class="w-full gold-btn py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-widest text-sm italic">
-                    <span id="login-btn-text">Đang kết nối...</span>
+                    <span id="login-btn-text">Kết nối...</span>
                 </button>
 
                 <a href="game.html" class="block w-full bg-[#1e232e] text-gray-400 font-bold py-4 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-[10px] border border-[#2d3442]">
@@ -49,13 +107,13 @@
     </div>
 
     <!-- GIAO DIỆN NGƯỜI CHƠI (USER) -->
-    <div id="user-interface" class="hidden flex flex-col h-screen fade-in">
+    <div id="user-interface" class="hidden flex flex-col h-full fade-in">
         <header class="bg-[#13161f] border-b border-[#232836] p-4 flex items-center justify-between shrink-0 z-20 shadow-md">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-black italic shrink-0 shadow-lg">T</div>
                 <div>
-                    <h2 class="font-bold gold-text text-sm uppercase leading-none mb-1">Hỗ trợ TPIG</h2>
-                    <div id="queue-status" class="text-[10px] text-gray-500 font-bold uppercase italic tracking-tighter">Vui lòng chờ...</div>
+                    <h2 class="font-bold text-[#FCD535] text-sm uppercase leading-none mb-1">CSKH TPIG</h2>
+                    <div id="queue-status" class="text-[10px] text-gray-500 font-bold uppercase italic tracking-tighter">Đang kết nối...</div>
                 </div>
             </div>
             <a href="game.html" class="bg-[#1e232e] text-gray-400 py-2 px-4 rounded-xl border border-[#2d3442] text-[10px] font-bold uppercase">Thoát</a>
@@ -64,7 +122,7 @@
         <div id="user-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll"></div>
 
         <div class="p-4 bg-[#13161f] border-t border-[#232836] shrink-0">
-            <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442]">
+            <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442] shadow-inner">
                 <input type="text" id="user-msg-input" placeholder="Nhập nội dung cần hỗ trợ..." class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white placeholder-gray-600 font-medium">
                 <button id="btn-send-user" class="gold-btn p-3 rounded-xl shadow-lg">
                     <i class="fa-solid fa-paper-plane"></i>
@@ -74,42 +132,48 @@
     </div>
 
     <!-- GIAO DIỆN CSKH (ADMIN) -->
-    <div id="admin-interface" class="hidden flex h-screen overflow-hidden bg-[#0b0f19] fade-in">
-        <div class="w-20 md:w-72 border-r border-[#232836] flex flex-col bg-[#13161f] shrink-0 shadow-2xl">
+    <div id="admin-interface" class="hidden flex h-full overflow-hidden bg-[#0b0f19] fade-in relative">
+        <!-- Sidebar -->
+        <div id="admin-sidebar" class="admin-sidebar md:w-80 border-r border-[#232836] flex flex-col bg-[#13161f] shrink-0">
             <div class="p-4 border-b border-[#232836] flex justify-between items-center bg-[#13161f]">
-                <h3 class="font-black gold-text text-[10px] uppercase hidden md:block tracking-widest">Danh sách đợi</h3>
-                <button onclick="location.reload()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-black text-[#FCD535] text-[10px] uppercase tracking-widest">KHÁCH ĐANG ĐỢI</h3>
+                    <span id="waiting-count" class="waiting-badge">0</span>
+                </div>
+                <button id="btn-refresh-admin" class="text-gray-500 hover:text-white"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
             <div id="admin-user-list" class="flex-grow overflow-y-auto hide-scroll"></div>
         </div>
 
-        <div class="flex-grow flex flex-col relative bg-[#0b0f19]">
+        <!-- Khung Chat Admin -->
+        <div class="chat-main flex-grow flex flex-col relative bg-[#0b0f19]">
             <div id="admin-chat-header" class="p-4 border-b border-[#232836] flex justify-between items-center shrink-0 min-h-[73px] bg-[#13161f]">
-                <div class="flex items-center gap-3">
-                    <div id="active-user-avatar" class="w-9 h-9 rounded-full bg-[#1e232e] flex items-center justify-center font-black text-[#FCD535] hidden border border-[#2d3442]">?</div>
-                    <div class="font-black text-gray-300 text-sm uppercase italic tracking-tighter" id="header-user-name">Quản lý phiên hỗ trợ</div>
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <button id="btn-back-to-list" class="md:hidden text-[#FCD535] mr-1 text-lg"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div id="active-user-avatar" class="w-9 h-9 rounded-full bg-[#1e232e] flex items-center justify-center font-black text-[#FCD535] hidden border border-[#2d3442] shrink-0">?</div>
+                    <div class="font-black text-gray-300 text-sm uppercase italic tracking-tighter truncate" id="header-user-name">QUẢN LÝ CSKH</div>
                 </div>
-                <button id="btn-end-session" class="hidden bg-[#F6465D] hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg">Kết thúc</button>
+                <button id="btn-end-session" class="hidden bg-red-600/90 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shrink-0">Kết thúc</button>
             </div>
             
             <div id="quick-chat-bar" class="bg-[#13161f] p-2 border-b border-[#232836] flex gap-2 overflow-x-auto hide-scroll hidden">
-                <button class="quick-chat-btn" data-txt="Chào bạn! CSKH TPIG xin nghe, tôi có thể hỗ trợ gì cho bạn ạ?">CHÀO HỎI</button>
+                <button class="quick-chat-btn" data-txt="Chào bạn! CSKH TPIG đã có mặt, tôi có thể hỗ trợ gì cho bạn?">CHÀO HỎI</button>
                 <button class="quick-chat-btn" data-txt="Vui lòng cung cấp chính xác Tên tài khoản Game của bạn để mình kiểm tra.">HỎI TÊN TK</button>
-                <button class="quick-chat-btn" data-txt="Vấn đề đã được chuyển bộ phận kỹ thuật, bạn vui lòng đợi trong giây lát.">BÁO LỖI</button>
-                <button class="quick-chat-btn" data-txt="Đã xử lý xong rồi nha bạn! Chúc bạn chơi game vui vẻ nhé.">XONG</button>
-                <button class="quick-chat-btn" data-txt="Cảm ơn bạn. Phiên hỗ trợ kết thúc tại đây, hẹn gặp lại bạn nhé!">TẠM BIỆT</button>
+                <button class="quick-chat-btn" data-txt="Vấn đề của bạn đã được chuyển cho bộ phận kỹ thuật, vui lòng chờ nhé.">BÁO LỖI</button>
+                <button class="quick-chat-btn" data-txt="Yêu cầu của bạn đã được hoàn tất. Chúc bạn chơi game vui vẻ nhé!">XONG</button>
+                <button class="quick-chat-btn" data-txt="Cảm ơn bạn đã liên hệ. Phiên hỗ trợ xin kết thúc tại đây!">TẠM BIỆT</button>
             </div>
 
             <div id="admin-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll">
-                <div class="flex flex-col items-center justify-center h-full text-gray-600 opacity-50 text-center px-10">
-                    <i class="fa-solid fa-headset text-5xl mb-4"></i>
-                    <p class="text-[10px] font-black uppercase tracking-widest">Chọn khách hàng để bắt đầu hỗ trợ</p>
+                <div class="flex flex-col items-center justify-center h-full text-gray-700 opacity-50 text-center px-10">
+                    <i class="fa-solid fa-comments text-5xl mb-4"></i>
+                    <p class="text-[10px] font-black uppercase tracking-widest">Chọn khách hàng để bắt đầu chat</p>
                 </div>
             </div>
 
             <div id="admin-input-container" class="p-4 bg-[#13161f] border-t border-[#232836] hidden shrink-0">
-                <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442]">
-                    <input type="text" id="admin-msg-input" placeholder="Nhập nội dung phản hồi..." class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white font-medium">
+                <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442] shadow-inner">
+                    <input type="text" id="admin-msg-input" placeholder="Phản hồi khách..." class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white font-medium">
                     <button id="btn-send-admin" class="gold-btn px-6 py-2 rounded-xl text-sm italic font-black uppercase shadow-lg">GỬI</button>
                 </div>
             </div>
@@ -117,7 +181,7 @@
     </div>
 
     <!-- Modal Xác nhận -->
-    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 hidden p-6 backdrop-blur-sm">
+    <div id="custom-modal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 hidden p-6 backdrop-blur-sm">
         <div class="bg-[#13161f] border border-[#2d3442] p-8 rounded-3xl max-w-xs w-full text-center shadow-2xl">
             <p id="modal-text" class="text-white mb-8 text-sm font-bold leading-relaxed uppercase tracking-tight"></p>
             <div class="flex gap-3 justify-center">
@@ -132,7 +196,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, deleteDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG GỐC CỦA BẠN
+        // CONFIG CỦA BẠN
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -146,20 +210,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-
-        // ĐỊNH NGHĨA PATH TUÂN THỦ RULES SECTION 10
+        
+        // Đường dẫn tuân thủ Rules Section 10
         const HUB_PATH = `artifacts/tpig_support/public/data/chats`;
 
-        let currentUser = null;
-        let isAdminView = false;
+        let fbUser = null;
+        let isAdminActive = false;
         let selectedUserId = null;
-        let myNick = "";
-        let botReplied = false;
+        let myNickName = "";
+        let hasRepliedOnce = false;
+        let msgListener = null;
 
-        // AUTH & READY
+        // AUTH
         onAuthStateChanged(auth, async (u) => {
             if (u) {
-                currentUser = u;
+                fbUser = u;
                 document.getElementById('btn-login').disabled = false;
                 document.getElementById('login-btn-text').innerText = 'BẮT ĐẦU CHAT';
             } else {
@@ -167,7 +232,7 @@
             }
         });
 
-        // UI MODAL
+        // MODAL HELPER
         const showModal = (text, confirmCb) => {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-text').innerText = text;
@@ -179,36 +244,28 @@
         // LOGIN
         document.getElementById('btn-login').onclick = () => {
             const val = document.getElementById('login-input').value.trim();
-            if (!val || !currentUser) return;
+            if (!val || !fbUser) return;
 
             if (val === "cskhtpig123") {
-                isAdminView = true;
+                isAdminActive = true;
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('admin-interface').classList.remove('hidden');
                 initAdminSystem();
             } else {
-                isAdminView = false;
-                myNick = val;
+                isAdminActive = false;
+                myNickName = val;
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('user-interface').classList.remove('hidden');
                 initUserSystem();
             }
         };
 
-        // --- USER LOGIC ---
+        // --- NGƯỜI CHƠI ---
         function initUserSystem() {
-            const userDocRef = doc(db, HUB_PATH, currentUser.uid);
-            
-            // Tạo document phiên chat
-            setDoc(userDocRef, { 
-                name: myNick, 
-                created: serverTimestamp(), 
-                agentJoined: false, 
-                active: true,
-                lastMsg: "Đã bắt đầu"
-            }, { merge: true });
+            const userDocRef = doc(db, HUB_PATH, fbUser.uid);
+            setDoc(userDocRef, { name: myNickName, created: serverTimestamp(), agentJoined: false, active: true }, { merge: true });
 
-            // Theo dõi hàng chờ (Query toàn bộ để đếm rank)
+            // Theo dõi hàng chờ và trạng thái kết nối
             onSnapshot(collection(db, HUB_PATH), (snap) => {
                 const waitingList = [];
                 snap.forEach(d => {
@@ -218,63 +275,83 @@
                     }
                 });
                 waitingList.sort((a,b) => a.time - b.time);
-                const rank = waitingList.findIndex(u => u.id === currentUser.uid) + 1;
+                const rank = waitingList.findIndex(u => u.id === fbUser.uid) + 1;
                 
                 getDoc(userDocRef).then(ds => {
                     const status = document.getElementById('queue-status');
                     if (ds.exists() && ds.data().agentJoined) {
-                        status.innerHTML = `<span class="text-[#0ECB81] font-bold">● ĐANG TRÒ CHUYỆN VỚI CSKH</span>`;
+                        status.innerHTML = `<span class="text-[#0ECB81] font-bold">● ĐANG TRÒ CHUYỆN TRỰC TIẾP</span>`;
                     } else {
-                        status.innerText = rank > 0 ? `BẠN ĐANG ĐỢI Ở VỊ TRÍ: ${rank}` : "ĐANG KẾT NỐI...";
+                        status.innerText = rank > 0 ? `VỊ TRÍ HÀNG CHỜ: ${rank}` : "ĐANG KẾT NỐI...";
                     }
                 });
             });
 
             // Theo dõi tin nhắn
-            const qMsg = query(collection(db, HUB_PATH, currentUser.uid, 'messages'), orderBy('time', 'asc'));
+            const qMsg = query(collection(db, HUB_PATH, fbUser.uid, 'messages'), orderBy('time', 'asc'));
             onSnapshot(qMsg, (snap) => {
                 const box = document.getElementById('user-messages');
-                if (snap.empty && botReplied) { location.reload(); return; }
+                // Nếu bị CSKH đóng phiên (Dữ liệu bị xóa)
+                if (snap.empty && hasRepliedOnce) { location.reload(); return; }
                 box.innerHTML = '';
                 snap.forEach(d => renderBubble(box, d.data().text, d.data().role === 'admin' ? 'left' : 'right'));
                 box.scrollTop = box.scrollHeight;
             });
         }
 
-        // --- ADMIN LOGIC ---
+        // --- CSKH (ADMIN) ---
         function initAdminSystem() {
             onSnapshot(collection(db, HUB_PATH), (snap) => {
                 const listEl = document.getElementById('admin-user-list');
+                const waitingCountEl = document.getElementById('waiting-count');
                 listEl.innerHTML = '';
+                
                 const allUsers = [];
-                snap.forEach(d => allUsers.push({ id: d.id, ...d.data() }));
+                let waitingCount = 0;
+                
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data.name) {
+                        allUsers.push({ id: d.id, ...data });
+                        if (!data.agentJoined) waitingCount++;
+                    }
+                });
+                
+                waitingCountEl.innerText = waitingCount;
                 
                 // Ưu tiên người chưa được tiếp nhận lên đầu
                 allUsers.sort((a,b) => (a.agentJoined === b.agentJoined) ? 0 : a.agentJoined ? 1 : -1);
 
                 allUsers.forEach(data => {
-                    if(!data.name) return;
                     const item = document.createElement('div');
                     item.className = `p-4 border-b border-[#232836] cursor-pointer transition-all ${selectedUserId === data.id ? 'admin-item-active' : 'hover:bg-[#13161f]'}`;
                     item.innerHTML = `
                         <div class="flex items-center gap-3">
                             <div class="relative shrink-0">
                                 <div class="w-10 h-10 rounded-full bg-[#1e232e] text-[#FCD535] flex items-center justify-center font-black border border-[#2d3442] text-xs">${data.name.charAt(0).toUpperCase()}</div>
-                                ${!data.agentJoined ? '<div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FCD535] rounded-full border-2 border-[#0b0f19] animate-pulse"></div>' : ''}
+                                ${!data.agentJoined ? '<div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0b0f19] animate-pulse"></div>' : ''}
                             </div>
                             <div class="flex-grow overflow-hidden leading-tight">
-                                <p class="font-black text-[11px] text-gray-200 truncate uppercase">${data.name}</p>
-                                <p class="text-[8px] ${data.agentJoined ? 'text-gray-500' : 'text-[#FCD535] font-black'} uppercase mt-1 tracking-tighter">${data.agentJoined ? 'Đang hỗ trợ' : 'ĐANG CHỜ ĐỢI'}</p>
+                                <p class="font-black text-[11px] text-gray-200 truncate uppercase tracking-tight">${data.name}</p>
+                                <p class="text-[8px] ${data.agentJoined ? 'text-gray-500 font-bold' : 'text-[#FCD535] font-black'} uppercase mt-1 tracking-tighter">
+                                    ${data.agentJoined ? 'Đã tiếp nhận' : 'CHỜ HỖ TRỢ'}
+                                </p>
                             </div>
                         </div>`;
-                    item.onclick = () => selectUserByAdmin(data.id, data.name, data.agentJoined);
+                    item.onclick = () => selectUser(data.id, data.name, data.agentJoined);
                     listEl.appendChild(item);
                 });
             });
         }
 
-        async function selectUserByAdmin(uid, name, alreadyJoined) {
+        async function selectUser(uid, name, alreadyJoined) {
             selectedUserId = uid;
+            
+            // Xử lý di động: ẩn danh sách để chat
+            if (window.innerWidth <= 768) {
+                document.getElementById('admin-sidebar').classList.add('hidden-mobile');
+            }
+
             document.getElementById('header-user-name').innerText = name.toUpperCase();
             document.getElementById('active-user-avatar').innerText = name.charAt(0).toUpperCase();
             document.getElementById('active-user-avatar').classList.remove('hidden');
@@ -285,18 +362,15 @@
             const userRef = doc(db, HUB_PATH, uid);
             const msgCol = collection(db, HUB_PATH, uid, 'messages');
 
-            // Nếu đây là lần đầu CSKH vào hỗ trợ người chơi này
             if (!alreadyJoined) {
                 await updateDoc(userRef, { agentJoined: true });
-                await addDoc(msgCol, { 
-                    text: "Xin chào! Chuyên viên CSKH TPIG đã tiếp nhận yêu cầu. Tôi có thể giúp gì cho bạn hôm nay?", 
-                    role: 'admin', 
-                    time: serverTimestamp() 
-                });
+                await addDoc(msgCol, { text: "Xin chào! CSKH TPIG đã tiếp nhận yêu cầu. Tôi có thể hỗ trợ gì cho bạn ạ?", role: 'admin', time: serverTimestamp() });
             }
 
-            const q = query(msgCol, orderBy('time', 'asc'));
-            onSnapshot(q, (snap) => {
+            if (msgListener) msgListener(); // Gỡ lắng nghe cũ
+
+            const qMsg = query(msgCol, orderBy('time', 'asc'));
+            msgListener = onSnapshot(qMsg, (snap) => {
                 const box = document.getElementById('admin-messages');
                 box.innerHTML = '';
                 snap.forEach(d => renderBubble(box, d.data().text, d.data().role === 'admin' ? 'right' : 'left'));
@@ -304,12 +378,12 @@
             });
         }
 
-        // --- SEND MSG ---
-        const sendMsg = async (role, manualText = null) => {
+        // --- GỬI TIN ---
+        const sendMsg = async (role, customTxt = null) => {
             const input = document.getElementById(role === 'admin' ? 'admin-msg-input' : 'user-msg-input');
-            const text = manualText || input.value.trim();
-            if (!text || !currentUser) return;
-            const targetId = role === 'admin' ? selectedUserId : currentUser.uid;
+            const text = customTxt || input.value.trim();
+            if (!text || !fbUser) return;
+            const targetId = role === 'admin' ? selectedUserId : fbUser.uid;
             
             try {
                 const msgCol = collection(db, HUB_PATH, targetId, 'messages');
@@ -318,19 +392,18 @@
                 await addDoc(msgCol, { text, role, time: serverTimestamp() });
                 await updateDoc(chatDoc, { lastMsg: text, lastUpdate: serverTimestamp() });
 
-                // BOT REPLY FIRST TIME
-                if (role === 'user' && !botReplied) {
+                if (role === 'user' && !hasRepliedOnce) {
                     const ds = await getDoc(chatDoc);
                     if (!ds.data()?.agentJoined) {
-                        botReplied = true;
+                        hasRepliedOnce = true;
                         setTimeout(async () => {
-                            const botMsg = `Chào bạn ${myNick}! Hệ thống đã nhận được tín hiệu. Vui lòng cung cấp Tên tài khoản Game và vấn đề cần hỗ trợ, chuyên viên sẽ phản hồi bạn ngay ạ.`;
+                            const botMsg = `Chào bạn! Hệ thống đã ghi nhận yêu cầu. Bạn vui lòng cung cấp Tên tài khoản Game và mô tả vấn đề gặp phải, chuyên viên sẽ phản hồi bạn ngay lập tức.`;
                             await addDoc(msgCol, { text: botMsg, role: 'admin', time: serverTimestamp() });
                         }, 1200);
                     }
                 }
-                if (!manualText) input.value = '';
-            } catch (e) { console.error("Lỗi gửi tin", e); }
+                if (!customTxt) input.value = '';
+            } catch (e) { console.error(e); }
         };
 
         // UI Handlers
@@ -340,14 +413,37 @@
             b.onclick = () => sendMsg('admin', b.getAttribute('data-txt'));
         });
 
+        document.getElementById('btn-back-to-list').onclick = () => {
+            document.getElementById('admin-sidebar').classList.remove('hidden-mobile');
+        };
+
+        document.getElementById('btn-refresh-admin').onclick = () => location.reload();
+
+        // KẾT THÚC PHIÊN (XÓA DATA & RESET UI)
         document.getElementById('btn-end-session').onclick = () => {
-            showModal("KẾT THÚC VÀ XÓA DỮ LIỆU PHIÊN CHAT NÀY?", async () => {
-                const col = collection(db, HUB_PATH, selectedUserId, 'messages');
+            showModal("BẠN MUỐN ĐÓNG PHIÊN VÀ XÓA DỮ LIỆU CHAT NÀY?", async () => {
+                const targetId = selectedUserId;
+                const col = collection(db, HUB_PATH, targetId, 'messages');
+                
+                // Reset UI Admin ngay lập tức (Xóa bóng ma dữ liệu)
+                selectedUserId = null;
+                document.getElementById('admin-messages').innerHTML = '<div class="flex flex-col items-center justify-center h-full text-gray-700 opacity-50 text-center px-10"><i class="fa-solid fa-check-circle text-5xl mb-4 text-green-500"></i><p class="text-[10px] font-black uppercase tracking-widest">Đã đóng phiên hỗ trợ thành công</p></div>';
+                document.getElementById('admin-input-container').classList.add('hidden');
+                document.getElementById('btn-end-session').classList.add('hidden');
+                document.getElementById('quick-chat-bar').classList.add('hidden');
+                document.getElementById('active-user-avatar').classList.add('hidden');
+                document.getElementById('header-user-name').innerText = "Quản lý phiên hỗ trợ";
+                if (msgListener) msgListener();
+                
+                if (window.innerWidth <= 768) {
+                    document.getElementById('admin-sidebar').classList.remove('hidden-mobile');
+                }
+
+                // Thực hiện xóa dữ liệu thật trên Firebase
                 const snap = await getDocs(col);
                 const promises = snap.docs.map(d => deleteDoc(d.ref));
                 await Promise.all(promises);
-                await deleteDoc(doc(db, HUB_PATH, selectedUserId));
-                location.reload();
+                await deleteDoc(doc(db, HUB_PATH, targetId));
             });
         };
 
@@ -355,7 +451,7 @@
             const div = document.createElement('div');
             div.className = `flex ${side === 'right' ? 'justify-end' : 'justify-start'} fade-in`;
             const color = side === 'right' ? 'bg-[#FCD535] text-black font-black rounded-tr-none' : 'bg-[#1e232e] text-gray-200 border border-[#2d3442] rounded-tl-none';
-            div.innerHTML = `<div class="${color} message-bubble px-4 py-3 rounded-2xl shadow-lg text-[13px] tracking-tight font-medium">${text}</div>`;
+            div.innerHTML = `<div class="${color} message-bubble px-4 py-2.5 shadow-lg text-[13px] tracking-tight font-medium">${text}</div>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
