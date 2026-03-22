@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- CẤM ZOOM TUYỆT ĐỐI TRÊN MOBILE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tpig - Tài khoản</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -88,19 +87,15 @@
     <!-- HEADER BAR TƯƠNG TỰ TRANG CHỦ -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 sticky top-0">
         <div class="flex items-center gap-3">
-            <!-- NÚT CSKH -->
             <a href="cskh.html" class="bg-[#1e232e] border border-[#2d3442] px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition-transform shadow-sm text-white">
                 <i class="fa-solid fa-headset text-blue-400"></i>
                 <span class="text-xs font-bold">CSKH</span>
             </a>
-            
-            <!-- LOGO TPIG -->
             <div class="font-black text-xl text-white tracking-widest italic flex items-center gap-1 ml-1">
                 <span class="text-[#FCD535]">T</span>PIG
             </div>
         </div>
 
-        <!-- HIỂN THỊ SỐ DƯ NHỎ GÓC PHẢI -->
         <div class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner">
             <div class="flex flex-col items-end leading-none">
                 <span class="text-[9px] text-[#6b7280] font-bold uppercase mb-0.5">SỐ DƯ</span>
@@ -114,8 +109,6 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-24 relative bg-[#0b0f19]">
-        
-        <!-- TOP DECORATION GLOW -->
         <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FCD535]/5 to-transparent pointer-events-none"></div>
 
         <div class="relative z-10">
@@ -148,7 +141,6 @@
                     <div class="text-[11px] text-[#0ECB81] font-mono mt-1 font-medium bg-[#0ECB81]/10 w-fit px-2 py-0.5 rounded" id="displayBalanceVND">≈ 0 VNĐ</div>
                     
                     <div class="mt-5 flex gap-3">
-                        <!-- LINK SANG TRANG NẠP RÚT -->
                         <a href="naprut.html?tab=deposit" class="flex-1 bg-gradient-to-r from-[#FCD535] to-[#f59e0b] text-[#111] font-black py-3 rounded-xl text-center text-sm shadow-[0_4px_15px_rgba(252,213,53,0.3)] hover:brightness-110 active:scale-95 transition-all">
                             <i class="fa-solid fa-arrow-down mr-1"></i> NẠP T
                         </a>
@@ -171,7 +163,6 @@
                     <span id="bankStatusBadge" class="hidden verified-badge shadow-sm">ĐÃ LIÊN KẾT</span>
                 </div>
 
-                <!-- Form nhập liệu -->
                 <div id="bankInputForm">
                     <div class="mb-3">
                         <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Chọn Ngân Hàng / Ví</label>
@@ -189,12 +180,9 @@
                             <option value="TPBank">TPBank</option>
                             <option value="Sacombank">Sacombank</option>
                             <option value="VIB">VIB</option>
-                            <option value="MSB">MSB (Hàng Hải)</option>
+                            <option value="MSB">MSB</option>
                             <option value="OCB">OCB</option>
                             <option value="Eximbank">Eximbank</option>
-                            <option value="SHB">SHB</option>
-                            <option value="HDBank">HDBank</option>
-                            <option value="VietCapital">VietCapital (Bản Việt)</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -209,11 +197,10 @@
                         <i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH
                     </button>
                     <p class="text-[10px] text-[#F6465D] mt-3 font-medium text-center bg-[#F6465D]/10 py-1.5 rounded">
-                        <i class="fa-solid fa-circle-info mr-1"></i> Thông tin thanh toán không thể thay đổi sau khi lưu.
+                        <i class="fa-solid fa-circle-info mr-1"></i> Thông tin không thể thay đổi sau khi lưu.
                     </p>
                 </div>
 
-                <!-- Thông tin đã lưu -->
                 <div id="bankInfoDisplay" class="hidden space-y-4">
                     <div class="flex justify-between items-center border-b border-[#2d3442] pb-3">
                         <span class="text-xs text-gray-400">Ngân hàng / Ví</span>
@@ -255,17 +242,15 @@
                 </div>
             </div>
             
-            <!-- ĐĂNG XUẤT -->
             <button onclick="window.logout()" class="w-full bg-[#1e232e] border border-[#F6465D]/40 text-[#F6465D] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 mt-2 mb-6 hover:bg-[#F6465D]/10 active:scale-95 transition-all shadow-lg">
                 <i class="fa-solid fa-right-from-bracket text-lg"></i> ĐĂNG XUẤT TÀI KHOẢN
             </button>
 
-            <!-- VERSION -->
             <p class="text-center text-[10px] text-[#4b5563] mt-2 font-mono font-bold tracking-widest">TPIG APP V30.2.3 • BUID: <span id="appVersionID">...</span></p>
         </div>
     </main>
 
-    <!-- BOTTOM NAVIGATION (TAB TÀI KHOẢN ACTIVE) -->
+    <!-- BOTTOM NAVIGATION -->
     <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[68px] border-t border-[#232836] flex items-center justify-around px-2 z-30">
         <a href="game.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
             <i class="fa-solid fa-house text-xl"></i>
@@ -297,11 +282,9 @@
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, updateDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 1. NGĂN CHẶN ZOOM
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); });
 
-        // Ngăn chặn hành vi cuộn khi focus input trên iOS
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.addEventListener('focus', function() {
@@ -309,7 +292,6 @@
             });
         });
 
-        // 2. FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -324,11 +306,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         let currentUserUID = null;
-        
-        // TỶ GIÁ QUY ĐỔI ĐÃ ĐƯỢC CẬP NHẬT 1T = 1.000 VNĐ
         const EXCHANGE_RATE = 1000;
 
-        // Xử lý thay đổi label khi chọn Ví Momo
         window.checkBankType = (select) => {
             const label = document.getElementById('labelBankNumber');
             const input = document.getElementById('bankNumber');
@@ -370,9 +349,7 @@
                 
                 if (!querySnapshot.empty) {
                     querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        // Kiểm tra trùng số tài khoản ở tài khoản khác
-                        if (data.bankName === bankName && doc.id !== currentUserUID) { isDuplicate = true; }
+                        if (doc.data().bankName === bankName && doc.id !== currentUserUID) { isDuplicate = true; }
                     });
                 }
 
@@ -400,7 +377,6 @@
             }
         };
 
-        // Render Random Build ID
         document.getElementById('appVersionID').innerText = Math.floor(Math.random()*90000)+10000;
 
         // KIỂM TRA ĐĂNG NHẬP & ĐỒNG BỘ DỮ LIỆU
@@ -409,64 +385,62 @@
                 currentUserUID = user.uid;
                 const userRef = doc(db, "users", user.uid);
                 
-                // Load nhanh dữ liệu từ LocalStorage để giảm giật UI
+                // 1. FIX: GỌI HÀM RENDER NGAY LẬP TỨC CHO LOCALSTORAGE ĐỂ KHÔNG BỊ TREO UI
                 const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
                 if(localData) {
-                    document.getElementById('displayFullname').innerText = localData.fullName || localData.username || "User";
-                    document.getElementById('displayUsername').innerText = "@" + (localData.username || "player");
+                    renderData(localData, user.uid);
                 }
 
-                // Lắng nghe dữ liệu realtime từ Firestore
+                // 2. Lắng nghe dữ liệu realtime từ Firestore
                 onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         renderData(data, user.uid);
                         data.uid = user.uid;
                         localStorage.setItem('crownex_user_info', JSON.stringify(data));
+                    } else {
+                        // 3. FIX: XỬ LÝ NẾU TÀI KHOẢN CHƯA CÓ DOCUMENT TRONG FIRESTORE
+                        console.warn("Chưa có document trên Firestore!");
+                        renderData({ balance: 0, fullName: "Player", username: "new_player" }, user.uid);
                     }
+                }, (error) => {
+                    // 4. FIX: BẮT LỖI QUYỀN TRUY CẬP (RULES)
+                    console.error("Lỗi đồng bộ dữ liệu: ", error);
                 });
             } else {
-                // Chưa đăng nhập thực sự (hoặc là ẩn danh) thì đẩy về trang Login
+                console.log("Chưa đăng nhập, quay về trang chủ");
                 window.location.href = "index.html";
             }
         });
 
         // HÀM HIỂN THỊ DỮ LIỆU LÊN UI
         function renderData(data, uid) {
-            // Thông tin cơ bản
             document.getElementById('displayFullname').innerText = data.fullName || "Tpig Player";
             document.getElementById('displayUsername').innerText = "@" + (data.username || "player");
             
-            // Xử lý Hiển thị Số dư (Đồng T)
             const bal = data.balance || 0;
             const formattedBalance = bal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
-            // Cập nhật số dư ở Card to
             document.getElementById('displayBalanceMain').innerText = formattedBalance;
-            // Cập nhật số dư trên Header nhỏ
             const headerBal = document.getElementById('balanceDisplayHeader');
             headerBal.innerText = formattedBalance;
-            headerBal.classList.remove('animate-pulse'); // Tắt hiệu ứng tải
+            headerBal.classList.remove('animate-pulse');
 
-            // Cập nhật VNĐ ước tính
             document.getElementById('displayBalanceVND').innerText = "≈ " + (bal * EXCHANGE_RATE).toLocaleString('vi-VN') + " VNĐ";
             
-            // Thông tin List Detail
             document.getElementById('infoPhone').innerText = data.phone || "Chưa cập nhật";
             document.getElementById('infoID').innerText = uid;
-            const d = new Date(data.createdAt || Date.now());
+            const d = data.createdAt ? new Date(data.createdAt) : new Date();
             document.getElementById('infoDate').innerText = d.toLocaleDateString('vi-VN');
 
-            // Hiển thị Bank Form hoặc Data Bank đã lưu
             if (data.bankNumber) {
                 document.getElementById('bankInputForm').classList.add('hidden');
                 document.getElementById('bankInfoDisplay').classList.remove('hidden');
                 document.getElementById('bankStatusBadge').classList.remove('hidden');
                 document.getElementById('displayBankName').innerText = data.bankName;
-                document.getElementById('displayBankNumber').innerText = "****" + data.bankNumber.slice(-4); // Lộ 4 số cuối
+                document.getElementById('displayBankNumber').innerText = "****" + data.bankNumber.slice(-4);
                 document.getElementById('displayBankOwner').innerText = data.bankOwner;
                 
-                // Đổi label hiển thị theo loại
                 if (data.bankName === 'Momo') {
                     document.getElementById('labelDisplayNumber').innerText = "Số ví MoMo";
                 } else {
@@ -482,5 +456,4 @@
     </script>
 </body>
 </html>
-
 
