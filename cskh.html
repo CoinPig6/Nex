@@ -19,7 +19,7 @@
             overscroll-behavior-y: contain;
         }
 
-        /* Chống phóng to trên mobile khi nhấn input (font >= 16px) */
+        /* Chống phóng to trên mobile (font >= 16px) */
         input, textarea, button { font-size: 16px !important; }
 
         .message-bubble { max-width: 85%; word-wrap: break-word; line-height: 1.5; }
@@ -40,7 +40,6 @@
             flex-shrink: 0;
             color: #e2e8f0;
         }
-        .quick-chat-btn:active { border-color: #fbbf24; color: #fbbf24; }
 
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -55,20 +54,21 @@
                 <span class="text-slate-900 text-3xl font-black">TP</span>
             </div>
             <h1 class="text-2xl font-bold gold-text mb-1 tracking-tight uppercase">TPIG CENTER</h1>
-            <p class="text-slate-500 text-xs mb-8 font-medium">Hỗ trợ người chơi TPIG trực tuyến</p>
+            <p class="text-slate-500 text-xs mb-8 font-medium">Hỗ trợ người chơi trực tuyến</p>
             
             <div class="space-y-4">
                 <input type="text" id="login-input" placeholder="Tên tài khoản hoặc mã..." 
                     class="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 px-6 focus:border-amber-500 outline-none transition-all text-white placeholder-slate-600 font-medium">
                 
-                <button id="btn-login" disabled class="w-full gold-btn py-4 rounded-2xl shadow-md transition-all transform active:scale-95 uppercase tracking-wider text-sm">
-                    Đang kết nối...
+                <button id="btn-login" class="w-full gold-btn py-4 rounded-2xl shadow-md transition-all transform active:scale-95 uppercase tracking-wider text-sm">
+                    BẮT ĐẦU CHAT
                 </button>
 
                 <button id="btn-home" class="w-full secondary-btn font-bold py-4 rounded-2xl transition-all transform active:scale-95 uppercase tracking-wider text-[10px]">
                     Quay lại Trang chủ
                 </button>
             </div>
+            <p id="error-log" class="text-red-500 text-[10px] mt-4 hidden"></p>
         </div>
     </div>
 
@@ -79,7 +79,7 @@
                 <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-slate-900 font-bold shrink-0 shadow-lg">CS</div>
                 <div>
                     <h2 class="font-bold gold-text text-sm uppercase leading-none mb-1 tracking-tight">CSKH TPIG</h2>
-                    <div id="queue-status" class="text-[10px] text-slate-500 font-medium">Vui lòng chờ...</div>
+                    <div id="queue-status" class="text-[10px] text-slate-500 font-medium">Đang tính toán hàng chờ...</div>
                 </div>
             </div>
             <button id="btn-exit-user" class="bg-slate-800 text-slate-300 py-2 px-4 rounded-xl border border-slate-700 text-[10px] font-bold uppercase transition-colors">Thoát</button>
@@ -99,57 +99,52 @@
 
     <!-- GIAO DIỆN CSKH (ADMIN) -->
     <div id="admin-interface" class="hidden flex h-screen overflow-hidden bg-slate-950 fade-in">
-        <!-- Sidebar -->
         <div class="w-20 md:w-72 border-r border-slate-800 flex flex-col bg-slate-900 shrink-0">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                <h3 class="font-bold gold-text text-[10px] uppercase hidden md:block tracking-widest">Hàng chờ chat</h3>
-                <button onclick="location.reload()" class="text-slate-500 hover:text-white transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
+                <h3 class="font-bold gold-text text-[10px] uppercase hidden md:block tracking-widest">Danh sách đợi</h3>
+                <button onclick="location.reload()" class="text-slate-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
             </div>
             <div id="admin-user-list" class="flex-grow overflow-y-auto hide-scroll"></div>
         </div>
 
-        <!-- Khung Chat Admin -->
         <div class="flex-grow flex flex-col relative bg-slate-900">
             <div id="admin-chat-header" class="p-4 border-b border-slate-800 flex justify-between items-center shrink-0 min-h-[73px] bg-slate-900/80">
                 <div class="flex items-center gap-3">
                     <div id="active-user-avatar" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-bold text-amber-500 hidden border border-slate-700">?</div>
                     <div class="font-bold text-slate-300 text-sm uppercase tracking-tight" id="header-user-name">Quản lý hỗ trợ</div>
                 </div>
-                <button id="btn-end-session" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg">Kết thúc phiên</button>
+                <button id="btn-end-session" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg">Kết thúc</button>
             </div>
             
-            <!-- Quick Chat Bar -->
             <div id="quick-chat-bar" class="bg-slate-800/50 p-2 border-b border-slate-700 flex gap-2 overflow-x-auto hide-scroll hidden">
-                <button class="quick-chat-btn" data-txt="Chào bạn! CSKH TPIG xin nghe, bạn cần hỗ trợ vấn đề gì ạ?">Chào hỏi</button>
-                <button class="quick-chat-btn" data-txt="Vui lòng cung cấp chính xác Tên tài khoản Game của bạn để mình kiểm tra.">Hỏi tên TK</button>
-                <button class="quick-chat-btn" data-txt="Vấn đề của bạn đã được chuyển tới kỹ thuật, bạn vui lòng đợi trong giây lát.">Báo lỗi</button>
-                <button class="quick-chat-btn" data-txt="Giao dịch của bạn đã thành công rồi nha. Chúc bạn chơi game vui vẻ!">Hoàn tất</button>
-                <button class="quick-chat-btn" data-txt="Cảm ơn bạn đã liên hệ. Tôi xin phép đóng phiên hỗ trợ tại đây. Chúc bạn một ngày tốt lành!">Tạm biệt</button>
+                <button class="quick-chat-btn" data-txt="Chào bạn! CSKH TPIG xin nghe, bạn cần hỗ trợ gì?">Chào hỏi</button>
+                <button class="quick-chat-btn" data-txt="Vui lòng cung cấp chính xác Tên tài khoản Game của bạn.">Hỏi tên TK</button>
+                <button class="quick-chat-btn" data-txt="Giao dịch của bạn đã thành công. Chúc bạn chơi vui vẻ!">Xong</button>
+                <button class="quick-chat-btn" data-txt="Cảm ơn bạn đã liên hệ. Chào tạm biệt!">Tạm biệt</button>
             </div>
 
             <div id="admin-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll">
-                <div class="flex flex-col items-center justify-center h-full text-slate-500 opacity-50 text-center px-10">
-                    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                    <p class="text-sm italic">Chọn người chơi bên trái để bắt đầu chat hỗ trợ.</p>
+                <div class="flex flex-col items-center justify-center h-full text-slate-500 opacity-50 text-center">
+                    <p class="text-sm italic">Chọn người chơi để bắt đầu chat.</p>
                 </div>
             </div>
 
             <div id="admin-input-container" class="p-4 bg-slate-900 border-t border-slate-800 hidden shrink-0">
                 <div class="flex items-center gap-2 bg-slate-800 p-2 rounded-2xl border border-slate-700 shadow-inner">
                     <input type="text" id="admin-msg-input" placeholder="Phản hồi người chơi..." class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white">
-                    <button id="btn-send-admin" class="gold-btn px-6 py-2 rounded-xl text-sm uppercase tracking-wide shadow-lg">Gửi</button>
+                    <button id="btn-send-admin" class="gold-btn px-6 py-2 rounded-xl text-sm uppercase">Gửi</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Custom Modal -->
+    <!-- Confirm Modal -->
     <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden p-6 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center shadow-2xl">
             <p id="modal-text" class="text-white mb-6 text-sm font-medium leading-relaxed"></p>
             <div class="flex gap-3 justify-center">
-                <button id="modal-cancel" class="bg-slate-700 text-white flex-1 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-wider">Hủy</button>
-                <button id="modal-confirm" class="bg-red-600 text-white flex-1 py-3 rounded-2xl text-[10px] font-bold uppercase shadow-lg tracking-wider">Xác nhận</button>
+                <button id="modal-cancel" class="bg-slate-700 text-white flex-1 py-3 rounded-xl text-[10px] font-bold uppercase">Hủy</button>
+                <button id="modal-confirm" class="bg-red-600 text-white flex-1 py-3 rounded-xl text-[10px] font-bold uppercase shadow-lg">Xác nhận</button>
             </div>
         </div>
     </div>
@@ -157,45 +152,53 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, deleteDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // FIREBASE CONFIG & INIT
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // THAY ĐỔI: Kiểm tra cấu hình Firebase
+        let firebaseConfig;
+        try {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } catch (e) {
+            // Nếu bạn chạy trên GitHub mà không có biến môi trường, hãy dán Config của bạn vào đây:
+            firebaseConfig = {
+                apiKey: "",
+                authDomain: "",
+                projectId: "",
+                storageBucket: "",
+                messagingSenderId: "",
+                appId: ""
+            };
+            if (!firebaseConfig.apiKey) {
+                document.getElementById('error-log').innerText = "Lỗi: Chưa có cấu hình Firebase. Vui lòng kiểm tra lại.";
+                document.getElementById('error-log').classList.remove('hidden');
+            }
+        }
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tpig_support_final_fix';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tpig_support_github';
 
-        let firebaseUser = null;
+        let fbUser = null;
         let isAdmin = false;
         let selectedUserId = null;
         let myName = "";
         let autoReplied = false;
 
-        // AUTHENTICATION (RULE 3)
-        async function startAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error("Firebase Auth Error:", err);
-            }
-        }
-        startAuth();
-
+        // Khởi tạo Auth ngay lập tức
         onAuthStateChanged(auth, (u) => {
             if (u) {
-                firebaseUser = u;
-                const btn = document.getElementById('btn-login');
-                btn.disabled = false;
-                btn.innerText = "BẮT ĐẦU CHAT";
+                fbUser = u;
+                document.getElementById('btn-login').disabled = false;
+            } else {
+                signInAnonymously(auth).catch(err => {
+                    console.error("Lỗi Auth:", err);
+                    document.getElementById('error-log').innerText = "Lỗi kết nối Firebase: " + err.message;
+                    document.getElementById('error-log').classList.remove('hidden');
+                });
             }
         });
 
-        // UI HELPERS
         const showModal = (text, confirmCb) => {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-text').innerText = text;
@@ -204,10 +207,10 @@
             document.getElementById('modal-cancel').onclick = () => { modal.classList.add('hidden'); };
         };
 
-        // LOGIN HANDLER
+        // ĐĂNG NHẬP
         document.getElementById('btn-login').onclick = () => {
             const val = document.getElementById('login-input').value.trim();
-            if (!val || !firebaseUser) return;
+            if (!val) return;
 
             if (val === "cskhtpig123") {
                 isAdmin = true;
@@ -226,67 +229,51 @@
         document.getElementById('btn-home').onclick = () => window.location.href = 'game.html';
         document.getElementById('btn-exit-user').onclick = () => window.location.href = 'game.html';
 
-        // --- USER LOGIC (RULE 1: /artifacts/{appId}/public/data/chats) ---
+        // --- HỆ THỐNG NGƯỜI DÙNG ---
         function initUser() {
-            if (!firebaseUser) return;
-            const chatRef = doc(db, 'artifacts', appId, 'public', 'data', 'chats', firebaseUser.uid);
-            
-            // Đăng ký thông tin (setDoc)
-            setDoc(chatRef, { name: myName, created: serverTimestamp(), agentJoined: false, active: true }, { merge: true });
+            if (!fbUser) return;
+            const chatRef = doc(db, 'artifacts', appId, 'public', 'data', 'chats', fbUser.uid);
+            setDoc(chatRef, { name: myName, created: serverTimestamp(), agentJoined: false }, { merge: true });
 
-            // Hàng chờ (onSnapshot)
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'chats'), (snap) => {
                 const list = [];
                 snap.forEach(d => {
                     const data = d.data();
-                    if (data.created && !data.agentJoined) {
-                        list.push({ id: d.id, time: data.created.toMillis ? data.created.toMillis() : Date.now() });
-                    }
+                    if (data.created && !data.agentJoined) list.push({ id: d.id, time: data.created.toMillis ? data.created.toMillis() : Date.now() });
                 });
                 list.sort((a,b) => a.time - b.time);
-                const rank = list.findIndex(u => u.id === firebaseUser.uid) + 1;
+                const rank = list.findIndex(u => u.id === fbUser.uid) + 1;
                 
                 getDoc(chatRef).then(ds => {
                     const status = document.getElementById('queue-status');
-                    if (ds.data()?.agentJoined) {
-                        status.innerHTML = `<span class="text-green-400 font-bold animate-pulse">● ĐANG TRÒ CHUYỆN</span>`;
-                    } else {
-                        status.innerText = rank > 0 ? `HÀNG CHỜ SỐ: ${rank}` : "ĐANG KẾT NỐI...";
-                    }
+                    if (ds.data()?.agentJoined) status.innerHTML = `<span class="text-green-400 font-bold">● ĐANG TRÒ CHUYỆN</span>`;
+                    else status.innerText = rank > 0 ? `HÀNG CHỜ SỐ: ${rank}` : "ĐANG CHỜ KẾT NỐI...";
                 });
             });
 
-            // Tin nhắn
-            const qMessages = query(collection(db, 'artifacts', appId, 'public', 'data', 'chats', firebaseUser.uid, 'messages'), orderBy('time', 'asc'));
-            onSnapshot(qMessages, (snap) => {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'chats', fbUser.uid, 'messages'), orderBy('time', 'asc'));
+            onSnapshot(q, (snap) => {
                 const box = document.getElementById('user-messages');
-                // Nếu bị xóa phiên bởi admin
-                if (snap.empty && autoReplied) {
-                    location.reload();
-                    return;
-                }
+                if (snap.empty && autoReplied) location.reload();
                 box.innerHTML = '';
                 snap.forEach(d => render(box, d.data().text, d.data().role === 'admin' ? 'left' : 'right'));
                 box.scrollTop = box.scrollHeight;
-            }, (err) => console.log("User msg error:", err));
+            });
         }
 
-        // --- ADMIN LOGIC ---
+        // --- HỆ THỐNG ADMIN ---
         function initAdmin() {
-            const chatsCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
-            onSnapshot(chatsCol, (snap) => {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'chats'), (snap) => {
                 const list = document.getElementById('admin-user-list');
                 list.innerHTML = '';
-                const users = [];
-                snap.forEach(d => users.push({ id: d.id, ...d.data() }));
-                
-                // Ai chưa hỗ trợ lên trước
-                users.sort((a,b) => (a.agentJoined === b.agentJoined) ? 0 : a.agentJoined ? 1 : -1);
+                const uDatas = [];
+                snap.forEach(d => uDatas.push({ id: d.id, ...d.data() }));
+                uDatas.sort((a,b) => (a.agentJoined === b.agentJoined) ? 0 : a.agentJoined ? 1 : -1);
 
-                users.forEach(data => {
+                uDatas.forEach(data => {
                     if (!data.name) return;
                     const item = document.createElement('div');
-                    item.className = `p-4 border-b border-slate-800 cursor-pointer transition-all ${selectedUserId === data.id ? 'bg-slate-800 border-l-4 border-amber-500' : 'hover:bg-slate-800/30'}`;
+                    item.className = `p-4 border-b border-slate-800 cursor-pointer ${selectedUserId === data.id ? 'bg-slate-800 border-l-4 border-amber-500' : 'hover:bg-slate-800/30'}`;
                     item.innerHTML = `
                         <div class="flex items-center gap-3">
                             <div class="relative shrink-0">
@@ -308,9 +295,7 @@
 
         async function selectUser(uid, name, joined) {
             selectedUserId = uid;
-            document.getElementById('header-user-name').innerText = name.toUpperCase();
-            document.getElementById('active-user-avatar').innerText = name.charAt(0).toUpperCase();
-            document.getElementById('active-user-avatar').classList.remove('hidden');
+            document.getElementById('header-user-name').innerText = name;
             document.getElementById('admin-input-container').classList.remove('hidden');
             document.getElementById('btn-end-session').classList.remove('hidden');
             document.getElementById('quick-chat-bar').classList.remove('hidden');
@@ -318,104 +303,76 @@
             const chatRef = doc(db, 'artifacts', appId, 'public', 'data', 'chats', uid);
             const msgCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats', uid, 'messages');
 
-            // Nếu lần đầu CSKH vào hỗ trợ người chơi này
             if (!joined) {
                 await updateDoc(chatRef, { agentJoined: true });
-                await addDoc(msgCol, { 
-                    text: "Xin chào! Chuyên viên CSKH TPIG đã sẵn sàng hỗ trợ bạn. Bạn gặp vấn đề gì ạ?", 
-                    role: 'admin', 
-                    time: serverTimestamp() 
-                });
+                await addDoc(msgCol, { text: "Chào bạn! CSKH TPIG đã vào hỗ trợ. Bạn gặp vấn đề gì ạ?", role: 'admin', time: serverTimestamp() });
             }
 
-            const qMessages = query(msgCol, orderBy('time', 'asc'));
-            onSnapshot(qMessages, (snap) => {
+            const q = query(msgCol, orderBy('time', 'asc'));
+            onSnapshot(q, (snap) => {
                 const box = document.getElementById('admin-messages');
                 box.innerHTML = '';
                 snap.forEach(d => render(box, d.data().text, d.data().role === 'admin' ? 'right' : 'left'));
                 box.scrollTop = box.scrollHeight;
-            }, (err) => console.log("Admin msg error:", err));
+            });
         }
 
-        // --- COMMON SENDING ---
+        // --- GỬI TIN NHẮN ---
         const sendMessage = async (role, manualText = null) => {
-            if (!firebaseUser) return;
+            if (!fbUser) return;
             const input = document.getElementById(role === 'admin' ? 'admin-msg-input' : 'user-msg-input');
             const text = manualText || input.value.trim();
             if (!text) return;
             
-            const targetId = role === 'admin' ? selectedUserId : firebaseUser.uid;
+            const targetId = role === 'admin' ? selectedUserId : fbUser.uid;
             if (!targetId) return;
 
             try {
                 const msgCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats', targetId, 'messages');
                 const chatDoc = doc(db, 'artifacts', appId, 'public', 'data', 'chats', targetId);
 
-                // Thêm tin nhắn vào sub-collection
                 await addDoc(msgCol, { text, role, time: serverTimestamp() });
-                // Cập nhật thông tin phiên chat chính
-                await updateDoc(chatDoc, { updated: serverTimestamp(), lastText: text });
+                await updateDoc(chatDoc, { updated: serverTimestamp() });
 
-                // TỰ ĐỘNG TRẢ LỜI LẦN ĐẦU CHO NGƯỜI DÙNG
                 if (role === 'user' && !autoReplied) {
                     const ds = await getDoc(chatDoc);
                     if (!ds.data()?.agentJoined) {
                         autoReplied = true;
                         setTimeout(async () => {
-                            await addDoc(msgCol, { 
-                                text: `Chào ${myName}! Chúng tôi đã nhận được yêu cầu của bạn. Vui lòng giữ kết nối, chuyên viên sẽ phản hồi bạn sớm nhất theo hàng chờ.`, 
-                                role: 'admin', 
-                                time: serverTimestamp() 
-                            });
+                            await addDoc(msgCol, { text: `Chào ${myName}! Chúng tôi đã nhận được yêu cầu. Vui lòng chờ trong hàng chờ, CSKH sẽ phản hồi bạn sớm nhất.`, role: 'admin', time: serverTimestamp() });
                         }, 1200);
                     }
                 }
-                
-                if (!manualText) {
-                    input.value = '';
-                    input.focus();
-                }
-            } catch (err) {
-                console.error("Lỗi khi gửi tin nhắn:", err);
-            }
+                if (!manualText) input.value = '';
+            } catch (err) { console.error("Lỗi gửi:", err); }
         };
 
-        // Click Events
         document.getElementById('btn-send-user').onclick = () => sendMessage('user');
         document.getElementById('btn-send-admin').onclick = () => sendMessage('admin');
-
         document.querySelectorAll('.quick-chat-btn').forEach(b => {
             b.onclick = () => sendMessage('admin', b.getAttribute('data-txt'));
         });
 
         document.getElementById('btn-end-session').onclick = () => {
             if (!selectedUserId) return;
-            showModal("KẾT THÚC PHIÊN CHAT VÀ XÓA TOÀN BỘ DỮ LIỆU?", async () => {
-                try {
-                    const col = collection(db, 'artifacts', appId, 'public', 'data', 'chats', selectedUserId, 'messages');
-                    const snap = await getDocs(col);
-                    // Xóa tất cả tin nhắn
-                    const deletePromises = snap.docs.map(d => deleteDoc(d.ref));
-                    await Promise.all(deletePromises);
-                    // Xóa document user
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'chats', selectedUserId));
-                    location.reload();
-                } catch (err) {
-                    console.error("Lỗi khi kết thúc phiên:", err);
-                }
+            showModal("KẾT THÚC PHIÊN CHAT VÀ XÓA DỮ LIỆU?", async () => {
+                const col = collection(db, 'artifacts', appId, 'public', 'data', 'chats', selectedUserId, 'messages');
+                const snap = await getDocs(col);
+                await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'chats', selectedUserId));
+                location.reload();
             });
         };
 
         function render(box, text, side) {
             const div = document.createElement('div');
             div.className = `flex ${side === 'right' ? 'justify-end' : 'justify-start'} fade-in`;
-            const color = side === 'right' ? 'bg-amber-500 text-slate-950 rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none';
-            div.innerHTML = `<div class="${color} message-bubble px-4 py-3 rounded-2xl text-[14px] font-medium tracking-tight">${text}</div>`;
+            const color = side === 'right' ? 'bg-amber-500 text-slate-950 rounded-tr-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none';
+            div.innerHTML = `<div class="${color} message-bubble px-4 py-3 rounded-2xl text-[14px] font-medium leading-tight shadow-lg">${text}</div>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
 
-        // Keydown support
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 if (!document.getElementById('user-interface').classList.contains('hidden')) sendMessage('user');
