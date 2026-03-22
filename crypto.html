@@ -15,7 +15,7 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 15px); }
         input, select, textarea, button { font-size: 16px !important; appearance: none; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* TECH BORDER & POPUP */
+        /* POPUP KẾT QUẢ */
         .tech-border { position: relative; background: #13161f; border: 1px solid #2a2e39; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 20px; overflow: hidden; }
         .tech-border.win { border: 1px solid #0ECB81; box-shadow: 0 0 40px rgba(14, 203, 129, 0.2); }
         .tech-border.lose { border: 1px solid #F6465D; box-shadow: 0 0 40px rgba(246, 70, 93, 0.2); }
@@ -24,19 +24,19 @@
         .btn-trade:active { transform: translateY(3px); border-bottom-width: 1px; }
         .btn-trade.dimmed { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
 
-        /* HISTORY ROADMAP */
-        .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; scroll-behavior: smooth; }
-        .history-container { display: flex; flex-direction: row; gap: 4px; padding: 0 5px; }
+        /* BẢNG LỊCH SỬ (ROADMAP) */
+        .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; padding-left: 5px; scroll-behavior: smooth; }
+        .history-container { display: flex; flex-direction: row; gap: 4px; padding-right: 15px; }
         .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 72px; height: 90px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 8px; border: 1px solid #1f2430; }
         .dot { width: 12px; height: 12px; border-radius: 50%; background-color: #1e232e; margin: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #2d3442; transition: all 0.3s; }
         .dot.up { background-color: #0ECB81; box-shadow: 0 0 6px rgba(14, 203, 129, 0.6); border-color: #0ECB81; } 
         .dot.down { background-color: #F6465D; box-shadow: 0 0 6px rgba(246, 70, 93, 0.6); border-color: #F6465D; }
         
-        /* CHART ELEMENTS */
+        /* ĐƯỜNG KHÓA GIÁ */
         #lockLine { position: absolute; left: 0; right: 0; height: 1px; border-top: 1px dashed #FCD535; z-index: 5; pointer-events: none; display: none; }
         #lockLabel { position: absolute; left: 10px; z-index: 6; background: #FCD535; color: #111; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 6px; transform: translateY(-50%); display: none; box-shadow: 0 4px 10px rgba(252,213,53,0.3); }
         
-        /* CONFIRM BAR */
+        /* BẢNG XÁC NHẬN LỆNH */
         #confirmBar { 
             position: fixed; bottom: 0; left: 0; right: 0; background: #1e232e; 
             border-top-left-radius: 24px; border-top-right-radius: 24px;
@@ -47,15 +47,15 @@
         #confirmBar.active { transform: translateY(0); }
         
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .dot.new { animation: popIn 0.3s; border: 2px solid white; }
+        .dot.new { animation: popIn 0.3s; border: 2px solid white; box-shadow: 0 0 10px white; }
         
-        /* TOAST */
+        /* TOAST THÔNG BÁO */
         #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1e232e; border: 1px solid #2d3442; padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { opacity: 1; }
         
-        /* QUICK SELECT CHIPS (Fix sáng lên khi chọn) */
+        /* CHIP CHỌN TIỀN (Có hiệu ứng sáng lên) */
         .chip { background: #1e232e; color: #9ca3af; padding: 8px 0; width: 15%; min-width: 45px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.2s; }
-        .chip.selected { background: #FCD535; color: black; border-color: #FCD535; box-shadow: 0 0 10px rgba(252,213,53,0.4); transform: scale(1.05); }
+        .chip.selected { background: #FCD535; color: black; border-color: #FCD535; box-shadow: 0 0 15px rgba(252,213,53,0.5); transform: scale(1.05); }
         .chip:active { transform: scale(0.95); }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -63,7 +63,7 @@
 </head>
 <body>
 
-    <!-- LOADING SCREEN -->
+    <!-- MÀN HÌNH TẢI -->
     <div id="pageLoader" class="fixed inset-0 bg-[#0b0f19] z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce">
             <span class="text-black font-black text-2xl italic tracking-widest pl-1">T</span>
@@ -74,10 +74,11 @@
     <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-[#0ECB81] text-lg"></i><span class="text-xs font-bold text-white uppercase tracking-wide" id="toastMsg">...</span></div>
 
-    <!-- HEADER: Minimal & Nút Thoát Game (Trở về sảnh) -->
+    <!-- HEADER: Nút Thoát Về Trang Chủ -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
         <div class="flex items-center gap-4">
-            <a href="game.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
+            <!-- NÚT THOÁT -->
+            <a href="index.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
                 <i class="fa-solid fa-arrow-right-from-bracket text-[#9ca3af] rotate-180"></i>
             </a>
             <div class="flex flex-col justify-center">
@@ -97,7 +98,7 @@
         </div>
     </header>
 
-    <!-- CHART AREA -->
+    <!-- BIỂU ĐỒ NẾN -->
     <div class="flex-1 relative bg-[#050505] overflow-hidden border-b border-white/5" id="chart-wrapper">
         <div class="absolute top-4 right-[70px] z-10">
             <span id="candleStatusBadge" class="text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-blue-500/20 text-blue-400 border border-blue-500/50">CHỜ KẾT QUẢ</span>
@@ -106,7 +107,7 @@
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
         
-        <!-- WIN/LOSE POPUP -->
+        <!-- POPUP THẮNG/THUA -->
         <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase tracking-widest">HÚP RỒI</div>
@@ -115,22 +116,21 @@
         </div>
     </div>
 
-    <!-- HISTORY BAR -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
-            <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">MUA: <span id="count-up">0</span></span><span class="text-[#F6465D]">BÁN: <span id="count-down">0</span></span></div>
+            <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
-        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper hide-scroll"><div class="history-container" id="historyContainer"></div></div></div>
+        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper hide-scroll" id="historyWrapper"><div class="history-container" id="historyContainer"></div></div></div>
     </div>
 
-    <!-- CONTROL PANEL CHUẨN CÂN ĐỐI -->
+    <!-- BẢNG ĐIỀU KHIỂN & CHIP CƯỢC -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
             
-            <!-- QUICK CHIPS -->
+            <!-- CHIPS CHỌN NHANH -->
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
-                <!-- Mặc định chọn 10 T -->
                 <button onclick="window.setBetAmount(10, this)" class="chip selected">10</button>
                 <button onclick="window.setBetAmount(50, this)" class="chip">50</button>
                 <button onclick="window.setBetAmount(100, this)" class="chip">100</button>
@@ -139,8 +139,8 @@
                 <button onclick="window.setAllIn(this)" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
             </div>
 
-            <!-- BET INPUT -->
-            <div class="flex items-center justify-center gap-3 w-full">
+            <!-- Ô NHẬP TIỀN -->
+            <div class="flex items-center justify-center gap-3 w-full max-w-sm">
                 <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-minus"></i></button>
                 
                 <div class="flex-1 relative group h-12">
@@ -154,36 +154,35 @@
             <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.50 T</span></div>
         </div>
         
-        <!-- UP/DOWN BUTTONS & TIMER (CĂN CHỈNH GIỮA) -->
-        <div class="flex justify-between items-center gap-3 h-14 w-full max-w-sm mx-auto">
-            <!-- NÚT BÁN -->
-            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
-                <i class="fa-solid fa-arrow-trend-down text-2xl text-white/30 absolute left-3"></i>
-                <div class="flex flex-col items-center w-full z-10">
+        <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
+        <div class="flex justify-center items-center gap-3 h-16 w-full max-w-sm mx-auto">
+            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-center gap-2 shadow-lg relative">
+                <i class="fa-solid fa-arrow-trend-down text-3xl text-white/30 absolute left-3"></i>
+                <div class="flex flex-col items-center z-10 ml-4">
                     <span class="font-black text-xl text-white tracking-wide">BÁN</span>
+                    <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">DOWN</span>
                 </div>
-                <div id="badge-down" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <div id="badge-down" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
             
-            <!-- TIMER -->
             <div class="w-20 shrink-0 h-full bg-[#050505] rounded-2xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
                 <div id="timerProgress" class="absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
-                <span id="phaseText" class="text-[8px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
-                <span id="timerText" class="text-white font-mono font-black text-2xl z-10 leading-none">30</span>
+                <span id="phaseText" class="text-[7px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
+                <span id="timerText" class="text-white font-mono font-black text-3xl z-10 leading-none">30</span>
             </div>
             
-            <!-- NÚT MUA -->
-            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
-                <div class="flex flex-col items-center w-full z-10">
+            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-center gap-2 shadow-lg relative">
+                <div class="flex flex-col items-center z-10 mr-4">
                     <span class="font-black text-xl text-white tracking-wide">MUA</span>
+                    <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">UP</span>
                 </div>
-                <i class="fa-solid fa-arrow-trend-up text-2xl text-white/30 absolute right-3"></i>
-                <div id="badge-up" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <i class="fa-solid fa-arrow-trend-up text-3xl text-white/30 absolute right-3"></i>
+                <div id="badge-up" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
         </div>
     </div>
 
-    <!-- CONFIRM BAR -->
+    <!-- KHUNG XÁC NHẬN LỆNH -->
     <div id="confirmBar" class="p-5 bg-[#13161f] border-t border-white/10">
         <div class="flex justify-between items-center mb-5">
             <div class="flex flex-col">
@@ -219,8 +218,10 @@
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // --- CORE MATH & DETERMINISTIC ENGINE ---
-        // Thuật toán Pseudo Random để cố định màu sắc cho cùng một mốc thời gian
+        // GLOBAL FLAGS
+        let roundSettled = false;
+
+        // --- MATH & SEED LOGIC (ABSOLUTE SYNC 100%) ---
         function seededRandom(seed) {
             let t = seed += 0x6D2B79F5;
             t = Math.imul(t ^ t >>> 15, t | 1);
@@ -228,36 +229,25 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
 
-        // Lấy kết quả của một "phút" cụ thể (0 hoặc 1)
-        function getDeterministicResult(minIdx) {
-            const currentMinIdx = Math.floor(Date.now() / 60000);
-            if (minIdx === currentMinIdx && state.killWhaleMode) {
-                if (state.totalUp > state.totalDown) return 'down';
-                if (state.totalDown > state.totalUp) return 'up';
-            }
-            const rand = seededRandom(minIdx * 12345 + 6789);
+        // Lấy đúng màu Xanh/Đỏ theo Epoch (Mỗi 30s là 1 màu cố định)
+        function getDeterministicResult(epoch) {
+            const rand = seededRandom(epoch * 12345 + 6789);
             return rand > 0.5 ? 'up' : 'down';
         }
 
-        // Tạo mảng nến 60 phút quá khứ hoàn hảo không đổi khi F5
+        // Tạo mảng nến lịch sử chuẩn tuyệt đối
         function buildBaseCandles() {
             const currentEpoch = Math.floor(Date.now() / 30000);
             let simPrice = 98100;
             let cands = [];
             
+            // Generate 60 cây nến quá khứ
             for (let e = currentEpoch - 60; e <= currentEpoch; e++) {
-                const minIdx = Math.floor(e / 2);
-                const isResult = (e % 2 !== 0); // Lẻ là Result phase (kết quả chốt)
                 const rand = seededRandom(e * 123);
+                const dir = getDeterministicResult(e); // Lấy hướng chuẩn
                 
-                let change = 0;
-                if (isResult) {
-                    const dir = getDeterministicResult(minIdx);
-                    // Force change để chốt màu chuẩn (>= 2 đơn vị)
-                    change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
-                } else {
-                    change = (rand - 0.5) * 12; // Cây nến order chạy tự do
-                }
+                // Nến chắc chắn đóng đúng hướng
+                let change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
                 
                 const open = simPrice;
                 const close = open + change;
@@ -265,43 +255,19 @@
                 const low = Math.min(open, close) - seededRandom(e*456) * 3;
                 
                 cands.push({ epoch: e, open, close, high, low, change });
-                simPrice = close;
+                simPrice = close; // Giá đóng nến này là mở nến sau
             }
             return cands;
         }
 
-        // --- GLOBAL STATE & CONFIG ---
-        const CONFIG = { chartPaddingRight: 80 };
-        const state = {
-            balance: 0, userData: null, currentBet: null, 
-            pendingBet: { type: null, amount: 0 },
-            baseCandles: [], visualPrice: 98100, lockPrice: 0, 
-            lastEpoch: -1, isProcessing: false, gameStarted: false,
-            killWhaleMode: false, totalUp: 0, totalDown: 0
-        };
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
-            authDomain: "btccoinbig.firebaseapp.com",
-            projectId: "btccoinbig",
-            storageBucket: "btccoinbig.firebasestorage.app",
-            messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // --- UI INTERACTION FUNCTIONS ---
+        // --- UI FUNCTIONS ---
         window.setBetAmount = (val, el) => { 
-            document.getElementById('betInput').value = val; 
-            window.updateProfit(); 
+            document.getElementById('betInput').value = val; window.updateProfit(); 
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
             if(el) el.classList.add('selected');
         }
         window.setAllIn = (el) => { 
-            document.getElementById('betInput').value = Math.floor(state.balance); 
-            window.updateProfit(); 
+            document.getElementById('betInput').value = Math.floor(state.balance); window.updateProfit(); 
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
             if(el) el.classList.add('selected');
         }
@@ -310,8 +276,7 @@
             let current = parseFloat(inp.value) || 0;
             let nextVal = current + val;
             if (nextVal < 10) nextVal = 10; 
-            inp.value = nextVal;
-            window.updateProfit();
+            inp.value = nextVal; window.updateProfit();
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
         };
         window.updateProfit = () => {
@@ -320,8 +285,7 @@
         };
 
         function showToast(type, msg) {
-            const t = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
+            const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg;
             t.querySelector('i').className = type === 'error' ? 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]' : 'fa-solid fa-circle-check text-lg text-[#0ECB81]';
             t.style.borderColor = type === 'error' ? '#F6465D' : '#0ECB81';
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
@@ -386,14 +350,28 @@
 
         function updateBetUI(type, amount) {
             const id = type === 'up' ? 'badge-up' : 'badge-down';
-            document.getElementById(id).innerText = amount + " T"; 
-            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).innerText = amount + " T"; document.getElementById(id).classList.remove('hidden');
             document.getElementById(type === 'up' ? 'btnSell' : 'btnBuy').classList.add('locked');
         }
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + " T"; }
 
-        // --- AUTH & INIT ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
+        };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
+
+        const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
+        const state = {
+            balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
+            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false
+        };
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 let userStr = localStorage.getItem('crownex_user_info');
@@ -410,20 +388,14 @@
                         } else { window.location.href = "login.html"; }
                     } catch (e) { state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading(); }
                 }
-
                 if(!user.isAnonymous) {
-                    onSnapshot(doc(db, "users", user.uid), (doc) => {
-                        if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
-                    });
+                    onSnapshot(doc(db, "users", user.uid), (doc) => { if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); } });
                 }
-                onSnapshot(doc(db, "settings", "global"), (doc) => { if(doc.exists()) state.killWhaleMode = doc.data().killWhaleMode === true; });
-                onSnapshot(doc(db, "games", "current"), (doc) => { if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; } });
             } else { window.location.href = "login.html"; }
         });
 
         function finishLoading() {
-            state.balance = state.userData.balance || 0;
-            updateBalanceUI();
+            state.balance = state.userData.balance || 0; updateBalanceUI();
             const loader = document.getElementById('pageLoader'); loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
             if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
@@ -436,9 +408,9 @@
             if (b.expires > Date.now()) { state.currentBet = { type: b.type, amount: b.amount }; updateBetUI(b.type, b.amount); }
         }
 
-        // --- CORE CHART & HISTORY RENDER (THE HOLY GRAIL SYNC) ---
+        // --- HISTORY RENDER (GHI 2 NẾN = 2 BÓNG LIÊN TỤC) ---
         function regenerateHistory() {
-            const currentMinIdx = Math.floor(Date.now() / 60000);
+            const currentEpoch = Math.floor(Date.now() / 30000);
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
             let u = 0, dCount = 0;
             
@@ -446,13 +418,13 @@
                 const block = document.createElement('div'); block.className = 'history-block';
                 for(let i = 0; i < 20; i++) {
                     const slotIdx = b * 20 + i;
-                    const minIdx = currentMinIdx - 59 + slotIdx; // 60 bóng lịch sử
+                    const epochIdx = currentEpoch - 59 + slotIdx; // Lấy 60 Epoch (Cả Order và Result)
                     
                     const dot = document.createElement('div');
                     if (slotIdx === 59) {
-                        dot.className = 'dot new'; // Phút hiện tại đang chạy
+                        dot.id = 'liveDot'; dot.className = 'dot new'; // Chờ vòng lặp gameLoop xử lý màu
                     } else if (slotIdx < 59) {
-                        const res = getDeterministicResult(minIdx);
+                        const res = getDeterministicResult(epochIdx);
                         dot.className = res === 'up' ? 'dot up' : 'dot down';
                         if (res === 'up') u++; else dCount++;
                     }
@@ -462,6 +434,8 @@
             }
             document.getElementById('count-up').innerText = u; 
             document.getElementById('count-down').innerText = dCount;
+            // Tự động cuộn lưới
+            const wrapper = document.getElementById('historyWrapper'); wrapper.scrollLeft = wrapper.scrollWidth;
         }
 
         function initGame() {
@@ -469,7 +443,7 @@
             state.baseCandles = buildBaseCandles();
             regenerateHistory();
             requestAnimationFrame(gameLoop);
-            setInterval(engineTimer, 100); // UI Timer update
+            setInterval(engineTimer, 100); 
         }
 
         function engineTimer() {
@@ -484,10 +458,13 @@
             document.getElementById('timerProgress').style.width = ((timeLeft / 30) * 100) + "%";
         }
 
-        // Hàm quyết định kết quả và trả thưởng
         async function finalizeRound() {
-            const finishedMinIdx = Math.floor(Date.now() / 60000) - 1;
-            let res = getDeterministicResult(finishedMinIdx); // Chân lý toán học!
+            if (roundSettled) return;
+            roundSettled = true;
+            
+            // Lấy kết quả của cây nến Chờ Kết Quả vừa mới xong
+            const finishedEpoch = Math.floor(Date.now() / 30000) - 1;
+            let res = getDeterministicResult(finishedEpoch);
 
             if (state.currentBet) {
                 const b = state.currentBet; const win = (b.type === res);
@@ -511,25 +488,25 @@
                     } catch (e) {}
                 }
             }
+            setTimeout(() => { roundSettled = false; }, 2000);
         }
 
-        // Vòng lặp vẽ Biểu đồ liên tục
         const cvs = document.getElementById('chartCanvas'); const ctx = cvs.getContext('2d');
         function resizeCanvas() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
 
         function gameLoop() {
             const now = Date.now();
             const currentEpoch = Math.floor(now / 30000);
-            const isResultPhase = currentEpoch % 2 !== 0;
-            const progress = (now % 30000) / 30000; // 0.0 -> 1.0
+            const isResultPhase = currentEpoch % 2 !== 0; // Epoch lẻ là Result
+            const progress = (now % 30000) / 30000;
 
-            // 1. Nếu sang Epoch mới -> Render lại lịch sử và Mảng Nến Gốc
+            // 1. Chuyển Phase
             if (state.lastEpoch !== currentEpoch) {
                 state.baseCandles = buildBaseCandles();
                 state.lastEpoch = currentEpoch;
                 
                 if (isResultPhase) {
-                    // Đóng lệnh, khóa giá
+                    // ĐÓNG ORDER -> MỞ RESULT
                     state.lockPrice = state.baseCandles[state.baseCandles.length - 1].open;
                     document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
                     document.getElementById('lockLine').style.display = 'block'; document.getElementById('lockLabel').style.display = 'block';
@@ -541,7 +518,7 @@
                     document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
                     window.cancelSelection();
                 } else {
-                    // Mở lệnh mới
+                    // ĐÓNG RESULT -> MỞ ORDER MỚI
                     document.getElementById('lockLine').style.display = 'none'; document.getElementById('lockLabel').style.display = 'none';
                     
                     document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
@@ -553,41 +530,43 @@
                     if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
                     state.currentBet = null;
                     
-                    finalizeRound();
-                    regenerateHistory();
+                    finalizeRound(); // Trả thưởng ván vừa xong
                 }
+                regenerateHistory(); // Vẽ lại 60 bóng
             }
 
-            // 2. Cập nhật cây nến LIVE (Cây cuối cùng)
+            // 2. Chạy Cây Nến LIVE
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
+            const easeProgress = 1 - Math.pow(1 - progress, 2); // Chạy nhanh đoạn đầu, chậm đoạn cuối
             const tSec = now / 1000;
-            // Wiggle tự nhiên tạo cảm giác thị trường, tiến về 0 khi hết giờ
-            const wiggle = (Math.sin(tSec * 3) * 1.5 + Math.cos(tSec * 5) * 1) * (1 - progress);
+            const wiggle = (Math.sin(tSec * 5) * 1 + Math.cos(tSec * 8) * 0.5) * (1 - progress); 
             
-            // Nội suy giá từ Open tới Close mục tiêu
-            // Sử dụng hàm ease để giá chạy mượt mà
-            const easeProgress = 1 - Math.pow(1 - progress, 2);
+            // Ép giá về đúng kết quả thay đổi (change) do Deterministic sinh ra
             state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + wiggle;
 
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // 3. VẼ LÊN CANVAS
+            // Cập nhật bóng hiện tại (Sáng theo nến)
+            const liveDot = document.getElementById('liveDot');
+            if (liveDot) {
+                const isLiveUp = state.visualPrice >= liveCandle.open;
+                liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
+            }
+
+            // 3. Render Canvas
             const w = (cvs.width - CONFIG.chartPaddingRight) / 30; 
             const r = 80; 
             const min = state.visualPrice - r / 2;
-            
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
-            // Lưới dọc nền
             for(let p = Math.floor(min / 10) * 10; p < min + r; p += 10) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
                 ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 50, y + 4);
             }
 
-            // Cập nhật vị trí đường Lock
             if (isResultPhase) {
                 const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
                 document.getElementById('lockLine').style.top = yl + 'px'; 
@@ -596,7 +575,6 @@
                 ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(cvs.width, yl); ctx.stroke(); ctx.setLineDash([]);
             }
 
-            // Vẽ Nến
             const lastIdx = state.baseCandles.length - 1;
             for (let i = 0; i <= lastIdx; i++) {
                 const dist = lastIdx - i;
@@ -615,11 +593,10 @@
 
                 ctx.lineWidth = 1.5;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-                const bodyH = Math.max(Math.abs(yC - yO), 2);
+                const bodyH = Math.max(Math.abs(yC - yO), 3);
                 ctx.fillRect(x - (w/2) + 2, Math.min(yO, yC), w - 4, bodyH);
             }
 
-            // Đường giá hiện tại
             const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
             ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(0, yc); ctx.lineTo(cvs.width, yc); ctx.stroke(); ctx.setLineDash([]);
             
