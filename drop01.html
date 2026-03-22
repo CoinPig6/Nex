@@ -655,7 +655,7 @@
             balanceEl.innerText = formatMoney(state.balance);
             if (gameState === "K_HOLE_MINIGAME") { multEl.innerText = currentKholeMult.toFixed(2) + "x"; multEl.className = "text-5xl text-purple-400 font-black bungee drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"; } 
             else { multEl.innerText = airMultiplier.toFixed(2) + "x"; multEl.className = "text-4xl text-white font-black bungee drop-shadow-md leading-none"; }
-            depthEl.innerText = player.maxDepthMeters + "m"; depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.1).toFixed(1) + "x";
+            depthEl.innerText = player.maxDepthMeters + "m"; depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.01).toFixed(1) + "x";
             
             // Render tính 96% RTP theo đúng logic 
             let dBet = isNaN(bet) ? 0 : bet;
