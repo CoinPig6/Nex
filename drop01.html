@@ -133,7 +133,7 @@
                     </div>
                     <div class="flex items-center gap-1.5">
                         <span class="text-[10px] text-gray-300 font-semibold uppercase tracking-wider">Độ sâu: <span id="depth-val" class="text-white text-xs font-bold ml-0.5">0m</span></span>
-                        <span id="depth-bonus" class="text-[10px] text-[var(--stake-green)] font-bold bg-[#064E3B]/80 px-1.5 rounded">+0.0x</span>
+                        <span id="depth-bonus" class="text-[10px] text-[var(--stake-green)] font-bold bg-[#064E3B]/80 px-1.5 rounded">+0.00x</span>
                     </div>
                 </div>
                 
@@ -252,7 +252,7 @@
                     <p class="font-bold text-white mb-2">Thu thập trên không (Hệ số Bay):</p>
                     <ul class="space-y-2 bg-gray-900/50 p-3 rounded-lg border border-white/5">
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">☁️</span> <span>Mây Trắng: <strong class="text-white">Không nảy, trượt qua</strong>.</span></li>
-                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">📏</span> <span>Khoảng cách: <strong class="text-white">+0.1x</strong> / 1 mét</span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">📏</span> <span>Khoảng cách: <strong class="text-white">+0.05x</strong> / 1 mét</span></li>
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🔄</span> <span>Nhào lộn: <strong class="text-white">+0.1x</strong> / vòng</span></li>
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🧢</span> <span>Mũ Mega: <strong class="text-[var(--stake-green)]">+0.2x</strong></span></li>
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🪙</span> <span>Xu Vàng: <strong class="text-yellow-400">+1.0x</strong></span></li>
@@ -655,7 +655,10 @@
             balanceEl.innerText = formatMoney(state.balance);
             if (gameState === "K_HOLE_MINIGAME") { multEl.innerText = currentKholeMult.toFixed(2) + "x"; multEl.className = "text-5xl text-purple-400 font-black bungee drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"; } 
             else { multEl.innerText = airMultiplier.toFixed(2) + "x"; multEl.className = "text-4xl text-white font-black bungee drop-shadow-md leading-none"; }
-            depthEl.innerText = player.maxDepthMeters + "m"; depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.01).toFixed(1) + "x";
+            depthEl.innerText = player.maxDepthMeters + "m"; 
+            
+            // CẬP NHẬT HỆ SỐ RỚT LÀ 0.05
+            depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.05).toFixed(2) + "x";
             
             // Render tính 96% RTP theo đúng logic 
             let dBet = isNaN(bet) ? 0 : bet;
@@ -752,7 +755,12 @@
             else if (player.x > WORLD_WIDTH - player.r) { player.x = WORLD_WIDTH - player.r; player.vx *= -WALL_BOUNCE; if(player.vx < -1) player.angularVelocity -= (Math.random()*0.05 + 0.05); }
 
             let currentDepthMeters = Math.floor(Math.max(0, player.y - START_Y) / PIXELS_PER_METER);
-            if (currentDepthMeters > player.maxDepthMeters) { airMultiplier += (currentDepthMeters - player.maxDepthMeters) * 0.1; player.maxDepthMeters = currentDepthMeters; updateUI(); }
+            if (currentDepthMeters > player.maxDepthMeters) { 
+                // CẬP NHẬT RỚT THEO MÉT: +0.05
+                airMultiplier += (currentDepthMeters - player.maxDepthMeters) * 0.05; 
+                player.maxDepthMeters = currentDepthMeters; 
+                updateUI(); 
+            }
             let currentFlips = Math.floor(Math.abs(player.totalRotation) / (2 * Math.PI));
             if (currentFlips > player.lastFlips) { airMultiplier += (currentFlips - player.lastFlips) * 0.1; player.lastFlips = currentFlips; createFloatingText(player.x, player.y - 35, `+0.1x`, "#A78BFA"); updateUI(); }
 
