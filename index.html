@@ -127,7 +127,6 @@
     <div class="orb"></div>
     <div id="toast-box"></div>
 
-    <!-- MÀN HÌNH CHỜ (SẼ TỰ TẮT NHANH) -->
     <div id="loadingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0b0f19] transition-opacity duration-300">
         <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce">
             <span class="text-black font-black text-2xl italic tracking-widest pl-1">T</span>
@@ -232,21 +231,25 @@
         const db = getFirestore(app);
         const EMAIL_PREFIX = "@tpig.com";
         let captchaCodes = { login: '', reg: '' };
+        
+        // 1. THÊM BIẾN NÀY ĐỂ CHỐNG LỖI RACE CONDITION CHUYỂN TRANG SỚM
+        let isRegistering = false; 
 
-        // 1. KIỂM TRA ĐĂNG NHẬP VỚI LOGIC CHUYỂN TRANG TỨC THÌ
+        // 2. KIỂM TRA ĐĂNG NHẬP
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Nếu đã đăng nhập -> Chuyển thẳng tới game.html
-                window.location.href = "game.html";
+                // CHỈ CHUYỂN TRANG NẾU KHÔNG PHẢI LÀ ĐANG TRONG QUÁ TRÌNH TẠO TÀI KHOẢN
+                if (!isRegistering) {
+                    window.location.href = "game.html";
+                }
             } else {
-                // Chưa đăng nhập -> Hiện Form
                 document.getElementById('loadingOverlay').style.display = 'none';
                 const main = document.getElementById('mainContainer');
                 main.classList.remove('opacity-0', 'translate-y-4');
             }
         });
 
-        // 2. LOGIC ĐĂNG NHẬP
+        // 3. LOGIC ĐĂNG NHẬP
         document.getElementById('formLogin').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnLogin');
@@ -259,7 +262,6 @@
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG VÀO...`;
             
             try {
-                // Đăng nhập xong là onAuthStateChanged ở trên sẽ tự đẩy đi game.html
                 await signInWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
             } catch (err) {
                 window.toast('error', 'Tài khoản hoặc mật khẩu không đúng!');
@@ -268,7 +270,7 @@
             }
         });
 
-        // 3. LOGIC ĐĂNG KÝ
+        // 4. LOGIC ĐĂNG KÝ ĐÃ ĐƯỢC FIX LỖI
         document.getElementById('formRegister').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnReg');
@@ -280,21 +282,33 @@
 
             if (cap !== captchaCodes.reg) { window.toast('error', 'Mã xác nhận sai!'); return; }
 
+            // BẬT CỜ BÁO HIỆU ĐANG ĐĂNG KÝ
+            isRegistering = true; 
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO...`;
             
             try {
                 const cred = await createUserWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
                 await updateProfile(cred.user, { displayName: name });
                 
-                // Ghi dữ liệu người dùng
+                // ĐỢI GHI DỮ LIỆU XONG HOÀN TOÀN
                 await setDoc(doc(db, "users", cred.user.uid), {
-                    username: user, phone: phone, fullName: name,
-                    balance: 0, betTurnover: 0, createdAt: new Date().toISOString()
+                    username: user, 
+                    phone: phone, 
+                    fullName: name,
+                    balance: 0, 
+                    betTurnover: 0, 
+                    createdAt: new Date().toISOString()
                 });
 
                 window.toast('success', 'Đăng ký thành công!');
-                // firebase tự động login sau khi đăng ký thành công, onAuthStateChanged sẽ lo việc chuyển trang
+                
+                // SAU KHI GHI XONG MỚI CHO PHÉP CHUYỂN TRANG
+                setTimeout(() => {
+                    window.location.href = "game.html";
+                }, 800);
+
             } catch (err) {
+                isRegistering = false; // TẮT CỜ NẾU LỖI ĐỂ TRÁNH KẸT
                 let msg = 'Lỗi tạo tài khoản!';
                 if(err.code.includes('already-in-use')) msg = 'Tên đăng nhập đã tồn tại!';
                 window.toast('error', msg);
@@ -302,7 +316,7 @@
             }
         });
 
-        // --- HÀM TIỆN ÍCH ---
+        // --- HÀM TIỆN ÍCH KHÔNG ĐỔI ---
         window.switchTab = (tab) => {
             const loginForm = document.getElementById('formLogin');
             const regForm = document.getElementById('formRegister');
