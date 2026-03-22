@@ -89,18 +89,27 @@
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .float-win { color: #4ade80; } .float-loss { color: #ef4444; }
 
-        /* MARQUEE CHAT CHẠY NGANG */
+        /* DANMAKU CHAT (Bay 1 lần qua màn hình) */
         .chat-marquee-container {
             width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box;
             background: rgba(0,0,0,0.6); border-bottom: 1px solid rgba(255,255,255,0.05);
             height: 26px; display: flex; align-items: center; position: relative;
         }
-        .chat-marquee-content {
-            display: inline-block; padding-left: 100%;
-            animation: marquee 20s linear infinite;
+        
+        .flying-chat {
+            position: absolute;
+            left: 100%; /* Bắt đầu từ rìa phải */
+            white-space: nowrap;
             font-size: 11px;
+            animation: flyLeft 5s linear forwards; /* Tốc độ 5s - nhanh hơn */
+            will-change: transform;
         }
-        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
+        /* Di chuyển xa bằng chiều ngang màn hình + chiều dài của chính dòng text đó */
+        @keyframes flyLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-100vw - 100%)); }
+        }
     </style>
 </head>
 <body class="flex flex-col">
@@ -174,12 +183,10 @@
     <!-- BETTING CONTROLS -->
     <div class="bg-slate-900/95 border-t border-white/10 pb-safe z-30 shrink-0">
         
-        <!-- CHAT MARQUEE (Chạy ngang 3 chat mới nhất) -->
-        <div class="chat-marquee-container">
+        <!-- CHAT DANMAKU (Bay qua màn hình) -->
+        <div class="chat-marquee-container" id="marqueeContainer">
             <div class="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/80 to-transparent z-10 pointer-events-none"></div>
-            <div id="marqueeContent" class="chat-marquee-content">
-                <span class="text-slate-400 italic">Hệ thống: Chào mừng bạn đến với Baccarat Pro.</span>
-            </div>
+            <!-- Chữ sẽ được chèn tự động vào đây bằng JS -->
             <div class="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/80 to-transparent z-10 pointer-events-none"></div>
         </div>
 
@@ -269,7 +276,6 @@
 
             <div class="p-3 bg-slate-800 border-t border-slate-700 pb-safe shrink-0">
                 <div class="flex gap-2">
-                    <!-- Text 16px để chống auto-zoom trên iOS Safari -->
                     <input type="text" id="chatInput" class="flex-1 bg-slate-900 text-white rounded-lg px-4 py-2.5 text-[16px] border border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') game.sendChat()">
                     <button onclick="game.sendChat()" class="bg-blue-600 text-white px-5 rounded-lg font-bold shadow-lg active:scale-95 transition-transform"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -386,81 +392,70 @@
             history: [],
             isShuffling: false,
             audioUnlocked: false,
-            
-            latestChats: [], // Lưu trữ 3 chat gần nhất
 
             init() {
                 onAuthStateChanged(auth, async (user) => {
                     if (user) { 
                         currentUser = user; 
                         this.listenBalance(user.uid); 
-                        this.listenChat(); // Gọi lắng nghe chat
+                        this.listenChat();
                     } else await signInAnonymously(auth);
                 });
                 this.loop();
             },
 
             listenChat() {
-                // Tải tối đa 5 tin nhắn gần nhất và tiếp tục lắng nghe
                 const q = query(collection(db, "globalChat"), orderBy("timestamp", "desc"), limit(5));
+                let isFirstLoad = true;
                 
                 onSnapshot(q, (snapshot) => {
-                    let newDocs = [];
+                    if (isFirstLoad) {
+                        isFirstLoad = false;
+                        return; // Bỏ qua load cũ, chỉ xử lý tin vừa chat
+                    }
+
                     snapshot.docChanges().forEach((change) => {
                         if (change.type === "added") {
-                            newDocs.push(change.doc.data());
-                        }
-                    });
+                            const data = change.doc.data();
+                            if(data.text) {
+                                const timeDate = data.timestamp ? data.timestamp.toDate() : new Date();
+                                const timeStr = `${String(timeDate.getHours()).padStart(2,'0')}:${String(timeDate.getMinutes()).padStart(2,'0')}`;
+                                
+                                const userName = (!data.uid || data.uid === 'anon') ? 'Khách' : `Heocon${data.uid.substring(0,2)}`;
+                                const isMe = currentUser && data.uid === currentUser.uid;
 
-                    // Sắp xếp lại từ cũ đến mới (để append vào chat đúng thứ tự)
-                    newDocs.sort((a, b) => {
-                        const tA = a.timestamp ? a.timestamp.toMillis() : 0;
-                        const tB = b.timestamp ? b.timestamp.toMillis() : 0;
-                        return tA - tB;
-                    });
-
-                    newDocs.forEach(data => {
-                        if(data.text) {
-                            // Tạo định dạng Ngày/Giờ
-                            const timeDate = data.timestamp ? data.timestamp.toDate() : new Date();
-                            const d = String(timeDate.getDate()).padStart(2, '0');
-                            const mo = String(timeDate.getMonth() + 1).padStart(2, '0');
-                            const y = timeDate.getFullYear();
-                            const h = String(timeDate.getHours()).padStart(2, '0');
-                            const min = String(timeDate.getMinutes()).padStart(2, '0');
-                            const s = String(timeDate.getSeconds()).padStart(2, '0');
-                            
-                            const timeStr = `${d}/${mo}/${y} ${h}:${min}:${s}`;
-                            
-                            // Tạo Tên tài khoản từ UID (Cắt 5 ký tự đầu)
-                            const userName = (!data.uid || data.uid === 'anon') ? 'Khách' : `Người chơi ${data.uid.substring(0,5).toUpperCase()}`;
-                            const isMe = currentUser && data.uid === currentUser.uid;
-
-                            game.appendChatHistory(userName, data.text, timeStr, isMe);
-                            this.updateMarquee(userName, data.text);
+                                // Lưu vào lịch sử modal
+                                game.appendChatHistory(userName, data.text, timeStr, isMe);
+                                
+                                // Bắn lên thanh chạy ngang
+                                this.fireDanmaku(userName, data.text);
+                            }
                         }
                     });
                 });
             },
 
-            updateMarquee(userName, text) {
-                // Tạo chuỗi HTML cho Marquee
-                const displayStr = `<span class="text-amber-400 font-bold">${userName}:</span> <span class="text-white">${text}</span>`;
+            fireDanmaku(userName, text) {
+                const container = document.getElementById('marqueeContainer');
                 
-                // Tránh trùng lặp khi re-render
-                if (!this.latestChats.includes(displayStr)) {
-                    this.latestChats.push(displayStr);
-                    if(this.latestChats.length > 3) this.latestChats.shift(); // Chỉ giữ lại 3
+                // GIỚI HẠN: Nếu đang có nhiều hơn 4 tin nhắn đang bay, bỏ qua tin này để tránh loạn
+                if (container.querySelectorAll('.flying-chat').length >= 4) {
+                    return; 
                 }
+
+                const flyItem = document.createElement('div');
+                flyItem.className = 'flying-chat';
+                // Theo định dạng: Tên TK: nội dung (Ví dụ: Heocon: alo)
+                flyItem.innerHTML = `<span class="text-amber-400 font-bold">${userName}:</span> <span class="text-white">${text}</span>`;
                 
-                const mContainer = document.getElementById('marqueeContent');
-                if(this.latestChats.length > 0) {
-                    mContainer.innerHTML = this.latestChats.join(' &nbsp; <span class="text-slate-500">|</span> &nbsp; ');
-                    // Khởi động lại animation để nó trượt mượt
-                    mContainer.style.animation = 'none';
-                    mContainer.offsetHeight; // trigger reflow
-                    mContainer.style.animation = null; 
-                }
+                container.appendChild(flyItem);
+
+                // Tự động xóa khỏi DOM sau khi animation kết thúc (5 giây)
+                setTimeout(() => {
+                    if (flyItem.parentElement) {
+                        flyItem.remove();
+                    }
+                }, 5200); 
             },
 
             sendChatMessage(text) {
@@ -692,7 +687,6 @@
                 const modal = document.getElementById('chatModal');
                 if (modal.classList.contains('hidden')) {
                     modal.classList.remove('hidden');
-                    // setTimeout để UI render xong mới focus chống giật
                     setTimeout(() => document.getElementById('chatInput').focus(), 100);
                 } else {
                     modal.classList.add('hidden');
@@ -705,7 +699,7 @@
                 if (text) {
                     app.sendChatMessage(text);
                     input.value = '';
-                    input.focus(); // Gửi xong vẫn focus để gõ tiếp
+                    input.focus(); 
                 }
             },
             appendChatHistory(userName, text, timeStr, isMe) {
