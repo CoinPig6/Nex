@@ -15,7 +15,7 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 15px); }
         input, select, textarea, button { font-size: 16px !important; appearance: none; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* POPUP KẾT QUẢ */
+        /* TECH BORDER & POPUP */
         .tech-border { position: relative; background: #13161f; border: 1px solid #2a2e39; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 20px; overflow: hidden; }
         .tech-border.win { border: 1px solid #0ECB81; box-shadow: 0 0 40px rgba(14, 203, 129, 0.2); }
         .tech-border.lose { border: 1px solid #F6465D; box-shadow: 0 0 40px rgba(246, 70, 93, 0.2); }
@@ -24,7 +24,7 @@
         .btn-trade:active { transform: translateY(3px); border-bottom-width: 1px; }
         .btn-trade.dimmed { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
 
-        /* BẢNG LỊCH SỬ (ROADMAP) */
+        /* HISTORY ROADMAP */
         .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; padding-left: 5px; scroll-behavior: smooth; }
         .history-container { display: flex; flex-direction: row; gap: 4px; padding-right: 15px; }
         .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 72px; height: 90px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 8px; border: 1px solid #1f2430; }
@@ -116,13 +116,38 @@
         </div>
     </div>
 
-    <!-- BẢNG LỊCH SỬ KẾT QUẢ -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ CÓ ĐỒNG HỒ ĐO LỰC -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
             <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
-        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper hide-scroll" id="historyWrapper"><div class="history-container" id="historyContainer"></div></div></div>
+        <div class="flex-1 bg-[#0b0f19] flex items-center justify-between px-3 overflow-hidden">
+            
+            <!-- ĐỒNG HỒ LỰC NẾN (Market Force Gauge) -->
+            <div class="w-[60px] h-16 relative flex flex-col items-center justify-end shrink-0 border-r border-[#232836] pr-3 mr-2">
+                <div class="w-12 h-6 relative overflow-hidden">
+                    <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible drop-shadow-md">
+                        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#F6465D" stroke-width="12" stroke-linecap="round"/>
+                        <!-- Dash array tính bằng Pi * R (40) = 125.66 -->
+                        <path id="force-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#0ECB81" stroke-width="12" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="62.83" style="transition: stroke-dashoffset 0.3s ease-out;"/>
+                    </svg>
+                    <!-- Kim đồng hồ -->
+                    <div id="force-needle" class="absolute bottom-0 left-1/2 w-0.5 h-6 bg-white origin-bottom rounded-full shadow-md" style="transform: translateX(-50%) rotate(0deg); transition: transform 0.3s ease-out; z-index: 10;"></div>
+                    <!-- Trục kim -->
+                    <div class="absolute bottom-0 left-1/2 w-2 h-2 bg-gray-200 rounded-full transform -translate-x-1/2 translate-y-1/2 z-20 shadow-lg border border-gray-400"></div>
+                </div>
+                <div class="mt-1.5 flex flex-col items-center leading-none">
+                    <div id="force-value" class="text-[8px] font-bold text-[#0ECB81]">50%</div>
+                    <div class="text-[7px] font-black text-gray-500 uppercase tracking-widest mt-0.5">Lực Nến</div>
+                </div>
+            </div>
+
+            <!-- LƯỚI BÓNG LỊCH SỬ -->
+            <div class="flex-1 overflow-x-auto hide-scroll h-full flex items-center" id="historyWrapper">
+                <div class="history-container" id="historyContainer"></div>
+            </div>
+        </div>
     </div>
 
     <!-- BẢNG ĐIỀU KHIỂN & CHIP CƯỢC -->
@@ -156,13 +181,13 @@
         
         <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
         <div class="flex justify-center items-center gap-3 h-16 w-full max-w-sm mx-auto">
-            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-center gap-2 shadow-lg relative">
+            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
                 <i class="fa-solid fa-arrow-trend-down text-3xl text-white/30 absolute left-3"></i>
-                <div class="flex flex-col items-center z-10 ml-4">
+                <div class="flex flex-col items-center z-10 w-full ml-2">
                     <span class="font-black text-xl text-white tracking-wide">BÁN</span>
                     <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">DOWN</span>
                 </div>
-                <div id="badge-down" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <div id="badge-down" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
             
             <div class="w-20 shrink-0 h-full bg-[#050505] rounded-2xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
@@ -171,13 +196,13 @@
                 <span id="timerText" class="text-white font-mono font-black text-3xl z-10 leading-none">30</span>
             </div>
             
-            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-center gap-2 shadow-lg relative">
-                <div class="flex flex-col items-center z-10 mr-4">
+            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
+                <div class="flex flex-col items-center z-10 w-full mr-2">
                     <span class="font-black text-xl text-white tracking-wide">MUA</span>
                     <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">UP</span>
                 </div>
                 <i class="fa-solid fa-arrow-trend-up text-3xl text-white/30 absolute right-3"></i>
-                <div id="badge-up" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <div id="badge-up" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
         </div>
     </div>
@@ -216,9 +241,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // GLOBAL FLAGS
         let roundSettled = false;
 
         // --- MATH & SEED LOGIC (ABSOLUTE SYNC 100%) ---
@@ -229,8 +253,14 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
 
-        // Lấy đúng màu Xanh/Đỏ theo Epoch (Mỗi 30s là 1 màu cố định)
+        // Lấy đúng màu Xanh/Đỏ theo Epoch (Đồng bộ vĩnh viễn)
         function getDeterministicResult(epoch) {
+            const currentEpoch = Math.floor(Date.now() / 30000);
+            // Kill whale chỉ hoạt động ở ván hiện tại đang chạy
+            if (epoch === currentEpoch && state.killWhaleMode) {
+                if (state.totalUp > state.totalDown) return 'down';
+                if (state.totalDown > state.totalUp) return 'up';
+            }
             const rand = seededRandom(epoch * 12345 + 6789);
             return rand > 0.5 ? 'up' : 'down';
         }
@@ -244,9 +274,9 @@
             // Generate 60 cây nến quá khứ
             for (let e = currentEpoch - 60; e <= currentEpoch; e++) {
                 const rand = seededRandom(e * 123);
-                const dir = getDeterministicResult(e); // Lấy hướng chuẩn
+                const dir = getDeterministicResult(e); 
                 
-                // Nến chắc chắn đóng đúng hướng
+                // Ép nến chạy theo đúng kết quả
                 let change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
                 
                 const open = simPrice;
@@ -255,7 +285,7 @@
                 const low = Math.min(open, close) - seededRandom(e*456) * 3;
                 
                 cands.push({ epoch: e, open, close, high, low, change });
-                simPrice = close; // Giá đóng nến này là mở nến sau
+                simPrice = close;
             }
             return cands;
         }
@@ -408,7 +438,7 @@
             if (b.expires > Date.now()) { state.currentBet = { type: b.type, amount: b.amount }; updateBetUI(b.type, b.amount); }
         }
 
-        // --- HISTORY RENDER (GHI 2 NẾN = 2 BÓNG LIÊN TỤC) ---
+        // --- HISTORY RENDER (GHI CẢ NẾN ORDER LẪN NẾN RESULT THEO EPOCH) ---
         function regenerateHistory() {
             const currentEpoch = Math.floor(Date.now() / 30000);
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
@@ -418,11 +448,11 @@
                 const block = document.createElement('div'); block.className = 'history-block';
                 for(let i = 0; i < 20; i++) {
                     const slotIdx = b * 20 + i;
-                    const epochIdx = currentEpoch - 59 + slotIdx; // Lấy 60 Epoch (Cả Order và Result)
+                    const epochIdx = currentEpoch - 59 + slotIdx; // Lấy 60 Epoch
                     
                     const dot = document.createElement('div');
                     if (slotIdx === 59) {
-                        dot.id = 'liveDot'; dot.className = 'dot new'; // Chờ vòng lặp gameLoop xử lý màu
+                        dot.id = 'liveDot'; dot.className = 'dot new'; // Gắn id để Cập nhật Live
                     } else if (slotIdx < 59) {
                         const res = getDeterministicResult(epochIdx);
                         dot.className = res === 'up' ? 'dot up' : 'dot down';
@@ -434,7 +464,7 @@
             }
             document.getElementById('count-up').innerText = u; 
             document.getElementById('count-down').innerText = dCount;
-            // Tự động cuộn lưới
+            // Tự động cuộn lưới sang phải
             const wrapper = document.getElementById('historyWrapper'); wrapper.scrollLeft = wrapper.scrollWidth;
         }
 
@@ -462,7 +492,7 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // Lấy kết quả của cây nến Chờ Kết Quả vừa mới xong
+            // Lấy kết quả của Epoch Vừa xong (Luôn là số lẻ)
             const finishedEpoch = Math.floor(Date.now() / 30000) - 1;
             let res = getDeterministicResult(finishedEpoch);
 
@@ -506,7 +536,7 @@
                 state.lastEpoch = currentEpoch;
                 
                 if (isResultPhase) {
-                    // ĐÓNG ORDER -> MỞ RESULT
+                    // MỞ CHỜ KẾT QUẢ
                     state.lockPrice = state.baseCandles[state.baseCandles.length - 1].open;
                     document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
                     document.getElementById('lockLine').style.display = 'block'; document.getElementById('lockLabel').style.display = 'block';
@@ -518,7 +548,7 @@
                     document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
                     window.cancelSelection();
                 } else {
-                    // ĐÓNG RESULT -> MỞ ORDER MỚI
+                    // MỞ ĐẶT LỆNH
                     document.getElementById('lockLine').style.display = 'none'; document.getElementById('lockLabel').style.display = 'none';
                     
                     document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
@@ -530,25 +560,42 @@
                     if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
                     state.currentBet = null;
                     
-                    finalizeRound(); // Trả thưởng ván vừa xong
+                    finalizeRound(); // Trả thưởng
                 }
-                regenerateHistory(); // Vẽ lại 60 bóng
+                regenerateHistory(); // Vẽ bóng
             }
 
-            // 2. Chạy Cây Nến LIVE
+            // 2. Chạy Nến LIVE và Đồng hồ Lực
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
-            const easeProgress = 1 - Math.pow(1 - progress, 2); // Chạy nhanh đoạn đầu, chậm đoạn cuối
+            const easeProgress = 1 - Math.pow(1 - progress, 2); 
             const tSec = now / 1000;
             const wiggle = (Math.sin(tSec * 5) * 1 + Math.cos(tSec * 8) * 0.5) * (1 - progress); 
             
-            // Ép giá về đúng kết quả thay đổi (change) do Deterministic sinh ra
+            // Ép giá về kết quả
             state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + wiggle;
 
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // Cập nhật bóng hiện tại (Sáng theo nến)
+            // Cập nhật Đồng hồ lực nến
+            const diff = state.visualPrice - liveCandle.open;
+            let forceBase = diff * 15; // Phóng đại diff
+            forceBase += (Math.random() - 0.5) * 10; // Rung kim
+            forceBase = Math.max(-50, Math.min(50, forceBase)); // Clamp
+            let forcePercent = 50 + forceBase;
+
+            const arc = document.getElementById('force-arc');
+            const needle = document.getElementById('force-needle');
+            const fVal = document.getElementById('force-value');
+            if (arc && needle) {
+                arc.style.strokeDashoffset = 125.66 - (forcePercent / 100 * 125.66);
+                needle.style.transform = `translateX(-50%) rotate(${-90 + (forcePercent / 100 * 180)}deg)`;
+                fVal.innerText = Math.round(forcePercent) + "%";
+                fVal.className = forcePercent > 50 ? 'text-[8px] font-bold text-[#0ECB81]' : 'text-[8px] font-bold text-[#F6465D]';
+            }
+
+            // Cập nhật bóng hiện tại đang sáng
             const liveDot = document.getElementById('liveDot');
             if (liveDot) {
                 const isLiveUp = state.visualPrice >= liveCandle.open;
