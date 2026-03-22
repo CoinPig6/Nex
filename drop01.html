@@ -322,7 +322,7 @@
 
         // GAME STATE
         let bet = 5; // Số tiền nhập ở ô Input
-        let activeBet = 5; // Số tiền KHÓA lại của ván chơi hiện tại (Fix lỗi trừ sai tiền)
+        let activeBet = 5; // Số tiền KHÓA lại của ván chơi hiện tại
         let airMultiplier = 1.0; 
         let gameState = "MENU"; 
         let gameHistory = [];
@@ -386,12 +386,10 @@
             if(autoTimeoutId) clearTimeout(autoTimeoutId); if(autoIntervalId) clearInterval(autoIntervalId);
         }
 
-        // Cập nhật Cược, Chip đồng bộ hoàn hảo
         window.updateBetFromInput = () => {
             let val = parseFloat(betInput.value);
             if (isNaN(val)) val = 0;
             
-            // Nếu người dùng nhập quá số dư, cap lại cho họ
             if (val > state.balance && state.balance >= 5) {
                 val = Math.floor(state.balance);
                 betInput.value = val;
@@ -399,7 +397,6 @@
             
             bet = val; 
             
-            // Xử lý bật sáng CHIP đúng giá trị nhập
             document.querySelectorAll('.chip').forEach(c => {
                 c.classList.remove('selected');
                 if (c.innerText === "ALL" && val === Math.floor(state.balance) && state.balance > 0) {
@@ -453,9 +450,9 @@
             document.getElementById('btn-stop-auto').classList.add('hidden'); document.getElementById('auto-progress').style.display = "none"; document.getElementById('btn-close-result').classList.remove('hidden');
         }
 
-        // --- BẮT ĐẦU GAME & GHI NHẬN VÒNG CƯỢC ---
+        // --- BẮT ĐẦU GAME (ĐÃ TỐI ƯU CHỐNG GIẬT LAG) ---
         window.handleStartGame = async () => {
-            // FIX LỖI BẤM MULTI-CLICK TRIỆT ĐỂ: Khóa chết nếu không ở màn hình MENU
+            // Khóa trạng thái để không bị double-click
             if (gameState !== "MENU") return;
             gameState = "STARTING"; 
 
@@ -468,7 +465,7 @@
                 return; 
             }
             
-            // CHỐT SỔ TIỀN CƯỢC CỦA VÁN NÀY (Để nếu đang chơi user đổi số tiền thì không bị loạn)
+            // Chốt tiền cược của ván
             bet = val;
             activeBet = val; 
             
@@ -479,9 +476,10 @@
                 return;
             }
 
-            btnStart.disabled = true; btnStart.innerText = "ĐANG TẢI...";
+            btnStart.disabled = true; 
+            btnStart.innerText = "ĐANG TẢI...";
 
-            // Trừ tiền & Ghi nhận vòng cược Firebase
+            // Trừ tiền Firebase (Bất đồng bộ)
             if(!state.isGuest && state.user) {
                 try {
                     await updateDoc(doc(db, "users", state.user.uid), {
@@ -500,31 +498,47 @@
             state.balance -= activeBet; 
             updateUI();
             
-            // Initialize Level
-            airMultiplier = 1.0; 
-            player.x = WORLD_WIDTH / 2; player.y = START_Y; 
-            player.vx = (Math.random() - 0.5) * 8; player.vy = 0; 
-            player.rotation = 0; player.totalRotation = 0; player.angularVelocity = (Math.random() - 0.5) * 0.1; 
-            player.lastFlips = 0; player.maxDepthMeters = 0; player.isCharred = false;
-            
-            cameraX = Math.max(0, Math.min(player.x - screenW/2, WORLD_WIDTH - screenW)); cameraY = 0; 
-            stuckSeconds = 0; checkTimer = 0; lastCheckY = player.y; lastCheckX = player.x;
-
-            particles = []; floatingTexts = []; generateLevel(); gameState = "PLAYING";
-            jumpFailTimer = 0; isStruckByLightning = false;
-            
-            // Tỷ lệ sét đánh 55%
-            if (Math.random() < 0.55) {
-                jumpFailTimer = 1; isStruckByLightning = true; player.isCharred = true; 
-                player.vx = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 10); 
-                player.vy = 15; player.angularVelocity = (Math.random() > 0.5 ? 1.5 : -1.5) * 3; 
-                createFloatingText(player.x, player.y - 30, "SÉT ĐÁNH!", "#FDE047");
-                for(let i=0; i<30; i++) particles.push({ x: player.x, y: player.y, vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20, life: 1.5, color: Math.random() > 0.5 ? "#FDE047" : "#000000", size: Math.random()*8+4 });
-            }
-            
+            // Ẩn UI ngay lập tức để người dùng không bấm được nữa
             controlPanel.style.display = "none"; 
-            dropHud.classList.remove('hidden'); resultOverlay.classList.add('hidden');
-            btnStart.disabled = false; btnStart.innerText = "THẢ RƠI";
+            dropHud.classList.remove('hidden'); 
+            resultOverlay.classList.add('hidden');
+            
+            // Sử dụng requestAnimationFrame để tránh nghẽn luồng render DOM
+            requestAnimationFrame(() => {
+                // Initialize Level
+                airMultiplier = 1.0; 
+                player.x = WORLD_WIDTH / 2; 
+                
+                // GIẢI PHÁP CHỐNG GIẬT (KHÔNG BỊ SNAP TỌA ĐỘ): Kế thừa vị trí nhấp nhô hiện tại
+                player.y = BLIMP_Y + 90 + Math.sin(frameCount * 0.02) * 10; 
+                
+                player.vx = (Math.random() - 0.5) * 8; 
+                player.vy = 0; 
+                player.rotation = 0; player.totalRotation = 0; player.angularVelocity = (Math.random() - 0.5) * 0.1; 
+                player.lastFlips = 0; player.maxDepthMeters = 0; player.isCharred = false;
+                
+                cameraX = Math.max(0, Math.min(player.x - screenW/2, WORLD_WIDTH - screenW)); 
+                cameraY = 0; 
+                stuckSeconds = 0; checkTimer = 0; lastCheckY = player.y; lastCheckX = player.x;
+
+                particles = []; floatingTexts = []; 
+                generateLevel(); 
+                
+                jumpFailTimer = 0; isStruckByLightning = false;
+                
+                // Tỷ lệ sét đánh 55%
+                if (Math.random() < 0.55) {
+                    jumpFailTimer = 1; isStruckByLightning = true; player.isCharred = true; 
+                    player.vx = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 10); 
+                    player.vy = 15; player.angularVelocity = (Math.random() > 0.5 ? 1.5 : -1.5) * 3; 
+                    createFloatingText(player.x, player.y - 30, "SÉT ĐÁNH!", "#FDE047");
+                    for(let i=0; i<30; i++) particles.push({ x: player.x, y: player.y, vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20, life: 1.5, color: Math.random() > 0.5 ? "#FDE047" : "#000000", size: Math.random()*8+4 });
+                }
+                
+                // Bắt đầu vẽ chuyển động rơi
+                gameState = "PLAYING";
+                btnStart.disabled = false; btnStart.innerText = "THẢ RƠI";
+            });
         }
 
         // --- ENGINE KẾT QUẢ & GHI LỊCH SỬ CƯỢC ---
@@ -666,6 +680,7 @@
             else { multEl.innerText = airMultiplier.toFixed(2) + "x"; multEl.className = "text-4xl text-white font-black bungee drop-shadow-md leading-none"; }
             depthEl.innerText = player.maxDepthMeters + "m"; 
             
+            // CẬP NHẬT HỆ SỐ RỚT LÀ 0.05
             depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.05).toFixed(2) + "x";
             
             // Tính Lãi hiển thị thời gian thực (Dùng activeBet nếu game đang chạy)
@@ -737,7 +752,9 @@
         let frameCount = 0;
         function updateLogic(dt) {
             frameCount += dt; 
-            if (gameState === "MENU") {
+            
+            // XỬ LÝ CẢ TRẠNG THÁI STARTING CHỜ MÁY CHỦ
+            if (gameState === "MENU" || gameState === "STARTING") {
                 cameraX += ((WORLD_WIDTH / 2 - screenW / 2) - cameraX) * (0.1 * dt); cameraY += (0 - cameraY) * (0.1 * dt);
                 for(let bg of bgClouds) { bg.x += bg.speed * dt; if(bg.x > WORLD_WIDTH + bg.r) bg.x = -bg.r; }
                 return;
@@ -769,7 +786,6 @@
 
             let currentDepthMeters = Math.floor(Math.max(0, player.y - START_Y) / PIXELS_PER_METER);
             if (currentDepthMeters > player.maxDepthMeters) { 
-                // CẬP NHẬT RỚT THEO MÉT: +0.05
                 airMultiplier += (currentDepthMeters - player.maxDepthMeters) * 0.05; 
                 player.maxDepthMeters = currentDepthMeters; 
                 updateUI(); 
@@ -914,7 +930,9 @@
             if (gameState === "PLAYING") {
                 drawBoss(player.x, player.y, player.r, player.rotation);
                 if (player.vy > 12 && !player.isCharred) { ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(player.x - 15, player.y - 30); ctx.lineTo(player.x - 15 - player.vx*1.5, player.y - 30 - player.vy*1.5); ctx.moveTo(player.x + 15, player.y - 30); ctx.lineTo(player.x + 15 - player.vx*1.5, player.y - 30 - player.vy*1.5); ctx.stroke(); }
-            } else if (gameState === "MENU") { drawBoss(WORLD_WIDTH / 2, BLIMP_Y + 90 + Math.sin(frameCount * 0.02) * 10, player.r, 0); }
+            } else if (gameState === "MENU" || gameState === "STARTING") { 
+                drawBoss(WORLD_WIDTH / 2, BLIMP_Y + 90 + Math.sin(frameCount * 0.02) * 10, player.r, 0); 
+            }
 
             particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); }); ctx.globalAlpha = 1;
             floatingTexts.forEach(f => { ctx.globalAlpha = f.life / f.maxLife; ctx.fillStyle = f.color; ctx.font = "900 24px Inter"; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 6; ctx.fillText(f.text, f.x, f.y - (f.maxLife - f.life)*2); ctx.shadowBlur = 0; }); ctx.globalAlpha = 1;
