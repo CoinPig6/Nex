@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Baccarat Pro - Wallet & AI Synced</title>
+    <!-- Thêm maximum-scale=1.0 và user-scalable=no để chống zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     
@@ -15,7 +16,6 @@
             --color-player: #3b82f6; --color-banker: #ef4444; --color-tie: #10b981; --bg-felt: #0f172a;
             --card-scale: 1;
         }
-        /* Tự động thu nhỏ lá bài nếu màn hình quá ngắn */
         @media (max-height: 750px) { :root { --card-scale: 0.9; } }
         @media (max-height: 650px) { :root { --card-scale: 0.8; } }
         @media (max-height: 550px) { :root { --card-scale: 0.7; } }
@@ -25,6 +25,8 @@
             background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
             font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden;
             color: white; user-select: none; -webkit-tap-highlight-color: transparent;
+            /* Chống pull-to-refresh và hành vi zoom mặc định */
+            touch-action: none;
         }
 
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -84,20 +86,29 @@
         .tie-dot { position: absolute; width: 8px; height: 8px; background-color: #10b981; border: 1px solid white; border-radius: 50%; top: -3px; right: -3px; z-index: 10; }
         .tie-number { position: absolute; width: 100%; text-align: center; color: #10b981; font-size: 10px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); text-shadow: 0 0 2px white; }
 
-        /* FLOATING TEXT & CHAT */
+        /* FLOATING TEXT */
         .float-text { position: absolute; font-weight: 900; font-family: 'Roboto Mono', monospace; pointer-events: none; z-index: 50; animation: floatUpFade 1.5s forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 16px; white-space: nowrap; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .float-win { color: #4ade80; } .float-loss { color: #ef4444; }
 
-        @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .animate-fade-in-left { animation: fadeInLeft 0.2s ease-out forwards; }
+        /* MARQUEE CHAT CHẠY NGANG */
+        .chat-marquee-container {
+            width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box;
+            background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.05);
+            height: 24px; display: flex; align-items: center;
+        }
+        .chat-marquee-content {
+            display: inline-block; padding-left: 100%;
+            animation: marquee 15s linear infinite;
+            font-size: 11px; color: #cbd5e1;
+        }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
     </style>
 </head>
 <body class="flex flex-col">
 
     <!-- TOP BAR -->
     <header class="h-12 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 z-50 shrink-0">
-        <!-- NÚT THOÁT -->
         <a href="game.html" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
             <i class="fa-solid fa-arrow-left text-sm"></i> <span class="font-bold text-xs tracking-wide">Thoát</span>
         </a>
@@ -122,10 +133,8 @@
     <!-- GAME AREA -->
     <div class="flex-1 relative flex flex-col items-center justify-center py-1 min-h-0">
         
-        <!-- Đếm ngược -->
         <div id="uiTimer" class="absolute top-2 w-10 h-10 rounded-full border-2 border-amber-500 flex items-center justify-center text-lg font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all">--</div>
 
-        <!-- Trạng thái Shuffle -->
         <div id="shuffleNotice" class="hidden absolute top-12 bg-black/80 px-5 py-1.5 rounded-full border border-amber-500/50 z-40 backdrop-blur-md">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-arrows-rotate text-amber-500 animate-spin"></i>
@@ -133,7 +142,6 @@
             </div>
         </div>
 
-        <!-- Area chứa lá bài -->
         <div class="w-full max-w-md flex justify-between px-4 mt-2 relative h-24 sm:h-32">
             <div id="handP" class="hand-p w-1/2 relative h-full">
                 <div id="scoreP" class="absolute -top-5 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-0.5 rounded-full text-[10px] font-bold opacity-0 transition-opacity shadow-lg z-20 whitespace-nowrap">CON: 0</div>
@@ -143,7 +151,6 @@
             </div>
         </div>
 
-        <!-- Màn che kết quả -->
         <div id="resultOverlay" class="absolute inset-0 bg-black/60 z-40 hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm pointer-events-none">
             <div class="transform scale-90 transition-transform duration-300 text-center" id="resultCard">
                 <div class="text-3xl font-black uppercase tracking-widest drop-shadow-lg mb-1" id="resTitle">WINNER</div>
@@ -152,9 +159,8 @@
             </div>
         </div>
 
-        <!-- Chat Stream & Button -->
-        <div id="chatStream" class="absolute left-3 bottom-14 w-48 flex flex-col justify-end gap-1.5 pointer-events-none z-40 h-32 overflow-hidden"></div>
-        <button onclick="game.toggleChat()" class="absolute left-3 bottom-3 w-9 h-9 bg-white/10 border border-white/20 rounded-full flex items-center justify-center text-white z-40 backdrop-blur shadow-lg active:scale-90 transition-transform">
+        <!-- Nút Mở Chat nổi -->
+        <button onclick="game.toggleChat()" class="absolute left-3 bottom-3 w-10 h-10 bg-black/60 border border-white/20 rounded-full flex items-center justify-center text-white z-40 backdrop-blur shadow-lg active:scale-90 transition-transform">
             <i class="fa-solid fa-comment-dots text-sm"></i>
         </button>
     </div>
@@ -170,8 +176,15 @@
     <!-- BETTING CONTROLS -->
     <div class="bg-slate-900/95 border-t border-white/10 pb-safe z-30 shrink-0">
         
+        <!-- CHAT MARQUEE (Chạy ngang 3 chat mới nhất) -->
+        <div class="chat-marquee-container">
+            <div id="marqueeContent" class="chat-marquee-content">
+                <span class="text-slate-500 italic">Chào mừng đến với Baccarat Pro. Khung chat đang trống.</span>
+            </div>
+        </div>
+
         <!-- STATISTICS BAR -->
-        <div class="flex justify-between items-center px-3 py-1 bg-black/40 text-[9px] font-bold border-b border-white/5">
+        <div class="flex justify-between items-center px-3 py-1.5 bg-black/40 text-[9px] font-bold border-b border-white/5">
             <div class="flex gap-3">
                 <span class="text-red-500">CÁI: <span id="statB" class="text-white">0</span></span>
                 <span class="text-blue-500">CON: <span id="statP" class="text-white">0</span></span>
@@ -242,12 +255,31 @@
         </div>
     </div>
 
-    <!-- Chat Modal Overlay -->
-    <div id="chatModal" class="fixed inset-0 bg-black/60 z-[100] flex items-end justify-center pb-safe hidden backdrop-blur-sm transition-opacity">
-        <div class="w-full bg-slate-800 p-3 flex gap-2 border-t border-slate-600 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-            <input type="text" id="chatInput" class="flex-1 bg-slate-900 text-white rounded-lg px-4 py-3 text-sm border border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') game.sendChat()">
-            <button onclick="game.sendChat()" class="bg-blue-600 text-white px-5 rounded-lg font-bold"><i class="fa-solid fa-paper-plane"></i></button>
-            <button onclick="game.toggleChat()" class="bg-slate-700 text-white px-4 rounded-lg"><i class="fa-solid fa-chevron-down"></i></button>
+    <!-- Chat Modal Overlay (Lịch sử + Input) -->
+    <div id="chatModal" class="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end hidden backdrop-blur-sm transition-opacity">
+        <!-- Đóng khi ấn bên ngoài -->
+        <div class="flex-1" onclick="game.toggleChat()"></div>
+        
+        <div class="w-full h-[65vh] bg-slate-800 flex flex-col rounded-t-2xl shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+            <!-- Header Modal Chat -->
+            <div class="flex justify-between items-center px-4 py-3 border-b border-slate-700 bg-slate-800 rounded-t-2xl shrink-0">
+                <span class="text-white font-bold text-sm"><i class="fa-solid fa-comments text-blue-400 mr-2"></i> Kênh Chat Chung</span>
+                <button onclick="game.toggleChat()" class="text-slate-400 hover:text-white w-6 h-6 flex items-center justify-center"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <!-- Lịch sử Chat hiển thị tạm thời -->
+            <div id="chatHistory" class="flex-1 overflow-y-auto p-3 flex flex-col gap-3 bg-slate-900/50">
+                <div class="text-center text-[10px] text-slate-500 italic my-2">Lịch sử chat chỉ lưu trong phiên hiện tại.</div>
+            </div>
+
+            <!-- Input Box -->
+            <div class="p-3 bg-slate-800 border-t border-slate-700 pb-safe shrink-0">
+                <div class="flex gap-2">
+                    <!-- THIẾT LẬP TEXT-[16px] ĐỂ CHỐNG IOS ZOOM -->
+                    <input type="text" id="chatInput" class="flex-1 bg-slate-900 text-white rounded-lg px-4 py-2.5 text-[16px] border border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') game.sendChat()">
+                    <button onclick="game.sendChat()" class="bg-blue-600 text-white px-5 rounded-lg font-bold shadow-lg active:scale-95 transition-transform"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -365,6 +397,9 @@
             history: [],
             isShuffling: false,
             audioUnlocked: false,
+            
+            // Chứa 3 chat mới nhất cho Marquee
+            latestChats: [],
 
             init() {
                 onAuthStateChanged(auth, async (user) => {
@@ -378,17 +413,43 @@
             },
 
             listenChat() {
+                // Chỉ lấy dữ liệu mới nhất. initialLoad = true bỏ qua các dữ liệu cũ trong DB
                 const q = query(collection(db, "globalChat"), orderBy("timestamp", "desc"), limit(5));
                 let initialLoad = true;
+                
                 onSnapshot(q, (snapshot) => {
-                    if (initialLoad) { initialLoad = false; return; }
-                    snapshot.docChanges().forEach((change) => {
+                    if (initialLoad) { 
+                        initialLoad = false; 
+                        return; // Bỏ qua lịch sử cũ khi vừa load trang
+                    }
+                    
+                    // Xử lý các tin nhắn mới vừa được thêm
+                    // Đảo ngược để tin cũ hơn xử lý trước (do query desc)
+                    const changes = snapshot.docChanges().reverse();
+                    changes.forEach((change) => {
                         if (change.type === "added") {
                             const data = change.doc.data();
-                            if(data.text) window.game.showChatBubble(data.text);
+                            if(data.text) {
+                                // Lấy thời gian hiện tại nếu serverTimestamp chưa có
+                                const timeDate = data.timestamp ? data.timestamp.toDate() : new Date();
+                                const timeStr = `${String(timeDate.getHours()).padStart(2, '0')}:${String(timeDate.getMinutes()).padStart(2, '0')}:${String(timeDate.getSeconds()).padStart(2, '0')}`;
+                                
+                                game.appendChatHistory(data.text, timeStr, data.uid === currentUser?.uid);
+                                this.updateMarquee(data.text);
+                            }
                         }
                     });
                 });
+            },
+
+            updateMarquee(text) {
+                this.latestChats.unshift(text); // Thêm lên đầu
+                if(this.latestChats.length > 3) this.latestChats.pop(); // Giữ tối đa 3
+                
+                const mContainer = document.getElementById('marqueeContent');
+                if(this.latestChats.length > 0) {
+                    mContainer.innerHTML = this.latestChats.map(t => `<span class="text-white">${t}</span>`).join(' &nbsp; • &nbsp; ');
+                }
             },
 
             sendChatMessage(text) {
@@ -620,7 +681,8 @@
                 const modal = document.getElementById('chatModal');
                 if (modal.classList.contains('hidden')) {
                     modal.classList.remove('hidden');
-                    document.getElementById('chatInput').focus();
+                    // setTimeout để mượt animation trước khi focus
+                    setTimeout(() => document.getElementById('chatInput').focus(), 100);
                 } else {
                     modal.classList.add('hidden');
                     document.getElementById('chatInput').blur();
@@ -632,27 +694,24 @@
                 if (text) {
                     app.sendChatMessage(text);
                     input.value = '';
-                    this.toggleChat(); // Auto close on send for better mobile experience
+                    input.focus(); // Giữ focus sau khi gửi để nhập tiếp
                 }
             },
-            showChatBubble(text) {
-                const stream = document.getElementById('chatStream');
-                const b = document.createElement('div');
-                b.className = 'bg-black/70 text-white text-[11px] px-2.5 py-1.5 rounded-xl w-max max-w-[200px] break-words border border-white/20 shadow-lg animate-fade-in-left backdrop-blur-md font-medium';
-                b.innerText = text;
-                stream.appendChild(b);
+            appendChatHistory(text, timeStr, isMe) {
+                const historyBox = document.getElementById('chatHistory');
+                const div = document.createElement('div');
+                div.className = `flex flex-col max-w-[80%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`;
                 
-                // Keep max 3-4 chats
-                while(stream.children.length > 4) {
-                    stream.removeChild(stream.firstChild);
-                }
+                div.innerHTML = `
+                    <div class="px-3 py-1.5 rounded-xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-700 text-slate-100 rounded-tl-sm'} shadow-md">
+                        ${text}
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-0.5">${timeStr}</span>
+                `;
                 
-                // Disappear after ~2s
-                setTimeout(() => {
-                    b.style.opacity = '0';
-                    b.style.transition = 'opacity 0.4s ease';
-                    setTimeout(() => b.remove(), 400);
-                }, 2000);
+                historyBox.appendChild(div);
+                // Cuộn xuống dòng cuối
+                historyBox.scrollTop = historyBox.scrollHeight;
             },
             aiSpeak(text) {
                 const el = document.getElementById('aiSubtitles');
@@ -814,18 +873,15 @@
                     document.getElementById('hand'+z).appendChild(div);
                     void div.offsetWidth;
                     setTimeout(()=>div.classList.add('active'),50);
-                    // Lật nhanh hơn một chút để mượt mạch đọc
                     setTimeout(()=>div.querySelector('.card-inner').classList.add('flipped'), 300);
                 };
                 
-                // Quy tắc đọc điểm 1-9 bình thường, 10-K là 0
                 const getCardPoints = (c) => {
                     if(['10','J','Q','K'].includes(c.r)) return '0';
                     if(c.r === 'A') return '1';
                     return c.r;
                 };
 
-                // Nếu tổng điểm là 0 thì đọc là Ba Ca Ra
                 const getScoreText = (side, score) => {
                     const name = side === 'P' ? 'Nhà con' : 'Nhà cái';
                     if (score === 0) return `${name} ba ca ra`;
@@ -851,7 +907,6 @@
                 upS('scoreP', pScore); 
                 upS('scoreB', bScore);
                 
-                // Đọc tổng điểm 2 lá đầu
                 this.aiSpeak(`${getScoreText('P', pScore)}.`);
                 await w(1200);
                 this.aiSpeak(`${getScoreText('B', bScore)}.`);
@@ -980,4 +1035,5 @@
     </script>
 </body>
 </html>
+
 
