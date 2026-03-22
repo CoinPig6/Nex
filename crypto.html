@@ -60,7 +60,7 @@
 
         .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* HIỆU ỨNG NGƯỜI THẮNG (TICKER) */
+        /* HIỆU ỨNG TICKER */
         .winner-item {
             display: flex;
             justify-content: space-between;
@@ -131,7 +131,7 @@
         </div>
     </div>
 
-    <!-- BẢNG LỊCH SỬ KẾT QUẢ & TICKER NGƯỜI THẮNG THẬT -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ & TICKER NGƯỜI CHƠI THẬT -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
@@ -141,16 +141,16 @@
         <!-- Khu vực chia đôi -->
         <div class="flex-1 flex overflow-hidden">
             <!-- Left: Bóng Lịch Sử -->
-            <div class="w-[68%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
+            <div class="w-[60%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
                 <div class="history-wrapper hide-scroll" id="historyWrapper">
                     <div class="history-container" id="historyContainer"></div>
                 </div>
             </div>
-            <!-- Right: Cột Người Thắng Thật (Ticker) -->
-            <div class="w-[32%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
-                <div class="text-[8px] text-[#0ECB81] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
+            <!-- Right: Cột KẾT QUẢ PHIÊN (Real) -->
+            <div class="w-[40%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
+                <div class="text-[8px] text-[#FCD535] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">KẾT QUẢ PHIÊN VỪA RỒI</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
-                    <div class="text-gray-500 text-center text-[9px] mt-3 font-bold px-2">Đang tải người chơi thật...</div>
+                    <div class="text-gray-500 text-center text-[9px] mt-3 font-bold px-2">Đang chờ chốt phiên...</div>
                 </div>
             </div>
         </div>
@@ -239,7 +239,7 @@
     <!-- FIREBASE & CORE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, getDoc, onSnapshot, getDocs, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // APP CONFIG & GLOBAL VARIABLES
@@ -258,12 +258,12 @@
         
         let currentUser = null;
         let roundSettled = false;
+        let currentSessionStr = "";
 
         const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
         const state = {
             balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
-            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false,
-            lastTickTime: 0, targetVisualPrice: 98100
+            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false
         };
 
         // --- MATH & SEED LOGIC (ABSOLUTE SYNC 100%) ---
@@ -316,7 +316,6 @@
                 currentUser = user;
                 if (user) {
                     loadUserData(user.uid);
-                    setupTickerListener(); // Kích hoạt lắng nghe người thắng thời gian thực
                 } else {
                     window.location.href = "login.html";
                 }
@@ -441,56 +440,84 @@
             }, 2500);
         }
 
-        // --- REAL-TIME TICKER (LẮNG NGHE NGƯỜI CHƠI THẬT) ---
-        function setupTickerListener() {
-            if (!currentUser) return;
-            const winsRef = collection(db, 'artifacts', appId, 'public', 'data', 'recentWins');
+        // --- CẬP NHẬT LỊCH SỬ NGƯỜI CHƠI (TẤT CẢ NGƯỜI THẮNG/THUA TRONG PHIÊN) ---
+        async function fetchAndDisplaySessionResults(sessionId, correctResult) {
+            const ticker = document.getElementById('winnersTicker');
+            ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Đang tải...</div>';
             
-            onSnapshot(winsRef, (snapshot) => {
-                let wins = [];
-                snapshot.forEach(doc => {
+            try {
+                // Lấy TẤT CẢ các cược đã ghi nhận vào Public Collection
+                const betsRef = collection(db, 'artifacts', appId, 'public', 'data', 'latestBets');
+                const querySnapshot = await getDocs(betsRef);
+                
+                let sessionResults = [];
+                
+                querySnapshot.forEach((doc) => {
                     let data = doc.data();
-                    if (Date.now() - data.timestamp < 86400000) { 
-                        wins.push(data);
+                    // Lọc bằng JS theo Rule (Không dùng where)
+                    if (data.sessionId === sessionId) {
+                        let isWin = (data.type === correctResult);
+                        let profit = isWin ? (data.amount * 0.96) : -data.amount;
+                        
+                        sessionResults.push({
+                            uid: data.uid,
+                            name: data.name,
+                            isWin: isWin,
+                            profit: profit,
+                            amount: data.amount,
+                            type: data.type
+                        });
                     }
                 });
                 
-                wins.sort((a, b) => b.timestamp - a.timestamp);
-                wins = wins.slice(0, 15); 
+                ticker.innerHTML = '';
                 
-                renderRealWinners(wins);
-            }, (error) => {
-                console.error("Lỗi lấy dữ liệu người thắng:", error);
-            });
-        }
+                if (sessionResults.length === 0) {
+                    ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Phiên này không ai chơi</div>';
+                    return;
+                }
+                
+                // Sắp xếp: Thắng lên trên (lãi cao lên đầu), Thua xuống dưới (lỗ nhiều xuống bét)
+                sessionResults.sort((a, b) => b.profit - a.profit);
+                
+                sessionResults.forEach((w, index) => {
+                    let el = document.createElement('div');
+                    let isLocal = state.userData && w.uid === state.userData.uid;
+                    
+                    let bgClass = '';
+                    let textClass = '';
+                    let sign = '';
+                    
+                    if (w.isWin) {
+                        bgClass = isLocal ? 'bg-[#0ECB81]/20 border-l-[3px] border-[#0ECB81]' : '';
+                        textClass = 'text-[#0ECB81]';
+                        sign = '+';
+                    } else {
+                        bgClass = isLocal ? 'bg-[#F6465D]/20 border-l-[3px] border-[#F6465D]' : '';
+                        textClass = 'text-[#F6465D]';
+                        sign = '';
+                    }
+                    
+                    el.className = `winner-item ${bgClass}`;
+                    el.style.animationDelay = `${index * 0.05}s`; 
+                    
+                    let nameColor = isLocal ? 'text-white font-black' : 'text-gray-400 font-bold';
+                    let safeName = w.name || "Khách";
+                    let maskedName = isLocal ? "Bạn (Me)" : (safeName.length > 3 ? safeName.substring(0, 3) + '***' : safeName + '***');
+                    
+                    let typeBadge = w.type === 'up' ? '<i class="fa-solid fa-arrow-trend-up text-[#0ECB81] ml-1"></i>' : '<i class="fa-solid fa-arrow-trend-down text-[#F6465D] ml-1"></i>';
+                    
+                    el.innerHTML = `
+                        <span class="${nameColor} truncate flex-1">${maskedName} ${typeBadge}</span>
+                        <span class="${textClass} font-mono font-black shrink-0">${sign}${w.profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    `;
+                    ticker.appendChild(el);
+                });
 
-        function renderRealWinners(wins) {
-            const ticker = document.getElementById('winnersTicker');
-            ticker.innerHTML = '';
-            
-            if (wins.length === 0) {
-                ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Đang chờ người chiến thắng...</div>';
-                return;
+            } catch (error) {
+                console.error("Lỗi lấy lịch sử phiên:", error);
+                ticker.innerHTML = '<div class="text-red-500 text-center text-[9px] mt-3 font-bold px-2">Lỗi tải dữ liệu</div>';
             }
-
-            wins.forEach((w, index) => {
-                let el = document.createElement('div');
-                let isLocal = state.userData && w.uid === state.userData.uid;
-                
-                el.className = 'winner-item' + (isLocal ? ' bg-[#0ECB81]/20 border-l-[3px] border-[#0ECB81]' : '');
-                
-                let nameColor = isLocal ? 'text-white font-black' : 'text-gray-400 font-bold';
-                let safeName = w.name || "Khách";
-                
-                // XỬ LÝ TÊN: Người thật hiển thị "Bạn (Me)", người khác sẽ bị che ***
-                let maskedName = isLocal ? "Bạn (Me)" : (safeName.length > 3 ? safeName.substring(0, 3) + '***' : safeName + '***');
-                
-                el.innerHTML = `
-                    <span class="${nameColor} truncate w-[60%]">${maskedName}</span>
-                    <span class="text-[#0ECB81] font-mono font-black shrink-0">+${w.amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                `;
-                ticker.appendChild(el);
-            });
         }
 
         window.selectSide = (type) => {
@@ -511,7 +538,7 @@
             
             document.getElementById('confirmBalance').innerText = state.balance.toLocaleString('en-US') + " T";
             document.getElementById('confirmAmount').innerText = amount + " T";
-            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; // Update RTP 96%
+            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; 
             document.getElementById('confirmBar').classList.add('active');
         };
 
@@ -534,8 +561,19 @@
 
             if(currentUser && state.userData) {
                 try {
+                    // Update user balance locally
                     await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
-                    await setDoc(doc(db, "games", "current"), { [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount) }, { merge: true });
+                    
+                    // Ghi nhận cược vào Public Data để Ticker quét khi hết phiên
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'latestBets', state.userData.uid), {
+                        uid: state.userData.uid,
+                        name: state.userData.username || "Khách",
+                        amount: (!state.currentBet ? amount : state.currentBet.amount + amount), // Gộp nếu nhồi lệnh
+                        type: type,
+                        sessionId: currentSessionStr,
+                        timestamp: Date.now()
+                    });
+                    
                 } catch(e) { console.error(e); }
             }
 
@@ -607,7 +645,8 @@
             const isOrder = exactSec < 30;
             const timeLeft = isOrder ? Math.ceil(30 - exactSec) : Math.ceil(60 - exactSec);
 
-            document.getElementById('sessionID').innerText = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
+            currentSessionStr = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
+            document.getElementById('sessionID').innerText = currentSessionStr;
             document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
             document.getElementById('timerProgress').style.width = ((timeLeft / 30) * 100) + "%";
         }
@@ -618,7 +657,8 @@
             
             const finishedCandle = state.baseCandles[state.baseCandles.length - 2];
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
-
+            
+            // Xử lý Popup thắng thua cho tài khoản này
             if (state.currentBet) {
                 const b = state.currentBet; 
                 state.currentBet = null; 
@@ -629,18 +669,6 @@
                     totalReturn = b.amount * 1.96; profit = b.amount * 0.96; 
                     state.balance += totalReturn; 
                     showPopup(true, profit); 
-                    
-                    // Đẩy dữ liệu Thắng lên máy chủ Ticker chung của sàn
-                    if(currentUser && state.userData) {
-                        try {
-                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'recentWins'), {
-                                uid: state.userData.uid,
-                                name: state.userData.username || "Khách",
-                                amount: profit,
-                                timestamp: Date.now() 
-                            });
-                        } catch(e) { console.error("Lỗi đẩy Ticker", e); }
-                    }
                 } else { 
                     showPopup(false, b.amount); 
                 }
@@ -659,6 +687,13 @@
                 }
             }
 
+            // KÍCH HOẠT LẤY DỮ LIỆU TẤT CẢ NGƯỜI CHƠI TRONG PHIÊN VỪA KẾT THÚC
+            // (Đẩy lùi 1 phút vì sessionStr hiện tại đã chuyển sang phiên order mới)
+            const now = new Date(Date.now() - 60000); 
+            let finishedSessionStr = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
+            
+            fetchAndDisplaySessionResults(finishedSessionStr, res);
+
             setTimeout(() => { roundSettled = false; }, 2000);
         }
 
@@ -671,6 +706,7 @@
             const isResultPhase = currentEpoch % 2 !== 0; 
             const progress = (now % 30000) / 30000;
 
+            // 1. Chuyển Phiên (Epoch mới)
             if (state.lastEpoch !== currentEpoch) {
                 state.baseCandles = buildBaseCandles(); 
                 state.lastEpoch = currentEpoch;
@@ -705,53 +741,50 @@
                 regenerateHistory(); 
             }
 
-            // 2. THUẬT TOÁN KHỚP LỆNH CHÂN THỰC (ORDER BOOK TICK SIMULATOR)
+            // 2. THUẬT TOÁN NẾN MỚI: SÓNG SIÊU MƯỢT, HỘI TỤ ĐÍCH TRƠN TRU
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
+            const tSec = now / 1000;
+            const t = progress; 
             
-            // Nếu chưa có biến lưu trữ tạm, khởi tạo giá trị đầu tiên
-            if (!state.targetVisualPrice) state.targetVisualPrice = liveCandle.open;
-            if (!state.lastTickTime) state.lastTickTime = 0;
-
-            // Xử lý tạo Tick: Cứ mỗi 200ms tạo ra 1 mức giá mới (Giống biểu đồ tick của sàn)
-            if (now - state.lastTickTime > 200) {
-                state.lastTickTime = now;
-                
-                // Trục cơ sở chạy từ Open tới Close (hơi bẻ cong nhẹ đoạn cuối cho tự nhiên)
-                let basePrice = liveCandle.open + (liveCandle.change * Math.pow(progress, 0.8));
-                
-                // Tạo độ vọt/sập ngẫu nhiên (Biên độ lớn 8 giá)
-                let tickWiggle = (Math.random() - 0.5) * 8; 
-                
-                if (progress > 0.9) {
-                    // Ở 3 giây cuối (progress > 0.9): Dần dần bóp nhẹ tickWiggle và kéo BasePrice về sát Close
-                    // Điều này giúp tránh việc nến giật xa rồi hút ngược lại trong mili-giây cuối.
-                    let forceClose = (progress - 0.9) * 10; // Chạy từ 0 -> 1
-                    state.targetVisualPrice = (basePrice * (1 - forceClose)) + (liveCandle.close * forceClose) + (tickWiggle * (1 - forceClose));
-                } else {
-                    state.targetVisualPrice = basePrice + tickWiggle;
-                }
-            }
+            // Hàm chuyển động: Đảm bảo giá xuất phát từ Open và kết thúc chính xác ở Close
+            const startPrice = liveCandle.open;
+            const endPrice = liveCandle.open + liveCandle.change;
             
-            // LÀM MƯỢT GIỮA 2 TICK: Biến đổi dần về giá Target (Giúp nến di chuyển trơn tru nhưng vẫn có nhịp vọt)
-            state.visualPrice += (state.targetVisualPrice - state.visualPrice) * 0.25;
+            // Đường cơ sở nối thẳng từ Open đến Close
+            let baseTrajectory = startPrice + (endPrice - startPrice) * t;
+            
+            // Lớp bọc (Envelope): Math.sin(t * PI) 
+            // - t=0 (Bắt đầu): Envelope = 0 -> Giá đúng bằng Open, không giật khúc
+            // - t=0.5 (Giữa phiên): Envelope = 1 -> Biến động vọt max
+            // - t=1.0 (Cuối phiên): Envelope = 0 -> Giá bị ép chuẩn xác về Close một cách từ từ, tự nhiên
+            let envelope = Math.sin(t * Math.PI);
+            
+            // Sóng tạo biến động (Lên xuống chậm, biên độ lớn)
+            let wave1 = Math.sin(t * 30) * 12; // Lên xuống 5 chu kỳ
+            let wave2 = Math.cos(t * 45) * 8;  // Sóng phụ tạo độ nhiễu
+            let wave3 = Math.sin(t * 80) * 3;  // Nhiễu tăm
+            
+            let wiggle = (wave1 + wave2 + wave3) * envelope;
+            
+            // Cập nhật giá
+            state.visualPrice = baseTrajectory + wiggle;
 
-            // Cập nhật dữ liệu nến realtime để râu nến mọc ra
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // Cập nhật bóng hiện tại
+            // Cập nhật bóng
             const liveDot = document.getElementById('liveDot');
             if (liveDot) {
                 const isLiveUp = state.visualPrice >= liveCandle.open;
                 liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
             }
 
-            // 3. Render Canvas (Đã tối ưu AUTO-SCALE chống mất râu)
-            const VISIBLE_CANDLES = 22; // Nến to vừa đủ màn hình
+            // 3. Render Canvas (Đã tối ưu AUTO-SCALE chống mất đỉnh/đáy râu)
+            const VISIBLE_CANDLES = 22; 
             const w = (cvs.width - CONFIG.chartPaddingRight) / VISIBLE_CANDLES; 
             
-            // DYNAMIC SCALE: Quét High/Low của các nến đang hiển thị
+            // DYNAMIC SCALE
             let highestVisible = state.visualPrice;
             let lowestVisible = state.visualPrice;
             const startIndex = Math.max(0, state.baseCandles.length - VISIBLE_CANDLES);
@@ -760,10 +793,9 @@
                 if (state.baseCandles[i].low < lowestVisible) lowestVisible = state.baseCandles[i].low;
             }
             
-            // Đảm bảo khung hình bao trọn đỉnh và đáy + lề 15 giá
-            const padding = 15; 
-            // Giữ mức tối thiểu r=80 để khi nến đi ngang không bị zoom phóng đại quá mức
-            const r = Math.max(80, (highestVisible - lowestVisible) + padding * 2); 
+            // Nới rộng Padding trên và dưới thêm ±40 để chứa râu nến thoải mái
+            const padding = 40; 
+            const r = Math.max(100, (highestVisible - lowestVisible) + padding * 2); 
             const min = lowestVisible - padding;
 
             ctx.clearRect(0, 0, cvs.width, cvs.height);
@@ -798,11 +830,9 @@
                 ctx.fillStyle = c.close >= c.open ? '#0ECB81' : '#F6465D'; 
                 ctx.strokeStyle = ctx.fillStyle;
 
-                // Tăng độ dày râu nến
                 ctx.lineWidth = 2.0;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
                 
-                // Tăng bề ngang thân nến
                 const bodyH = Math.max(Math.abs(yC - yO), 3);
                 const candleWidth = w * 0.75;
                 ctx.fillRect(x - (candleWidth/2), Math.min(yO, yC), candleWidth, bodyH);
