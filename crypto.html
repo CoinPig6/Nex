@@ -24,13 +24,15 @@
         .btn-trade:active { transform: translateY(3px); border-bottom-width: 1px; }
         .btn-trade.dimmed { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
 
-        /* HISTORY ROADMAP */
+        /* HISTORY ROADMAP - CHUẨN BO 4 HÀNG X 5 CỘT */
         .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; padding-left: 5px; scroll-behavior: smooth; }
-        .history-container { display: flex; flex-direction: row; gap: 4px; padding-right: 15px; }
-        .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 72px; height: 90px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 8px; border: 1px solid #1f2430; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; background-color: #1e232e; margin: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #2d3442; transition: all 0.3s; }
-        .dot.up { background-color: #0ECB81; box-shadow: 0 0 6px rgba(14, 203, 129, 0.6); border-color: #0ECB81; } 
-        .dot.down { background-color: #F6465D; box-shadow: 0 0 6px rgba(246, 70, 93, 0.6); border-color: #F6465D; }
+        .history-container { display: flex; flex-direction: row; gap: 6px; padding-right: 15px; }
+        .history-block { display: grid; grid-template-rows: repeat(4, 1fr); grid-template-columns: repeat(5, 1fr); grid-auto-flow: column; gap: 4px; width: 85px; height: 68px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 8px; border: 1px solid #1f2430; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; margin: auto; transition: all 0.3s; }
+        .dot.empty { border: 1px solid #2d3442; background-color: transparent; }
+        .dot.up { background-color: #0ECB81; box-shadow: 0 0 6px rgba(14, 203, 129, 0.6); border: 1px solid #0ECB81; } 
+        .dot.down { background-color: #F6465D; box-shadow: 0 0 6px rgba(246, 70, 93, 0.6); border: 1px solid #F6465D; }
+        .dot.new { border: 2px solid white !important; box-shadow: 0 0 10px white !important; animation: popIn 0.3s; }
         
         /* ĐƯỜNG KHÓA GIÁ */
         #lockLine { position: absolute; left: 0; right: 0; height: 1px; border-top: 1px dashed #FCD535; z-index: 5; pointer-events: none; display: none; }
@@ -47,15 +49,14 @@
         #confirmBar.active { transform: translateY(0); }
         
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .dot.new { animation: popIn 0.3s; border: 2px solid white; box-shadow: 0 0 10px white; }
         
         /* TOAST THÔNG BÁO */
         #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1e232e; border: 1px solid #2d3442; padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { opacity: 1; }
         
-        /* CHIP CHỌN TIỀN */
+        /* CHIP CHỌN TIỀN CÓ HIỆU ỨNG SÁNG LÊN */
         .chip { background: #1e232e; color: #9ca3af; padding: 8px 0; width: 15%; min-width: 45px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.2s; }
-        .chip.selected { background: #FCD535; color: black; border-color: #FCD535; box-shadow: 0 0 15px rgba(252,213,53,0.5); transform: scale(1.05); }
+        .chip.selected { background: #FCD535; color: black; border-color: white; box-shadow: 0 0 15px rgba(252,213,53,0.6); transform: scale(1.05); }
         .chip:active { transform: scale(0.95); }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -71,13 +72,12 @@
         <div class="text-[#FCD535] text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse">Đồng bộ biểu đồ...</div>
     </div>
 
-    <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-[#0ECB81] text-lg"></i><span class="text-xs font-bold text-white uppercase tracking-wide" id="toastMsg">...</span></div>
 
-    <!-- HEADER -->
+    <!-- HEADER: Nút Thoát Về Game.html -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
         <div class="flex items-center gap-4">
-            <a href="index.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
+            <a href="game.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
                 <i class="fa-solid fa-arrow-right-from-bracket text-[#9ca3af] rotate-180"></i>
             </a>
             <div class="flex flex-col justify-center">
@@ -106,7 +106,6 @@
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
         
-        <!-- POPUP THẮNG/THUA -->
         <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase tracking-widest">HÚP RỒI</div>
@@ -115,7 +114,7 @@
         </div>
     </div>
 
-    <!-- BẢNG LỊCH SỬ KẾT QUẢ CÓ ĐỒNG HỒ ĐO LỰC -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ (THIẾT KẾ ĐÚNG CHUẨN CẦU 4 HÀNG X 5 CỘT) -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
@@ -123,15 +122,13 @@
         </div>
         <div class="flex-1 bg-[#0b0f19] flex items-center justify-between px-3 overflow-hidden">
             
-            <!-- ĐỒNG HỒ LỰC NẾN (Market Force Gauge) -->
             <div class="w-[60px] h-16 relative flex flex-col items-center justify-end shrink-0 border-r border-[#232836] pr-3 mr-2">
                 <div class="w-12 h-6 relative overflow-hidden">
                     <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible drop-shadow-md">
                         <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#F6465D" stroke-width="12" stroke-linecap="round"/>
-                        <path id="force-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#0ECB81" stroke-width="12" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="62.83" style="transition: stroke-dashoffset 0.3s ease-out;"/>
+                        <path id="force-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#0ECB81" stroke-width="12" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="62.83" style="transition: stroke-dashoffset 0.2s ease-out;"/>
                     </svg>
-                    <!-- Kim đồng hồ -->
-                    <div id="force-needle" class="absolute bottom-0 left-1/2 w-0.5 h-6 bg-white origin-bottom rounded-full shadow-md" style="transform: translateX(-50%) rotate(0deg); transition: transform 0.3s ease-out; z-index: 10;"></div>
+                    <div id="force-needle" class="absolute bottom-0 left-1/2 w-0.5 h-6 bg-white origin-bottom rounded-full shadow-md" style="transform: translateX(-50%) rotate(0deg); transition: transform 0.2s ease-out; z-index: 10;"></div>
                     <div class="absolute bottom-0 left-1/2 w-2 h-2 bg-gray-200 rounded-full transform -translate-x-1/2 translate-y-1/2 z-20 shadow-lg border border-gray-400"></div>
                 </div>
                 <div class="mt-1.5 flex flex-col items-center leading-none">
@@ -140,18 +137,17 @@
                 </div>
             </div>
 
-            <!-- LƯỚI BÓNG LỊCH SỬ -->
+            <!-- BẢNG GIỌT NƯỚC (ROADMAP) -->
             <div class="flex-1 overflow-x-auto hide-scroll h-full flex items-center" id="historyWrapper">
                 <div class="history-container" id="historyContainer"></div>
             </div>
         </div>
     </div>
 
-    <!-- BẢNG ĐIỀU KHIỂN & CHIP CƯỢC -->
+    <!-- BẢNG ĐIỀU KHIỂN & CHIP CƯỢC CÂN ĐỐI -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
             
-            <!-- CHIPS CHỌN NHANH -->
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
                 <button onclick="window.setBetAmount(10, this)" class="chip selected">10</button>
                 <button onclick="window.setBetAmount(50, this)" class="chip">50</button>
@@ -161,24 +157,19 @@
                 <button onclick="window.setAllIn(this)" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
             </div>
 
-            <!-- Ô NHẬP TIỀN -->
             <div class="flex items-center justify-center gap-3 w-full max-w-sm">
                 <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-minus"></i></button>
-                
                 <div class="flex-1 relative group h-12">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#FCD535] font-black text-base mt-0.5">T</span>
                     <input type="number" id="betInput" value="10" min="10" class="w-full h-full bg-[#050505] border border-[#2d3442] text-white font-mono font-black text-xl rounded-xl text-center focus:outline-none focus:border-[#FCD535] shadow-inner" oninput="window.updateProfit()">
                 </div>
-                
                 <button onclick="window.adjustBet(10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-plus"></i></button>
             </div>
             
             <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.50 T</span></div>
         </div>
         
-        <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
         <div class="flex justify-center items-center gap-3 h-14 w-full max-w-sm mx-auto">
-            <!-- NÚT BÁN -->
             <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
                 <i class="fa-solid fa-arrow-trend-down text-2xl text-white/30 absolute left-3"></i>
                 <div class="flex flex-col items-center w-full z-10 ml-2">
@@ -187,14 +178,12 @@
                 <div id="badge-down" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
             
-            <!-- TIMER -->
             <div class="w-20 shrink-0 h-full bg-[#050505] rounded-2xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
                 <div id="timerProgress" class="absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
                 <span id="phaseText" class="text-[7px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
                 <span id="timerText" class="text-white font-mono font-black text-3xl z-10 leading-none">30</span>
             </div>
             
-            <!-- NÚT MUA -->
             <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
                 <div class="flex flex-col items-center w-full z-10 mr-2">
                     <span class="font-black text-xl text-white tracking-wide">MUA</span>
@@ -251,7 +240,7 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
 
-        // Lấy đúng màu Xanh/Đỏ theo Epoch (Mỗi 30s là 1 mốc)
+        // Lấy đúng màu Xanh/Đỏ theo Epoch
         function getDeterministicResult(epoch) {
             const currentEpoch = Math.floor(Date.now() / 30000);
             if (epoch === currentEpoch && state.killWhaleMode) {
@@ -262,7 +251,7 @@
             return rand > 0.5 ? 'up' : 'down';
         }
 
-        // Tạo mảng nến lịch sử
+        // Khởi tạo mảng nến
         function buildBaseCandles() {
             const currentEpoch = Math.floor(Date.now() / 30000);
             let simPrice = 98100;
@@ -272,7 +261,6 @@
                 const rand = seededRandom(e * 123);
                 const dir = getDeterministicResult(e); 
                 
-                // Nến chắc chắn đóng đúng hướng của Epoch đó
                 let change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
                 
                 const open = simPrice;
@@ -434,30 +422,40 @@
             if (b.expires > Date.now()) { state.currentBet = { type: b.type, amount: b.amount }; updateBetUI(b.type, b.amount); }
         }
 
-        // --- HISTORY RENDER (GHI 60 BÓNG TƯƠNG ỨNG 60 EPOCH VỪA QUA) ---
+        // --- HISTORY RENDER (BẢNG LỊCH SỬ CHUẨN 4 HÀNG) ---
         function regenerateHistory() {
             const currentEpoch = Math.floor(Date.now() / 30000);
+            
+            // Tìm mốc bắt đầu của khối chứa ô hiện tại (một khối có 20 ô)
+            const currentBlockStartEpoch = currentEpoch - (currentEpoch % 20);
+            
+            // Ta sẽ vẽ 3 khối (block), nên lùi lại 40 ô từ điểm bắt đầu khối hiện tại
+            const startEpochToDraw = currentBlockStartEpoch - 40;
+            
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
             let u = 0, dCount = 0;
             
             for (let b = 0; b < 3; b++) {
                 const block = document.createElement('div'); block.className = 'history-block';
                 for(let i = 0; i < 20; i++) {
-                    const slotIdx = b * 20 + i;
-                    const epochIdx = currentEpoch - 59 + slotIdx; // Lấy đủ 60 mốc 30s
-                    
+                    const epochIdx = startEpochToDraw + (b * 20) + i;
                     const dot = document.createElement('div');
-                    if (slotIdx === 59) {
-                        dot.id = 'liveDot'; dot.className = 'dot new'; 
-                    } else if (slotIdx < 59) {
+                    
+                    if (epochIdx === currentEpoch) {
+                        dot.id = 'liveDot'; 
+                        dot.className = 'dot new'; 
+                    } else if (epochIdx < currentEpoch) {
                         const res = getDeterministicResult(epochIdx);
                         dot.className = res === 'up' ? 'dot up' : 'dot down';
                         if (res === 'up') u++; else dCount++;
+                    } else {
+                        dot.className = 'dot empty'; // Ô trống trong tương lai
                     }
                     block.appendChild(dot);
                 }
                 c.appendChild(block);
             }
+            
             document.getElementById('count-up').innerText = u; 
             document.getElementById('count-down').innerText = dCount;
             const wrapper = document.getElementById('historyWrapper'); wrapper.scrollLeft = wrapper.scrollWidth;
@@ -487,7 +485,7 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // Kết quả 100% dựa vào thuật toán Seeded để không ai có thể can thiệp
+            // Lấy kết quả bằng toán học tuyệt đối của nến vừa đóng
             const finishedEpoch = Math.floor(Date.now() / 30000) - 1;
             let res = getDeterministicResult(finishedEpoch);
 
@@ -558,30 +556,35 @@
                 regenerateHistory(); 
             }
 
-            // 2. Chạy Nến LIVE & Đồng hồ Lực
+            // 2. Thuật toán di chuyển Nến (Thrust Movement)
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
-            const easeProgress = 1 - Math.pow(1 - progress, 2); 
             const tSec = now / 1000;
             
-            // --- THUẬT TOÁN "GIẬT ĐIỆN" 3 GIÂY CUỐI ---
+            // Xung nhịp để tạo ra đà "chạy rồi dừng"
+            const thrust = Math.max(0, Math.sin(tSec * Math.PI * 1.5)); 
+            
+            // Progress dạng bước sóng
+            let steppedProgress = progress + (thrust * 0.05 * (1 - progress));
+            const easeProgress = 1 - Math.pow(1 - Math.max(0, Math.min(1, steppedProgress)), 2);
+
             const timeRemaining = 30 * (1 - progress); 
             let currentWiggle = 0;
-            if (timeRemaining <= 3.5 && timeRemaining > 0.1) {
-                // Random giật cực mạnh nhưng thu hẹp dần về 0
-                currentWiggle = (Math.random() - 0.5) * 12 * timeRemaining;
+            
+            if (timeRemaining <= 2.5) {
+                // 2.5s cuối: Tắt rung lắc hoàn toàn, nến sẽ êm ái đáp vào đích
+                currentWiggle = 0;
             } else {
-                // Rung nhẹ tự nhiên
-                currentWiggle = (Math.sin(tSec * 5) * 1 + Math.cos(tSec * 8) * 0.5) * (1 - progress);
+                // Rung lắc nhẹ khi nến đang đi
+                currentWiggle = (Math.random() - 0.5) * 1.5 * (timeRemaining / 30);
             }
             
-            // Bắt buộc đích đến bằng Change + Wiggle (Wiggle tự về 0 ở mili giây cuối cùng)
             state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
 
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // Đồng hồ lực
+            // Đồng hồ lực Nến (Speedometer)
             const diff = state.visualPrice - liveCandle.open;
             let forceBase = diff * 15; 
             forceBase += (Math.random() - 0.5) * 10; 
@@ -598,7 +601,7 @@
                 fVal.className = forcePercent > 50 ? 'text-[8px] font-bold text-[#0ECB81]' : 'text-[8px] font-bold text-[#F6465D]';
             }
 
-            // Bóng lịch sử đang nháy
+            // Cập nhật bóng hiện tại đang sáng
             const liveDot = document.getElementById('liveDot');
             if (liveDot) {
                 const isLiveUp = state.visualPrice >= liveCandle.open;
@@ -662,5 +665,4 @@
     </script>
 </body>
 </html>
-
 
