@@ -166,7 +166,7 @@
         <div id="result-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md pointer-events-auto z-40">
             <div id="result-box" class="panel-ui p-6 w-[90%] max-w-sm text-center border-t-4 border-[var(--stake-green)] opacity-0 shadow-2xl">
                 <div class="flex justify-center mb-2" id="result-icon"></div>
-                <h2 id="result-title" class="text-[var(--stake-green)] font-bold uppercase text-sm mb-1 tracking-widest">Thắng Cược</h2>
+                <h2 id="result-title" class="text-[var(--stake-green)] font-bold uppercase text-sm mb-1 tracking-widest">Húp Rồi</h2>
                 <div class="flex justify-center items-end gap-2 mb-4">
                     <p id="result-money" class="text-4xl text-white font-black bungee drop-shadow-[0_0_15px_rgba(0,231,1,0.5)]">0.00</p>
                     <span class="text-xl font-bold text-white mb-1">T</span>
@@ -178,7 +178,7 @@
                 
                 <p id="end-reason" class="text-xs font-bold px-3 py-1.5 rounded-md inline-block mb-2"></p>
                 
-                <button onclick="closeResult()" class="mt-4 btn-action w-full py-3.5 rounded-lg font-bold uppercase tracking-wider text-white">Đóng Lại</button>
+                <button id="btn-close-result" onclick="closeResult()" class="mt-4 btn-action w-full py-3.5 rounded-lg font-bold uppercase tracking-wider text-white">Đóng Lại</button>
                 
                 <button id="btn-stop-auto" onclick="stopAutoMode()" class="hidden mt-4 btn-stop-auto w-full py-3.5 rounded-lg font-bold uppercase tracking-wider">
                     🛑 Dừng Auto (<span id="auto-countdown">3</span>s)
@@ -212,12 +212,12 @@
             <!-- Ô NHẬP TIỀN -->
             <div class="input-ui flex items-center justify-between p-1.5 shadow-inner bg-black/50 rounded-xl">
                 <div class="flex items-center pl-4 w-full">
-                    <input type="number" id="bet-input" value="5" min="5" oninput="updateBetFromInput()" class="bg-transparent text-white font-bold w-full outline-none text-xl font-mono">
+                    <input type="number" id="bet-input" value="5" min="5" onchange="updateBetFromInput()" oninput="updateBetFromInput()" class="bg-transparent text-white font-bold w-full outline-none text-xl font-mono">
                     <span class="text-gray-400 font-black mr-2 text-lg">T</span>
                 </div>
             </div>
             <div class="text-right mt-1 px-1">
-                <span id="est-win-val" class="text-[10px] text-[var(--stake-green)] font-bold uppercase tracking-widest">Bay: +0.00 T</span>
+                <span id="est-win-val" class="text-[10px] text-[var(--stake-green)] font-bold uppercase tracking-widest">Lãi: +0.00 T</span>
             </div>
         </div>
 
@@ -237,9 +237,15 @@
             </div>
             <div class="p-6 overflow-y-auto custom-scroll text-[13px] text-gray-200 space-y-5 bg-gray-800/50">
                 <div>
+                    <p class="font-bold text-white mb-2">Cơ chế Thu Phí (RTP 96%):</p>
+                    <p class="bg-[#064E3B]/40 p-3 rounded-lg border border-[var(--stake-green)]/30 text-[var(--stake-green)] shadow-inner">
+                        Toàn bộ tiền Lời nhận được sẽ được áp dụng trực tiếp <strong>tỷ lệ RTP 96%</strong> (Trừ 4% phí nền tảng vào Lợi nhuận) để đảm bảo cân bằng.
+                    </p>
+                </div>
+                <div>
                     <p class="font-bold text-white mb-2">Sét Đánh (40% Rủi ro):</p>
                     <p class="bg-red-900/40 p-3 rounded-lg border border-red-500/30 text-red-100 shadow-inner">
-                        <span class="text-xl">⚡</span> Có đúng <strong>40% tỷ lệ</strong> thời tiết xấu khiến tia sét đánh trúng Boss ngay khi vừa nhảy ra cửa phi thuyền. Nếu bị đánh trúng, thua ngay lập tức!
+                        <span class="text-xl">⚡</span> Có đúng <strong>40% tỷ lệ</strong> thời tiết xấu khiến tia sét đánh trúng Boss ngay khi vừa nhảy. Nếu bị đánh trúng, thua ngay lập tức!
                     </p>
                 </div>
                 <div>
@@ -383,28 +389,44 @@
             if(autoTimeoutId) clearTimeout(autoTimeoutId); if(autoIntervalId) clearInterval(autoIntervalId);
         }
 
+        // Cập nhật Cược, Chip đồng bộ hoàn hảo
         window.updateBetFromInput = () => {
             let val = parseFloat(betInput.value);
-            if (isNaN(val) || val < 5) val = 5; // Min 5T
-            if (val > state.balance && state.balance >= 5) val = Math.floor(state.balance);
-            bet = val; betInput.value = bet; updateUI();
+            if (isNaN(val)) val = 0;
+            
+            // Nếu người dùng nhập quá số dư, cap lại cho họ
+            if (val > state.balance && state.balance >= 5) {
+                val = Math.floor(state.balance);
+                betInput.value = val;
+            }
+            
+            bet = val; 
+            
+            // Xử lý bật sáng CHIP đúng giá trị nhập
+            document.querySelectorAll('.chip').forEach(c => {
+                c.classList.remove('selected');
+                if (c.innerText === "ALL" && val === Math.floor(state.balance) && state.balance > 0) {
+                    c.classList.add('selected');
+                } else if (parseFloat(c.innerText) === val) {
+                    c.classList.add('selected');
+                }
+            });
+            updateUI();
         }
 
         window.setQuickBet = (val, el) => {
             bet = val;
             if (bet > state.balance && state.balance >= 5) bet = Math.floor(state.balance);
             if (bet < 5) bet = 5;
-            betInput.value = bet; updateUI();
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
+            betInput.value = bet; 
+            window.updateBetFromInput();
         }
 
         window.setQuickAll = (el) => {
             bet = Math.floor(state.balance);
             if (bet < 5) bet = 5;
-            betInput.value = bet; updateUI();
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
+            betInput.value = bet; 
+            window.updateBetFromInput();
         }
 
         window.toggleSpeed = () => {
@@ -436,13 +458,18 @@
 
         // --- BẮT ĐẦU GAME & GHI NHẬN VÒNG CƯỢC ---
         window.handleStartGame = async () => {
-            window.updateBetFromInput(); 
+            let val = parseFloat(betInput.value);
+            if (isNaN(val) || val < 5) {
+                alert("Mức cược tối thiểu là 5 T!"); 
+                betInput.value = 5; window.updateBetFromInput();
+                if(isAuto) window.toggleAuto(); 
+                return; 
+            }
+            bet = val;
+            
             if (state.balance < bet) {
                 if(isAuto) window.toggleAuto(); 
                 document.getElementById('no-money-modal').classList.remove('hidden'); return;
-            }
-            if (bet < 5) {
-                alert("Mức cược tối thiểu là 5 T!"); return;
             }
 
             btnStart.disabled = true; btnStart.innerText = "ĐANG TẢI...";
@@ -504,33 +531,57 @@
 
             if(isWin) {
                 if (isKhole) {
-                    finalTotalMult = currentKholeMult; payout = bet * finalTotalMult;
-                    historyMultStr = finalTotalMult.toFixed(2) + "x"; historyColorClass = "bg-[#3B0764] text-purple-300 border-purple-500/50";
-                    detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hố đen:</span> <span class="text-purple-400 font-bold">${finalTotalMult.toFixed(2)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between"><span class="math-label text-xs">TỔNG HỆ SỐ:</span> <span class="text-purple-400 font-black text-xl">${finalTotalMult.toFixed(2)}x</span></div>`;
-                    resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">🚀</span>`;
-                    endReason.className = "text-xs text-purple-300 font-bold bg-[#2E1065] px-3 py-2 rounded-md inline-block border border-purple-500/50 mb-2";
+                    finalTotalMult = currentKholeMult; 
                 } else if (zoneObj) {
                     if(zoneObj.type === "add") {
-                        finalTotalMult = airMultiplier + zoneObj.add; payout = bet * finalTotalMult;
-                        detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div><div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-blue-400 font-bold">+${zoneObj.add.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG CỘNG:</span> <span class="text-[var(--stake-green)] font-black text-xl">${finalTotalMult.toFixed(1)}x</span></div>`;
+                        finalTotalMult = airMultiplier + zoneObj.add; 
                     } else if (zoneObj.type === "square") {
-                        finalTotalMult = airMultiplier * airMultiplier; payout = bet * finalTotalMult;
-                        detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div><div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-pink-400 font-bold">Bình phương (x²)</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG (${airMultiplier.toFixed(1)}²):</span> <span class="text-[var(--stake-green)] font-black text-xl">${finalTotalMult.toFixed(2)}x</span></div>`;
+                        finalTotalMult = airMultiplier * airMultiplier; 
                     } else {
-                        finalTotalMult = airMultiplier; payout = bet * finalTotalMult;
-                        detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div><div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-gray-400 font-bold">x1</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG:</span> <span class="text-[var(--stake-green)] font-black text-xl">${finalTotalMult.toFixed(1)}x</span></div>`;
+                        finalTotalMult = airMultiplier; 
                     }
+                }
+                
+                // Cập nhật RTP 96%: Tính Lãi thuần 
+                let rtpMult = finalTotalMult * 0.96;
+                let profit = bet * rtpMult;
+                payout = bet + profit; // Balance = Hoàn trả vốn + Lãi thuần
+                
+                historyMultStr = rtpMult.toFixed(2) + "x";
+                if(rtpMult >= 10) historyColorClass = "bg-yellow-900/40 text-yellow-400 border-yellow-500/50";
+                else if(rtpMult >= 2) historyColorClass = "bg-blue-900/40 text-blue-300 border-blue-500/50";
+                else historyColorClass = "bg-[#064E3B]/60 text-[var(--stake-green)] border-[var(--stake-green)]/40";
+                
+                if (isKhole) {
+                    detailsHtml = `
+                        <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div>
+                        <div class="math-row"><span class="math-label">Hố đen:</span> <span class="text-purple-400 font-bold">${finalTotalMult.toFixed(2)}x</span></div>
+                        <div class="math-row"><span class="math-label">Phí nền tảng (RTP):</span> <span class="text-red-400 font-bold">-4%</span></div>
+                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between"><span class="math-label text-xs">HỆ SỐ THỰC:</span> <span class="text-purple-400 font-black text-xl">${rtpMult.toFixed(2)}x</span></div>`;
+                    resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">🚀</span>`;
+                    endReason.className = "text-xs text-purple-300 font-bold bg-[#2E1065] px-3 py-2 rounded-md inline-block border border-purple-500/50 mb-2";
+                } else {
+                    let zoneMath = "";
+                    if(zoneObj.type === "add") zoneMath = `+${zoneObj.add.toFixed(1)}x`;
+                    else if(zoneObj.type === "square") zoneMath = `x²`;
+                    else zoneMath = `x1`;
                     
-                    historyMultStr = finalTotalMult.toFixed(2) + "x";
-                    if(finalTotalMult >= 10) historyColorClass = "bg-yellow-900/40 text-yellow-400 border-yellow-500/50";
-                    else if(finalTotalMult >= 2) historyColorClass = "bg-blue-900/40 text-blue-300 border-blue-500/50";
-                    else historyColorClass = "bg-[#064E3B]/60 text-[var(--stake-green)] border-[var(--stake-green)]/40";
+                    detailsHtml = `
+                        <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div>
+                        <div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div>
+                        <div class="math-row"><span class="math-label">Khu vực hạ cánh:</span> <span class="text-blue-400 font-bold">${zoneMath}</span></div>
+                        <div class="math-row"><span class="math-label">Phí nền tảng (RTP):</span> <span class="text-red-400 font-bold">-4%</span></div>
+                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">HỆ SỐ THỰC:</span> <span class="text-[var(--stake-green)] font-black text-xl">${rtpMult.toFixed(2)}x</span></div>`;
+                    
                     resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">${zoneObj.icon}</span>`;
                     endReason.className = "text-xs text-[var(--stake-green)] font-bold bg-[#064E3B] px-3 py-2 rounded-md inline-block border border-[var(--stake-green)]/50 mb-2 shadow-inner";
                 }
                 
-                resultTitle.innerText = "THẮNG CƯỢC"; resultTitle.className = "text-[var(--stake-green)] font-bold uppercase text-sm mb-1 tracking-widest";
-                resultMoney.innerText = "+" + payout.toFixed(2); resultMoney.className = "text-4xl text-[var(--stake-green)] font-black bungee drop-shadow-[0_0_15px_rgba(0,231,1,0.5)]";
+                resultTitle.innerText = "HÚP RỒI"; resultTitle.className = "text-[var(--stake-green)] font-bold uppercase text-sm mb-1 tracking-widest";
+                
+                // TRẢ THƯỞNG KHÔNG CỘNG VỐN: Chỉ hiển thị Lãi
+                resultMoney.innerText = "+" + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); 
+                resultMoney.className = "text-4xl text-[var(--stake-green)] font-black bungee drop-shadow-[0_0_15px_rgba(0,231,1,0.5)]";
                 
                 // --- CỘNG TIỀN & GHI LỊCH SỬ THẮNG ---
                 if(!state.isGuest && state.user) {
@@ -539,10 +590,10 @@
                         await addDoc(collection(db, "users", state.user.uid, "betHistory"), { 
                             game: "Drop The Boss", 
                             amount: bet, 
-                            winAmount: payout, 
-                            profit: payout - bet,
+                            winAmount: payout, // Vốn + Lãi
+                            profit: profit, // Chỉ có Lãi
                             result: "win",
-                            multiplier: finalTotalMult, 
+                            multiplier: rtpMult, 
                             detail: reason,
                             timestamp: serverTimestamp() 
                         });
@@ -552,9 +603,13 @@
             } else {
                 let isLightningStr = reason.includes("sét đánh");
                 resultIcon.innerHTML = isLightningStr ? `<span class="text-6xl drop-shadow-[0_0_20px_rgba(253,224,71,0.8)]">⚡</span>` : `<span class="text-6xl opacity-50 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]">💀</span>`;
-                resultTitle.innerText = "THUA CƯỢC"; resultTitle.className = "text-red-500 font-bold uppercase text-sm mb-1 tracking-widest";
-                resultMoney.innerText = "-" + bet.toFixed(2); resultMoney.className = "text-4xl text-red-500 font-black bungee drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]";
-                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold">Ván cược thất bại!</div>`;
+                resultTitle.innerText = "GÃY RỒI"; resultTitle.className = "text-red-500 font-bold uppercase text-sm mb-1 tracking-widest";
+                
+                // Trừ tiền: Chỉ hiển thị Vốn
+                resultMoney.innerText = "-" + bet.toFixed(2); 
+                resultMoney.className = "text-4xl text-red-500 font-black bungee drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]";
+                
+                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold">Thử lại nhé sếp!</div>`;
                 endReason.className = "text-xs text-red-300 font-bold bg-[#7F1D1D] px-3 py-2 rounded-md inline-block border border-red-500/50 mb-2 shadow-inner";
                 historyColorClass = isLightningStr ? "bg-red-900/60 text-red-400 border-red-500/50" : "bg-[#1F2937] text-gray-400 border-gray-600";
 
@@ -601,7 +656,10 @@
             if (gameState === "K_HOLE_MINIGAME") { multEl.innerText = currentKholeMult.toFixed(2) + "x"; multEl.className = "text-5xl text-purple-400 font-black bungee drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"; } 
             else { multEl.innerText = airMultiplier.toFixed(2) + "x"; multEl.className = "text-4xl text-white font-black bungee drop-shadow-md leading-none"; }
             depthEl.innerText = player.maxDepthMeters + "m"; depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.1).toFixed(1) + "x";
-            estWinEl.innerText = "Bay: +" + formatMoney(bet * airMultiplier) + " T";
+            
+            // Render tính 96% RTP theo đúng logic 
+            let dBet = isNaN(bet) ? 0 : bet;
+            estWinEl.innerText = "Lãi: +" + formatMoney(dBet * airMultiplier * 0.96) + " T";
         }
         function renderHistory() {
             const hc = document.getElementById('history-container'); hc.innerHTML = '';
