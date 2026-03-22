@@ -28,7 +28,7 @@
         .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; scroll-behavior: smooth; }
         .history-container { display: flex; flex-direction: row; gap: 4px; padding: 0 5px; }
         .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 72px; height: 90px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 8px; border: 1px solid #1f2430; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; background-color: #1e232e; margin: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #2d3442; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background-color: #1e232e; margin: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #2d3442; transition: all 0.3s; }
         .dot.up { background-color: #0ECB81; box-shadow: 0 0 6px rgba(14, 203, 129, 0.6); border-color: #0ECB81; } 
         .dot.down { background-color: #F6465D; box-shadow: 0 0 6px rgba(246, 70, 93, 0.6); border-color: #F6465D; }
         
@@ -53,9 +53,10 @@
         #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1e232e; border: 1px solid #2d3442; padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { opacity: 1; }
         
-        /* QUICK SELECT CHIPS */
-        .chip { background: #1e232e; color: #9ca3af; padding: 6px 0; width: 15%; min-width: 40px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.1s; }
-        .chip:active { background: #FCD535; color: black; border-color: #FCD535; transform: scale(0.95); }
+        /* QUICK SELECT CHIPS (Fix sáng lên khi chọn) */
+        .chip { background: #1e232e; color: #9ca3af; padding: 8px 0; width: 15%; min-width: 45px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.2s; }
+        .chip.selected { background: #FCD535; color: black; border-color: #FCD535; box-shadow: 0 0 10px rgba(252,213,53,0.4); transform: scale(1.05); }
+        .chip:active { transform: scale(0.95); }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
@@ -73,11 +74,11 @@
     <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-[#0ECB81] text-lg"></i><span class="text-xs font-bold text-white uppercase tracking-wide" id="toastMsg">...</span></div>
 
-    <!-- HEADER: Minimal & Nút Thoát Game -->
+    <!-- HEADER: Minimal & Nút Thoát Game (Trở về sảnh) -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4">
             <a href="game.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
-                <i class="fa-solid fa-chevron-left text-[#9ca3af]"></i>
+                <i class="fa-solid fa-arrow-right-from-bracket text-[#9ca3af] rotate-180"></i>
             </a>
             <div class="flex flex-col justify-center">
                 <div class="flex items-center gap-2">
@@ -123,62 +124,61 @@
         <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper hide-scroll"><div class="history-container" id="historyContainer"></div></div></div>
     </div>
 
-    <!-- CONTROL PANEL CĂN CHỈNH GIỮA CHUẨN MỰC -->
+    <!-- CONTROL PANEL CHUẨN CÂN ĐỐI -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
-        
-        <div class="flex flex-col items-center mb-5">
+        <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
+            
             <!-- QUICK CHIPS -->
-            <div class="flex items-center justify-center gap-1.5 mb-4 w-full max-w-sm">
-                <button onclick="window.setBetAmount(10)" class="chip">10</button>
-                <button onclick="window.setBetAmount(50)" class="chip">50</button>
-                <button onclick="window.setBetAmount(100)" class="chip">100</button>
-                <button onclick="window.setBetAmount(500)" class="chip">500</button>
-                <button onclick="window.setBetAmount(1000)" class="chip">1K</button>
-                <button onclick="window.setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
+            <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
+                <!-- Mặc định chọn 10 T -->
+                <button onclick="window.setBetAmount(10, this)" class="chip selected">10</button>
+                <button onclick="window.setBetAmount(50, this)" class="chip">50</button>
+                <button onclick="window.setBetAmount(100, this)" class="chip">100</button>
+                <button onclick="window.setBetAmount(500, this)" class="chip">500</button>
+                <button onclick="window.setBetAmount(1000, this)" class="chip">1K</button>
+                <button onclick="window.setAllIn(this)" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
             </div>
 
-            <!-- BET INPUT (Centered) -->
-            <div class="flex items-center justify-center gap-3 w-full max-w-sm">
-                <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
+            <!-- BET INPUT -->
+            <div class="flex items-center justify-center gap-3 w-full">
+                <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-minus"></i></button>
                 
-                <div class="flex-1 relative group">
+                <div class="flex-1 relative group h-12">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#FCD535] font-black text-base mt-0.5">T</span>
-                    <input type="number" id="betInput" value="10" min="10" class="w-full h-12 bg-[#050505] border border-[#2d3442] text-white font-mono font-black text-xl rounded-xl text-center focus:outline-none focus:border-[#FCD535] shadow-inner" oninput="window.updateProfit()">
+                    <input type="number" id="betInput" value="10" min="10" class="w-full h-full bg-[#050505] border border-[#2d3442] text-white font-mono font-black text-xl rounded-xl text-center focus:outline-none focus:border-[#FCD535] shadow-inner" oninput="window.updateProfit()">
                 </div>
                 
-                <button onclick="window.adjustBet(10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+                <button onclick="window.adjustBet(10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-plus"></i></button>
             </div>
             
             <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.50 T</span></div>
         </div>
         
-        <!-- UP/DOWN BUTTONS (Centered and Symmetrical) -->
-        <div class="flex justify-center items-center gap-3 h-16 w-full max-w-sm mx-auto">
+        <!-- UP/DOWN BUTTONS & TIMER (CĂN CHỈNH GIỮA) -->
+        <div class="flex justify-between items-center gap-3 h-14 w-full max-w-sm mx-auto">
             <!-- NÚT BÁN -->
-            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 max-w-[150px] h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-center gap-2 shadow-lg relative">
-                <i class="fa-solid fa-arrow-trend-down text-3xl text-white/30 absolute left-3"></i>
-                <div class="flex flex-col items-center z-10 ml-4">
+            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
+                <i class="fa-solid fa-arrow-trend-down text-2xl text-white/30 absolute left-3"></i>
+                <div class="flex flex-col items-center w-full z-10">
                     <span class="font-black text-xl text-white tracking-wide">BÁN</span>
-                    <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">DOWN</span>
                 </div>
-                <div id="badge-down" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <div id="badge-down" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
             
             <!-- TIMER -->
             <div class="w-20 shrink-0 h-full bg-[#050505] rounded-2xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
                 <div id="timerProgress" class="absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
-                <span id="phaseText" class="text-[7px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
-                <span id="timerText" class="text-white font-mono font-black text-3xl z-10 leading-none">30</span>
+                <span id="phaseText" class="text-[8px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
+                <span id="timerText" class="text-white font-mono font-black text-2xl z-10 leading-none">30</span>
             </div>
             
             <!-- NÚT MUA -->
-            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 max-w-[150px] h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-center gap-2 shadow-lg relative">
-                <div class="flex flex-col items-center z-10 mr-4">
+            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
+                <div class="flex flex-col items-center w-full z-10">
                     <span class="font-black text-xl text-white tracking-wide">MUA</span>
-                    <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">UP</span>
                 </div>
-                <i class="fa-solid fa-arrow-trend-up text-3xl text-white/30 absolute right-3"></i>
-                <div id="badge-up" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <i class="fa-solid fa-arrow-trend-up text-2xl text-white/30 absolute right-3"></i>
+                <div id="badge-up" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
         </div>
     </div>
@@ -217,12 +217,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        let roundSettled = false;
-
-        // --- MATH & SEED LOGIC (ABSOLUTE SYNC) ---
-        // Thuật toán Pseudo Random đảm bảo kết quả trùng khớp cho mọi người dùng ở cùng 1 phút
+        // --- CORE MATH & DETERMINISTIC ENGINE ---
+        // Thuật toán Pseudo Random để cố định màu sắc cho cùng một mốc thời gian
         function seededRandom(seed) {
             let t = seed += 0x6D2B79F5;
             t = Math.imul(t ^ t >>> 15, t | 1);
@@ -230,40 +228,58 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
 
-        function getMinuteSeed(timestamp) {
-            const d = new Date(timestamp);
-            return d.getFullYear() * 100000000 + (d.getMonth()+1)*1000000 + d.getDate()*10000 + d.getHours()*100 + d.getMinutes();
-        }
-
-        // ĐÂY LÀ CHÂN LÝ: Hàm quyết định kết quả cuối cùng của Nến và Lịch sử
-        function getDeterministicResult(timestamp) {
-            const seed = getMinuteSeed(timestamp);
-            const isLive = seed === getMinuteSeed(Date.now());
-            
-            if (isLive && state.killWhaleMode) {
+        // Lấy kết quả của một "phút" cụ thể (0 hoặc 1)
+        function getDeterministicResult(minIdx) {
+            const currentMinIdx = Math.floor(Date.now() / 60000);
+            if (minIdx === currentMinIdx && state.killWhaleMode) {
                 if (state.totalUp > state.totalDown) return 'down';
                 if (state.totalDown > state.totalUp) return 'up';
             }
-            const rand = seededRandom(seed * 12345 + 6789);
+            const rand = seededRandom(minIdx * 12345 + 6789);
             return rand > 0.5 ? 'up' : 'down';
         }
 
-        // --- UI FUNCTIONS ---
-        window.setBetAmount = (val) => { document.getElementById('betInput').value = val; window.updateProfit(); }
-        window.setAllIn = () => { document.getElementById('betInput').value = Math.floor(state.balance); window.updateProfit(); }
-        window.adjustBet = (val) => {
-            const inp = document.getElementById('betInput');
-            let current = parseFloat(inp.value) || 0;
-            let nextVal = current + val;
-            if (nextVal < 10) nextVal = 10; 
-            inp.value = nextVal;
-            window.updateProfit();
+        // Tạo mảng nến 60 phút quá khứ hoàn hảo không đổi khi F5
+        function buildBaseCandles() {
+            const currentEpoch = Math.floor(Date.now() / 30000);
+            let simPrice = 98100;
+            let cands = [];
+            
+            for (let e = currentEpoch - 60; e <= currentEpoch; e++) {
+                const minIdx = Math.floor(e / 2);
+                const isResult = (e % 2 !== 0); // Lẻ là Result phase (kết quả chốt)
+                const rand = seededRandom(e * 123);
+                
+                let change = 0;
+                if (isResult) {
+                    const dir = getDeterministicResult(minIdx);
+                    // Force change để chốt màu chuẩn (>= 2 đơn vị)
+                    change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
+                } else {
+                    change = (rand - 0.5) * 12; // Cây nến order chạy tự do
+                }
+                
+                const open = simPrice;
+                const close = open + change;
+                const high = Math.max(open, close) + seededRandom(e*321) * 3;
+                const low = Math.min(open, close) - seededRandom(e*456) * 3;
+                
+                cands.push({ epoch: e, open, close, high, low, change });
+                simPrice = close;
+            }
+            return cands;
+        }
+
+        // --- GLOBAL STATE & CONFIG ---
+        const CONFIG = { chartPaddingRight: 80 };
+        const state = {
+            balance: 0, userData: null, currentBet: null, 
+            pendingBet: { type: null, amount: 0 },
+            baseCandles: [], visualPrice: 98100, lockPrice: 0, 
+            lastEpoch: -1, isProcessing: false, gameStarted: false,
+            killWhaleMode: false, totalUp: 0, totalDown: 0
         };
-        window.updateProfit = () => {
-            const val = parseFloat(document.getElementById('betInput').value) || 0;
-            document.getElementById('profitDisplay').innerText = "+" + (val * 0.95).toFixed(2) + " T";
-        };
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -276,74 +292,32 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
-        const state = {
-            balance: 0, userData: null, currentBet: null, 
-            pendingBet: { type: null, amount: 0 },
-            history: new Array(60).fill(null), 
-            candles: [], visualPrice: CONFIG.basePrice,
-            targetPrice: CONFIG.basePrice, currentPhase: 'order', 
-            lockPrice: 0, isProcessing: false, gameStarted: false,
-            killWhaleMode: false, totalUp: 0, totalDown: 0
+        // --- UI INTERACTION FUNCTIONS ---
+        window.setBetAmount = (val, el) => { 
+            document.getElementById('betInput').value = val; 
+            window.updateProfit(); 
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            if(el) el.classList.add('selected');
+        }
+        window.setAllIn = (el) => { 
+            document.getElementById('betInput').value = Math.floor(state.balance); 
+            window.updateProfit(); 
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            if(el) el.classList.add('selected');
+        }
+        window.adjustBet = (val) => {
+            const inp = document.getElementById('betInput');
+            let current = parseFloat(inp.value) || 0;
+            let nextVal = current + val;
+            if (nextVal < 10) nextVal = 10; 
+            inp.value = nextVal;
+            window.updateProfit();
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
         };
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                let userStr = localStorage.getItem('crownex_user_info');
-                if (userStr && !user.isAnonymous) {
-                    state.userData = JSON.parse(userStr); finishLoading();
-                } else if (user.isAnonymous) {
-                    state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading();
-                } else {
-                    try {
-                        const docSnap = await getDoc(doc(db, "users", user.uid));
-                        if(docSnap.exists()) {
-                            state.userData = docSnap.data(); state.userData.uid = user.uid;
-                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData)); finishLoading();
-                        } else { window.location.href = "login.html"; }
-                    } catch (e) { state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading(); }
-                }
-
-                if(!user.isAnonymous) {
-                    onSnapshot(doc(db, "users", user.uid), (doc) => {
-                        if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
-                    });
-                }
-                onSnapshot(doc(db, "settings", "global"), (doc) => {
-                    if(doc.exists()) state.killWhaleMode = doc.data().killWhaleMode === true;
-                });
-                onSnapshot(doc(db, "games", "current"), (doc) => {
-                    if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; }
-                });
-            } else { window.location.href = "login.html"; }
-        });
-
-        function finishLoading() {
-            state.balance = state.userData.balance || 0;
-            updateBalanceUI();
-            const loader = document.getElementById('pageLoader');
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
-            if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
-        }
-
-        function checkSavedBet() {
-            const saved = localStorage.getItem('crownex_active_bet');
-            if (!saved) return;
-            const betData = JSON.parse(saved);
-            if (betData.expires > Date.now()) {
-                state.currentBet = { type: betData.type, amount: betData.amount };
-                updateBetUI(betData.type, betData.amount);
-            }
-        }
-
-        function updateBetUI(type, amount) {
-            const id = type === 'up' ? 'badge-up' : 'badge-down';
-            document.getElementById(id).innerText = amount + " T"; 
-            document.getElementById(id).classList.remove('hidden');
-            const otherBtn = type === 'up' ? 'btnSell' : 'btnBuy';
-            document.getElementById(otherBtn).classList.add('locked');
-        }
+        window.updateProfit = () => {
+            const val = parseFloat(document.getElementById('betInput').value) || 0;
+            document.getElementById('profitDisplay').innerText = "+" + (val * 0.95).toFixed(2) + " T";
+        };
 
         function showToast(type, msg) {
             const t = document.getElementById('toast');
@@ -354,13 +328,13 @@
         }
 
         window.selectSide = (type) => {
-            if (new Date().getSeconds() >= 30) return showToast('error', "Hết thời gian cược phiên này!");
-            if (state.currentPhase !== 'order') return showToast('error', "Vui lòng đợi phiên mới!");
+            if (new Date().getSeconds() >= 30) return showToast('error', "Hết thời gian đặt lệnh!");
+            const isResultPhase = Math.floor(Date.now()/30000) % 2 !== 0;
+            if (isResultPhase) return showToast('error', "Vui lòng đợi lệnh tiếp theo!");
             if (state.currentBet && state.currentBet.type !== type) return showToast('error', "Không được cược đối nghịch!");
             
             const amount = parseFloat(document.getElementById('betInput').value);
-            if (!amount || amount <= 0) return;
-            if (amount < 10) return showToast('error', "Mức cược tối thiểu là 10 T!");
+            if (!amount || amount < 10) return showToast('error', "Mức cược tối thiểu là 10 T!");
             if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư T không đủ!");
             
             state.pendingBet = { type, amount };
@@ -410,30 +384,76 @@
             state.isProcessing = false; btn.classList.remove('btn-loading'); btn.innerText = "XÁC NHẬN NGAY";
         };
 
+        function updateBetUI(type, amount) {
+            const id = type === 'up' ? 'badge-up' : 'badge-down';
+            document.getElementById(id).innerText = amount + " T"; 
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(type === 'up' ? 'btnSell' : 'btnBuy').classList.add('locked');
+        }
+
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + " T"; }
 
-        // --- HISTORY & CHART ENGINE ---
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                let userStr = localStorage.getItem('crownex_user_info');
+                if (userStr && !user.isAnonymous) {
+                    state.userData = JSON.parse(userStr); finishLoading();
+                } else if (user.isAnonymous) {
+                    state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading();
+                } else {
+                    try {
+                        const docSnap = await getDoc(doc(db, "users", user.uid));
+                        if(docSnap.exists()) {
+                            state.userData = docSnap.data(); state.userData.uid = user.uid;
+                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData)); finishLoading();
+                        } else { window.location.href = "login.html"; }
+                    } catch (e) { state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading(); }
+                }
+
+                if(!user.isAnonymous) {
+                    onSnapshot(doc(db, "users", user.uid), (doc) => {
+                        if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
+                    });
+                }
+                onSnapshot(doc(db, "settings", "global"), (doc) => { if(doc.exists()) state.killWhaleMode = doc.data().killWhaleMode === true; });
+                onSnapshot(doc(db, "games", "current"), (doc) => { if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; } });
+            } else { window.location.href = "login.html"; }
+        });
+
+        function finishLoading() {
+            state.balance = state.userData.balance || 0;
+            updateBalanceUI();
+            const loader = document.getElementById('pageLoader'); loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+            if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
+        }
+
+        function checkSavedBet() {
+            const saved = localStorage.getItem('crownex_active_bet');
+            if (!saved) return;
+            const b = JSON.parse(saved);
+            if (b.expires > Date.now()) { state.currentBet = { type: b.type, amount: b.amount }; updateBetUI(b.type, b.amount); }
+        }
+
+        // --- CORE CHART & HISTORY RENDER (THE HOLY GRAIL SYNC) ---
         function regenerateHistory() {
-            const now = Date.now();
-            const currentMin = new Date(now).getMinutes();
-            // Get timestamp of the start of the current hour to base history generation on
-            const baseHourTime = now - (currentMin * 60000) - (new Date().getSeconds() * 1000) - new Date().getMilliseconds();
-            
+            const currentMinIdx = Math.floor(Date.now() / 60000);
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
             let u = 0, dCount = 0;
             
             for (let b = 0; b < 3; b++) {
                 const block = document.createElement('div'); block.className = 'history-block';
-                const startIdx = b * 20;
-                for(let i = startIdx; i < startIdx + 20; i++) {
+                for(let i = 0; i < 20; i++) {
+                    const slotIdx = b * 20 + i;
+                    const minIdx = currentMinIdx - 59 + slotIdx; // 60 bóng lịch sử
+                    
                     const dot = document.createElement('div');
-                    if (i > currentMin) {
-                        dot.className = 'dot';
-                    } else {
-                        // Gọi đúng chân lý GetDeterministicResult
-                        const res = getDeterministicResult(baseHourTime + i * 60000);
+                    if (slotIdx === 59) {
+                        dot.className = 'dot new'; // Phút hiện tại đang chạy
+                    } else if (slotIdx < 59) {
+                        const res = getDeterministicResult(minIdx);
                         dot.className = res === 'up' ? 'dot up' : 'dot down';
-                        if (i === currentMin) dot.classList.add('new');
                         if (res === 'up') u++; else dCount++;
                     }
                     block.appendChild(dot);
@@ -446,86 +466,28 @@
 
         function initGame() {
             resizeCanvas(); window.addEventListener('resize', resizeCanvas);
-            
-            // Build Past Candles
-            const currentEpoch = Math.floor(Date.now() / 30000);
-            let simPrice = CONFIG.basePrice;
-            for(let i = 60; i > 0; i--) {
-                const ep = currentEpoch - i;
-                const isResult = (ep % 2 !== 0);
-                let change = (seededRandom(ep * 999) - 0.5) * 8;
-                
-                if (isResult) {
-                    const det = getDeterministicResult(ep * 30000);
-                    if (det === 'up') change = Math.abs(change) + 1; // Force Up
-                    if (det === 'down') change = -Math.abs(change) - 1; // Force Down
-                }
-                const close = simPrice + change;
-                state.candles.push({ open: simPrice, close: close, high: Math.max(simPrice, close) + Math.abs(change*0.5), low: Math.min(simPrice, close) - Math.abs(change*0.5), epoch: ep });
-                simPrice = close;
-            }
-            state.visualPrice = simPrice; state.lockPrice = simPrice;
+            state.baseCandles = buildBaseCandles();
             regenerateHistory();
-            
-            setInterval(syncLoop, 100); 
-            setInterval(marketLoop, 40);
-            requestAnimationFrame(drawLoop);
+            requestAnimationFrame(gameLoop);
+            setInterval(engineTimer, 100); // UI Timer update
         }
 
-        function syncLoop() {
+        function engineTimer() {
             const now = new Date();
-            const s = now.getSeconds();
-            const ms = now.getMilliseconds();
+            const s = now.getSeconds(); const ms = now.getMilliseconds();
             const exactSec = s + (ms/1000);
-            
             const isOrder = exactSec < 30;
             const timeLeft = isOrder ? Math.ceil(30 - exactSec) : Math.ceil(60 - exactSec);
 
             document.getElementById('sessionID').innerText = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
             document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
             document.getElementById('timerProgress').style.width = ((timeLeft / 30) * 100) + "%";
-
-            // Phase Transitions
-            if (isOrder && state.currentPhase === 'result') { 
-                finalizeRound(); startOrderPhase(); regenerateHistory();
-            } else if (!isOrder && state.currentPhase === 'order') { 
-                startResultPhase(); 
-            }
         }
 
-        function startOrderPhase() {
-            state.currentPhase = 'order';
-            document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
-            document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
-            document.getElementById('candleStatusBadge').innerText = "MỞ ĐẶT LỆNH";
-            document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-green-500/20 text-[#0ECB81] border border-green-500/50 shadow-[0_0_10px_rgba(14,203,129,0.3)]";
-            
-            document.getElementById('lockLabel').style.display = 'none'; document.getElementById('lockLine').style.display = 'none';
-            state.currentBet = null;
-            document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
-            document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); document.getElementById('btnSell').classList.remove('dimmed', 'locked');
-            if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
-        }
-
-        function startResultPhase() {
-            state.lockPrice = state.visualPrice; 
-            state.currentPhase = 'result'; window.cancelSelection();
-            document.getElementById('phaseText').innerText = "CHỜ KẾT QUẢ";
-            document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1.5 bg-blue-500 w-full transition-all duration-1000 ease-linear";
-            document.getElementById('candleStatusBadge').innerText = "CHỜ KẾT QUẢ";
-            document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-blue-500/20 text-blue-400 border border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]";
-            
-            document.getElementById('lockLabel').style.display = 'block'; document.getElementById('lockLine').style.display = 'block';
-            document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
-            document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
-        }
-
+        // Hàm quyết định kết quả và trả thưởng
         async function finalizeRound() {
-            if (roundSettled) return;
-            roundSettled = true;
-            
-            // TRUTH: Lấy kết quả từ hàm sinh mã gốc, không phụ thuộc vào nến ảo
-            let res = getDeterministicResult(Date.now());
+            const finishedMinIdx = Math.floor(Date.now() / 60000) - 1;
+            let res = getDeterministicResult(finishedMinIdx); // Chân lý toán học!
 
             if (state.currentBet) {
                 const b = state.currentBet; const win = (b.type === res);
@@ -549,85 +511,84 @@
                     } catch (e) {}
                 }
             }
-            setTimeout(() => { roundSettled = false; }, 2000);
         }
 
-        function showPopup(w, a) {
-            const p = document.getElementById('resultPopup'); const b = document.getElementById('popupBorder');
-            const t = document.getElementById('popupTitle'); const m = document.getElementById('popupAmount');
-            p.classList.remove('hidden', 'scale-90', 'opacity-0'); p.classList.add('scale-100', 'opacity-100');
-            if (w) {
-                b.className = 'tech-border p-6 relative bg-[#13161f] win'; t.innerText = "THẮNG LỚN"; t.className = "text-[#0ECB81] font-black text-xl mb-1 uppercase tracking-widest";
-                m.innerText = "+" + a.toFixed(2) + " T"; m.className = "font-mono font-black text-4xl text-[#0ECB81] drop-shadow-[0_0_15px_rgba(14,203,129,0.5)]";
-            } else {
-                b.className = 'tech-border p-6 relative bg-[#13161f] lose'; t.innerText = "CHƯA MAY MẮN"; t.className = "text-[#F6465D] font-black text-xl mb-1 uppercase tracking-widest";
-                m.innerText = "-" + a.toFixed(2) + " T"; m.className = "font-mono font-black text-4xl text-[#F6465D] drop-shadow-[0_0_15px_rgba(246,70,93,0.5)]";
-            }
-            setTimeout(() => { p.classList.remove('scale-100', 'opacity-100'); p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
-        }
-
-        function marketLoop() {
-            const now = Date.now(); const epoch = Math.floor(now / 30000);
-            const seconds = (now % 60000) / 1000;
-            const isResultPhase = seconds >= 30;
-
-            let target = state.visualPrice;
-            const t = now / 1000;
-            
-            if (isResultPhase) {
-                const det = getDeterministicResult(now);
-                const trendDir = det === 'up' ? 1 : -1;
-                const timeRemaining = 60 - seconds;
-                
-                // ÉP NẾN VÀO ĐÚNG MÀU LỊCH SỬ KHI GẦN KẾT THÚC
-                if (timeRemaining < 10) {
-                    const diff = state.visualPrice - state.lockPrice;
-                    if (trendDir === 1 && diff <= 0.5) target = state.lockPrice + 1.5; // Bắt buộc nến Xanh
-                    else if (trendDir === -1 && diff >= -0.5) target = state.lockPrice - 1.5; // Bắt buộc nến Đỏ
-                    else target += (Math.random() - 0.5) * 0.5; // Rung nhẹ nếu đã an toàn
-                } else {
-                    target += trendDir * 0.2 + (Math.random() - 0.5) * 0.5;
-                }
-            } else {
-                // Order Phase - Chạy tự nhiên
-                target += (Math.sin(t*3) * 0.5) + (Math.random() - 0.5) * 1.5;
-            }
-
-            state.visualPrice += (target - state.visualPrice) * 0.15;
-
-            // Update Nến
-            let lastCandle = state.candles[state.candles.length - 1];
-            if (!lastCandle || lastCandle.epoch !== epoch) {
-                let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
-                const newCandle = { epoch: epoch, open: openPrice, close: openPrice, high: openPrice, low: openPrice };
-                state.candles.push(newCandle);
-                if(state.candles.length > 50) state.candles.shift();
-                lastCandle = newCandle;
-                if (isResultPhase) { state.lockPrice = openPrice; document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2); }
-            }
-
-            lastCandle.close = state.visualPrice;
-            if (state.visualPrice > lastCandle.high) lastCandle.high = state.visualPrice;
-            if (state.visualPrice < lastCandle.low) lastCandle.low = state.visualPrice;
-        }
-
+        // Vòng lặp vẽ Biểu đồ liên tục
         const cvs = document.getElementById('chartCanvas'); const ctx = cvs.getContext('2d');
         function resizeCanvas() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
-        
-        function drawLoop() {
+
+        function gameLoop() {
+            const now = Date.now();
+            const currentEpoch = Math.floor(now / 30000);
+            const isResultPhase = currentEpoch % 2 !== 0;
+            const progress = (now % 30000) / 30000; // 0.0 -> 1.0
+
+            // 1. Nếu sang Epoch mới -> Render lại lịch sử và Mảng Nến Gốc
+            if (state.lastEpoch !== currentEpoch) {
+                state.baseCandles = buildBaseCandles();
+                state.lastEpoch = currentEpoch;
+                
+                if (isResultPhase) {
+                    // Đóng lệnh, khóa giá
+                    state.lockPrice = state.baseCandles[state.baseCandles.length - 1].open;
+                    document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
+                    document.getElementById('lockLine').style.display = 'block'; document.getElementById('lockLabel').style.display = 'block';
+                    
+                    document.getElementById('phaseText').innerText = "CHỜ KẾT QUẢ";
+                    document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1.5 bg-blue-500 w-full transition-all duration-1000 ease-linear";
+                    document.getElementById('candleStatusBadge').innerText = "CHỜ KẾT QUẢ";
+                    document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-blue-500/20 text-blue-400 border border-blue-500/50";
+                    document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
+                    window.cancelSelection();
+                } else {
+                    // Mở lệnh mới
+                    document.getElementById('lockLine').style.display = 'none'; document.getElementById('lockLabel').style.display = 'none';
+                    
+                    document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
+                    document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
+                    document.getElementById('candleStatusBadge').innerText = "MỞ ĐẶT LỆNH";
+                    document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-green-500/20 text-[#0ECB81] border border-green-500/50";
+                    document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
+                    document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); document.getElementById('btnSell').classList.remove('dimmed', 'locked');
+                    if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
+                    state.currentBet = null;
+                    
+                    finalizeRound();
+                    regenerateHistory();
+                }
+            }
+
+            // 2. Cập nhật cây nến LIVE (Cây cuối cùng)
+            const liveCandle = state.baseCandles[state.baseCandles.length - 1];
+            const tSec = now / 1000;
+            // Wiggle tự nhiên tạo cảm giác thị trường, tiến về 0 khi hết giờ
+            const wiggle = (Math.sin(tSec * 3) * 1.5 + Math.cos(tSec * 5) * 1) * (1 - progress);
+            
+            // Nội suy giá từ Open tới Close mục tiêu
+            // Sử dụng hàm ease để giá chạy mượt mà
+            const easeProgress = 1 - Math.pow(1 - progress, 2);
+            state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + wiggle;
+
+            liveCandle.close = state.visualPrice;
+            liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
+            liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
+
+            // 3. VẼ LÊN CANVAS
             const w = (cvs.width - CONFIG.chartPaddingRight) / 30; 
             const r = 80; 
             const min = state.visualPrice - r / 2;
             
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
+            // Lưới dọc nền
             for(let p = Math.floor(min / 10) * 10; p < min + r; p += 10) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
                 ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 50, y + 4);
             }
 
-            if (state.currentPhase === 'result') {
+            // Cập nhật vị trí đường Lock
+            if (isResultPhase) {
                 const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
                 document.getElementById('lockLine').style.top = yl + 'px'; 
                 document.getElementById('lockLabel').style.top = yl + 'px';
@@ -635,13 +596,14 @@
                 ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(cvs.width, yl); ctx.stroke(); ctx.setLineDash([]);
             }
 
-            const lastIdx = state.candles.length - 1;
-            for (let i = 0; i < state.candles.length; i++) {
+            // Vẽ Nến
+            const lastIdx = state.baseCandles.length - 1;
+            for (let i = 0; i <= lastIdx; i++) {
                 const dist = lastIdx - i;
                 if (dist > 30) continue; 
 
                 const x = (cvs.width - CONFIG.chartPaddingRight) - (dist * w) - (w/2);
-                const c = state.candles[i];
+                const c = state.baseCandles[i];
                 
                 const yO = cvs.height - ((c.open - min) / r * cvs.height); 
                 const yC = cvs.height - ((c.close - min) / r * cvs.height);
@@ -657,17 +619,18 @@
                 ctx.fillRect(x - (w/2) + 2, Math.min(yO, yC), w - 4, bodyH);
             }
 
+            // Đường giá hiện tại
             const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
             ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(0, yc); ctx.lineTo(cvs.width, yc); ctx.stroke(); ctx.setLineDash([]);
             
-            ctx.fillStyle = state.visualPrice >= state.candles[lastIdx].open ? '#0ECB81' : '#F6465D';
+            ctx.fillStyle = state.visualPrice >= liveCandle.open ? '#0ECB81' : '#F6465D';
             ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 5;
             ctx.beginPath(); ctx.roundRect(cvs.width - 60, yc - 12, 60, 24, 4); ctx.fill();
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#fff'; ctx.font = 'bold 12px IBM Plex Mono';
             ctx.fillText(state.visualPrice.toFixed(2), cvs.width - 55, yc + 4);
             
-            requestAnimationFrame(drawLoop);
+            requestAnimationFrame(gameLoop);
         }
     </script>
 </body>
