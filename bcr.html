@@ -98,14 +98,13 @@
         
         .flying-chat {
             position: absolute;
-            left: 100%; /* Bắt đầu từ rìa phải */
+            left: 100%;
             white-space: nowrap;
             font-size: 11px;
-            animation: flyLeft 5s linear forwards; /* Tốc độ 5s - nhanh hơn */
+            animation: flyLeft 5s linear forwards;
             will-change: transform;
         }
 
-        /* Di chuyển xa bằng chiều ngang màn hình + chiều dài của chính dòng text đó */
         @keyframes flyLeft {
             0% { transform: translateX(0); }
             100% { transform: translateX(calc(-100vw - 100%)); }
@@ -116,9 +115,14 @@
 
     <!-- TOP BAR -->
     <header class="h-12 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 z-50 shrink-0">
-        <a href="game.html" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
-            <i class="fa-solid fa-arrow-left text-sm"></i> <span class="font-bold text-xs tracking-wide">Thoát</span>
-        </a>
+        <div class="flex items-center gap-1.5">
+            <a href="game.html" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
+                <i class="fa-solid fa-arrow-left text-sm"></i> <span class="font-bold text-xs tracking-wide">Thoát</span>
+            </a>
+            <button onclick="game.toggleAudio()" id="btnAudio" class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-colors">
+                <i class="fa-solid fa-volume-high text-sm"></i>
+            </button>
+        </div>
 
         <div class="flex flex-col items-center ml-2">
              <div class="text-[10px] text-slate-500 font-mono bg-black/30 px-2 py-0.5 rounded">
@@ -166,7 +170,6 @@
             </div>
         </div>
 
-        <!-- Nút Mở Chat nổi -->
         <button onclick="game.toggleChat()" class="absolute left-3 bottom-3 w-10 h-10 bg-black/60 border border-white/20 rounded-full flex items-center justify-center text-white z-40 backdrop-blur shadow-lg active:scale-90 transition-transform">
             <i class="fa-solid fa-comment-dots text-sm"></i>
         </button>
@@ -183,14 +186,12 @@
     <!-- BETTING CONTROLS -->
     <div class="bg-slate-900/95 border-t border-white/10 pb-safe z-30 shrink-0">
         
-        <!-- CHAT DANMAKU (Bay qua màn hình) -->
+        <!-- CHAT DANMAKU -->
         <div class="chat-marquee-container" id="marqueeContainer">
             <div class="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/80 to-transparent z-10 pointer-events-none"></div>
-            <!-- Chữ sẽ được chèn tự động vào đây bằng JS -->
             <div class="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/80 to-transparent z-10 pointer-events-none"></div>
         </div>
 
-        <!-- STATISTICS BAR -->
         <div class="flex justify-between items-center px-3 py-1.5 bg-black/40 text-[9px] font-bold border-b border-white/5">
             <div class="flex gap-3">
                 <span class="text-red-500">CÁI: <span id="statB" class="text-white">0</span></span>
@@ -200,7 +201,6 @@
             <div class="text-slate-400">TỔNG: <span id="statTotal" class="text-slate-200">0</span></div>
         </div>
 
-        <!-- BETTING ZONES -->
         <div class="flex flex-col gap-1.5 px-2 mb-2 mt-1.5">
             <div class="flex h-12 gap-1.5">
                 <div id="zonePP" onclick="game.placeBet('PP')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
@@ -239,7 +239,6 @@
             </div>
         </div>
 
-        <!-- CHIPS -->
         <div class="px-2 pb-2 space-y-1.5">
             <div class="flex gap-1 overflow-x-auto px-1 py-1 no-scrollbar justify-between">
                 <button class="chip-3d w-8 h-8 rounded-full bg-slate-300 border-2 border-dashed border-slate-500 flex items-center justify-center text-[10px] font-black text-slate-900 shadow-lg selected ring-2 ring-white" onclick="game.selectChip(1, this)">1</button>
@@ -260,7 +259,7 @@
         </div>
     </div>
 
-    <!-- Chat Modal Overlay -->
+    <!-- Chat Modal -->
     <div id="chatModal" class="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end hidden backdrop-blur-sm transition-opacity">
         <div class="flex-1" onclick="game.toggleChat()"></div>
         
@@ -292,7 +291,6 @@
         import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc, addDoc, collection, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // COINPIGBTC CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -392,6 +390,7 @@
             history: [],
             isShuffling: false,
             audioUnlocked: false,
+            isMuted: false,
 
             init() {
                 onAuthStateChanged(auth, async (user) => {
@@ -411,7 +410,7 @@
                 onSnapshot(q, (snapshot) => {
                     if (isFirstLoad) {
                         isFirstLoad = false;
-                        return; // Bỏ qua load cũ, chỉ xử lý tin vừa chat
+                        return;
                     }
 
                     snapshot.docChanges().forEach((change) => {
@@ -424,10 +423,7 @@
                                 const userName = (!data.uid || data.uid === 'anon') ? 'Khách' : `Heocon${data.uid.substring(0,2)}`;
                                 const isMe = currentUser && data.uid === currentUser.uid;
 
-                                // Lưu vào lịch sử modal
                                 game.appendChatHistory(userName, data.text, timeStr, isMe);
-                                
-                                // Bắn lên thanh chạy ngang
                                 this.fireDanmaku(userName, data.text);
                             }
                         }
@@ -437,25 +433,14 @@
 
             fireDanmaku(userName, text) {
                 const container = document.getElementById('marqueeContainer');
-                
-                // GIỚI HẠN: Nếu đang có nhiều hơn 4 tin nhắn đang bay, bỏ qua tin này để tránh loạn
-                if (container.querySelectorAll('.flying-chat').length >= 4) {
-                    return; 
-                }
+                if (container.querySelectorAll('.flying-chat').length >= 4) return; 
 
                 const flyItem = document.createElement('div');
                 flyItem.className = 'flying-chat';
-                // Theo định dạng: Tên TK: nội dung (Ví dụ: Heocon: alo)
                 flyItem.innerHTML = `<span class="text-amber-400 font-bold">${userName}:</span> <span class="text-white">${text}</span>`;
                 
                 container.appendChild(flyItem);
-
-                // Tự động xóa khỏi DOM sau khi animation kết thúc (5 giây)
-                setTimeout(() => {
-                    if (flyItem.parentElement) {
-                        flyItem.remove();
-                    }
-                }, 5200); 
+                setTimeout(() => { if (flyItem.parentElement) flyItem.remove(); }, 5200); 
             },
 
             sendChatMessage(text) {
@@ -544,6 +529,7 @@
                         game.resetTable();
                         this.bet = {P:0,B:0,T:0,PP:0,BP:0};
                         game.renderChips();
+                        game.aiSpeak("Bắt đầu đặt cược, chúc người chơi may mắn!");
                         this.engine.simulateToRound(t.shoeId, t.roundInShoe);
                         if (this.history.length === 0 || t.roundInShoe === 0 || this.history.length < t.roundInShoe) {
                              this.generateHistory(t.shoeId, t.roundInShoe);
@@ -559,6 +545,7 @@
                     if (this.state === 'BETTING') {
                         this.state = 'DEALING';
                         game.updateTimer('<i class="fa-solid fa-lock text-sm"></i>', true);
+                        game.aiSpeak("Kết thúc đặt cược.");
                         this.resolveRound();
                     }
                 }
@@ -600,7 +587,7 @@
 
             resolveRound() {
                 const res = this.engine.playSingleRound();
-                game.playAnimation(res).then(({isPP, isBP, winMsg}) => {
+                game.playAnimation(res).then(({isPP, isBP}) => {
                     clearPendingBet();
                     let winT = 0;
                     const activeBets = { ...this.bet };
@@ -626,10 +613,19 @@
                     
                     this.saveHistory(activeBets, res.winner, isPP, isBP, this.currentRoundStr);
 
-                    let finalMsg = `Kết quả: ${winMsg}.`;
-                    if(isPP && isBP) finalMsg += " Cả hai đôi.";
-                    else if(isPP) finalMsg += " Đôi con.";
-                    else if(isBP) finalMsg += " Đôi cái.";
+                    // Xử lý đọc kết quả chiến thắng ngắn gọn theo đúng điểm
+                    let finalMsg = "";
+                    if (res.winner === 'T') {
+                        finalMsg = `Kết quả Hòa với ${res.pScore} điểm. Hoàn trả tiền cược.`;
+                    } else {
+                        let winScore = res.winner === 'P' ? res.pScore : res.bScore;
+                        finalMsg = `Nhà ${res.winner === 'P' ? 'con' : 'cái'} thắng với ${winScore} điểm.`;
+                    }
+
+                    // Tùy chọn đọc thêm trúng thưởng nếu có
+                    if (winT > 0) {
+                        finalMsg += ` Chúc mừng, bạn nhận ${winT.toLocaleString()} T.`;
+                    }
                     
                     game.aiSpeak(finalMsg);
                     game.showResult(res.winner, profitT);
@@ -683,6 +679,20 @@
         };
 
         window.game = {
+            toggleAudio() {
+                app.isMuted = !app.isMuted;
+                const icon = document.querySelector('#btnAudio i');
+                if (app.isMuted) {
+                    icon.className = 'fa-solid fa-volume-xmark text-sm';
+                    if(window.speechSynthesis) window.speechSynthesis.cancel();
+                } else {
+                    icon.className = 'fa-solid fa-volume-high text-sm';
+                    if(!app.audioUnlocked && window.speechSynthesis) {
+                        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+                        app.audioUnlocked = true;
+                    }
+                }
+            },
             toggleChat() {
                 const modal = document.getElementById('chatModal');
                 if (modal.classList.contains('hidden')) {
@@ -723,11 +733,11 @@
                 document.getElementById('aiText').innerText = text;
                 el.classList.remove('opacity-0');
                 
-                if (window.speechSynthesis && app.audioUnlocked) {
+                if (!app.isMuted && window.speechSynthesis && app.audioUnlocked) {
                     window.speechSynthesis.cancel();
                     const u = new SpeechSynthesisUtterance(text);
                     u.lang = 'vi-VN';
-                    u.rate = 1.05;
+                    u.rate = 0.85; // Giảm tốc độ đọc chậm lại
                     window.speechSynthesis.speak(u);
                 }
             },
@@ -881,29 +891,22 @@
                     setTimeout(()=>div.querySelector('.card-inner').classList.add('flipped'), 300);
                 };
                 
-                const getCardPoints = (c) => {
-                    if(['10','J','Q','K'].includes(c.r)) return '0';
-                    if(c.r === 'A') return '1';
-                    return c.r;
-                };
-
-                const getScoreText = (side, score) => {
-                    const name = side === 'P' ? 'Nhà con' : 'Nhà cái';
-                    if (score === 0) return `${name} ba ca ra`;
-                    return `${name} ${score} điểm`;
+                const getScoreText = (score) => {
+                    if (score === 0) return `ba ca ra`;
+                    return `${score} điểm`;
                 };
 
                 const isPP = res.pHand[0].r === res.pHand[1].r;
                 const isBP = res.bHand[0].r === res.bHand[1].r;
 
-                this.aiSpeak('Bắt đầu chia bài');
-                await w(1000);
+                // Đợi AI đọc xong câu "Kết thúc đặt cược."
+                await w(2000); 
 
-                c(res.pHand[0],0,'P'); this.aiSpeak(`Nhà con ${getCardPoints(res.pHand[0])} điểm`); await w(1000); 
-                c(res.bHand[0],0,'B'); this.aiSpeak(`Nhà cái ${getCardPoints(res.bHand[0])} điểm`); await w(1000);
-                
-                c(res.pHand[1],1,'P'); this.aiSpeak(`Nhà con ${getCardPoints(res.pHand[1])} điểm`); await w(1000); 
-                c(res.bHand[1],1,'B'); this.aiSpeak(`Nhà cái ${getCardPoints(res.bHand[1])} điểm`); await w(1000);
+                // Lật 4 lá
+                c(res.pHand[0],0,'P'); await w(300); 
+                c(res.bHand[0],0,'B'); await w(300);
+                c(res.pHand[1],1,'P'); await w(300); 
+                c(res.bHand[1],1,'B'); await w(600);
 
                 let pScore = (res.pHand[0].v+res.pHand[1].v)%10;
                 let bScore = (res.bHand[0].v+res.bHand[1].v)%10;
@@ -912,30 +915,23 @@
                 upS('scoreP', pScore); 
                 upS('scoreB', bScore);
                 
-                this.aiSpeak(`${getScoreText('P', pScore)}.`);
-                await w(1200);
-                this.aiSpeak(`${getScoreText('B', bScore)}.`);
-                await w(1200);
+                // Đọc tổng 2 lá
+                this.aiSpeak(`Nhà con ${getScoreText(pScore)}, nhà cái ${getScoreText(bScore)}.`);
+                await w(3500);
 
                 if(res.pHand[2]) { 
                     c(res.pHand[2],2,'P'); 
-                    this.aiSpeak(`Nhà con rút thêm 1 lá.`);
-                    await w(1200); 
-                    this.aiSpeak(`${getCardPoints(res.pHand[2])} điểm.`);
-                    await w(1000);
+                    await w(600);
                     upS('scoreP',res.pScore); 
-                    this.aiSpeak(`${getScoreText('P', res.pScore)}.`);
-                    await w(1200);
+                    this.aiSpeak(`Nhà con thêm bài, nhà con ${getScoreText(res.pScore)}.`);
+                    await w(3000);
                 }
                 if(res.bHand[2]) { 
                     c(res.bHand[2],2,'B'); 
-                    this.aiSpeak(`Nhà cái rút thêm 1 lá.`);
-                    await w(1200); 
-                    this.aiSpeak(`${getCardPoints(res.bHand[2])} điểm.`);
-                    await w(1000);
+                    await w(600);
                     upS('scoreB',res.bScore); 
-                    this.aiSpeak(`${getScoreText('B', res.bScore)}.`);
-                    await w(1200);
+                    this.aiSpeak(`Nhà cái thêm bài, nhà cái ${getScoreText(res.bScore)}.`);
+                    await w(3000);
                 }
 
                 await w(1000);
@@ -943,8 +939,7 @@
                 if(isPP) document.getElementById('zonePP').classList.add('winner');
                 if(isBP) document.getElementById('zoneBP').classList.add('winner');
 
-                let winMsg = res.winner === 'P' ? "Nhà con thắng" : (res.winner === 'B' ? "Nhà cái thắng" : "Hòa");
-                return { isPP, isBP, winMsg };
+                return { isPP, isBP, winMsg: "" };
             },
             showResult(win, profitT) {
                 const ov = document.getElementById('resultOverlay');
@@ -1032,7 +1027,9 @@
                 }
                 
                 const container = document.querySelector('.roadmap-container');
-                requestAnimationFrame(() => container.scrollLeft = container.scrollWidth);
+                setTimeout(() => {
+                    container.scrollLeft = container.scrollWidth;
+                }, 100);
             }
         };
 
