@@ -8,46 +8,17 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
-        
-        body { 
-            font-family: 'Roboto', sans-serif; 
-            background-color: #0b0f19; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            margin: 0; 
-            color: #d1d5db;
-            overscroll-behavior-y: contain;
-        }
-
-        /* Chống phóng to trên di động: font-size tối thiểu 16px */
+        body { font-family: 'Roboto', sans-serif; background-color: #0b0f19; height: 100vh; display: flex; flex-direction: column; margin: 0; color: #d1d5db; overscroll-behavior-y: contain; }
         input, textarea, button { font-size: 16px !important; touch-action: manipulation; }
-
         .message-bubble { max-width: 85%; word-wrap: break-word; line-height: 1.5; }
         .chat-bg { background-color: #0b0f19; background-image: radial-gradient(#1e232e 0.5px, transparent 0.5px); background-size: 15px 15px; }
         .hide-scroll::-webkit-scrollbar { display: none; }
-        
         .gold-text { color: #FCD535; }
         .gold-btn { background: linear-gradient(to right, #FCD535, #f59e0b); color: #000; font-weight: 900; }
         .gold-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-        
-        .admin-item-active { background-color: #1e232e; border-left: 4px solid #FCD535; }
-        
-        .quick-chat-btn {
-            background: #1e232e;
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-size: 12px !important;
-            white-space: nowrap;
-            border: 1px solid #2d3442;
-            flex-shrink: 0;
-            color: #fff;
-        }
+        .quick-chat-btn { background: #1e232e; padding: 8px 14px; border-radius: 12px; font-size: 12px !important; white-space: nowrap; border: 1px solid #2d3442; color: #fff; flex-shrink: 0; }
         .fade-in { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Queue Badge */
-        .badge-waiting { background: rgba(252, 213, 53, 0.1); border: 1px solid rgba(252, 213, 53, 0.3); color: #FCD535; }
     </style>
 </head>
 <body class="overflow-hidden">
@@ -55,88 +26,73 @@
     <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="login-container" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0f19] p-6">
         <div class="bg-[#13161f] w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center border border-[#232836]">
-            <div class="w-20 h-20 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(252,213,53,0.3)]">
+            <div class="w-20 h-20 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/20">
                 <span class="text-black text-3xl font-black italic">TP</span>
             </div>
             <h1 class="text-2xl font-black gold-text mb-1 tracking-widest uppercase italic">TPIG CENTER</h1>
             <p class="text-gray-500 text-[10px] mb-8 font-bold uppercase tracking-widest">Hỗ trợ người chơi trực tuyến</p>
             
             <div class="space-y-4">
-                <input type="text" id="login-input" placeholder="Nhập tên tài khoản..." 
-                    class="w-full bg-[#0b0f19] border-2 border-[#2d3442] rounded-2xl py-4 px-6 focus:border-[#FCD535] outline-none transition-all text-white placeholder-gray-600 font-bold">
-                
+                <input type="text" id="login-input" placeholder="Tên tài khoản..." class="w-full bg-[#0b0f19] border-2 border-[#2d3442] rounded-2xl py-4 px-6 focus:border-[#FCD535] outline-none transition-all text-white placeholder-gray-600 font-bold">
                 <button id="btn-login" disabled class="w-full gold-btn py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-widest text-sm italic">
-                    <span id="login-btn-text">Đang kết nối...</span>
+                    <span id="login-btn-text"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang kết nối...</span>
                 </button>
-
-                <a href="game.html" class="block w-full bg-[#1e232e] text-gray-400 font-bold py-4 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-[10px] border border-[#2d3442]">
-                    Quay lại Trang chủ
-                </a>
+                <a href="game.html" class="block w-full bg-[#1e232e] text-gray-400 font-bold py-4 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-[10px] border border-[#2d3442]">Quay lại Trang chủ</a>
             </div>
+            <p id="error-log" class="text-red-500 text-[10px] mt-6 font-bold hidden uppercase"></p>
         </div>
     </div>
 
-    <!-- GIAO DIỆN NGƯỜI CHƠI (USER) -->
+    <!-- GIAO DIỆN NGƯỜI CHƠI -->
     <div id="user-interface" class="hidden flex flex-col h-screen fade-in">
-        <header class="bg-[#13161f] border-b border-[#232836] p-4 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <header class="bg-[#13161f] border-b border-[#232836] p-4 flex items-center justify-between shrink-0 z-20 shadow-md">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-black italic shrink-0 shadow-lg">T</div>
                 <div>
-                    <h2 class="font-bold gold-text text-sm uppercase leading-none mb-1 tracking-tighter">CSKH TPIG</h2>
-                    <div id="queue-status" class="text-[10px] text-gray-500 font-bold uppercase italic tracking-tighter">Đang kiểm tra...</div>
+                    <h2 class="font-bold gold-text text-sm uppercase leading-none mb-1">Hỗ trợ TPIG</h2>
+                    <div id="queue-status" class="text-[10px] text-gray-500 font-bold uppercase italic tracking-tighter">Đang kết nối...</div>
                 </div>
             </div>
             <a href="game.html" class="bg-[#1e232e] text-gray-400 py-2 px-4 rounded-xl border border-[#2d3442] text-[10px] font-bold uppercase">Thoát</a>
         </header>
-
         <div id="user-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll"></div>
-
         <div class="p-4 bg-[#13161f] border-t border-[#232836] shrink-0">
             <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442]">
                 <input type="text" id="user-msg-input" placeholder="Bạn cần hỗ trợ gì?" class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white placeholder-gray-600 font-medium">
-                <button id="btn-send-user" class="gold-btn p-3 rounded-xl shadow-lg">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
+                <button id="btn-send-user" class="gold-btn p-3 rounded-xl shadow-lg"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
-    <!-- GIAO DIỆN CSKH (ADMIN) -->
+    <!-- GIAO DIỆN CSKH -->
     <div id="admin-interface" class="hidden flex h-screen overflow-hidden bg-[#0b0f19] fade-in">
         <div class="w-20 md:w-72 border-r border-[#232836] flex flex-col bg-[#13161f] shrink-0">
             <div class="p-4 border-b border-[#232836] flex justify-between items-center bg-[#13161f]">
-                <h3 class="font-black gold-text text-[10px] uppercase hidden md:block tracking-widest">Danh sách chờ</h3>
+                <h3 class="font-black gold-text text-[10px] uppercase hidden md:block tracking-widest">HÀNG CHỜ</h3>
                 <button onclick="location.reload()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
             <div id="admin-user-list" class="flex-grow overflow-y-auto hide-scroll"></div>
         </div>
-
         <div class="flex-grow flex flex-col relative bg-[#0b0f19]">
             <div id="admin-chat-header" class="p-4 border-b border-[#232836] flex justify-between items-center shrink-0 min-h-[73px] bg-[#13161f]">
                 <div class="flex items-center gap-3">
                     <div id="active-user-avatar" class="w-9 h-9 rounded-full bg-[#1e232e] flex items-center justify-center font-black text-[#FCD535] hidden border border-[#2d3442]">?</div>
                     <div class="font-black text-gray-300 text-sm uppercase italic tracking-tighter" id="header-user-name">QUẢN LÝ HỖ TRỢ</div>
                 </div>
-                <button id="btn-end-session" class="hidden bg-[#F6465D] hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg">
-                    Kết thúc
-                </button>
+                <button id="btn-end-session" class="hidden bg-[#F6465D] hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg">Kết thúc</button>
             </div>
-            
             <div id="quick-chat-bar" class="bg-[#13161f] p-2 border-b border-[#232836] flex gap-2 overflow-x-auto hide-scroll hidden">
-                <button class="quick-chat-btn" data-txt="Chào bạn! CSKH TPIG xin nghe, bạn cần giúp gì ạ?">CHÀO HỎI</button>
-                <button class="quick-chat-btn" data-txt="Vui lòng cung cấp chính xác Tên tài khoản Game của bạn để mình kiểm tra.">HỎI TÊN TK</button>
-                <button class="quick-chat-btn" data-txt="Vấn đề của bạn đã được chuyển kỹ thuật, vui lòng chờ xử lý nhé.">BÁO LỖI</button>
-                <button class="quick-chat-btn" data-txt="Đã hoàn tất xử lý. Chúc bạn chơi game vui vẻ nhé!">XONG</button>
-                <button class="quick-chat-btn" data-txt="Cảm ơn bạn đã liên hệ. Phiên hỗ trợ kết thúc tại đây!">TẠM BIỆT</button>
+                <button class="quick-chat-btn" data-txt="Chào bạn! CSKH TPIG đã sẵn sàng, bạn cần hỗ trợ gì ạ?">CHÀO HỎI</button>
+                <button class="quick-chat-btn" data-txt="Vui lòng cung cấp Tên tài khoản Game của bạn.">HỎI TÊN TK</button>
+                <button class="quick-chat-btn" data-txt="Đã xử lý xong. Chúc bạn chơi game vui vẻ nhé!">XONG</button>
+                <button class="quick-chat-btn" data-txt="Cảm ơn bạn. Phiên hỗ trợ xin phép kết thúc!">TẠM BIỆT</button>
             </div>
-
             <div id="admin-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll">
-                <div class="flex flex-col items-center justify-center h-full text-gray-600 opacity-50 text-center">
-                    <i class="fa-solid fa-headset text-5xl mb-4"></i>
+                <div class="flex flex-col items-center justify-center h-full text-gray-600 opacity-50 text-center px-10">
+                    <i class="fa-solid fa-comments text-5xl mb-4"></i>
                     <p class="text-[10px] font-black uppercase tracking-widest">Chọn khách hàng từ danh sách</p>
                 </div>
             </div>
-
             <div id="admin-input-container" class="p-4 bg-[#13161f] border-t border-[#232836] hidden shrink-0">
                 <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442]">
                     <input type="text" id="admin-msg-input" placeholder="Trả lời người chơi..." class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white font-medium">
@@ -163,7 +119,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, deleteDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIG CỦA BẠN
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -178,42 +133,37 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // ĐỊNH NGHĨA ĐƯỜNG DẪN THEO RULES SECTION 10
-        // match /artifacts/{appId}/{path=**}
-        const APP_ID = "tpig_cskh_v1"; 
-        const CHAT_PATH = (uid) => `artifacts/${APP_ID}/public/data/chats/${uid}`;
-        const COLLECTION_REF = collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats');
+        // ĐƯỜNG DẪN TUÂN THỦ RULE Section 10
+        // appId = tpig_support
+        const APP_ID = "tpig_support";
+        const getSessionPath = (uid) => `artifacts/${APP_ID}/public/data/sessions/${uid}`;
+        const getMessagesPath = (uid) => `artifacts/${APP_ID}/public/data/sessions/${uid}/messages`;
 
         let currentFBUser = null;
         let isAdmin = false;
         let selectedUserId = null;
         let myName = "";
-        let hasRepliedOnce = false;
+        let autoReplied = false;
 
         // AUTH
         onAuthStateChanged(auth, async (u) => {
             if (u) {
                 currentFBUser = u;
-                document.getElementById('btn-login').disabled = false;
+                const btn = document.getElementById('btn-login');
+                btn.disabled = false;
                 document.getElementById('login-btn-text').innerText = 'BẮT ĐẦU CHAT';
             } else {
-                signInAnonymously(auth).catch(e => console.error("Auth Error", e));
+                signInAnonymously(auth).catch(e => {
+                    document.getElementById('error-log').innerText = "Lỗi kết nối: " + e.message;
+                    document.getElementById('error-log').classList.remove('hidden');
+                });
             }
         });
-
-        const showModal = (text, confirmCb) => {
-            const modal = document.getElementById('custom-modal');
-            document.getElementById('modal-text').innerText = text;
-            modal.classList.remove('hidden');
-            document.getElementById('modal-confirm').onclick = () => { modal.classList.add('hidden'); confirmCb(); };
-            document.getElementById('modal-cancel').onclick = () => { modal.classList.add('hidden'); };
-        };
 
         // LOGIN
         document.getElementById('btn-login').onclick = () => {
             const val = document.getElementById('login-input').value.trim();
             if (!val || !currentFBUser) return;
-
             if (val === "cskhtpig123") {
                 isAdmin = true;
                 document.getElementById('login-container').classList.add('hidden');
@@ -230,18 +180,11 @@
 
         // --- USER SYSTEM ---
         function initUser() {
-            const userDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'chats', currentFBUser.uid);
-            
-            setDoc(userDocRef, { 
-                name: myName, 
-                created: serverTimestamp(), 
-                agentJoined: false, 
-                active: true,
-                lastUpdate: serverTimestamp()
-            }, { merge: true });
+            const userDocRef = doc(db, getSessionPath(currentFBUser.uid));
+            setDoc(userDocRef, { name: myName, created: serverTimestamp(), agentJoined: false, active: true }, { merge: true });
 
-            // Hàng chờ
-            onSnapshot(COLLECTION_REF, (snap) => {
+            const sessionsCol = collection(db, `artifacts/${APP_ID}/public/data/sessions`);
+            onSnapshot(sessionsCol, (snap) => {
                 const list = [];
                 snap.forEach(d => {
                     const data = d.data();
@@ -252,19 +195,15 @@
                 
                 getDoc(userDocRef).then(ds => {
                     const status = document.getElementById('queue-status');
-                    if (ds.exists() && ds.data().agentJoined) {
-                        status.innerHTML = `<span class="text-[#0ECB81] font-black italic">● ĐANG TRÒ CHUYỆN</span>`;
-                    } else {
-                        status.innerText = rank > 0 ? `HÀNG CHỜ SỐ: ${rank}` : "ĐANG CHỜ KẾT NỐI...";
-                    }
+                    if (ds.exists() && ds.data().agentJoined) status.innerHTML = `<span class="text-[#0ECB81] font-black italic">● Đang trò chuyện</span>`;
+                    else status.innerText = rank > 0 ? `SỐ THỨ TỰ CỦA BẠN: ${rank}` : "ĐANG CHỜ KẾT NỐI...";
                 });
             });
 
-            // Tin nhắn
-            const qMsg = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats', currentFBUser.uid, 'messages'), orderBy('time', 'asc'));
+            const qMsg = query(collection(db, getMessagesPath(currentFBUser.uid)), orderBy('time', 'asc'));
             onSnapshot(qMsg, (snap) => {
                 const box = document.getElementById('user-messages');
-                if (snap.empty && hasRepliedOnce) location.reload();
+                if (snap.empty && autoReplied) { location.reload(); return; }
                 box.innerHTML = '';
                 snap.forEach(d => render(box, d.data().text, d.data().role === 'admin' ? 'left' : 'right'));
                 box.scrollTop = box.scrollHeight;
@@ -273,7 +212,8 @@
 
         // --- ADMIN SYSTEM ---
         function initAdmin() {
-            onSnapshot(COLLECTION_REF, (snap) => {
+            const sessionsCol = collection(db, `artifacts/${APP_ID}/public/data/sessions`);
+            onSnapshot(sessionsCol, (snap) => {
                 const list = document.getElementById('admin-user-list');
                 list.innerHTML = '';
                 const uDatas = [];
@@ -283,27 +223,23 @@
                 uDatas.forEach(data => {
                     if(!data.name) return;
                     const item = document.createElement('div');
-                    item.className = `p-4 border-b border-[#232836] cursor-pointer transition-all ${selectedUserId === data.id ? 'admin-item-active' : 'hover:bg-[#13161f]'}`;
+                    item.className = `p-4 border-b border-[#232836] cursor-pointer ${selectedUserId === data.id ? 'admin-item-active' : 'hover:bg-[#13161f]'}`;
                     item.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <div class="relative shrink-0">
-                                <div class="w-10 h-10 rounded-full bg-[#1e232e] text-[#FCD535] flex items-center justify-center font-black border border-[#2d3442] text-xs">${data.name.charAt(0).toUpperCase()}</div>
-                                ${!data.agentJoined ? '<div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FCD535] rounded-full border-2 border-[#0b0f19] animate-pulse"></div>' : ''}
+                            <div class="w-10 h-10 rounded-full bg-[#1e232e] text-[#FCD535] flex items-center justify-center font-black border border-[#2d3442] text-xs">${data.name.charAt(0).toUpperCase()}</div>
+                            <div class="flex-grow overflow-hidden leading-tight">
+                                <p class="font-black text-[11px] text-gray-200 truncate uppercase">${data.name}</p>
+                                <p class="text-[8px] ${data.agentJoined ? 'text-gray-500 font-bold' : 'text-[#FCD535] font-black'} uppercase mt-1 tracking-tighter">${data.agentJoined ? 'Đã tiếp nhận' : 'CHỜ HỖ TRỢ'}</p>
                             </div>
-                            <div class="hidden md:block overflow-hidden flex-grow leading-tight">
-                                <p class="font-black text-[11px] text-gray-200 truncate uppercase tracking-tight">${data.name}</p>
-                                <p class="text-[8px] ${data.agentJoined ? 'text-gray-500 font-bold' : 'text-[#FCD535] font-black'} uppercase mt-1 tracking-tighter">
-                                    ${data.agentJoined ? 'Đã tiếp nhận' : 'CHỜ HỖ TRỢ'}
-                                </p>
-                            </div>
+                            ${!data.agentJoined ? '<div class="w-2.5 h-2.5 bg-[#FCD535] rounded-full animate-pulse"></div>' : ''}
                         </div>`;
-                    item.onclick = () => selectUserByAdmin(data.id, data.name, data.agentJoined);
+                    item.onclick = () => selectUser(data.id, data.name, data.agentJoined);
                     list.appendChild(item);
                 });
             });
         }
 
-        async function selectUserByAdmin(uid, name, joined) {
+        async function selectUser(uid, name, joined) {
             selectedUserId = uid;
             document.getElementById('header-user-name').innerText = name.toUpperCase();
             document.getElementById('active-user-avatar').innerText = name.charAt(0).toUpperCase();
@@ -312,16 +248,12 @@
             document.getElementById('btn-end-session').classList.remove('hidden');
             document.getElementById('quick-chat-bar').classList.remove('hidden');
             
-            const chatRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'chats', uid);
-            const msgCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats', uid, 'messages');
+            const chatRef = doc(db, getSessionPath(uid));
+            const msgCol = collection(db, getMessagesPath(uid));
 
             if (!joined) {
                 await updateDoc(chatRef, { agentJoined: true });
-                await addDoc(msgCol, { 
-                    text: "Chào bạn! CSKH TPIG đã có mặt. Rất vui được hỗ trợ bạn, bạn đang cần giúp vấn đề gì ạ?", 
-                    role: 'admin', 
-                    time: serverTimestamp() 
-                });
+                await addDoc(msgCol, { text: "Chào bạn! Chuyên viên CSKH TPIG đã nhận tín hiệu. Tôi có thể giúp gì cho bạn?", role: 'admin', time: serverTimestamp() });
             }
 
             const qMsg = query(msgCol, orderBy('time', 'asc'));
@@ -333,35 +265,29 @@
             });
         }
 
-        // --- SEND ---
+        // --- SEND LOGIC ---
         const sendMsg = async (role, manualText = null) => {
             const input = document.getElementById(role === 'admin' ? 'admin-msg-input' : 'user-msg-input');
             const text = manualText || input.value.trim();
-            if (!text) return;
+            if (!text || !currentFBUser) return;
             const targetId = role === 'admin' ? selectedUserId : currentFBUser.uid;
-            
-            try {
-                const msgCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats', targetId, 'messages');
-                const chatDoc = doc(db, 'artifacts', APP_ID, 'public', 'data', 'chats', targetId);
-                
-                await addDoc(msgCol, { text, role, time: serverTimestamp() });
-                await updateDoc(chatDoc, { lastMsg: text, lastUpdate: serverTimestamp() });
+            if (!targetId) return;
 
-                if (role === 'user' && !hasRepliedOnce) {
-                    const ds = await getDoc(chatDoc);
-                    if (!ds.data()?.agentJoined) {
-                        hasRepliedOnce = true;
-                        setTimeout(async () => {
-                            await addDoc(msgCol, { 
-                                text: `Chào bạn! CSKH đã nhận được tín hiệu. Vui lòng chờ trong giây lát theo số thứ tự, chuyên viên sẽ phản hồi ngay ạ.`, 
-                                role: 'admin', 
-                                time: serverTimestamp() 
-                            });
-                        }, 1200);
-                    }
+            try {
+                const msgCol = collection(db, getMessagesPath(targetId));
+                await addDoc(msgCol, { text, role, time: serverTimestamp() });
+
+                if (role === 'user' && !autoReplied) {
+                    autoReplied = true;
+                    setTimeout(async () => {
+                        await addDoc(msgCol, { text: `Chào ${myName}! Đã nhận yêu cầu. Vui lòng chờ giây lát, chuyên viên sẽ phản hồi ngay ạ.`, role: 'admin', time: serverTimestamp() });
+                    }, 1200);
                 }
                 if (!manualText) input.value = '';
-            } catch (e) { console.error("Gửi tin thất bại", e); }
+            } catch (e) {
+                console.error("Gửi tin lỗi:", e);
+                alert("Lỗi: Không thể gửi tin. Kiểm tra lại phân quyền Firestore.");
+            }
         };
 
         document.getElementById('btn-send-user').onclick = () => sendMsg('user');
@@ -371,13 +297,18 @@
         });
 
         document.getElementById('btn-end-session').onclick = () => {
-            showModal("KẾT THÚC VÀ XÓA DỮ LIỆU PHIÊN CHAT NÀY?", async () => {
-                const col = collection(db, 'artifacts', APP_ID, 'public', 'data', 'chats', selectedUserId, 'messages');
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-text').innerText = "KẾT THÚC VÀ XÓA TOÀN BỘ DỮ LIỆU PHIÊN CHAT NÀY?";
+            modal.classList.remove('hidden');
+            document.getElementById('modal-confirm').onclick = async () => {
+                modal.classList.add('hidden');
+                const col = collection(db, getMessagesPath(selectedUserId));
                 const snap = await getDocs(col);
                 await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
-                await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'chats', selectedUserId));
+                await deleteDoc(doc(db, getSessionPath(selectedUserId)));
                 location.reload();
-            });
+            };
+            document.getElementById('modal-cancel').onclick = () => modal.classList.add('hidden');
         };
 
         function render(box, text, side) {
