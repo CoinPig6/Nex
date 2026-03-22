@@ -3,135 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crownex Pro - Absolute Sync</title>
+    <title>Tpig - Crypto Trading</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS CORE */
-        html, body { touch-action: pan-x pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
+        /* CSS CORE & ANTI-ZOOM */
+        html, body { touch-action: pan-y; overscroll-behavior: none; height: 100%; overflow: hidden; background-color: #0b0f19; }
         body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        input, select, textarea, button { font-size: 16px !important; appearance: none; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* SIDEBAR & UI */
+        /* SIDEBAR */
         #sidebar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: #9ca3af; font-weight: 500; font-size: 14px; transition: all 0.2s; }
         .menu-item:active { background: #1e232e; color: white; }
         .menu-item.active { background: #1e232e; color: #FCD535; border: 1px solid #2d3442; }
 
-        /* TECH BORDER */
-        .tech-border { position: relative; background: #13161f; border: 1px solid #2a2e39; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border-radius: 16px; overflow: hidden; }
-        .tech-border.win { border: 1px solid #0ECB81; box-shadow: 0 0 30px rgba(14, 203, 129, 0.15); }
-        .tech-border.lose { border: 1px solid #F6465D; box-shadow: 0 0 30px rgba(246, 70, 93, 0.15); }
+        /* TECH BORDER & POPUP */
+        .tech-border { position: relative; background: #13161f; border: 1px solid #2a2e39; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 20px; overflow: hidden; }
+        .tech-border.win { border: 1px solid #0ECB81; box-shadow: 0 0 40px rgba(14, 203, 129, 0.2); }
+        .tech-border.lose { border: 1px solid #F6465D; box-shadow: 0 0 40px rgba(246, 70, 93, 0.2); }
         
-        .btn-trade { transition: all 0.1s; position: relative; overflow: hidden; border-bottom: 3px solid rgba(0,0,0,0.2); }
-        .btn-trade:active { transform: translateY(2px); border-bottom-width: 1px; }
-        .btn-trade.dimmed { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        .btn-trade.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); }
+        .btn-trade { transition: all 0.1s; position: relative; overflow: hidden; border-bottom: 4px solid rgba(0,0,0,0.2); }
+        .btn-trade:active { transform: translateY(3px); border-bottom-width: 1px; }
+        .btn-trade.dimmed { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
 
-        /* HISTORY */
-        .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; }
+        /* HISTORY ROADMAP */
+        .history-wrapper { width: 100%; height: 100%; overflow-x: auto; display: flex; align-items: center; justify-content: center; scroll-behavior: smooth; }
         .history-container { display: flex; flex-direction: row; gap: 4px; padding: 0 5px; }
-        .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 68px; height: 85px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 6px; border: 1px solid #1f2430; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: #232836; margin: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
-        .dot.up { background-color: #0ECB81; box-shadow: 0 0 5px rgba(14, 203, 129, 0.5); } 
-        .dot.down { background-color: #F6465D; box-shadow: 0 0 5px rgba(246, 70, 93, 0.5); }
+        .history-block { display: grid; grid-template-rows: repeat(5, 1fr); grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; gap: 3px; width: 72px; height: 90px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 8px; border: 1px solid #1f2430; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background-color: #1e232e; margin: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #2d3442; }
+        .dot.up { background-color: #0ECB81; box-shadow: 0 0 6px rgba(14, 203, 129, 0.6); border-color: #0ECB81; } 
+        .dot.down { background-color: #F6465D; box-shadow: 0 0 6px rgba(246, 70, 93, 0.6); border-color: #F6465D; }
         
         /* CHART ELEMENTS */
         #lockLine { position: absolute; left: 0; right: 0; height: 1px; border-top: 1px dashed #FCD535; z-index: 5; pointer-events: none; display: none; }
-        #lockLabel { position: absolute; left: 10px; z-index: 6; background: #FCD535; color: #111; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; transform: translateY(-50%); display: none; }
+        #lockLabel { position: absolute; left: 10px; z-index: 6; background: #FCD535; color: #111; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 6px; transform: translateY(-50%); display: none; box-shadow: 0 4px 10px rgba(252,213,53,0.3); }
         
         /* CONFIRM BAR */
         #confirmBar { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: #1e232e; 
-            border-top-left-radius: 20px; border-top-right-radius: 20px;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.5);
-            z-index: 100;
-            transform: translateY(120%);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            padding-bottom: env(safe-area-inset-bottom, 20px);
+            position: fixed; bottom: 0; left: 0; right: 0; background: #1e232e; 
+            border-top-left-radius: 24px; border-top-right-radius: 24px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.8); z-index: 100;
+            transform: translateY(120%); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #2d3442;
         }
         #confirmBar.active { transform: translateY(0); }
         
-        /* ANIMATIONS */
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .dot.new { animation: popIn 0.3s; }
+        .dot.new { animation: popIn 0.3s; border: 2px solid white; }
         
         /* TOAST */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1e232e; border: 1px solid #2d3442; padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
-        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        #toast.error i { color: #F6465D; } #toast.success i { color: #0ECB81; }
+        #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1e232e; border: 1px solid #2d3442; padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
+        #toast.show { opacity: 1; }
         
-        .btn-loading { pointer-events: none; opacity: 0.7; }
-        
-        /* QUICK SELECT */
-        .chip { background: #232836; color: #9ca3af; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #2d3442; transition: all 0.2s; }
-        .chip:active { background: #FCD535; color: black; border-color: #FCD535; }
+        /* QUICK SELECT CHIPS */
+        .chip { background: #1e232e; color: #9ca3af; padding: 6px 0; width: 45px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.1s; }
+        .chip:active { background: #FCD535; color: black; border-color: #FCD535; transform: scale(0.95); }
 
-        #pageLoader { position: fixed; inset: 0; background: #0b0f19; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
     <!-- LOADING SCREEN -->
-    <div id="pageLoader">
-        <div class="w-12 h-12 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-2xl animate-bounce rounded-bl-none">C</div>
-        <div class="text-[#6b7280] text-xs font-mono mt-4 font-bold tracking-widest">SYNCING DATA...</div>
+    <div id="pageLoader" class="fixed inset-0 bg-[#0b0f19] z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce">
+            <span class="text-black font-black text-2xl italic tracking-widest pl-1">T</span>
+        </div>
+        <div class="text-[#FCD535] text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse">Kết nối sàn giao dịch...</div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast"><i class="fa-solid fa-circle-check text-lg"></i><span class="text-sm font-bold text-white" id="toastMsg">...</span></div>
+    <div id="toast"><i class="fa-solid fa-circle-check text-[#0ECB81] text-lg"></i><span class="text-xs font-bold text-white uppercase tracking-wide" id="toastMsg">...</span></div>
 
     <!-- SIDEBAR -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-40 hidden opacity-0 transition-opacity duration-300" onclick="window.toggleMenu()"></div>
-    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-50 transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 z-[60] hidden opacity-0 transition-opacity duration-300" onclick="window.toggleMenu()"></div>
+    <div id="sidebar" class="fixed top-0 left-0 w-[80%] max-w-xs h-full bg-[#13161f] z-[70] transform -translate-x-full shadow-2xl border-r border-[#232836] flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-[#232836] bg-[#171b26]">
             <div class="w-8 h-8 rounded bg-[#FCD535] flex items-center justify-center text-black font-bold text-xl rounded-bl-none mr-3">C</div>
             <span class="font-bold text-lg text-white">CROWNEX</span>
             <button onclick="window.toggleMenu()" class="ml-auto text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        <!-- RESTORED FULL MENU -->
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 hide-scroll">
             <a href="game.html" class="menu-item active"><i class="fa-solid fa-chart-line"></i> Giao dịch</a>
             <a href="bcr.html" class="menu-item"><i class="fa-solid fa-ranking-star"></i> Bacarat</a>
             <a href="taikhoan.html" class="menu-item"><i class="fa-solid fa-user-gear"></i> Tài khoản</a>
             <a href="lichsu.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử cược</a>
-            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi <span class="ml-auto bg-[#F6465D] text-white text-[10px] px-1.5 rounded font-bold">HOT</span></a>
+            <a href="khuyenmai.html" class="menu-item"><i class="fa-solid fa-gift"></i> Khuyến mãi</a>
             <div class="border-t border-[#232836] my-2 mx-2"></div>
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="window.logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
-        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
-                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">User...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
-            </div>
-        </div>
     </div>
 
     <!-- HEADER -->
-    <header class="flex items-center justify-between px-4 h-14 bg-[#13161f] border-b border-[#232836] z-20 shrink-0">
+    <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
         <div class="flex items-center gap-4">
-            <button onclick="window.toggleMenu()" class="cursor-pointer w-8 h-8 flex items-center justify-center active:scale-95 transition-transform"><i class="fa-solid fa-bars-staggered text-xl text-[#9ca3af]"></i></button>
+            <button onclick="window.toggleMenu()" class="w-9 h-9 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform"><i class="fa-solid fa-bars-staggered text-[#9ca3af]"></i></button>
             <div class="flex flex-col justify-center">
                 <div class="flex items-center gap-2">
-                    <span class="text-white font-bold text-sm">BTC/USDT</span>
-                    <span class="bg-[#232836] text-[#FCD535] text-[9px] px-1 rounded border border-[#2f3646] flex items-center gap-1">LIVE</span>
+                    <span class="text-white font-black text-sm tracking-wide">BTC/USDT</span>
+                    <span class="bg-red-500/20 text-red-500 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-500/30 uppercase animate-pulse">Live</span>
                 </div>
-                <div class="text-[10px] text-[#6b7280] font-mono leading-none mt-0.5">Phiên: <span id="sessionID" class="text-gray-400">...</span></div>
+                <div class="text-[9px] text-[#6b7280] font-mono leading-none mt-1 font-bold">Phiên: <span id="sessionID" class="text-gray-300">...</span></div>
             </div>
         </div>
-        <div class="bg-[#1e232e] pl-4 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-3">
-            <div class="text-right leading-tight"><div class="text-[9px] text-[#6b7280] font-bold uppercase">Thực: <span id="balanceDisplay" class="text-[#EAECEF] font-mono text-sm">---</span></div></div>
-            <div class="w-7 h-7 bg-[#FCD535] rounded-full flex items-center justify-center text-xs text-[#111]"><i class="fa-solid fa-wallet"></i></div>
+        <div class="bg-black/30 pl-4 pr-1 py-1 rounded-full border border-white/5 flex items-center gap-3">
+            <div class="text-right leading-tight">
+                <div class="text-[8px] text-gray-500 font-black uppercase mb-0.5 tracking-widest">SỐ DƯ</div>
+                <div id="balanceDisplay" class="text-[#0ECB81] font-mono font-black text-[13px]">--- T</div>
+            </div>
+            <div class="w-7 h-7 bg-[#FCD535] rounded-full flex items-center justify-center text-xs text-[#111] shadow-lg"><i class="fa-solid fa-wallet"></i></div>
         </div>
     </header>
 
     <!-- CHART AREA -->
-    <div class="flex-1 relative bg-[#0b0f19] overflow-hidden" id="chart-wrapper">
-        <div class="absolute top-3 right-[70px] z-10"><span id="candleStatusBadge" class="text-[10px] font-bold px-3 py-1 rounded-full bg-[#232836] text-[#9ca3af] border border-[#374151]">WAITING</span></div>
+    <div class="flex-1 relative bg-[#050505] overflow-hidden border-b border-white/5" id="chart-wrapper">
+        <div class="absolute top-4 right-[70px] z-10">
+            <span id="candleStatusBadge" class="text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-blue-500/20 text-blue-400 border border-blue-500/50">CHỜ KẾT QUẢ</span>
+        </div>
         <canvas id="chartCanvas" class="w-full h-full block"></canvas>
         <div id="lockLine"></div>
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
@@ -139,97 +132,100 @@
         <!-- WIN/LOSE POPUP -->
         <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
             <div id="popupBorder" class="tech-border p-8 relative">
-                <div id="popupTitle" class="font-black text-2xl mb-1 uppercase">HÚP RỒI</div>
-                <div id="popupAmount" class="font-mono font-bold text-4xl drop-shadow-xl">+$0.00</div>
+                <div id="popupTitle" class="font-black text-2xl mb-1 uppercase tracking-widest">HÚP RỒI</div>
+                <div id="popupAmount" class="font-mono font-black text-3xl drop-shadow-xl">+0 T</div>
             </div>
         </div>
     </div>
 
     <!-- HISTORY BAR -->
-    <div class="glass-panel z-20 shrink-0 h-28 flex flex-col shadow-[0_-5px_20px_rgba(0,0,0,0.5)] bg-[#13161f]">
-        <div class="flex items-center justify-between px-4 py-1.5 border-b border-[#232836] bg-[#171b26]">
-            <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#6b7280] text-xs"></i><span class="text-[#9ca3af] text-[10px] font-bold uppercase">Kết quả bóng</span></div>
-            <div class="flex gap-4 text-[10px] font-mono font-bold"><span class="text-[#0ECB81]">Xanh: <span id="count-up">0</span></span><span class="text-[#F6465D]">Đỏ: <span id="count-down">0</span></span></div>
+    <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
+        <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
+            <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
+            <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">MUA: <span id="count-up">0</span></span><span class="text-[#F6465D]">BÁN: <span id="count-down">0</span></span></div>
         </div>
-        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper"><div class="history-container" id="historyContainer"></div></div></div>
+        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center"><div class="history-wrapper hide-scroll"><div class="history-container" id="historyContainer"></div></div></div>
     </div>
 
     <!-- CONTROL PANEL -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
-        <div class="flex justify-between items-end mb-4">
-            <div class="text-center w-full">
-                <!-- QUICK SELECT BUTTONS -->
-                <div class="flex items-center justify-center gap-2 mb-3">
-                    <button onclick="window.setBetAmount(1)" class="chip">$1</button>
-                    <button onclick="window.setBetAmount(5)" class="chip">$5</button>
-                    <button onclick="window.setBetAmount(10)" class="chip">$10</button>
-                    <button onclick="window.setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
-                </div>
-
-                <div class="flex items-center justify-center gap-2">
-                    <button onclick="window.adjustBet(-1)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">-</button>
-                    <div class="w-36 relative group">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] font-bold font-mono text-sm">$</span>
-                        <input type="number" id="betInput" value="1" class="w-full h-10 bg-[#0b0f19] border border-[#2d3442] text-white font-mono font-bold text-lg rounded-lg pl-6 text-center focus:outline-none focus:border-[#FCD535]" oninput="window.updateProfit()">
-                    </div>
-                    <button onclick="window.adjustBet(1)" class="w-10 h-10 bg-[#1e232e] rounded-lg text-[#9ca3af] text-lg font-bold border border-[#2d3442] active:bg-[#2d3442]">+</button>
-                </div>
-                <div class="text-[10px] text-[#6b7280] font-bold uppercase mt-1">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+$0.95</span> (95%)</div>
+        <div class="flex flex-col mb-4">
+            <!-- QUICK CHIPS -->
+            <div class="flex items-center justify-between gap-1 mb-4 w-full">
+                <button onclick="window.setBetAmount(10)" class="chip">10</button>
+                <button onclick="window.setBetAmount(50)" class="chip">50</button>
+                <button onclick="window.setBetAmount(100)" class="chip">100</button>
+                <button onclick="window.setBetAmount(500)" class="chip">500</button>
+                <button onclick="window.setBetAmount(1000)" class="chip">1K</button>
+                <button onclick="window.setAllIn()" class="chip text-[#FCD535] border-[#FCD535]">ALL</button>
             </div>
+
+            <!-- BET INPUT -->
+            <div class="flex items-center justify-center gap-3">
+                <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm"><i class="fa-solid fa-minus"></i></button>
+                <div class="flex-1 relative group">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#FCD535] font-black text-sm">T</span>
+                    <input type="number" id="betInput" value="10" min="10" class="w-full h-12 bg-[#050505] border border-[#2d3442] text-white font-mono font-black text-xl rounded-xl pl-8 text-center focus:outline-none focus:border-[#FCD535] shadow-inner" oninput="window.updateProfit()">
+                </div>
+                <button onclick="window.adjustBet(10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận: <span class="text-[#0ECB81]" id="profitDisplay">+9.50 T</span> (95%)</div>
         </div>
         
-        <div class="flex gap-3 h-14 relative mb-2">
-            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 btn-trade bg-[#F6465D] rounded-xl flex items-center justify-between px-4 shadow-[0_4px_0_#b9283a]">
-                <div class="flex flex-col items-start"><span class="font-black text-lg text-white">BÁN</span><span class="text-[9px] text-white/70 font-mono font-bold">DOWN</span></div>
-                <i class="fa-solid fa-arrow-trend-down text-2xl text-white/40"></i>
-                <div id="badge-down" class="hidden absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-1 rounded shadow-lg">0$</div>
+        <!-- UP/DOWN BUTTONS -->
+        <div class="flex gap-3 h-16 relative mb-1">
+            <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-between px-5 shadow-lg">
+                <div class="flex flex-col items-start"><span class="font-black text-xl text-white tracking-wide">BÁN</span><span class="text-[9px] text-white/70 font-mono font-bold tracking-widest">DOWN</span></div>
+                <i class="fa-solid fa-arrow-trend-down text-3xl text-white/30"></i>
+                <div id="badge-down" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
             
-            <div class="w-24 bg-[#1e232e] rounded-xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
-                <div id="timerProgress" class="absolute bottom-0 left-0 h-1 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
-                <span id="phaseText" class="text-[9px] text-[#6b7280] font-bold uppercase z-10 tracking-wider">ĐẶT LỆNH</span>
-                <span id="timerText" class="text-white font-mono font-bold text-2xl z-10 leading-none mt-0.5">30</span>
+            <!-- TIMER -->
+            <div class="w-24 bg-[#050505] rounded-2xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
+                <div id="timerProgress" class="absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
+                <span id="phaseText" class="text-[8px] text-[#6b7280] font-black uppercase z-10 tracking-widest">ĐẶT LỆNH</span>
+                <span id="timerText" class="text-white font-mono font-black text-3xl z-10 leading-none mt-1">30</span>
             </div>
             
-            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 btn-trade bg-[#0ECB81] rounded-xl flex items-center justify-between px-4 shadow-[0_4px_0_#0aa869]">
-                <div class="flex flex-col items-start"><span class="font-black text-lg text-white">MUA</span><span class="text-[9px] text-white/70 font-mono font-bold">UP</span></div>
-                <i class="fa-solid fa-arrow-trend-up text-2xl text-white/40"></i>
-                <div id="badge-up" class="hidden absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-1 rounded shadow-lg">0$</div>
+            <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-between px-5 shadow-lg">
+                <div class="flex flex-col items-start"><span class="font-black text-xl text-white tracking-wide">MUA</span><span class="text-[9px] text-white/70 font-mono font-bold tracking-widest">UP</span></div>
+                <i class="fa-solid fa-arrow-trend-up text-3xl text-white/30"></i>
+                <div id="badge-up" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
         </div>
     </div>
 
     <!-- CONFIRM BAR -->
-    <div id="confirmBar" class="p-4 bg-[#1e232e] rounded-t-2xl shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
-        <div class="flex justify-between items-center mb-4">
+    <div id="confirmBar" class="p-5 bg-[#13161f] border-t border-white/10">
+        <div class="flex justify-between items-center mb-5">
             <div class="flex flex-col">
-                <span class="text-[#9ca3af] text-xs font-bold">XÁC NHẬN LỆNH</span>
-                <span id="confirmType" class="text-xl font-black">---</span>
+                <span class="text-gray-500 text-[10px] font-black uppercase tracking-widest">Xác nhận lệnh</span>
+                <span id="confirmType" class="text-2xl font-black uppercase mt-0.5">---</span>
             </div>
             <div class="text-right">
-                <span class="text-[#6b7280] text-[10px] font-bold">SỐ DƯ HIỆN TẠI</span>
-                <div id="confirmBalance" class="text-white font-mono font-bold">---</div>
+                <span class="text-gray-500 text-[10px] font-black uppercase tracking-widest">Số dư ví</span>
+                <div id="confirmBalance" class="text-white font-mono font-black text-lg mt-0.5">---</div>
             </div>
         </div>
         
-        <div class="bg-[#13161f] rounded-lg p-3 mb-4 border border-[#232836]">
-            <div class="flex justify-between mb-2">
-                <span class="text-[#9ca3af] text-xs">Tiền cược</span>
-                <span id="confirmAmount" class="text-white font-mono font-bold">---</span>
+        <div class="bg-black/30 rounded-xl p-4 mb-5 border border-white/5">
+            <div class="flex justify-between mb-2.5 items-center">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Tiền cược</span>
+                <span id="confirmAmount" class="text-white font-mono font-black text-base">---</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-[#9ca3af] text-xs">Lợi nhuận dự kiến</span>
-                <span id="confirmWin" class="text-[#0ECB81] font-mono font-bold">---</span>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Lợi nhuận dự kiến</span>
+                <span id="confirmWin" class="text-[#0ECB81] font-mono font-black text-base">---</span>
             </div>
         </div>
         
         <div class="flex gap-3 mb-2">
-            <button onclick="window.cancelSelection()" class="flex-1 py-3 bg-[#232836] rounded-xl text-[#9ca3af] font-bold text-sm">HỦY</button>
-            <button id="btnConfirm" onclick="window.confirmBet()" class="flex-[2] py-3 bg-[#FCD535] rounded-xl text-black font-black text-sm shadow-lg shadow-yellow-500/20">XÁC NHẬN NGAY</button>
+            <button onclick="window.cancelSelection()" class="flex-1 py-3.5 bg-[#1e232e] rounded-xl text-gray-400 font-black text-xs uppercase tracking-widest border border-[#2d3442] active:scale-95 transition-all">HỦY LỆNH</button>
+            <button id="btnConfirm" onclick="window.confirmBet()" class="flex-[2] py-3.5 bg-gradient-to-r from-[#FCD535] to-[#f59e0b] rounded-xl text-black font-black text-sm shadow-xl active:scale-95 transition-all tracking-widest">XÁC NHẬN NGAY</button>
         </div>
     </div>
 
-    <!-- MAIN LOGIC -->
+    <!-- FIREBASE & CORE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -238,28 +234,43 @@
         // GLOBAL FLAGS
         let roundSettled = false;
 
-        // --- GLOBAL UI FUNCTIONS ---
-        window.toggleMenu = () => {
-            const sb = document.getElementById('sidebar'); 
-            const ov = document.getElementById('sidebarOverlay');
-            if (sb.classList.contains('-translate-x-full')) { 
-                sb.classList.remove('-translate-x-full'); 
-                ov.classList.remove('hidden', 'opacity-0'); 
-            } else { 
-                sb.classList.add('-translate-x-full'); 
-                ov.classList.add('opacity-0'); 
-                setTimeout(()=>ov.classList.add('hidden'), 300); 
+        // --- MATH & SEED LOGIC (ABSOLUTE SYNC) ---
+        function seededRandom(seed) {
+            let t = seed += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
+
+        function getMinuteSeed(timestamp) {
+            const d = new Date(timestamp);
+            return d.getFullYear() * 100000000 + (d.getMonth()+1)*1000000 + d.getDate()*10000 + d.getHours()*100 + d.getMinutes();
+        }
+
+        function getDeterministicResult(timestamp) {
+            const seed = getMinuteSeed(timestamp);
+            const isLive = seed === getMinuteSeed(Date.now());
+            
+            if (isLive && state.killWhaleMode) {
+                if (state.totalUp > state.totalDown) return 'down';
+                if (state.totalDown > state.totalUp) return 'up';
             }
+            // Seeded result ensures every player sees the same outcome for the same minute
+            const rand = seededRandom(seed * 12345 + 6789);
+            return rand > 0.5 ? 'up' : 'down';
+        }
+
+        // --- UI FUNCTIONS ---
+        window.toggleMenu = () => {
+            const sb = document.getElementById('sidebar'); const ov = document.getElementById('sidebarOverlay');
+            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden', 'opacity-0'); } 
+            else { sb.classList.add('-translate-x-full'); ov.classList.add('opacity-0'); setTimeout(()=>ov.classList.add('hidden'), 300); }
         };
 
         window.logout = () => { 
             const auth = getAuth();
-            if(auth) {
-                signOut(auth).then(() => { 
-                    localStorage.clear();
-                    window.location.reload(); 
-                });
-            } else { window.location.reload(); }
+            if(auth) { signOut(auth).then(() => { localStorage.clear(); window.location.reload(); }); } 
+            else { window.location.reload(); }
         };
 
         window.setBetAmount = (val) => { document.getElementById('betInput').value = val; window.updateProfit(); }
@@ -268,67 +279,53 @@
             const inp = document.getElementById('betInput');
             let current = parseFloat(inp.value) || 0;
             let nextVal = current + val;
-            if (nextVal < 1) nextVal = 1; 
+            if (nextVal < 10) nextVal = 10; 
             inp.value = nextVal;
             window.updateProfit();
         };
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value) || 0;
-            document.getElementById('profitDisplay').innerText = "+$" + (val * 0.95).toFixed(2);
+            document.getElementById('profitDisplay').innerText = "+" + (val * 0.95).toFixed(2) + " T";
         };
         
-        // --- FIREBASE SETUP ---
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
             projectId: "btccoinbig",
             storageBucket: "btccoinbig.firebasestorage.app",
             messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // CONFIG
-        const CONFIG = { basePrice: 98100, chartPaddingRight: 80, gridStep: 20 };
+        const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
         const state = {
             balance: 0, userData: null, currentBet: null, 
             pendingBet: { type: null, amount: 0 },
             history: new Array(60).fill(null), 
-            candles: [], 
-            visualPrice: CONFIG.basePrice,
-            targetPrice: CONFIG.basePrice, 
-            currentPhase: 'order', 
+            candles: [], visualPrice: CONFIG.basePrice,
+            targetPrice: CONFIG.basePrice, currentPhase: 'order', 
             lockPrice: 0, isProcessing: false, gameStarted: false,
-            marketOffset: 0, killWhaleMode: false, totalUp: 0, totalDown: 0,
-            lastRecordedEpoch: 0
+            killWhaleMode: false, totalUp: 0, totalDown: 0
         };
 
-        // --- AUTH LOGIC ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 let userStr = localStorage.getItem('crownex_user_info');
                 if (userStr && !user.isAnonymous) {
-                    state.userData = JSON.parse(userStr);
-                    finishLoading();
+                    state.userData = JSON.parse(userStr); finishLoading();
                 } else if (user.isAnonymous) {
-                    state.userData = { uid: "guest", username: "Khách", balance: 1000 };
-                    finishLoading();
+                    state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading();
                 } else {
                     try {
                         const docSnap = await getDoc(doc(db, "users", user.uid));
                         if(docSnap.exists()) {
-                            state.userData = docSnap.data();
-                            state.userData.uid = user.uid;
-                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData));
-                            finishLoading();
+                            state.userData = docSnap.data(); state.userData.uid = user.uid;
+                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData)); finishLoading();
                         } else { window.logout(); }
-                    } catch (e) { 
-                        state.userData = { uid: "guest", username: "Khách", balance: 1000 };
-                        finishLoading(); 
-                    }
+                    } catch (e) { state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading(); }
                 }
 
                 if(!user.isAnonymous) {
@@ -336,21 +333,13 @@
                         if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); }
                     });
                 }
-                
-                // Admin Controls
                 onSnapshot(doc(db, "settings", "global"), (doc) => {
-                    if(doc.exists()) { 
-                        const data = doc.data();
-                        state.marketOffset = data.marketOffset || 0; 
-                        state.killWhaleMode = data.killWhaleMode === true;
-                    }
+                    if(doc.exists()) state.killWhaleMode = doc.data().killWhaleMode === true;
                 });
                 onSnapshot(doc(db, "games", "current"), (doc) => {
                     if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; }
                 });
-            } else { 
-                signInAnonymously(auth).catch(e => console.error(e));
-            }
+            } else { signInAnonymously(auth); }
         });
 
         function finishLoading() {
@@ -363,13 +352,11 @@
             if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
         }
 
-        // --- BETTING LOGIC ---
         function checkSavedBet() {
             const saved = localStorage.getItem('crownex_active_bet');
             if (!saved) return;
             const betData = JSON.parse(saved);
-            const now = Date.now();
-            if (betData.expires > now) {
+            if (betData.expires > Date.now()) {
                 state.currentBet = { type: betData.type, amount: betData.amount };
                 updateBetUI(betData.type, betData.amount);
             }
@@ -377,7 +364,7 @@
 
         function updateBetUI(type, amount) {
             const id = type === 'up' ? 'badge-up' : 'badge-down';
-            document.getElementById(id).innerText = amount + "$"; 
+            document.getElementById(id).innerText = amount + " T"; 
             document.getElementById(id).classList.remove('hidden');
             const otherBtn = type === 'up' ? 'btnSell' : 'btnBuy';
             document.getElementById(otherBtn).classList.add('locked');
@@ -385,379 +372,206 @@
 
         function showToast(type, msg) {
             const t = document.getElementById('toast');
-            const i = t.querySelector('i');
             document.getElementById('toastMsg').innerText = msg;
-            t.className = ''; 
-            if(type === 'error') { i.className = 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]'; t.style.borderColor = '#F6465D'; }
-            else { i.className = 'fa-solid fa-circle-check text-lg text-[#0ECB81]'; t.style.borderColor = '#0ECB81'; }
+            t.querySelector('i').className = type === 'error' ? 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]' : 'fa-solid fa-circle-check text-lg text-[#0ECB81]';
+            t.style.borderColor = type === 'error' ? '#F6465D' : '#0ECB81';
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
 
         window.selectSide = (type) => {
-            const currentSeconds = new Date().getSeconds();
-            if (currentSeconds >= 30) return showToast('error', "Đã hết thời gian cược phiên này!");
-
-            if (state.currentPhase !== 'order') return showToast('error', "Đang chờ kết quả, vui lòng đợi!");
+            if (new Date().getSeconds() >= 30) return showToast('error', "Hết thời gian cược phiên này!");
+            if (state.currentPhase !== 'order') return showToast('error', "Vui lòng đợi phiên mới!");
             if (state.currentBet && state.currentBet.type !== type) return showToast('error', "Không được cược đối nghịch!");
             
             const amount = parseFloat(document.getElementById('betInput').value);
             if (!amount || amount <= 0) return;
-            if (amount < 1) return showToast('error', "Mức cược tối thiểu là $1!");
+            if (amount < 10) return showToast('error', "Mức cược tối thiểu là 10 T!");
             if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
             
-            state.pendingBet.type = type; state.pendingBet.amount = amount;
+            state.pendingBet = { type, amount };
             
             const typeEl = document.getElementById('confirmType');
-            if(typeEl) {
-                typeEl.innerText = type.toUpperCase();
-                typeEl.className = type === 'up' ? 'text-[#0ECB81] font-bold uppercase text-xl' : 'text-[#F6465D] font-bold uppercase text-xl';
-            }
-            document.getElementById('confirmBalance').innerText = "$" + state.balance.toLocaleString('en-US');
-            document.getElementById('confirmAmount').innerText = "$" + amount;
-            document.getElementById('confirmWin').innerText = "+$" + (amount * 1.95).toFixed(2);
+            typeEl.innerText = type === 'up' ? 'MUA (UP)' : 'BÁN (DOWN)';
+            typeEl.className = type === 'up' ? 'text-[#0ECB81] font-black uppercase text-xl mt-0.5' : 'text-[#F6465D] font-black uppercase text-xl mt-0.5';
+            
+            document.getElementById('confirmBalance').innerText = state.balance.toLocaleString('en-US') + " T";
+            document.getElementById('confirmAmount').innerText = amount + " T";
+            document.getElementById('confirmWin').innerText = "+" + (amount * 0.95).toFixed(2) + " T";
             document.getElementById('confirmBar').classList.add('active');
         };
 
-        window.cancelSelection = () => {
-            state.pendingBet = { type: null, amount: 0 };
-            document.getElementById('confirmBar').classList.remove('active');
-        };
+        window.cancelSelection = () => { state.pendingBet = { type: null, amount: 0 }; document.getElementById('confirmBar').classList.remove('active'); };
 
         window.confirmBet = async () => {
-            const currentSeconds = new Date().getSeconds();
-            if (currentSeconds >= 30) {
-                window.cancelSelection();
-                return showToast('error', "Đã hết thời gian cược!");
-            }
-
+            if (new Date().getSeconds() >= 30) { window.cancelSelection(); return showToast('error', "Đã hết thời gian cược!"); }
             if (state.isProcessing) return;
-            const amount = state.pendingBet.amount;
-            const type = state.pendingBet.type;
+            const { amount, type } = state.pendingBet;
 
-            if (amount > state.balance) { showToast('error', "Số dư không đủ!"); return; }
-            if (amount < 1) { showToast('error', "Mức cược tối thiểu là $1!"); return; }
+            if (amount > state.balance) return showToast('error', "Số dư không đủ!");
+            if (amount < 10) return showToast('error', "Mức cược tối thiểu là 10 T!");
 
             state.isProcessing = true;
             const btn = document.getElementById('btnConfirm');
-            btn.classList.add('btn-loading'); btn.innerText = "ĐANG GỬI...";
+            btn.classList.add('btn-loading'); btn.innerText = "ĐANG XỬ LÝ...";
 
-            state.balance -= amount;
-            updateBalanceUI();
-            
-            state.pendingBet = { type: null, amount: 0 };
-            document.getElementById('confirmBar').classList.remove('active');
+            state.balance -= amount; updateBalanceUI();
+            state.pendingBet = { type: null, amount: 0 }; document.getElementById('confirmBar').classList.remove('active');
 
             if(state.userData.uid && state.userData.uid !== "guest") {
                 try {
-                    const uRef = doc(db, "users", state.userData.uid);
-                    await updateDoc(uRef, { 
-                        balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount)
-                    }); 
-                    await setDoc(doc(db, "games", "current"), {
-                        [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount)
-                    }, { merge: true });
-                } catch(e) { console.error(e); }
+                    await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
+                    await setDoc(doc(db, "games", "current"), { [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount) }, { merge: true });
+                } catch(e) {}
             }
 
-            if (!state.currentBet) { state.currentBet = { type: type, amount: amount }; } 
-            else { state.currentBet.amount += amount; }
+            if (!state.currentBet) state.currentBet = { type, amount }; else state.currentBet.amount += amount;
 
             const now = Date.now();
-            const nextMinute = now - (now % 60000) + 60000;
-            localStorage.setItem('crownex_active_bet', JSON.stringify({
-                type: state.currentBet.type, amount: state.currentBet.amount, expires: nextMinute
-            }));
+            localStorage.setItem('crownex_active_bet', JSON.stringify({ type: state.currentBet.type, amount: state.currentBet.amount, expires: now - (now % 60000) + 60000 }));
 
             updateBetUI(state.currentBet.type, state.currentBet.amount);
-            showToast('success', `Đã cược ${type === 'up' ? 'MUA' : 'BÁN'}: $${amount}`);
+            showToast('success', `Đã xác nhận lệnh ${type === 'up' ? 'MUA' : 'BÁN'} thành công!`);
             
-            state.isProcessing = false;
-            btn.classList.remove('btn-loading'); btn.innerText = "XÁC NHẬN NGAY";
+            state.isProcessing = false; btn.classList.remove('btn-loading'); btn.innerText = "XÁC NHẬN NGAY";
         };
 
-        function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = "$" + state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}); }
-        
-        // --- ABSOLUTE SYNC ENGINE ---
-        // 1. Pseudo Random Generator for Deterministic Results
-        function seededRandom(seed) {
-            let t = seed += 0x6D2B79F5;
-            t = Math.imul(t ^ t >>> 15, t | 1);
-            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-            return ((t ^ t >>> 14) >>> 0) / 4294967296;
-        }
+        function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + " T"; }
 
-        // 2. The God Function: Returns the exact UP/DOWN result for any epoch
-        function getDeterministicResult(epoch) {
-            // Check for Kill Whale Logic override if enabled and valid for current live epoch
-            // Note: Kill Whale only works for the current live round
-            const isLive = epoch === Math.floor(Date.now() / 30000);
+        // --- HISTORY & CHART ENGINE ---
+        function regenerateHistory() {
+            const now = Date.now();
+            const currentMin = new Date(now).getMinutes();
+            const baseHourTime = now - (currentMin * 60000) - (new Date().getSeconds() * 1000) - new Date().getMilliseconds();
             
-            if (isLive && state.killWhaleMode) {
-                if (state.totalUp > state.totalDown) return { dir: 'down', force: true };
-                if (state.totalDown > state.totalUp) return { dir: 'up', force: true };
+            const c = document.getElementById('historyContainer'); c.innerHTML = '';
+            let u = 0, dCount = 0;
+            
+            for (let b = 0; b < 3; b++) {
+                const block = document.createElement('div'); block.className = 'history-block';
+                const startIdx = b * 20;
+                for(let i = startIdx; i < startIdx + 20; i++) {
+                    const dot = document.createElement('div');
+                    if (i > currentMin) {
+                        dot.className = 'dot';
+                    } else {
+                        const res = getDeterministicResult(baseHourTime + i * 60000);
+                        dot.className = res === 'up' ? 'dot up' : 'dot down';
+                        if (i === currentMin) dot.classList.add('new');
+                        if (res === 'up') u++; else dCount++;
+                    }
+                    block.appendChild(dot);
+                }
+                c.appendChild(block);
             }
-
-            // Natural Deterministic Result
-            const rand = seededRandom(epoch * 12345 + 6789);
-            // 50/50 Chance + Trend bias from Sin wave
-            const trendBias = Math.sin(epoch * 0.1) * 0.2; // -0.2 to 0.2
-            const resultVal = rand + trendBias; 
-            
-            return { 
-                dir: resultVal > 0.5 ? 'up' : 'down', 
-                force: false,
-                volatility: seededRandom(epoch * 999) 
-            };
+            document.getElementById('count-up').innerText = u; 
+            document.getElementById('count-down').innerText = dCount;
         }
 
         function initGame() {
-            // Load history from storage or regenerate
-            const today = new Date().toDateString();
-            const lastDay = localStorage.getItem("crownex_history_day");
+            resizeCanvas(); window.addEventListener('resize', resizeCanvas);
             
-            if (lastDay !== today) {
-                state.history = new Array(60).fill(null);
-                localStorage.setItem("crownex_history_day", today);
-            } else {
-                const h = localStorage.getItem('crownex_history_v30');
-                if (h) state.history = JSON.parse(h);
-            }
-
-            resizeCanvas(); 
-            window.addEventListener('resize', resizeCanvas);
-            
-            // Generate historical candles
-            reconstructChart();
-
-            marketLoop(); drawLoop(); 
-            setInterval(syncLoop, 1000); 
-            setInterval(marketLoop, 40); // 25fps for market loop
-        }
-
-        function reconstructChart() {
-            const now = Date.now();
-            const currentEpoch30 = Math.floor(now / 30000);
-            state.candles = [];
-            
-            // Generate last 50 candles
+            // Build Past Candles
+            const currentEpoch = Math.floor(Date.now() / 30000);
             let simPrice = CONFIG.basePrice;
-            for(let i = 50; i > 0; i--) {
-                const ep = currentEpoch30 - i;
-                const c = generateStaticCandle(ep, simPrice);
-                state.candles.push(c);
-                simPrice = c.close;
-            }
-            
-            // Set start price for live animation
-            const lastC = state.candles[state.candles.length-1];
-            state.visualPrice = lastC.close;
-            state.targetPrice = lastC.close;
-            state.lockPrice = lastC.close; // Init lock price
-        }
-
-        // --- CANDLE GENERATION LOGIC ---
-        function generateStaticCandle(epoch, openPrice) {
-            // If it's a result epoch (Odd), the close MUST match the deterministic result of the previous Order epoch (Even)
-            // Wait, standard binary option: Order (30s) -> Result (30s).
-            // The result is determined by the candle that closes at the end of the Result Phase.
-            
-            // Determine the result for this epoch
-            const det = getDeterministicResult(epoch);
-            let change = (seededRandom(epoch) * 10 + 2); // Random volatility 2-12
-            
-            // Apply Direction
-            if (det.dir === 'up') change = change;
-            else change = -change;
-
-            // If it's an even epoch (Order phase), movement is more random/flat
-            if (epoch % 2 === 0) {
-                // Order phase candle - generally follows previous trend or consolidates
-                change = change * 0.5;
-            } else {
-                // Result phase candle - MUST adhere to result
-                // Logic is handled by direction above.
-            }
-
-            const close = openPrice + change;
-            const high = Math.max(openPrice, close) + Math.abs(seededRandom(epoch+1) * 5);
-            const low = Math.min(openPrice, close) - Math.abs(seededRandom(epoch+2) * 5);
-            
-            return { open: openPrice, close: close, high: high, low: low, epoch: epoch };
-        }
-
-        function renderHistoryBlocks() {
-            const c = document.getElementById('historyContainer'); c.innerHTML = '';
-            
-            let u = 0, d = 0;
-            const currentMin = new Date().getMinutes();
-            const now = new Date();
-            const currentEpoch = Math.floor(now.getTime() / 30000);
-
-            // Calculate Counts & Fill Data
-            for(let i = 0; i < 60; i++) {
-                if (state.history[i]) {
-                    if(state.history[i] === 'up') u++; else d++;
-                } else if (i < currentMin) {
-                    // Backfill missing history for display using deterministic logic
-                    // Mapping Minute to Epoch is tricky because Epoch is 30s.
-                    // We need the result of the Minute.
-                    // Usually 1 Result per Minute (at second 00).
-                    // The result comes from the candle ending at XX:XX:00.
-                    // That candle covers XX:XX-1:30 to XX:XX:00.
-                    // That is an ODD epoch.
-                    
-                    // Simple approach: Use a hash of the minute index + hour
-                    const seed = now.getHours() * 60 + i;
-                    const res = seededRandom(seed) > 0.5 ? 'up' : 'down'; // Simplified for history fill
-                    if(res === 'up') u++; else d++;
+            for(let i = 60; i > 0; i--) {
+                const ep = currentEpoch - i;
+                const isResult = (ep % 2 !== 0);
+                let change = (seededRandom(ep * 999) - 0.5) * 8;
+                
+                if (isResult) {
+                    const det = getDeterministicResult(ep * 30000);
+                    if (det === 'up' && change < 0) change = Math.abs(change) + 1;
+                    if (det === 'down' && change > 0) change = -Math.abs(change) - 1;
                 }
+                const close = simPrice + change;
+                state.candles.push({ open: simPrice, close: close, high: Math.max(simPrice, close) + Math.abs(change*0.5), low: Math.min(simPrice, close) - Math.abs(change*0.5), epoch: ep });
+                simPrice = close;
             }
-
-            document.getElementById('count-up').innerText = u; 
-            document.getElementById('count-down').innerText = d;
+            state.visualPrice = simPrice; state.lockPrice = simPrice;
+            regenerateHistory();
             
-            for(let b=0; b < 3; b++) {
-                const div = document.createElement('div'); div.className = 'history-block';
-                const s = b * 20;
-                for(let i=s; i<s+20; i++) {
-                    const d = document.createElement('div');
-                    
-                    if (i >= currentMin) {
-                        d.className = 'dot'; // Future
-                    } else {
-                        let res = state.history[i];
-                        if (!res) {
-                            // Deterministic fill
-                             const seed = now.getHours() * 60 + i;
-                             res = seededRandom(seed) > 0.5 ? 'up' : 'down';
-                        }
-                        d.className = res === 'up' ? 'dot up' : 'dot down';
-                        if(i === (currentMin - 1)) d.classList.add('new');
-                    }
-                    div.appendChild(d);
-                }
-                c.appendChild(div);
-            }
+            setInterval(syncLoop, 100); 
+            setInterval(marketLoop, 40);
+            requestAnimationFrame(drawLoop);
         }
 
         function syncLoop() {
             const now = new Date();
             const s = now.getSeconds();
-            const isOrder = s < 30; // 0-29
-            const timeLeft = isOrder ? (30 - s) : (60 - s);
-
-            const y = now.getFullYear(); const mo = ('0'+(now.getMonth()+1)).slice(-2);
-            const da = ('0'+now.getDate()).slice(-2); const h = ('0'+now.getHours()).slice(-2);
-            const mi = ('0'+now.getMinutes()).slice(-2);
+            const ms = now.getMilliseconds();
+            const exactSec = s + (ms/1000);
             
-            document.getElementById('sessionID').innerText = `${y}${mo}${da}${h}${mi}`;
+            const isOrder = exactSec < 30;
+            const timeLeft = isOrder ? Math.ceil(30 - exactSec) : Math.ceil(60 - exactSec);
 
-            // Phase Switching Logic
+            document.getElementById('sessionID').innerText = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
+            document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
+            document.getElementById('timerProgress').style.width = ((timeLeft / 30) * 100) + "%";
+
+            // Phase Transitions
             if (isOrder && state.currentPhase === 'result') { 
-                startOrderPhase(); 
+                finalizeRound(); startOrderPhase(); regenerateHistory();
             } else if (!isOrder && state.currentPhase === 'order') { 
                 startResultPhase(); 
             }
-
-            document.getElementById('timerText').innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft;
-            const progressPercent = (timeLeft / 30) * 100;
-            document.getElementById('timerProgress').style.width = progressPercent + "%";
         }
 
         function startOrderPhase() {
-            // End of Result Phase -> Finalize Round
-            finalizeRound();
-            
             state.currentPhase = 'order';
             document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
-            document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
-            document.getElementById('candleStatusBadge').innerText = "ORDERING";
-            document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-[#0ECB81]/20 text-[#0ECB81] border border-[#0ECB81]/50";
+            document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear";
+            document.getElementById('candleStatusBadge').innerText = "MỞ ĐẶT LỆNH";
+            document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-green-500/20 text-[#0ECB81] border border-green-500/50 shadow-[0_0_10px_rgba(14,203,129,0.3)]";
             
-            document.getElementById('lockLabel').style.display = 'none'; 
-            document.getElementById('lockLine').style.display = 'none';
+            document.getElementById('lockLabel').style.display = 'none'; document.getElementById('lockLine').style.display = 'none';
             state.currentBet = null;
-            document.getElementById('badge-up').classList.add('hidden'); 
-            document.getElementById('badge-down').classList.add('hidden');
-            document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); 
-            document.getElementById('btnSell').classList.remove('dimmed', 'locked');
-            
-            // Reset totals for new round
-            if(state.userData.uid && state.userData.uid !== "guest") { 
-                setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
-            }
+            document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
+            document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); document.getElementById('btnSell').classList.remove('dimmed', 'locked');
+            if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
         }
 
         function startResultPhase() {
-            // End of Order Phase -> Lock Price
-            state.lockPrice = state.visualPrice; // Lock at current visual price
-            
-            state.currentPhase = 'result'; 
-            window.cancelSelection();
+            state.lockPrice = state.visualPrice; 
+            state.currentPhase = 'result'; window.cancelSelection();
             document.getElementById('phaseText').innerText = "CHỜ KẾT QUẢ";
-            document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1 bg-[#3b82f6] w-full transition-all duration-1000 ease-linear";
-            document.getElementById('candleStatusBadge').innerText = "WAITING";
-            document.getElementById('candleStatusBadge').className = "text-[10px] font-bold px-3 py-1 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/50";
+            document.getElementById('timerProgress').className = "absolute bottom-0 left-0 h-1.5 bg-blue-500 w-full transition-all duration-1000 ease-linear";
+            document.getElementById('candleStatusBadge').innerText = "CHỜ KẾT QUẢ";
+            document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-blue-500/20 text-blue-400 border border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]";
             
-            document.getElementById('lockLabel').style.display = 'block'; 
-            document.getElementById('lockLine').style.display = 'block';
-            document.getElementById('lockLine').style.top = (document.getElementById('chartCanvas').height / 2) + "px"; // Temp pos, updated in drawLoop
+            document.getElementById('lockLabel').style.display = 'block'; document.getElementById('lockLine').style.display = 'block';
             document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
-            
-            document.getElementById('btnBuy').classList.add('dimmed'); 
-            document.getElementById('btnSell').classList.add('dimmed');
+            document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
         }
 
         async function finalizeRound() {
             if (roundSettled) return;
             roundSettled = true;
             
-            // The result is determined by the previous phase (Result Phase, Odd Epoch)
-            // But visually, we rely on where the price actually ended up.
-            // Due to our marketLoop sync logic, visualPrice is GUARANTEED to be on the correct side.
-            let res = state.visualPrice >= state.lockPrice ? 'up' : 'down';
-            
-            const m = new Date().getMinutes(); 
-            let pm = m - 1; if(pm < 0) pm = 59;
-
-            // Update History
-            state.history[pm] = res;
-            localStorage.setItem('crownex_history_v30', JSON.stringify(state.history));
-            renderHistoryBlocks();
+            // Result is absolutely determined by visual crossing of lockPrice
+            let res = state.visualPrice > state.lockPrice ? 'up' : 'down';
 
             if (state.currentBet) {
-                const b = state.currentBet; 
-                const win = (b.type === res);
+                const b = state.currentBet; const win = (b.type === res);
                 let profit = 0; let totalReturn = 0;
                 
                 if (win) {
                     totalReturn = b.amount * 1.95; profit = b.amount * 0.95;
-                    state.balance += totalReturn; 
-                    showPopup(true, profit);
+                    state.balance += totalReturn; showPopup(true, profit);
                 } else { showPopup(false, b.amount); }
                 
-                updateBalanceUI();
-                localStorage.removeItem('crownex_active_bet');
+                updateBalanceUI(); localStorage.removeItem('crownex_active_bet');
 
-                if(state.userData.uid && state.userData.uid !== "guest") {
+                if(state.userData.uid !== "guest") {
                     try {
-                        const batchPromise = [];
-                        if (win) {
-                             batchPromise.push(updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) }));
-                        }
-                        batchPromise.push(addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
-                            type: b.type,
-                            amount: b.amount,
-                            result: win ? 'win' : 'lose',
-                            profit: win ? profit : -b.amount,
-                            timestamp: serverTimestamp(),
-                            sessionId: document.getElementById('sessionID').innerText
+                        const batch = [];
+                        if (win) batch.push(updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) }));
+                        batch.push(addDoc(collection(db, "users", state.userData.uid, "betHistory"), {
+                            type: b.type, amount: b.amount, result: win ? 'win' : 'lose', profit: win ? profit : -b.amount, timestamp: serverTimestamp(), sessionId: document.getElementById('sessionID').innerText
                         }));
-                        await Promise.all(batchPromise);
-                    } catch (e) { console.error(e); }
+                        await Promise.all(batch);
+                    } catch (e) {}
                 }
             }
-            
             setTimeout(() => { roundSettled = false; }, 2000);
         }
 
@@ -766,82 +580,55 @@
             const t = document.getElementById('popupTitle'); const m = document.getElementById('popupAmount');
             p.classList.remove('hidden', 'scale-90', 'opacity-0'); p.classList.add('scale-100', 'opacity-100');
             if (w) {
-                b.className = 'tech-border p-6 relative bg-[#13161f] win'; t.innerText = "HÚP RỒI"; t.className = "text-[#0ECB81] font-black text-xl mb-2 uppercase";
-                m.innerText = "+$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#0ECB81]";
+                b.className = 'tech-border p-6 relative bg-[#13161f] win'; t.innerText = "THẮNG LỚN"; t.className = "text-[#0ECB81] font-black text-xl mb-1 uppercase tracking-widest";
+                m.innerText = "+" + a.toFixed(2) + " T"; m.className = "font-mono font-black text-4xl text-[#0ECB81] drop-shadow-[0_0_15px_rgba(14,203,129,0.5)]";
             } else {
-                b.className = 'tech-border p-6 relative bg-[#13161f] lose'; t.innerText = "GÃY RỒI"; t.className = "text-[#F6465D] font-black text-xl mb-2 uppercase";
-                m.innerText = "-$" + a.toFixed(2); m.className = "font-mono font-bold text-4xl text-[#F6465D]";
+                b.className = 'tech-border p-6 relative bg-[#13161f] lose'; t.innerText = "CHƯA MAY MẮN"; t.className = "text-[#F6465D] font-black text-xl mb-1 uppercase tracking-widest";
+                m.innerText = "-" + a.toFixed(2) + " T"; m.className = "font-mono font-black text-4xl text-[#F6465D] drop-shadow-[0_0_15px_rgba(246,70,93,0.5)]";
             }
-            setTimeout(() => { p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
+            setTimeout(() => { p.classList.remove('scale-100', 'opacity-100'); p.classList.add('scale-90', 'opacity-0'); setTimeout(() => p.classList.add('hidden'), 300); }, 3000);
         }
 
         function marketLoop() {
-            const now = Date.now();
-            const epoch = Math.floor(now / 30000);
-            const secondsInEpoch = (now % 30000) / 1000;
-            const isResultPhase = (epoch % 2 !== 0); // Odd epoch = Result Phase (30-59s)
+            const now = Date.now(); const epoch = Math.floor(now / 30000);
+            const seconds = (now % 60000) / 1000;
+            const isResultPhase = seconds >= 30;
 
-            // Calculate Target Price
-            // 1. Base Noise (Natural movement)
+            let target = state.visualPrice;
             const t = now / 1000;
-            const noise = (Math.sin(t) * 5) + (Math.sin(t * 3.5) * 3) + (Math.cos(t * 10) * 1.5);
-            let target = state.visualPrice + (noise * 0.05); // Small increments
-
-            // 2. Deterministic Force (Sync Logic)
+            
             if (isResultPhase) {
-                const det = getDeterministicResult(epoch);
-                const trendDir = det.dir === 'up' ? 1 : -1;
+                const det = getDeterministicResult(now);
+                const trendDir = det === 'up' ? 1 : -1;
+                const timeRemaining = 60 - seconds;
+                const diff = state.visualPrice - state.lockPrice;
                 
-                // As time runs out (approaching 30s mark of this epoch), force the price
-                if (secondsInEpoch > 20) { // Last 10 seconds of result phase
-                    // Calculate required position relative to lockPrice
-                    const margin = 2.0; // Minimal safe margin
-                    const currentDiff = state.visualPrice - state.lockPrice;
-                    
-                    // Logic: If trend is UP but price is DOWN (or close), pull UP hard
-                    if (trendDir === 1 && currentDiff < margin) {
-                        target = state.visualPrice + 0.5; // Strong pull up
-                    } else if (trendDir === -1 && currentDiff > -margin) {
-                        target = state.visualPrice - 0.5; // Strong pull down
-                    } else {
-                        // Already safe, just maintain
-                        target = state.visualPrice + (Math.random() - 0.5); 
-                    }
+                // Force candle to match deterministic result perfectly
+                if (timeRemaining < 12) {
+                    if (trendDir === 1 && diff < 1.5) target += 0.8;
+                    else if (trendDir === -1 && diff > -1.5) target -= 0.8;
+                    else target += (Math.sin(t*10) * 0.2); // Just shake it slightly if safe
                 } else {
-                     // Early in result phase - gentle bias
-                     target += (trendDir * 0.1);
+                    target += trendDir * 0.15 + (Math.sin(t*5) * 0.2);
                 }
             } else {
-                // Order Phase - completely natural, just drift
-                target += (Math.random() - 0.5) * 2;
+                // Order Phase - Random drift
+                target += (Math.sin(t*3) * 0.5) + (Math.random() - 0.5) * 1.5;
             }
 
-            // Apply Admin Offset (Global Shift)
-            // target += state.marketOffset; 
+            state.visualPrice += (target - state.visualPrice) * 0.15;
 
-            // Smooth Interpolation
-            state.visualPrice += (target - state.visualPrice) * 0.1;
-
-            // --- Candle Management ---
+            // Update Candle Logic
             let lastCandle = state.candles[state.candles.length - 1];
-            
-            // New Candle Logic
             if (!lastCandle || lastCandle.epoch !== epoch) {
                 let openPrice = lastCandle ? lastCandle.close : state.visualPrice;
                 const newCandle = { epoch: epoch, open: openPrice, close: openPrice, high: openPrice, low: openPrice };
                 state.candles.push(newCandle);
                 if(state.candles.length > 50) state.candles.shift();
                 lastCandle = newCandle;
-                state.lastRecordedEpoch = epoch;
-                
-                // If switching to Result Phase, ensure lock price is visually consistent
-                if (isResultPhase) {
-                    state.lockPrice = openPrice;
-                    document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
-                }
+                if (isResultPhase) { state.lockPrice = openPrice; document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2); }
             }
 
-            // Update Current Candle
             lastCandle.close = state.visualPrice;
             if (state.visualPrice > lastCandle.high) lastCandle.high = state.visualPrice;
             if (state.visualPrice < lastCandle.low) lastCandle.low = state.visualPrice;
@@ -851,29 +638,23 @@
         function resizeCanvas() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
         
         function drawLoop() {
-            const w = (cvs.width - CONFIG.chartPaddingRight) / 30; // 30 candles visible
-            const r = 100; // Price Range view
+            const w = (cvs.width - CONFIG.chartPaddingRight) / 30; 
+            const r = 80; // Zoom level
             const min = state.visualPrice - r / 2;
             
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
-            // Grid
-            for(let p = Math.floor(min / 20) * 20; p < min + r; p += 20) {
+            for(let p = Math.floor(min / 10) * 10; p < min + r; p += 10) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
-                ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 55, y + 4);
+                ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 50, y + 4);
             }
 
-            // Lock Line
             if (state.currentPhase === 'result') {
                 const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
-                const el = document.getElementById('lockLine');
-                const lb = document.getElementById('lockLabel');
-                
-                // Only update DOM if moved significantly to save performance
-                el.style.top = yl + 'px'; lb.style.top = yl + 'px';
-                
-                ctx.strokeStyle = '#FCD535'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); 
+                document.getElementById('lockLine').style.top = yl + 'px'; 
+                document.getElementById('lockLabel').style.top = yl + 'px';
+                ctx.strokeStyle = '#FCD535'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); 
                 ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(cvs.width, yl); ctx.stroke(); ctx.setLineDash([]);
             }
 
@@ -890,30 +671,25 @@
                 const yH = cvs.height - ((c.high - min) / r * cvs.height); 
                 const yL = cvs.height - ((c.low - min) / r * cvs.height);
 
-                const isUp = c.close >= c.open;
-                ctx.fillStyle = isUp ? '#0ECB81' : '#F6465D'; 
+                ctx.fillStyle = c.close >= c.open ? '#0ECB81' : '#F6465D'; 
                 ctx.strokeStyle = ctx.fillStyle;
 
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 1.5;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-                
-                const bodyH = Math.max(Math.abs(yC - yO), 1);
+                const bodyH = Math.max(Math.abs(yC - yO), 2);
                 ctx.fillRect(x - (w/2) + 2, Math.min(yO, yC), w - 4, bodyH);
             }
 
-            // Current Price Line
             const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
             ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(0, yc); ctx.lineTo(cvs.width, yc); ctx.stroke(); ctx.setLineDash([]);
             
-            // Price Tag
             ctx.fillStyle = state.visualPrice >= state.candles[lastIdx].open ? '#0ECB81' : '#F6465D';
-            ctx.fillRect(cvs.width - 60, yc - 10, 60, 20); 
-            ctx.fillStyle = '#000'; ctx.font = 'bold 11px IBM Plex Mono';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 5;
+            ctx.beginPath(); ctx.roundRect(cvs.width - 60, yc - 12, 60, 24, 4); ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 12px IBM Plex Mono';
             ctx.fillText(state.visualPrice.toFixed(2), cvs.width - 55, yc + 4);
             
-            // Render Ball History on first load or changes
-            if(state.gameStarted && document.getElementById('historyContainer').children.length === 0) renderHistoryBlocks();
-
             requestAnimationFrame(drawLoop);
         }
     </script>
