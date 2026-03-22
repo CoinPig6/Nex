@@ -526,8 +526,8 @@
                 
                 jumpFailTimer = 0; isStruckByLightning = false;
                 
-                // Tỷ lệ sét đánh 55%
-                if (Math.random() < 0.55) {
+                // Tỷ lệ sét đánh 45%
+                if (Math.random() < 0.45) {
                     jumpFailTimer = 1; isStruckByLightning = true; player.isCharred = true; 
                     player.vx = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 10); 
                     player.vy = 15; player.angularVelocity = (Math.random() > 0.5 ? 1.5 : -1.5) * 3; 
