@@ -131,24 +131,26 @@
         </div>
     </div>
 
-    <!-- BẢNG LỊCH SỬ KẾT QUẢ & TICKER NGƯỜI THẮNG -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ & TICKER NGƯỜI THẮNG THẬT -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
             <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
         
-        <!-- Khu vực chia đôi: Trái là Bóng, Phải là Người thắng -->
+        <!-- Khu vực chia đôi -->
         <div class="flex-1 flex overflow-hidden">
+            <!-- Left: Bóng Lịch Sử -->
             <div class="w-[68%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
                 <div class="history-wrapper hide-scroll" id="historyWrapper">
                     <div class="history-container" id="historyContainer"></div>
                 </div>
             </div>
+            <!-- Right: Cột Người Thắng Thật (Ticker) -->
             <div class="w-[32%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
                 <div class="text-[8px] text-[#0ECB81] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
-                    <!-- Ticker danh sách trượt xuống -->
+                    <div class="text-gray-600 text-center text-[9px] mt-3 font-bold">Đang tải...</div>
                 </div>
             </div>
         </div>
@@ -158,7 +160,6 @@
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
             
-            <!-- CHIPS CHỌN NHANH ĐỒNG BỘ -->
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
                 <button onclick="window.setBetAmount(10)" class="chip selected">10</button>
                 <button onclick="window.setBetAmount(50)" class="chip">50</button>
@@ -239,10 +240,32 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // APP CONFIG & GLOBAL VARIABLES
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tpig-crypto-app';
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
+        };
+        const app = initializeApp(firebaseConfig); 
+        const db = getFirestore(app); 
+        const auth = getAuth(app);
+        
+        let currentUser = null;
         let roundSettled = false;
 
+        const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
+        const state = {
+            balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
+            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false
+        };
+
+        // --- MATH & SEED LOGIC (ABSOLUTE SYNC 100%) ---
         function seededRandom(seed) {
             let t = seed += 0x6D2B79F5;
             t = Math.imul(t ^ t >>> 15, t | 1);
@@ -276,7 +299,65 @@
             return cands;
         }
 
-        // --- CHIP VÀ INPUT ĐỒNG BỘ ---
+        // --- FIREBASE INITIALIZATION & STRICT PATTERN ---
+        async function initFirebaseAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                if (user) {
+                    loadUserData(user.uid);
+                    setupTickerListener(); // Kích hoạt lắng nghe người thắng thời gian thực
+                } else {
+                    window.location.href = "login.html";
+                }
+            });
+        }
+
+        async function loadUserData(uid) {
+            // Tương thích với DB cũ của user (đang lưu ở collection users gốc)
+            const userProfileRef = doc(db, "users", uid);
+            
+            onSnapshot(userProfileRef, (docSnap) => {
+                if(docSnap.exists()) {
+                    state.userData = docSnap.data();
+                    state.userData.uid = uid;
+                    state.balance = state.userData.balance || 0;
+                } else {
+                    // Cấp vốn cho người chơi mới
+                    state.userData = { uid: uid, username: "Khách_" + uid.substring(0,4), balance: 1000 };
+                    state.balance = 1000;
+                    setDoc(userProfileRef, state.userData);
+                }
+                updateBalanceUI();
+                
+                if (!state.gameStarted) {
+                    finishLoading();
+                }
+            }, (err) => console.error("Balance listener error", err));
+        }
+        
+        initFirebaseAuth();
+
+        function finishLoading() {
+            const loader = document.getElementById('pageLoader'); loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+            if (!state.gameStarted) { 
+                initGame(); 
+                checkSavedBet(); 
+                state.gameStarted = true; 
+            }
+        }
+
+        // --- UI FUNCTIONS ---
         window.handleManualInput = () => {
             let val = parseFloat(document.getElementById('betInput').value);
             if (isNaN(val)) val = 0;
@@ -317,7 +398,6 @@
             window.handleManualInput();
         };
 
-        // --- HIỂN THỊ CẬP NHẬT 96% ---
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value) || 0;
             document.getElementById('profitDisplay').innerText = "+" + (val * 0.96).toFixed(2) + " T";
@@ -330,7 +410,7 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // --- POPUP TRẢ THƯỞNG: CHỈ HIỂN THỊ TIỀN LÃI THUẦN ---
+        // HÀM HIỂN THỊ POPUP THẮNG THUA
         function showPopup(isWin, amount) {
             const popup = document.getElementById('resultPopup');
             const border = document.getElementById('popupBorder');
@@ -362,43 +442,64 @@
             }, 2500);
         }
 
-        // --- BẢNG VINH DANH NGƯỜI THẮNG THẬT (TICKER) ---
-        function showWinners(localWinData) {
+        // --- REAL-TIME TICKER (LẮNG NGHE NGƯỜI CHƠI THẬT) ---
+        function setupTickerListener() {
+            if (!currentUser) return;
+            // Listen on a global public channel for recent wins
+            const winsRef = collection(db, 'artifacts', appId, 'public', 'data', 'recentWins');
+            
+            onSnapshot(winsRef, (snapshot) => {
+                let wins = [];
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    // Lọc những người thắng trong vòng 24h qua để bảng luôn có dữ liệu
+                    if (Date.now() - data.timestamp < 86400000) { 
+                        wins.push(data);
+                    }
+                });
+                
+                // Sort mới nhất lên đầu
+                wins.sort((a, b) => b.timestamp - a.timestamp);
+                wins = wins.slice(0, 15); // Lấy 15 người mới nhất
+                
+                renderRealWinners(wins);
+            }, (error) => {
+                console.error("Lỗi lấy dữ liệu người thắng:", error);
+            });
+        }
+
+        function renderRealWinners(wins) {
             const ticker = document.getElementById('winnersTicker');
             ticker.innerHTML = '';
-            let winners = [];
-
-            // Ưu tiên hiện người chơi thật (Mình) lên top 1 nếu thắng
-            if (localWinData) {
-                winners.push({
-                    name: localWinData.name,
-                    amount: localWinData.amount,
-                    isLocal: true
-                });
-            }
-
-            // Sinh random vài tài khoản ảo cho sống động
-            const fakes = ["Tran", "Ng", "Le", "Pham", "Hoang", "Vu", "Vo", "Do", "Bui", "Truong", "Ly", "Ngo", "Alex", "David"];
-            let numOtherWinners = Math.floor(Math.random() * 3) + 3; 
             
-            for(let i=0; i < numOtherWinners; i++) {
-                let name = fakes[Math.floor(Math.random() * fakes.length)] + "***";
-                let simBets = [10, 50, 100, 200, 500];
-                let amt = simBets[Math.floor(Math.random() * simBets.length)] * 0.96;
-                winners.push({ name: name, amount: amt, isLocal: false });
+            if (wins.length === 0) {
+                ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase">Chưa có người thắng</div>';
+                return;
             }
 
-            winners.forEach((w, index) => {
+            wins.forEach((w, index) => {
                 let el = document.createElement('div');
-                // Nếu là mình thì highlight viền sáng hơn
-                el.className = 'winner-item' + (w.isLocal ? ' bg-[#0ECB81]/15 border-l-2 border-[#0ECB81]' : '');
-                el.style.animationDelay = `${index * 0.15}s`; 
+                let isLocal = state.userData && w.uid === state.userData.uid;
                 
-                let nameColor = w.isLocal ? 'text-white font-black' : 'text-gray-400 font-bold';
-                let displayName = w.isLocal ? (w.name.substring(0, 10) + (w.name.length > 10 ? '...' : '')) : w.name;
+                // Highlight nếu là tài khoản của chính mình
+                el.className = 'winner-item' + (isLocal ? ' bg-[#0ECB81]/20 border-l-[3px] border-[#0ECB81]' : '');
+                el.style.animationDelay = `${index * 0.1}s`; 
+                
+                let nameColor = isLocal ? 'text-white font-black' : 'text-gray-400 font-bold';
+                
+                // XỬ LÝ MASK TÊN THEO YÊU CẦU: "Tên ở lịch sử cũng phải ***"
+                let safeName = w.name || "Khách";
+                let maskedName = "";
+                
+                if (isLocal) {
+                    maskedName = "Bạn (Me)"; // Hiện rõ nếu là mình
+                } else {
+                    // Che tên người khác (VD: "Nguyen" -> "Ngu***")
+                    maskedName = safeName.length > 3 ? safeName.substring(0, 3) + '***' : safeName + '***';
+                }
                 
                 el.innerHTML = `
-                    <span class="${nameColor} truncate">${displayName}</span>
+                    <span class="${nameColor} truncate w-[60%]">${maskedName}</span>
                     <span class="text-[#0ECB81] font-mono font-black shrink-0">+${w.amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 `;
                 ticker.appendChild(el);
@@ -423,7 +524,7 @@
             
             document.getElementById('confirmBalance').innerText = state.balance.toLocaleString('en-US') + " T";
             document.getElementById('confirmAmount').innerText = amount + " T";
-            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; // Xác nhận RTP 96%
+            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; // Update RTP 96%
             document.getElementById('confirmBar').classList.add('active');
         };
 
@@ -444,7 +545,7 @@
             state.balance -= amount; updateBalanceUI();
             state.pendingBet = { type: null, amount: 0 }; document.getElementById('confirmBar').classList.remove('active');
 
-            if(state.userData && state.userData.uid && state.userData.uid !== "guest") {
+            if(currentUser && state.userData) {
                 try {
                     await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
                     await setDoc(doc(db, "games", "current"), { [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount) }, { merge: true });
@@ -469,51 +570,6 @@
         }
 
         function updateBalanceUI() { document.getElementById('balanceDisplay').innerText = state.balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + " T"; }
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
-            authDomain: "btccoinbig.firebaseapp.com",
-            projectId: "btccoinbig",
-            storageBucket: "btccoinbig.firebasestorage.app",
-            messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664"
-        };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
-
-        const CONFIG = { basePrice: 98100, chartPaddingRight: 80 };
-        const state = {
-            balance: 0, userData: null, currentBet: null, pendingBet: { type: null, amount: 0 },
-            baseCandles: [], visualPrice: 98100, lockPrice: 0, lastEpoch: -1, isProcessing: false, gameStarted: false
-        };
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                let userStr = localStorage.getItem('crownex_user_info');
-                if (userStr && !user.isAnonymous) {
-                    state.userData = JSON.parse(userStr); finishLoading();
-                } else if (user.isAnonymous) {
-                    state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading();
-                } else {
-                    try {
-                        const docSnap = await getDoc(doc(db, "users", user.uid));
-                        if(docSnap.exists()) {
-                            state.userData = docSnap.data(); state.userData.uid = user.uid;
-                            localStorage.setItem('crownex_user_info', JSON.stringify(state.userData)); finishLoading();
-                        } else { window.location.href = "login.html"; }
-                    } catch (e) { state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading(); }
-                }
-                if(!user.isAnonymous) {
-                    onSnapshot(doc(db, "users", user.uid), (doc) => { if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); } }, (err) => console.error(err));
-                }
-            } else { window.location.href = "login.html"; }
-        });
-
-        function finishLoading() {
-            state.balance = state.userData.balance || 0; updateBalanceUI();
-            const loader = document.getElementById('pageLoader'); loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
-            if (!state.gameStarted) { initGame(); checkSavedBet(); state.gameStarted = true; }
-        }
 
         function checkSavedBet() {
             const saved = localStorage.getItem('crownex_active_bet');
@@ -555,7 +611,6 @@
             regenerateHistory();
             requestAnimationFrame(gameLoop);
             setInterval(engineTimer, 100); 
-            showWinners(null); // Render ticker mồi lúc tải trang
         }
 
         function engineTimer() {
@@ -577,8 +632,6 @@
             const finishedCandle = state.baseCandles[state.baseCandles.length - 2];
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
             
-            let localWinData = null;
-
             if (state.currentBet) {
                 const b = state.currentBet; 
                 state.currentBet = null; 
@@ -590,18 +643,24 @@
                     state.balance += totalReturn; 
                     showPopup(true, profit); 
                     
-                    // Đóng gói thông tin chiến thắng của mình để chèn vào Ticker
-                    localWinData = {
-                        name: state.userData.username || "Bạn (Me)",
-                        amount: profit
-                    };
+                    // NẾU THẮNG: Đẩy dữ liệu lên máy chủ Ticker chung của sàn
+                    if(currentUser && state.userData) {
+                        try {
+                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'recentWins'), {
+                                uid: state.userData.uid,
+                                name: state.userData.username || "Khách",
+                                amount: profit,
+                                timestamp: Date.now() // Dùng timestamp để sort
+                            });
+                        } catch(e) { console.error("Lỗi đẩy Ticker", e); }
+                    }
                 } else { 
                     showPopup(false, b.amount); 
                 }
                 
                 updateBalanceUI(); localStorage.removeItem('crownex_active_bet');
 
-                if(state.userData && state.userData.uid && state.userData.uid !== "guest") {
+                if(currentUser && state.userData) {
                     try {
                         const batch = [];
                         if (win) batch.push(updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) }));
@@ -612,9 +671,6 @@
                     } catch (e) { console.error(e); }
                 }
             }
-            
-            // Kích hoạt chạy hiệu ứng danh sách người vừa thắng (Gài tk mình vào top 1 nếu thắng)
-            showWinners(localWinData);
 
             setTimeout(() => { roundSettled = false; }, 2000);
         }
@@ -628,6 +684,7 @@
             const isResultPhase = currentEpoch % 2 !== 0; 
             const progress = (now % 30000) / 30000;
 
+            // 1. Chuyển Phiên (Epoch mới)
             if (state.lastEpoch !== currentEpoch) {
                 state.baseCandles = buildBaseCandles(); 
                 state.lastEpoch = currentEpoch;
@@ -654,7 +711,7 @@
                     document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); document.getElementById('btnSell').classList.remove('dimmed', 'locked');
                     
                     try {
-                        if(state.userData && state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
+                        if(currentUser && state.userData) setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
                     } catch(e) {}
                     
                     finalizeRound(); 
@@ -662,24 +719,34 @@
                 regenerateHistory(); 
             }
 
-            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN SÓNG TỪ TỪ SIÊU MƯỢT
+            // 2. THUẬT TOÁN ĐIỀU KHIỂN NẾN MỚI (LOW-FREQ WAVES)
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
             
-            // Dùng cubic ease-out: 1 - (1-p)^3 để giá trị đi từ từ và ổn định cực êm ở giây cuối
-            const easeProgress = 1 - Math.pow(1 - progress, 3); 
+            // Base trajectory: Đường đi cơ bản thẳng tắp từ Open tới Close
+            const baseProgress = progress; 
+            let basePrice = liveCandle.open + (liveCandle.change * baseProgress);
+            
             const tSec = now / 1000;
             
-            // BIẾN ĐỘNG LIÊN TỤC TOÀN BỘ PHIÊN (Không có if/else cắt ngang)
-            // Dùng sóng Sin/Cos Tần số RẤT thấp để nến bơi lên xuống RẤT CHẬM nhưng BIÊN ĐỘ CAO (không nhảy tưng tưng)
-            let wave1 = Math.sin(tSec * 0.4) * 25;  // Sóng cực dài, lên rất cao, sập rất sâu
-            let wave2 = Math.cos(tSec * 0.7) * 15;  // Sóng lượn vừa phải
-            let wave3 = Math.sin(tSec * 1.5) * 5;   // Nhấp nhô nhẹ tạo độ thở của live
+            // Envelope: Hàm điều tiết biên độ. 
+            // - Starts at 0 (không bị giật khi mới mở phiên)
+            // - Tăng dần đến Max ở giữa phiên (lấy đà vọt/sập mạnh)
+            // - Giảm dần về 0 ở giây cuối (khớp đúng 100% kết quả một cách mượt mà)
+            let rampUp = Math.min(1, progress * 10); // Lên đỉnh trong 3s đầu
+            let rampDown = Math.min(1, (1 - progress) * 10); // Xuống 0 trong 3s cuối
+            let envelope = Math.min(rampUp, rampDown);
             
-            // Tổng hợp các sóng. (1 - progress) là khóa an toàn: Khi thời gian lùi dần về 0 (hết 30 giây), độ nhiễu loạn tự động triệt tiêu từ từ về 0. Khớp kết quả hoàn hảo.
-            let currentWiggle = (wave1 + wave2 + wave3) * (1 - progress);
+            // WAVES: Sóng hình sin tần số cực thấp để "lượn" trơn tru thay vì giật cục
+            // - Sóng 1 (tSec * 0.8): Lượn rất chậm, biên độ siêu cao (18) -> Tụt/Lên sâu
+            // - Sóng 2 (tSec * 1.3): Lượn vừa phải, biên độ trung bình (12)
+            // - Sóng 3 (tSec * 2.5): Nhấp nhô nhẹ tạo độ tự nhiên (6)
+            let wave = Math.sin(tSec * 0.8) * 18 + Math.cos(tSec * 1.3) * 12 + Math.sin(tSec * 2.5) * 6;
             
-            // Ép giá về mục tiêu đích
-            state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
+            // Tổng hợp độ lệch:
+            let currentWiggle = wave * envelope;
+
+            // Ép giá về mục tiêu đích của thuật toán
+            state.visualPrice = basePrice + currentWiggle;
 
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
