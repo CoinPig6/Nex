@@ -315,7 +315,7 @@
                 currentUser = user;
                 if (user) {
                     loadUserData(user.uid);
-                    setupTickerListener(); // Kích hoạt lắng nghe người thắng thời gian thực
+                    setupTickerListener(); // Bật Listener đọc lịch sử người thắng realtime
                 } else {
                     window.location.href = "login.html";
                 }
@@ -323,7 +323,6 @@
         }
 
         async function loadUserData(uid) {
-            // Tương thích với DB cũ của user (đang lưu ở collection users gốc)
             const userProfileRef = doc(db, "users", uid);
             
             onSnapshot(userProfileRef, (docSnap) => {
@@ -332,7 +331,6 @@
                     state.userData.uid = uid;
                     state.balance = state.userData.balance || 0;
                 } else {
-                    // Cấp vốn cho người chơi mới
                     state.userData = { uid: uid, username: "Khách_" + uid.substring(0,4), balance: 1000 };
                     state.balance = 1000;
                     setDoc(userProfileRef, state.userData);
@@ -445,22 +443,20 @@
         // --- REAL-TIME TICKER (LẮNG NGHE NGƯỜI CHƠI THẬT) ---
         function setupTickerListener() {
             if (!currentUser) return;
-            // Listen on a global public channel for recent wins
+            // Listen on public channel for recent wins globally
             const winsRef = collection(db, 'artifacts', appId, 'public', 'data', 'recentWins');
             
             onSnapshot(winsRef, (snapshot) => {
                 let wins = [];
                 snapshot.forEach(doc => {
                     let data = doc.data();
-                    // Lọc những người thắng trong vòng 24h qua để bảng luôn có dữ liệu
                     if (Date.now() - data.timestamp < 86400000) { 
                         wins.push(data);
                     }
                 });
                 
-                // Sort mới nhất lên đầu
                 wins.sort((a, b) => b.timestamp - a.timestamp);
-                wins = wins.slice(0, 15); // Lấy 15 người mới nhất
+                wins = wins.slice(0, 15); 
                 
                 renderRealWinners(wins);
             }, (error) => {
@@ -473,7 +469,7 @@
             ticker.innerHTML = '';
             
             if (wins.length === 0) {
-                ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase">Chưa có người thắng</div>';
+                ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase">Chưa có dữ liệu</div>';
                 return;
             }
 
@@ -492,9 +488,8 @@
                 let maskedName = "";
                 
                 if (isLocal) {
-                    maskedName = "Bạn (Me)"; // Hiện rõ nếu là mình
+                    maskedName = "Bạn (Me)"; 
                 } else {
-                    // Che tên người khác (VD: "Nguyen" -> "Ngu***")
                     maskedName = safeName.length > 3 ? safeName.substring(0, 3) + '***' : safeName + '***';
                 }
                 
@@ -631,7 +626,7 @@
             
             const finishedCandle = state.baseCandles[state.baseCandles.length - 2];
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
-            
+
             if (state.currentBet) {
                 const b = state.currentBet; 
                 state.currentBet = null; 
@@ -650,7 +645,7 @@
                                 uid: state.userData.uid,
                                 name: state.userData.username || "Khách",
                                 amount: profit,
-                                timestamp: Date.now() // Dùng timestamp để sort
+                                timestamp: Date.now() // Dùng timestamp để sắp xếp
                             });
                         } catch(e) { console.error("Lỗi đẩy Ticker", e); }
                     }
@@ -719,34 +714,26 @@
                 regenerateHistory(); 
             }
 
-            // 2. THUẬT TOÁN ĐIỀU KHIỂN NẾN MỚI (LOW-FREQ WAVES)
+            // 2. THUẬT TOÁN NẾN MỚI: SÓNG MƯỢT TẦN SỐ THẤP (Low-freq Sine/Cosine Waves)
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
-            
-            // Base trajectory: Đường đi cơ bản thẳng tắp từ Open tới Close
-            const baseProgress = progress; 
-            let basePrice = liveCandle.open + (liveCandle.change * baseProgress);
-            
             const tSec = now / 1000;
             
-            // Envelope: Hàm điều tiết biên độ. 
-            // - Starts at 0 (không bị giật khi mới mở phiên)
-            // - Tăng dần đến Max ở giữa phiên (lấy đà vọt/sập mạnh)
-            // - Giảm dần về 0 ở giây cuối (khớp đúng 100% kết quả một cách mượt mà)
-            let rampUp = Math.min(1, progress * 10); // Lên đỉnh trong 3s đầu
-            let rampDown = Math.min(1, (1 - progress) * 10); // Xuống 0 trong 3s cuối
-            let envelope = Math.min(rampUp, rampDown);
+            // Hàm Ease Out Quintic: Trượt mượt chốt giá trị đích vào giây cuối
+            const easeProgress = 1 - Math.pow(1 - progress, 5); 
             
-            // WAVES: Sóng hình sin tần số cực thấp để "lượn" trơn tru thay vì giật cục
-            // - Sóng 1 (tSec * 0.8): Lượn rất chậm, biên độ siêu cao (18) -> Tụt/Lên sâu
-            // - Sóng 2 (tSec * 1.3): Lượn vừa phải, biên độ trung bình (12)
-            // - Sóng 3 (tSec * 2.5): Nhấp nhô nhẹ tạo độ tự nhiên (6)
-            let wave = Math.sin(tSec * 0.8) * 18 + Math.cos(tSec * 1.3) * 12 + Math.sin(tSec * 2.5) * 6;
+            // Xây dựng biến động gợn sóng (Wiggle) không xài Random
+            // - Sóng chính: Tần số cực thấp (0.5), biên độ siêu lớn (20) -> Lên xuống từ từ, sâu và cao.
+            // - Sóng phụ: Tần số vừa (1.2), biên độ vừa (8) -> Tạo độ trượt uốn lượn.
+            // - Sóng tăm: Tần số hơi nhanh (3.0), biên độ bé (3) -> Tạo cảm giác live.
+            let wave1 = Math.sin(tSec * 0.5) * 20; 
+            let wave2 = Math.cos(tSec * 1.2) * 8;
+            let wave3 = Math.sin(tSec * 3.0) * 3;
             
-            // Tổng hợp độ lệch:
-            let currentWiggle = wave * envelope;
-
+            // Càng về cuối biên độ càng bị triệt tiêu về 0 nhờ nhân với (1 - progress)
+            let currentWiggle = (wave1 + wave2 + wave3) * (1 - progress);
+            
             // Ép giá về mục tiêu đích của thuật toán
-            state.visualPrice = basePrice + currentWiggle;
+            state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
 
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
@@ -759,9 +746,10 @@
                 liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
             }
 
-            // 3. Render Canvas
-            const w = (cvs.width - CONFIG.chartPaddingRight) / 30; 
-            const r = 80; 
+            // 3. Render Canvas (Đã tối ưu nến to và không cắt lẹm râu)
+            const VISIBLE_CANDLES = 22; // Nến to, tràn lề
+            const w = (cvs.width - CONFIG.chartPaddingRight) / VISIBLE_CANDLES; 
+            const r = 110; // Cố định khoảng không gian rộng 110 để bắt mọi râu nến dài nhất
             const min = state.visualPrice - r / 2;
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
@@ -782,7 +770,7 @@
             const lastIdx = state.baseCandles.length - 1;
             for (let i = 0; i <= lastIdx; i++) {
                 const dist = lastIdx - i;
-                if (dist > 30) continue; 
+                if (dist > VISIBLE_CANDLES) continue; 
 
                 const x = (cvs.width - CONFIG.chartPaddingRight) - (dist * w) - (w/2);
                 const c = state.baseCandles[i];
@@ -795,10 +783,12 @@
                 ctx.fillStyle = c.close >= c.open ? '#0ECB81' : '#F6465D'; 
                 ctx.strokeStyle = ctx.fillStyle;
 
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 2.0;
                 ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-                const bodyH = Math.max(Math.abs(yC - yO), 2);
-                ctx.fillRect(x - (w/2) + 2, Math.min(yO, yC), w - 4, bodyH);
+                
+                const bodyH = Math.max(Math.abs(yC - yO), 3);
+                const candleWidth = w * 0.75;
+                ctx.fillRect(x - (candleWidth/2), Math.min(yO, yC), candleWidth, bodyH);
             }
 
             const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
