@@ -53,12 +53,28 @@
         #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1e232e; border: 1px solid #2d3442; padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { opacity: 1; }
         
-        /* CHIP CHỌN TIỀN (Hiệu ứng sáng rực) */
+        /* CHIP CHỌN TIỀN */
         .chip { background: #1e232e; color: #9ca3af; padding: 8px 0; width: 15%; min-width: 45px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.2s; }
         .chip.selected { background: #FCD535 !important; color: black !important; border-color: #FCD535 !important; box-shadow: 0 0 15px rgba(252,213,53,0.6) !important; transform: scale(1.08); }
         .chip:active { transform: scale(0.95); }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        /* TICKER ANIMATION */
+        .winner-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            font-size: 9px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            animation: slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        @keyframes slideInTop {
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -116,16 +132,25 @@
         </div>
     </div>
 
-    <!-- BẢNG LỊCH SỬ KẾT QUẢ -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ & NGƯỜI THẮNG -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
             <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
-        <div class="flex-1 bg-[#0b0f19] flex items-center justify-center">
-            <!-- Vùng cuộn mượt mà -->
-            <div class="history-wrapper hide-scroll" id="historyWrapper">
-                <div class="history-container" id="historyContainer"></div>
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left: Bóng Lịch Sử -->
+            <div class="w-[68%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
+                <div class="history-wrapper hide-scroll" id="historyWrapper">
+                    <div class="history-container" id="historyContainer"></div>
+                </div>
+            </div>
+            <!-- Right: Cột Người Thắng (Ticker) -->
+            <div class="w-[32%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
+                <div class="text-[8px] text-[#0ECB81] text-center font-black py-1 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
+                <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
+                    <!-- Danh sách sẽ được thêm bằng JS ở đây -->
+                </div>
             </div>
         </div>
     </div>
@@ -160,7 +185,7 @@
             <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.60 T</span></div>
         </div>
         
-        <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC (Bố cục chống vỡ) -->
+        <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
         <div class="flex justify-between items-center gap-3 h-14 w-full max-w-sm mx-auto">
             <!-- NÚT BÁN -->
             <button id="btnSell" onclick="window.selectSide('down')" class="relative flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-xl flex items-center justify-center shadow-lg">
@@ -350,6 +375,27 @@
             }, 2500);
         }
 
+        // HÀM HIỂN THỊ DANH SÁCH NGƯỜI THẮNG ẢO
+        function showFakeWinners() {
+            const ticker = document.getElementById('winnersTicker');
+            ticker.innerHTML = '';
+            const fakes = ["Tran", "Ng", "Le", "Pham", "Hoang", "Vu", "Vo", "Do", "Bui", "Truong", "Ly", "Ngo"];
+            let numWinners = Math.floor(Math.random() * 3) + 4; // 4 to 6 người
+            
+            for(let i=0; i < numWinners; i++) {
+                let name = fakes[Math.floor(Math.random() * fakes.length)] + "***";
+                let amt = (Math.random() * 800 + 50).toFixed(2);
+                let el = document.createElement('div');
+                el.className = 'winner-item';
+                el.style.animationDelay = `${i * 0.15}s`; // Giãn cách rơi
+                el.innerHTML = `
+                    <span class="text-gray-400 font-bold truncate max-w-[50%]">${name}</span>
+                    <span class="text-[#0ECB81] font-mono font-black">+${amt}</span>
+                `;
+                ticker.appendChild(el);
+            }
+        }
+
         window.selectSide = (type) => {
             if (new Date().getSeconds() >= 30) return showToast('error', "Hết thời gian đặt lệnh!");
             const isResultPhase = Math.floor(Date.now()/30000) % 2 !== 0;
@@ -518,6 +564,9 @@
             if (roundSettled) return;
             roundSettled = true;
             
+            // Chạy hiệu ứng danh sách Lãi
+            showFakeWinners();
+            
             // Lấy kết quả từ cây nến vừa đóng (nến áp chót trong mảng)
             const finishedCandle = state.baseCandles[state.baseCandles.length - 2];
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
@@ -596,23 +645,14 @@
                 regenerateHistory(); 
             }
 
-            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN "KILL ZONE" ĐÃ FIX LỖI GIẬT
+            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN MƯỢT MÀ
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
             const easeProgress = 1 - Math.pow(1 - progress, 2); 
             const tSec = now / 1000;
             
-            const timeRemaining = 30 * (1 - progress); 
-            let currentWiggle = 0;
-            
-            if (timeRemaining <= 4.0 && timeRemaining > 0.1) {
-                // TẠO BIẾN ĐỘNG LỚN (SẬP/VỌT) NHƯNG RẤT MƯỢT
-                // Dùng sóng Sin (tSec * 5) => Chu kỳ quét dài khoảng hơn 1 giây.
-                // Không dùng random() => Khắc phục triệt để lỗi "giật lên xuống liên tục quá nhanh"
-                currentWiggle = Math.sin(tSec * 5) * 12 * (timeRemaining / 4.0);
-            } else {
-                // Nhịp thở bình thường của nến (biến động rất nhẹ nhàng, mượt)
-                currentWiggle = (Math.sin(tSec * 4) * 1.5 + Math.cos(tSec * 2.5) * 0.8) * (1 - progress);
-            }
+            // Biến động giá bình thường nhưng mạnh hơn chút (tổng biên độ dao động khoảng 6-7)
+            // Sóng hoàn toàn trơn tru bằng tổng hợp hàm sin/cos, không có random để loại bỏ giật nháy
+            let currentWiggle = (Math.sin(tSec * 6) * 3.5 + Math.cos(tSec * 3.8) * 2.0 + Math.sin(tSec * 1.2) * 1.5) * (1 - progress);
             
             // Ép giá về mục tiêu đích của thuật toán
             state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
