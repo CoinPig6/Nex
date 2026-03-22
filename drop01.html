@@ -199,7 +199,7 @@
         </div>
 
         <div>
-            <!-- HÀNG CHIP CHỌN NHANH (MỚI) -->
+            <!-- HÀNG CHIP CHỌN NHANH -->
             <div class="flex items-center justify-between gap-1 mb-2 w-full overflow-x-auto custom-scroll">
                 <button onclick="setQuickBet(5, this)" class="chip selected">5</button>
                 <button onclick="setQuickBet(10, this)" class="chip">10</button>
@@ -226,55 +226,51 @@
         </button>
     </div>
 
-    <!-- MODAL LUẬT CHƠI -->
+    <!-- MODAL LUẬT CHƠI (GỌN GÀNG, KHÔNG HIỆN PHẦN TRĂM) -->
     <div id="rules-modal" class="hidden absolute inset-0 bg-black/70 flex items-center justify-center z-50 pointer-events-auto backdrop-blur-md">
         <div class="panel-ui w-[90%] max-w-md rounded-2xl overflow-hidden flex flex-col max-h-[85vh] animate-pop border border-white/20 shadow-2xl">
             <div class="bg-gray-900/80 px-6 py-4 flex justify-between items-center border-b border-white/10">
-                <h3 class="text-white font-black text-lg tracking-wide flex items-center gap-2">LUẬT CHƠI (HARDCORE)</h3>
+                <h3 class="text-white font-black text-lg tracking-wide flex items-center gap-2">LUẬT CHƠI CƠ BẢN</h3>
                 <button onclick="toggleRules()" class="text-gray-400 hover:text-white transition bg-gray-800 p-1.5 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
             <div class="p-6 overflow-y-auto custom-scroll text-[13px] text-gray-200 space-y-5 bg-gray-800/50">
                 <div>
-                    <p class="font-bold text-white mb-2">Cơ chế Thu Phí (RTP 96%):</p>
-                    <p class="bg-[#064E3B]/40 p-3 rounded-lg border border-[var(--stake-green)]/30 text-[var(--stake-green)] shadow-inner">
-                        Toàn bộ tiền Lời nhận được sẽ được áp dụng trực tiếp <strong>tỷ lệ RTP 96%</strong> (Trừ 4% phí nền tảng vào Lợi nhuận) để đảm bảo cân bằng.
+                    <p class="font-bold text-white mb-2">Rủi ro chuyến bay:</p>
+                    <p class="bg-red-900/40 p-3 rounded-lg border border-red-500/30 text-red-100 shadow-inner mb-2">
+                        <span class="text-xl">⚡</span> <strong>Sét đánh:</strong> Thời tiết xấu có thể khiến tia sét đánh trúng Boss ngay khi vừa nhảy. Thua ngay lập tức!
                     </p>
-                </div>
-                <div>
-                    <p class="font-bold text-white mb-2">Sét Đánh (40% Rủi ro):</p>
                     <p class="bg-red-900/40 p-3 rounded-lg border border-red-500/30 text-red-100 shadow-inner">
-                        <span class="text-xl">⚡</span> Có đúng <strong>40% tỷ lệ</strong> thời tiết xấu khiến tia sét đánh trúng Boss ngay khi vừa nhảy. Nếu bị đánh trúng, thua ngay lập tức!
+                        <span class="text-xl">🦅</span> <strong>Đại bàng:</strong> Bị quắp đi giữa không trung. Thua ngay lập tức!
                     </p>
                 </div>
                 <div>
-                    <p class="font-bold text-white mb-2">Thu thập trên không (Hệ số Bay):</p>
+                    <p class="font-bold text-white mb-2">Thu thập trên không (Cộng dồn hệ số):</p>
                     <ul class="space-y-2 bg-gray-900/50 p-3 rounded-lg border border-white/5">
-                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">☁️</span> <span>Mây Trắng: <strong class="text-white">Không nảy, trượt qua</strong>.</span></li>
-                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">📏</span> <span>Khoảng cách: <strong class="text-white">+0.05x</strong> / 1 mét</span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">📏</span> <span>Rơi tự do: <strong class="text-white">+0.05x</strong> / 1 mét</span></li>
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🔄</span> <span>Nhào lộn: <strong class="text-white">+0.1x</strong> / vòng</span></li>
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🧢</span> <span>Mũ Mega: <strong class="text-[var(--stake-green)]">+0.2x</strong></span></li>
                         <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🪙</span> <span>Xu Vàng: <strong class="text-yellow-400">+1.0x</strong></span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">☁️</span> <span>Mây Trắng: <strong class="text-gray-400">Trượt qua không có tác dụng</strong></span></li>
                     </ul>
                 </div>
                 <div>
-                    <p class="font-bold text-white mb-2">Chướng ngại vật:</p>
+                    <p class="font-bold text-white mb-2">Sự kiện đặc biệt:</p>
                     <ul class="space-y-3 bg-gray-900/50 p-3 rounded-lg border border-white/5">
-                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🌩️</span> <span><strong>Mây giông:</strong> Nảy 1 lần, giật sét chia đôi hệ số <strong class="text-red-400">(÷2)</strong>.</span></li>
-                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🦅</span> <span><strong>Đại bàng:</strong> Quắp đi, <strong class="text-red-400">Thua ngay lập tức</strong>.</span></li>
-                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🌌</span> <span><strong>K-Hole (Mini-game):</strong> Tên lửa lao vào Hố đen <strong class="text-purple-400">0.10x - 11.00x</strong> (Chỉ nhân tiền gốc).</span></li>
+                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🌩️</span> <span><strong>Mây giông:</strong> Bị giật sét chia đôi hệ số đang có <strong class="text-red-400">(÷2)</strong>.</span></li>
+                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🌌</span> <span><strong>K-Hole (Hố đen):</strong> Bị hút vào không gian khác. Hệ số được quay ngẫu nhiên.</span></li>
                     </ul>
                 </div>
                 <div>
-                    <p class="font-bold text-white mb-2">Khu hạ cánh (Hệ số tỉ lệ nghịch với diện tích):</p>
+                    <p class="font-bold text-white mb-2">Khu vực hạ cánh (Nhân / Cộng hệ số):</p>
                     <div class="grid grid-cols-2 gap-2 text-xs">
                         <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🟫 Đất Trống</span> <span class="text-gray-400 font-bold">+0.0x</span></div>
-                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🚚 Truck</span> <span class="text-blue-400 font-bold">+2.0x</span></div>
-                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🏢 Towers</span> <span class="text-[var(--stake-green)] font-bold">+10.0x</span></div>
-                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">⛳ Golden Tee</span> <span class="text-yellow-400 font-bold">+25.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🚚 Xe Tải</span> <span class="text-blue-400 font-bold">+2.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🏢 Tòa Nhà</span> <span class="text-[var(--stake-green)] font-bold">+10.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">⛳ Sân Golf</span> <span class="text-yellow-400 font-bold">+25.0x</span></div>
                         <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center col-span-2 flex flex-col items-center justify-center">
-                            <span class="text-white">🏛️ White House: <span class="text-yellow-400 font-bold text-sm ml-1">+100.0x</span></span> 
+                            <span class="text-white">🏛️ Nhà Trắng: <span class="text-yellow-400 font-bold text-sm ml-1">+100.0x</span></span> 
                         </div>
                         <div class="bg-pink-900/30 p-2 rounded-lg border border-pink-500/30 text-center col-span-2"><span class="text-pink-200">🐕 Chó:</span> <span class="text-pink-400 font-bold ml-2">Bình phương hệ số bay (x²)</span></div>
                     </div>
@@ -325,7 +321,8 @@
         canvas.width = screenW; canvas.height = screenH;
 
         // GAME STATE
-        let bet = 5; // Mặc định 5T
+        let bet = 5; // Số tiền nhập ở ô Input
+        let activeBet = 5; // Số tiền KHÓA lại của ván chơi hiện tại (Fix lỗi trừ sai tiền)
         let airMultiplier = 1.0; 
         let gameState = "MENU"; 
         let gameHistory = [];
@@ -458,18 +455,28 @@
 
         // --- BẮT ĐẦU GAME & GHI NHẬN VÒNG CƯỢC ---
         window.handleStartGame = async () => {
+            // FIX LỖI BẤM MULTI-CLICK TRIỆT ĐỂ: Khóa chết nếu không ở màn hình MENU
+            if (gameState !== "MENU") return;
+            gameState = "STARTING"; 
+
             let val = parseFloat(betInput.value);
             if (isNaN(val) || val < 5) {
                 alert("Mức cược tối thiểu là 5 T!"); 
                 betInput.value = 5; window.updateBetFromInput();
-                if(isAuto) window.toggleAuto(); 
+                if(isAuto) window.stopAutoMode(); 
+                gameState = "MENU";
                 return; 
             }
-            bet = val;
             
-            if (state.balance < bet) {
-                if(isAuto) window.toggleAuto(); 
-                document.getElementById('no-money-modal').classList.remove('hidden'); return;
+            // CHỐT SỔ TIỀN CƯỢC CỦA VÁN NÀY (Để nếu đang chơi user đổi số tiền thì không bị loạn)
+            bet = val;
+            activeBet = val; 
+            
+            if (state.balance < activeBet) {
+                if(isAuto) window.stopAutoMode(); 
+                document.getElementById('no-money-modal').classList.remove('hidden'); 
+                gameState = "MENU";
+                return;
             }
 
             btnStart.disabled = true; btnStart.innerText = "ĐANG TẢI...";
@@ -478,17 +485,20 @@
             if(!state.isGuest && state.user) {
                 try {
                     await updateDoc(doc(db, "users", state.user.uid), {
-                        balance: increment(-bet),
-                        betTurnover: increment(bet), // CỘNG VÒNG CƯỢC
-                        betToday: increment(bet)
+                        balance: increment(-activeBet),
+                        betTurnover: increment(activeBet), 
+                        betToday: increment(activeBet)
                     });
                 } catch(e) {
                     alert("Lỗi kết nối máy chủ! Vui lòng thử lại.");
-                    btnStart.disabled = false; btnStart.innerText = "THẢ RƠI"; return;
+                    btnStart.disabled = false; btnStart.innerText = "THẢ RƠI"; 
+                    gameState = "MENU";
+                    return;
                 }
             }
             
-            state.balance -= bet; updateUI();
+            state.balance -= activeBet; 
+            updateUI();
             
             // Initialize Level
             airMultiplier = 1.0; 
@@ -503,7 +513,8 @@
             particles = []; floatingTexts = []; generateLevel(); gameState = "PLAYING";
             jumpFailTimer = 0; isStruckByLightning = false;
             
-            if (Math.random() < 0.40) {
+            // Tỷ lệ sét đánh 55%
+            if (Math.random() < 0.55) {
                 jumpFailTimer = 1; isStruckByLightning = true; player.isCharred = true; 
                 player.vx = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 10); 
                 player.vy = 15; player.angularVelocity = (Math.random() > 0.5 ? 1.5 : -1.5) * 3; 
@@ -542,10 +553,10 @@
                     }
                 }
                 
-                // Cập nhật RTP 96%: Tính Lãi thuần 
+                // Tính Lãi thuần dựa trên activeBet (vốn cố định của ván) & RTP 96%
                 let rtpMult = finalTotalMult * 0.96;
-                let profit = bet * rtpMult;
-                payout = bet + profit; // Balance = Hoàn trả vốn + Lãi thuần
+                let profit = activeBet * rtpMult;
+                payout = activeBet + profit; // Balance = Hoàn trả vốn + Lãi thuần
                 
                 historyMultStr = rtpMult.toFixed(2) + "x";
                 if(rtpMult >= 10) historyColorClass = "bg-yellow-900/40 text-yellow-400 border-yellow-500/50";
@@ -554,10 +565,9 @@
                 
                 if (isKhole) {
                     detailsHtml = `
-                        <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div>
+                        <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div>
                         <div class="math-row"><span class="math-label">Hố đen:</span> <span class="text-purple-400 font-bold">${finalTotalMult.toFixed(2)}x</span></div>
-                        <div class="math-row"><span class="math-label">Phí nền tảng (RTP):</span> <span class="text-red-400 font-bold">-4%</span></div>
-                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between"><span class="math-label text-xs">HỆ SỐ THỰC:</span> <span class="text-purple-400 font-black text-xl">${rtpMult.toFixed(2)}x</span></div>`;
+                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between"><span class="math-label text-xs">HỆ SỐ TỔNG:</span> <span class="text-purple-400 font-black text-xl">${rtpMult.toFixed(2)}x</span></div>`;
                     resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">🚀</span>`;
                     endReason.className = "text-xs text-purple-300 font-bold bg-[#2E1065] px-3 py-2 rounded-md inline-block border border-purple-500/50 mb-2";
                 } else {
@@ -567,11 +577,10 @@
                     else zoneMath = `x1`;
                     
                     detailsHtml = `
-                        <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div>
+                        <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div>
                         <div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div>
                         <div class="math-row"><span class="math-label">Khu vực hạ cánh:</span> <span class="text-blue-400 font-bold">${zoneMath}</span></div>
-                        <div class="math-row"><span class="math-label">Phí nền tảng (RTP):</span> <span class="text-red-400 font-bold">-4%</span></div>
-                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">HỆ SỐ THỰC:</span> <span class="text-[var(--stake-green)] font-black text-xl">${rtpMult.toFixed(2)}x</span></div>`;
+                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">HỆ SỐ TỔNG:</span> <span class="text-[var(--stake-green)] font-black text-xl">${rtpMult.toFixed(2)}x</span></div>`;
                     
                     resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">${zoneObj.icon}</span>`;
                     endReason.className = "text-xs text-[var(--stake-green)] font-bold bg-[#064E3B] px-3 py-2 rounded-md inline-block border border-[var(--stake-green)]/50 mb-2 shadow-inner";
@@ -589,7 +598,7 @@
                         await updateDoc(doc(db, "users", state.user.uid), { balance: increment(payout) });
                         await addDoc(collection(db, "users", state.user.uid, "betHistory"), { 
                             game: "Drop The Boss", 
-                            amount: bet, 
+                            amount: activeBet, 
                             winAmount: payout, // Vốn + Lãi
                             profit: profit, // Chỉ có Lãi
                             result: "win",
@@ -606,10 +615,10 @@
                 resultTitle.innerText = "GÃY RỒI"; resultTitle.className = "text-red-500 font-bold uppercase text-sm mb-1 tracking-widest";
                 
                 // Trừ tiền: Chỉ hiển thị Vốn
-                resultMoney.innerText = "-" + bet.toFixed(2); 
+                resultMoney.innerText = "-" + activeBet.toFixed(2); 
                 resultMoney.className = "text-4xl text-red-500 font-black bungee drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]";
                 
-                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold">Thử lại nhé sếp!</div>`;
+                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold">Thử lại nhé sếp!</div>`;
                 endReason.className = "text-xs text-red-300 font-bold bg-[#7F1D1D] px-3 py-2 rounded-md inline-block border border-red-500/50 mb-2 shadow-inner";
                 historyColorClass = isLightningStr ? "bg-red-900/60 text-red-400 border-red-500/50" : "bg-[#1F2937] text-gray-400 border-gray-600";
 
@@ -618,9 +627,9 @@
                     try {
                         await addDoc(collection(db, "users", state.user.uid, "betHistory"), { 
                             game: "Drop The Boss", 
-                            amount: bet, 
+                            amount: activeBet, 
                             winAmount: 0, 
-                            profit: -bet,
+                            profit: -activeBet,
                             result: "lose",
                             multiplier: 0, 
                             detail: reason,
@@ -657,12 +666,12 @@
             else { multEl.innerText = airMultiplier.toFixed(2) + "x"; multEl.className = "text-4xl text-white font-black bungee drop-shadow-md leading-none"; }
             depthEl.innerText = player.maxDepthMeters + "m"; 
             
-            // CẬP NHẬT HỆ SỐ RỚT LÀ 0.05
             depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.05).toFixed(2) + "x";
             
-            // Render tính 96% RTP theo đúng logic 
-            let dBet = isNaN(bet) ? 0 : bet;
-            estWinEl.innerText = "Lãi: +" + formatMoney(dBet * airMultiplier * 0.96) + " T";
+            // Tính Lãi hiển thị thời gian thực (Dùng activeBet nếu game đang chạy)
+            let currentDisplayBet = (gameState === "PLAYING" || gameState === "K_HOLE_MINIGAME") ? activeBet : bet;
+            if(isNaN(currentDisplayBet)) currentDisplayBet = 0;
+            estWinEl.innerText = "Lãi: +" + formatMoney(currentDisplayBet * airMultiplier * 0.96) + " T";
         }
         function renderHistory() {
             const hc = document.getElementById('history-container'); hc.innerHTML = '';
@@ -692,11 +701,15 @@
         }
         function generateLevel() {
             entities = []; bgClouds = [];
-            for(let i=0; i<60; i++) bgClouds.push({ x: Math.random() * WORLD_WIDTH, y: Math.random() * (GROUND_Y - 1000), r: Math.random() * 60 + 50, speed: Math.random() * 0.5 + 0.1, isDark: Math.random() < 0.4 });
+            // TĂNG TỶ LỆ MÂY ĐEN NỀN LÊN ĐỂ TẠO CẢM GIÁC THỜI TIẾT XẤU (từ 0.4 lên 0.65)
+            for(let i=0; i<60; i++) bgClouds.push({ x: Math.random() * WORLD_WIDTH, y: Math.random() * (GROUND_Y - 1000), r: Math.random() * 60 + 50, speed: Math.random() * 0.5 + 0.1, isDark: Math.random() < 0.65 });
             generateZones();
             for (let y = 600; y < GROUND_Y - 500; y += 200) { 
                 if(Math.random() < 0.95) { let num = Math.floor(Math.random() * 4) + 4; for (let i = 0; i < num; i++) tryAddEntity('cloud', Math.random() * 30 + 40, y - 60, y + 60, false); }
-                if(Math.random() < 0.8) { let num = Math.floor(Math.random() * 3) + 1; for(let i=0; i < num; i++) tryAddEntity('storm_cloud', Math.random() * 15 + 40, y - 50, y + 150, true); }
+                
+                // TĂNG MÂY GIÔNG LÊN 95% MỖI TẦNG VÀ TĂNG SỐ LƯỢNG (từ 1-3 đám lên 2-5 đám)
+                if(Math.random() < 0.95) { let num = Math.floor(Math.random() * 4) + 2; for(let i=0; i < num; i++) tryAddEntity('storm_cloud', Math.random() * 15 + 40, y - 50, y + 150, true); }
+                
                 if(Math.random() < 0.6) tryAddEntity(Math.random() < 0.4 ? 'coin' : 'hat', 24, y, y + 100, true);
                 if(Math.random() < 0.35 && y > 1000) tryAddEntity('eagle', 35, y, y + 100, true);
                 if(Math.random() < 0.03 && y > 2500) tryAddEntity('blackhole', 60, y, y + 100, true);
