@@ -446,7 +446,6 @@
             ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Đang tải...</div>';
             
             try {
-                // Lấy TẤT CẢ các cược đã ghi nhận vào Public Collection
                 const betsRef = collection(db, 'artifacts', appId, 'public', 'data', 'latestBets');
                 const querySnapshot = await getDocs(betsRef);
                 
@@ -454,7 +453,6 @@
                 
                 querySnapshot.forEach((doc) => {
                     let data = doc.data();
-                    // Lọc bằng JS theo Rule (Không dùng where)
                     if (data.sessionId === sessionId) {
                         let isWin = (data.type === correctResult);
                         let profit = isWin ? (data.amount * 0.96) : -data.amount;
@@ -477,7 +475,7 @@
                     return;
                 }
                 
-                // Sắp xếp: Thắng lên trên (lãi cao lên đầu), Thua xuống dưới (lỗ nhiều xuống bét)
+                // Sắp xếp: Lãi cao lên top, lỗ nặng xuống đáy
                 sessionResults.sort((a, b) => b.profit - a.profit);
                 
                 sessionResults.forEach((w, index) => {
@@ -561,14 +559,13 @@
 
             if(currentUser && state.userData) {
                 try {
-                    // Update user balance locally
                     await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
                     
-                    // Ghi nhận cược vào Public Data để Ticker quét khi hết phiên
+                    // Ghi lệnh vào Public để cuối phiên hiển thị lịch sử người chơi
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'latestBets', state.userData.uid), {
                         uid: state.userData.uid,
                         name: state.userData.username || "Khách",
-                        amount: (!state.currentBet ? amount : state.currentBet.amount + amount), // Gộp nếu nhồi lệnh
+                        amount: (!state.currentBet ? amount : state.currentBet.amount + amount),
                         type: type,
                         sessionId: currentSessionStr,
                         timestamp: Date.now()
@@ -657,8 +654,7 @@
             
             const finishedCandle = state.baseCandles[state.baseCandles.length - 2];
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
-            
-            // Xử lý Popup thắng thua cho tài khoản này
+
             if (state.currentBet) {
                 const b = state.currentBet; 
                 state.currentBet = null; 
@@ -688,7 +684,6 @@
             }
 
             // KÍCH HOẠT LẤY DỮ LIỆU TẤT CẢ NGƯỜI CHƠI TRONG PHIÊN VỪA KẾT THÚC
-            // (Đẩy lùi 1 phút vì sessionStr hiện tại đã chuyển sang phiên order mới)
             const now = new Date(Date.now() - 60000); 
             let finishedSessionStr = `${now.getFullYear()}${('0'+(now.getMonth()+1)).slice(-2)}${('0'+now.getDate()).slice(-2)}${('0'+now.getHours()).slice(-2)}${('0'+now.getMinutes()).slice(-2)}`;
             
@@ -706,7 +701,6 @@
             const isResultPhase = currentEpoch % 2 !== 0; 
             const progress = (now % 30000) / 30000;
 
-            // 1. Chuyển Phiên (Epoch mới)
             if (state.lastEpoch !== currentEpoch) {
                 state.baseCandles = buildBaseCandles(); 
                 state.lastEpoch = currentEpoch;
@@ -746,23 +740,21 @@
             const tSec = now / 1000;
             const t = progress; 
             
-            // Hàm chuyển động: Đảm bảo giá xuất phát từ Open và kết thúc chính xác ở Close
+            // Đường cơ sở nối thẳng từ Open đến Close
             const startPrice = liveCandle.open;
             const endPrice = liveCandle.open + liveCandle.change;
-            
-            // Đường cơ sở nối thẳng từ Open đến Close
             let baseTrajectory = startPrice + (endPrice - startPrice) * t;
             
             // Lớp bọc (Envelope): Math.sin(t * PI) 
-            // - t=0 (Bắt đầu): Envelope = 0 -> Giá đúng bằng Open, không giật khúc
+            // - t=0 (Bắt đầu): Envelope = 0 -> Giá đúng bằng Open, tạo đà chuyển phiên siêu êm.
             // - t=0.5 (Giữa phiên): Envelope = 1 -> Biến động vọt max
-            // - t=1.0 (Cuối phiên): Envelope = 0 -> Giá bị ép chuẩn xác về Close một cách từ từ, tự nhiên
+            // - t=1.0 (Cuối phiên): Envelope = 0 -> Giá bị ép chuẩn xác về Close một cách từ từ, không bao giờ bị giật.
             let envelope = Math.sin(t * Math.PI);
             
             // Sóng tạo biến động (Lên xuống chậm, biên độ lớn)
-            let wave1 = Math.sin(t * 30) * 12; // Lên xuống 5 chu kỳ
-            let wave2 = Math.cos(t * 45) * 8;  // Sóng phụ tạo độ nhiễu
-            let wave3 = Math.sin(t * 80) * 3;  // Nhiễu tăm
+            let wave1 = Math.sin(tSec * 0.8) * 16; 
+            let wave2 = Math.cos(tSec * 1.5) * 8;  
+            let wave3 = Math.sin(tSec * 3.0) * 3;  
             
             let wiggle = (wave1 + wave2 + wave3) * envelope;
             
@@ -780,11 +772,11 @@
                 liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
             }
 
-            // 3. Render Canvas (Đã tối ưu AUTO-SCALE chống mất đỉnh/đáy râu)
+            // 3. Render Canvas (Đã tối ưu AUTO-SCALE CHỐNG MẤT RÂU KỂ CẢ KHI GIÁ VỌT SIÊU MẠNH)
             const VISIBLE_CANDLES = 22; 
             const w = (cvs.width - CONFIG.chartPaddingRight) / VISIBLE_CANDLES; 
             
-            // DYNAMIC SCALE
+            // Tìm Điểm Cao nhất / Thấp nhất của các nến trên màn hình
             let highestVisible = state.visualPrice;
             let lowestVisible = state.visualPrice;
             const startIndex = Math.max(0, state.baseCandles.length - VISIBLE_CANDLES);
@@ -793,10 +785,19 @@
                 if (state.baseCandles[i].low < lowestVisible) lowestVisible = state.baseCandles[i].low;
             }
             
-            // Nới rộng Padding trên và dưới thêm ±40 để chứa râu nến thoải mái
-            const padding = 40; 
-            const r = Math.max(100, (highestVisible - lowestVisible) + padding * 2); 
-            const min = lowestVisible - padding;
+            // CÔNG THỨC TOÁN HỌC: CHỐT CỨNG PADDING PIXEL
+            // Đảm bảo râu nến luôn cách viền trên/dưới tối thiểu 25 PIXEL bất chấp thị trường
+            let priceDiff = highestVisible - lowestVisible;
+            if (priceDiff < 40) { 
+                let mid = (highestVisible + lowestVisible) / 2;
+                highestVisible = mid + 20;
+                lowestVisible = mid - 20;
+            }
+
+            const pixelPadding = 25; 
+            const availableHeightRatio = 1 - (2 * pixelPadding / cvs.height);
+            const r = (highestVisible - lowestVisible) / availableHeightRatio; 
+            const min = lowestVisible - (pixelPadding / cvs.height) * r;
 
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
