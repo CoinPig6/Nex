@@ -53,7 +53,7 @@
         #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1e232e; border: 1px solid #2d3442; padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; transition: all 0.4s; pointer-events: none;}
         #toast.show { opacity: 1; }
         
-        /* CHIP CHỌN TIỀN (Có hiệu ứng sáng lên) */
+        /* CHIP CHỌN TIỀN */
         .chip { background: #1e232e; color: #9ca3af; padding: 8px 0; width: 15%; min-width: 45px; text-align: center; border-radius: 8px; font-size: 11px; font-weight: 900; border: 1px solid #2d3442; transition: all 0.2s; }
         .chip.selected { background: #FCD535; color: black; border-color: #FCD535; box-shadow: 0 0 15px rgba(252,213,53,0.5); transform: scale(1.05); }
         .chip:active { transform: scale(0.95); }
@@ -74,10 +74,9 @@
     <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-[#0ECB81] text-lg"></i><span class="text-xs font-bold text-white uppercase tracking-wide" id="toastMsg">...</span></div>
 
-    <!-- HEADER: Nút Thoát Về Trang Chủ -->
+    <!-- HEADER -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
         <div class="flex items-center gap-4">
-            <!-- NÚT THOÁT -->
             <a href="index.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
                 <i class="fa-solid fa-arrow-right-from-bracket text-[#9ca3af] rotate-180"></i>
             </a>
@@ -129,12 +128,10 @@
                 <div class="w-12 h-6 relative overflow-hidden">
                     <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible drop-shadow-md">
                         <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#F6465D" stroke-width="12" stroke-linecap="round"/>
-                        <!-- Dash array tính bằng Pi * R (40) = 125.66 -->
                         <path id="force-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#0ECB81" stroke-width="12" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="62.83" style="transition: stroke-dashoffset 0.3s ease-out;"/>
                     </svg>
                     <!-- Kim đồng hồ -->
                     <div id="force-needle" class="absolute bottom-0 left-1/2 w-0.5 h-6 bg-white origin-bottom rounded-full shadow-md" style="transform: translateX(-50%) rotate(0deg); transition: transform 0.3s ease-out; z-index: 10;"></div>
-                    <!-- Trục kim -->
                     <div class="absolute bottom-0 left-1/2 w-2 h-2 bg-gray-200 rounded-full transform -translate-x-1/2 translate-y-1/2 z-20 shadow-lg border border-gray-400"></div>
                 </div>
                 <div class="mt-1.5 flex flex-col items-center leading-none">
@@ -180,29 +177,30 @@
         </div>
         
         <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
-        <div class="flex justify-center items-center gap-3 h-16 w-full max-w-sm mx-auto">
+        <div class="flex justify-center items-center gap-3 h-14 w-full max-w-sm mx-auto">
+            <!-- NÚT BÁN -->
             <button id="btnSell" onclick="window.selectSide('down')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
-                <i class="fa-solid fa-arrow-trend-down text-3xl text-white/30 absolute left-3"></i>
-                <div class="flex flex-col items-center z-10 w-full ml-2">
+                <i class="fa-solid fa-arrow-trend-down text-2xl text-white/30 absolute left-3"></i>
+                <div class="flex flex-col items-center w-full z-10 ml-2">
                     <span class="font-black text-xl text-white tracking-wide">BÁN</span>
-                    <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">DOWN</span>
                 </div>
-                <div id="badge-down" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <div id="badge-down" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
             
+            <!-- TIMER -->
             <div class="w-20 shrink-0 h-full bg-[#050505] rounded-2xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
                 <div id="timerProgress" class="absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
                 <span id="phaseText" class="text-[7px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
                 <span id="timerText" class="text-white font-mono font-black text-3xl z-10 leading-none">30</span>
             </div>
             
+            <!-- NÚT MUA -->
             <button id="btnBuy" onclick="window.selectSide('up')" class="flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-2xl flex items-center justify-between px-4 shadow-lg relative">
-                <div class="flex flex-col items-center z-10 w-full mr-2">
+                <div class="flex flex-col items-center w-full z-10 mr-2">
                     <span class="font-black text-xl text-white tracking-wide">MUA</span>
-                    <span class="text-[9px] text-white/80 font-mono font-bold tracking-widest">UP</span>
                 </div>
-                <i class="fa-solid fa-arrow-trend-up text-3xl text-white/30 absolute right-3"></i>
-                <div id="badge-up" class="hidden absolute top-2 right-2 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
+                <i class="fa-solid fa-arrow-trend-up text-2xl text-white/30 absolute right-3"></i>
+                <div id="badge-up" class="hidden absolute top-1.5 right-1.5 bg-[#FCD535] text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">0 T</div>
             </button>
         </div>
     </div>
@@ -241,7 +239,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         let roundSettled = false;
 
@@ -253,10 +251,9 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
 
-        // Lấy đúng màu Xanh/Đỏ theo Epoch (Đồng bộ vĩnh viễn)
+        // Lấy đúng màu Xanh/Đỏ theo Epoch (Mỗi 30s là 1 mốc)
         function getDeterministicResult(epoch) {
             const currentEpoch = Math.floor(Date.now() / 30000);
-            // Kill whale chỉ hoạt động ở ván hiện tại đang chạy
             if (epoch === currentEpoch && state.killWhaleMode) {
                 if (state.totalUp > state.totalDown) return 'down';
                 if (state.totalDown > state.totalUp) return 'up';
@@ -265,18 +262,17 @@
             return rand > 0.5 ? 'up' : 'down';
         }
 
-        // Tạo mảng nến lịch sử chuẩn tuyệt đối
+        // Tạo mảng nến lịch sử
         function buildBaseCandles() {
             const currentEpoch = Math.floor(Date.now() / 30000);
             let simPrice = 98100;
             let cands = [];
             
-            // Generate 60 cây nến quá khứ
             for (let e = currentEpoch - 60; e <= currentEpoch; e++) {
                 const rand = seededRandom(e * 123);
                 const dir = getDeterministicResult(e); 
                 
-                // Ép nến chạy theo đúng kết quả
+                // Nến chắc chắn đóng đúng hướng của Epoch đó
                 let change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
                 
                 const open = simPrice;
@@ -438,7 +434,7 @@
             if (b.expires > Date.now()) { state.currentBet = { type: b.type, amount: b.amount }; updateBetUI(b.type, b.amount); }
         }
 
-        // --- HISTORY RENDER (GHI CẢ NẾN ORDER LẪN NẾN RESULT THEO EPOCH) ---
+        // --- HISTORY RENDER (GHI 60 BÓNG TƯƠNG ỨNG 60 EPOCH VỪA QUA) ---
         function regenerateHistory() {
             const currentEpoch = Math.floor(Date.now() / 30000);
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
@@ -448,11 +444,11 @@
                 const block = document.createElement('div'); block.className = 'history-block';
                 for(let i = 0; i < 20; i++) {
                     const slotIdx = b * 20 + i;
-                    const epochIdx = currentEpoch - 59 + slotIdx; // Lấy 60 Epoch
+                    const epochIdx = currentEpoch - 59 + slotIdx; // Lấy đủ 60 mốc 30s
                     
                     const dot = document.createElement('div');
                     if (slotIdx === 59) {
-                        dot.id = 'liveDot'; dot.className = 'dot new'; // Gắn id để Cập nhật Live
+                        dot.id = 'liveDot'; dot.className = 'dot new'; 
                     } else if (slotIdx < 59) {
                         const res = getDeterministicResult(epochIdx);
                         dot.className = res === 'up' ? 'dot up' : 'dot down';
@@ -464,7 +460,6 @@
             }
             document.getElementById('count-up').innerText = u; 
             document.getElementById('count-down').innerText = dCount;
-            // Tự động cuộn lưới sang phải
             const wrapper = document.getElementById('historyWrapper'); wrapper.scrollLeft = wrapper.scrollWidth;
         }
 
@@ -492,7 +487,7 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // Lấy kết quả của Epoch Vừa xong (Luôn là số lẻ)
+            // Kết quả 100% dựa vào thuật toán Seeded để không ai có thể can thiệp
             const finishedEpoch = Math.floor(Date.now() / 30000) - 1;
             let res = getDeterministicResult(finishedEpoch);
 
@@ -527,7 +522,7 @@
         function gameLoop() {
             const now = Date.now();
             const currentEpoch = Math.floor(now / 30000);
-            const isResultPhase = currentEpoch % 2 !== 0; // Epoch lẻ là Result
+            const isResultPhase = currentEpoch % 2 !== 0; 
             const progress = (now % 30000) / 30000;
 
             // 1. Chuyển Phase
@@ -536,7 +531,6 @@
                 state.lastEpoch = currentEpoch;
                 
                 if (isResultPhase) {
-                    // MỞ CHỜ KẾT QUẢ
                     state.lockPrice = state.baseCandles[state.baseCandles.length - 1].open;
                     document.getElementById('lockPriceText').innerText = state.lockPrice.toFixed(2);
                     document.getElementById('lockLine').style.display = 'block'; document.getElementById('lockLabel').style.display = 'block';
@@ -548,7 +542,6 @@
                     document.getElementById('btnBuy').classList.add('dimmed'); document.getElementById('btnSell').classList.add('dimmed');
                     window.cancelSelection();
                 } else {
-                    // MỞ ĐẶT LỆNH
                     document.getElementById('lockLine').style.display = 'none'; document.getElementById('lockLabel').style.display = 'none';
                     
                     document.getElementById('phaseText').innerText = "ĐẶT LỆNH";
@@ -560,29 +553,39 @@
                     if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
                     state.currentBet = null;
                     
-                    finalizeRound(); // Trả thưởng
+                    finalizeRound(); 
                 }
-                regenerateHistory(); // Vẽ bóng
+                regenerateHistory(); 
             }
 
-            // 2. Chạy Nến LIVE và Đồng hồ Lực
+            // 2. Chạy Nến LIVE & Đồng hồ Lực
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
             const easeProgress = 1 - Math.pow(1 - progress, 2); 
             const tSec = now / 1000;
-            const wiggle = (Math.sin(tSec * 5) * 1 + Math.cos(tSec * 8) * 0.5) * (1 - progress); 
             
-            // Ép giá về kết quả
-            state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + wiggle;
+            // --- THUẬT TOÁN "GIẬT ĐIỆN" 3 GIÂY CUỐI ---
+            const timeRemaining = 30 * (1 - progress); 
+            let currentWiggle = 0;
+            if (timeRemaining <= 3.5 && timeRemaining > 0.1) {
+                // Random giật cực mạnh nhưng thu hẹp dần về 0
+                currentWiggle = (Math.random() - 0.5) * 12 * timeRemaining;
+            } else {
+                // Rung nhẹ tự nhiên
+                currentWiggle = (Math.sin(tSec * 5) * 1 + Math.cos(tSec * 8) * 0.5) * (1 - progress);
+            }
+            
+            // Bắt buộc đích đến bằng Change + Wiggle (Wiggle tự về 0 ở mili giây cuối cùng)
+            state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
 
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // Cập nhật Đồng hồ lực nến
+            // Đồng hồ lực
             const diff = state.visualPrice - liveCandle.open;
-            let forceBase = diff * 15; // Phóng đại diff
-            forceBase += (Math.random() - 0.5) * 10; // Rung kim
-            forceBase = Math.max(-50, Math.min(50, forceBase)); // Clamp
+            let forceBase = diff * 15; 
+            forceBase += (Math.random() - 0.5) * 10; 
+            forceBase = Math.max(-50, Math.min(50, forceBase)); 
             let forcePercent = 50 + forceBase;
 
             const arc = document.getElementById('force-arc');
@@ -595,7 +598,7 @@
                 fVal.className = forcePercent > 50 ? 'text-[8px] font-bold text-[#0ECB81]' : 'text-[8px] font-bold text-[#F6465D]';
             }
 
-            // Cập nhật bóng hiện tại đang sáng
+            // Bóng lịch sử đang nháy
             const liveDot = document.getElementById('liveDot');
             if (liveDot) {
                 const isLiveUp = state.visualPrice >= liveCandle.open;
