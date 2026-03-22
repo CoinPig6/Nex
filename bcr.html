@@ -13,7 +13,13 @@
     <style>
         :root {
             --color-player: #3b82f6; --color-banker: #ef4444; --color-tie: #10b981; --bg-felt: #0f172a;
+            --card-scale: 1;
         }
+        /* Tự động thu nhỏ lá bài nếu màn hình quá ngắn */
+        @media (max-height: 750px) { :root { --card-scale: 0.9; } }
+        @media (max-height: 650px) { :root { --card-scale: 0.8; } }
+        @media (max-height: 550px) { :root { --card-scale: 0.7; } }
+
         body {
             background-color: var(--bg-felt);
             background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
@@ -21,15 +27,17 @@
             color: white; user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
         /* CARD STYLES */
         .card-wrapper {
             position: absolute; width: 56px; height: 80px; top: 50%; left: 50%;
             margin-top: -40px; margin-left: -28px; transform-style: preserve-3d;
-            transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
             opacity: 0; transform: scale(0.5) translateY(-200px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
         }
-        .card-wrapper.active { opacity: 1; transform: scale(1) translateY(0); }
-        .card-inner { width: 100%; height: 100%; position: relative; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; }
+        .card-wrapper.active { opacity: 1; transform: scale(var(--card-scale)) translateY(0); }
+        .card-inner { width: 100%; height: 100%; position: relative; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
         .card-inner.flipped { transform: rotateY(180deg); }
         .card-face {
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 6px;
@@ -76,85 +84,94 @@
         .tie-dot { position: absolute; width: 8px; height: 8px; background-color: #10b981; border: 1px solid white; border-radius: 50%; top: -3px; right: -3px; z-index: 10; }
         .tie-number { position: absolute; width: 100%; text-align: center; color: #10b981; font-size: 10px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); text-shadow: 0 0 2px white; }
 
-        /* FLOATING TEXT */
+        /* FLOATING TEXT & CHAT */
         .float-text { position: absolute; font-weight: 900; font-family: 'Roboto Mono', monospace; pointer-events: none; z-index: 50; animation: floatUpFade 1.5s forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 16px; white-space: nowrap; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .float-win { color: #4ade80; } .float-loss { color: #ef4444; }
+
+        @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .animate-fade-in-left { animation: fadeInLeft 0.2s ease-out forwards; }
     </style>
 </head>
 <body class="flex flex-col">
 
     <!-- TOP BAR -->
-    <header class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50">
+    <header class="h-12 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 z-50 shrink-0">
         <!-- NÚT THOÁT -->
-        <a href="game.html" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-            <i class="fa-solid fa-arrow-left"></i> <span class="font-bold text-sm tracking-wide">Thoát</span>
+        <a href="game.html" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
+            <i class="fa-solid fa-arrow-left text-sm"></i> <span class="font-bold text-xs tracking-wide">Thoát</span>
         </a>
 
         <div class="flex flex-col items-center ml-2">
              <div class="text-[10px] text-slate-500 font-mono bg-black/30 px-2 py-0.5 rounded">
                 HỘP: <span id="uiShoeID" class="text-slate-300 font-bold">#1</span> 
-                | VÁN: <span id="uiRoundCount" class="text-amber-400 font-bold">0/70</span>
+                | <span id="uiRoundCount" class="text-amber-400 font-bold">0/70</span>
             </div>
             <div class="text-[9px] text-slate-600 font-mono mt-0.5 tracking-wider" id="uiRoundID">---</div>
         </div>
 
         <div class="flex flex-col items-end" id="balanceContainer">
-            <div class="flex items-center gap-1.5">
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span class="text-slate-400 font-bold text-[10px] tracking-widest">SỐ DƯ</span>
+            <div class="flex items-center gap-1">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-slate-400 font-bold text-[9px] tracking-widest">SỐ DƯ</span>
             </div>
-            <span class="text-amber-400 font-mono font-black text-lg" id="uiBalT">0 T</span>
+            <span class="text-amber-400 font-mono font-black text-sm" id="uiBalT">0 T</span>
         </div>
     </header>
 
     <!-- GAME AREA -->
-    <div class="flex-1 relative flex flex-col items-center justify-center py-1">
+    <div class="flex-1 relative flex flex-col items-center justify-center py-1 min-h-0">
         
         <!-- Đếm ngược -->
-        <div id="uiTimer" class="absolute top-2 w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center text-xl font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all">--</div>
+        <div id="uiTimer" class="absolute top-2 w-10 h-10 rounded-full border-2 border-amber-500 flex items-center justify-center text-lg font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all">--</div>
 
         <!-- Trạng thái Shuffle -->
-        <div id="shuffleNotice" class="hidden absolute top-16 bg-black/80 px-6 py-2 rounded-full border border-amber-500/50 z-40 backdrop-blur-md">
-            <div class="flex items-center gap-3">
+        <div id="shuffleNotice" class="hidden absolute top-12 bg-black/80 px-5 py-1.5 rounded-full border border-amber-500/50 z-40 backdrop-blur-md">
+            <div class="flex items-center gap-2">
                 <i class="fa-solid fa-arrows-rotate text-amber-500 animate-spin"></i>
-                <span class="text-amber-500 font-bold text-sm tracking-widest">ĐANG XÁO BÀI...</span>
+                <span class="text-amber-500 font-bold text-xs tracking-widest">ĐANG XÁO BÀI...</span>
             </div>
         </div>
 
         <!-- Area chứa lá bài -->
-        <div class="w-full max-w-md flex justify-between px-4 mt-6 relative h-36">
+        <div class="w-full max-w-md flex justify-between px-4 mt-2 relative h-24 sm:h-32">
             <div id="handP" class="hand-p w-1/2 relative h-full">
-                <div id="scoreP" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-0.5 rounded-full text-xs font-bold opacity-0 transition-opacity shadow-lg z-20 whitespace-nowrap">CON: 0</div>
+                <div id="scoreP" class="absolute -top-5 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-0.5 rounded-full text-[10px] font-bold opacity-0 transition-opacity shadow-lg z-20 whitespace-nowrap">CON: 0</div>
             </div>
             <div id="handB" class="hand-b w-1/2 relative h-full">
-                <div id="scoreB" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-3 py-0.5 rounded-full text-xs font-bold opacity-0 transition-opacity shadow-lg z-20 whitespace-nowrap">CÁI: 0</div>
+                <div id="scoreB" class="absolute -top-5 left-1/2 -translate-x-1/2 bg-red-600 text-white px-3 py-0.5 rounded-full text-[10px] font-bold opacity-0 transition-opacity shadow-lg z-20 whitespace-nowrap">CÁI: 0</div>
             </div>
         </div>
 
         <!-- Màn che kết quả -->
         <div id="resultOverlay" class="absolute inset-0 bg-black/60 z-40 hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm pointer-events-none">
             <div class="transform scale-90 transition-transform duration-300 text-center" id="resultCard">
-                <div class="text-4xl font-black uppercase tracking-widest drop-shadow-lg mb-2" id="resTitle">WINNER</div>
-                <div class="text-2xl font-mono text-amber-400 font-bold" id="resMoney">+0 T</div>
-                <div id="recoveryMsg" class="text-xs text-amber-300 mt-2 font-bold hidden">KẾT QUẢ VÁN TREO</div>
+                <div class="text-3xl font-black uppercase tracking-widest drop-shadow-lg mb-1" id="resTitle">WINNER</div>
+                <div class="text-xl font-mono text-amber-400 font-bold" id="resMoney">+0 T</div>
+                <div id="recoveryMsg" class="text-[10px] text-amber-300 mt-1 font-bold hidden">KẾT QUẢ VÁN TREO</div>
             </div>
         </div>
+
+        <!-- Chat Stream & Button -->
+        <div id="chatStream" class="absolute left-3 bottom-14 w-48 flex flex-col justify-end gap-1.5 pointer-events-none z-40 h-32 overflow-hidden"></div>
+        <button onclick="game.toggleChat()" class="absolute left-3 bottom-3 w-9 h-9 bg-white/10 border border-white/20 rounded-full flex items-center justify-center text-white z-40 backdrop-blur shadow-lg active:scale-90 transition-transform">
+            <i class="fa-solid fa-comment-dots text-sm"></i>
+        </button>
     </div>
 
     <!-- AI SUBTITLE BAR -->
-    <div class="w-full flex justify-center h-8 bg-slate-900/95 z-30">
-        <div id="aiSubtitles" class="px-5 py-1 rounded-full bg-blue-900/60 border border-blue-400/30 text-blue-200 text-xs font-mono tracking-wide opacity-0 transition-opacity flex items-center mt-1">
-            <i class="fa-solid fa-robot mr-2 text-blue-400 animate-pulse"></i> 
+    <div class="w-full flex justify-center h-7 bg-slate-900/95 z-30 shrink-0">
+        <div id="aiSubtitles" class="px-4 py-0.5 rounded-full bg-blue-900/60 border border-blue-400/30 text-blue-200 text-[10px] font-mono tracking-wide opacity-0 transition-opacity flex items-center mt-1">
+            <i class="fa-solid fa-robot mr-1.5 text-blue-400 animate-pulse"></i> 
             <span id="aiText">AI Sẵn sàng</span>
         </div>
     </div>
 
     <!-- BETTING CONTROLS -->
-    <div class="bg-slate-900/95 border-t border-white/10 pb-safe z-30">
+    <div class="bg-slate-900/95 border-t border-white/10 pb-safe z-30 shrink-0">
         
         <!-- STATISTICS BAR -->
-        <div class="flex justify-between items-center px-4 py-1.5 bg-black/40 text-[10px] font-bold border-b border-white/5">
+        <div class="flex justify-between items-center px-3 py-1 bg-black/40 text-[9px] font-bold border-b border-white/5">
             <div class="flex gap-3">
                 <span class="text-red-500">CÁI: <span id="statB" class="text-white">0</span></span>
                 <span class="text-blue-500">CON: <span id="statP" class="text-white">0</span></span>
@@ -164,64 +181,73 @@
         </div>
 
         <!-- BETTING ZONES -->
-        <div class="flex flex-col gap-2 px-2 mb-2 mt-2">
+        <div class="flex flex-col gap-1.5 px-2 mb-2 mt-1.5">
             <!-- Top Row: Đôi Con - Hòa - Đôi Cái -->
-            <div class="flex h-14 gap-2">
+            <div class="flex h-12 gap-1.5">
                 <div id="zonePP" onclick="game.placeBet('PP')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <span class="text-blue-300 font-bold text-xs tracking-wider">ĐÔI CON</span>
-                    <span class="text-[9px] text-blue-300/50">1 : 11</span>
-                    <div id="betValPP" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/60 px-2 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
+                    <span class="text-blue-300 font-bold text-[10px] tracking-wider">ĐÔI CON</span>
+                    <span class="text-[8px] text-blue-300/50 mt-0.5">1 : 11</span>
+                    <div id="betValPP" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[9px] font-bold opacity-0 bg-black/60 px-1.5 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
                     <div id="pendPP" class="floating-chip">+0</div>
                 </div>
                 <div id="zoneT" onclick="game.placeBet('T')" class="bet-zone flex-1 bg-gradient-to-br from-emerald-900/40 to-emerald-900/20 border border-emerald-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <span class="text-emerald-400 font-bold text-xs tracking-wider">HÒA</span>
-                    <span class="text-[9px] text-emerald-300/50">1 : 8</span>
-                    <div id="betValT" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/60 px-2 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
+                    <span class="text-emerald-400 font-bold text-[10px] tracking-wider">HÒA</span>
+                    <span class="text-[8px] text-emerald-300/50 mt-0.5">1 : 8</span>
+                    <div id="betValT" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[9px] font-bold opacity-0 bg-black/60 px-1.5 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
                     <div id="pendT" class="floating-chip">+0</div>
                 </div>
                 <div id="zoneBP" onclick="game.placeBet('BP')" class="bet-zone flex-1 bg-gradient-to-br from-red-900/40 to-red-900/20 border border-red-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <span class="text-red-300 font-bold text-xs tracking-wider">ĐÔI CÁI</span>
-                    <span class="text-[9px] text-red-300/50">1 : 11</span>
-                    <div id="betValBP" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/60 px-2 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
+                    <span class="text-red-300 font-bold text-[10px] tracking-wider">ĐÔI CÁI</span>
+                    <span class="text-[8px] text-red-300/50 mt-0.5">1 : 11</span>
+                    <div id="betValBP" class="absolute bottom-1 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[9px] font-bold opacity-0 bg-black/60 px-1.5 rounded-full border border-amber-500/40 whitespace-nowrap">0 T</div>
                     <div id="pendBP" class="floating-chip">+0</div>
                 </div>
             </div>
             
             <!-- Bottom Row: Con - Cái -->
-            <div class="flex h-20 gap-2">
+            <div class="flex h-16 gap-1.5">
                 <div id="zoneP" onclick="game.placeBet('P')" class="bet-zone flex-1 bg-gradient-to-br from-blue-900/40 to-blue-900/20 border border-blue-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <span class="text-blue-400 font-black text-xl tracking-wider drop-shadow-md">CON</span>
-                    <span class="text-[11px] text-blue-300/50">1 : 1</span>
-                    <div id="betValP" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-sm font-bold opacity-0 bg-black/80 px-3 py-0.5 rounded-full border border-amber-500/50 whitespace-nowrap shadow-lg">0 T</div>
+                    <span class="text-blue-400 font-black text-lg tracking-wider drop-shadow-md">CON</span>
+                    <span class="text-[9px] text-blue-300/50 mt-0.5">1 : 1</span>
+                    <div id="betValP" class="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/80 px-2 py-0.5 rounded-full border border-amber-500/50 whitespace-nowrap shadow-lg">0 T</div>
                     <div id="pendP" class="floating-chip">+0</div>
                 </div>
                 <div id="zoneB" onclick="game.placeBet('B')" class="bet-zone flex-1 bg-gradient-to-br from-red-900/40 to-red-900/20 border border-red-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer relative">
-                    <span class="text-red-400 font-black text-xl tracking-wider drop-shadow-md">CÁI</span>
-                    <span class="text-[11px] text-red-300/50">0.95 : 1</span>
-                    <div id="betValB" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-sm font-bold opacity-0 bg-black/80 px-3 py-0.5 rounded-full border border-amber-500/50 whitespace-nowrap shadow-lg">0 T</div>
+                    <span class="text-red-400 font-black text-lg tracking-wider drop-shadow-md">CÁI</span>
+                    <span class="text-[9px] text-red-300/50 mt-0.5">0.95 : 1</span>
+                    <div id="betValB" class="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-amber-400 font-mono text-[11px] font-bold opacity-0 bg-black/80 px-2 py-0.5 rounded-full border border-amber-500/50 whitespace-nowrap shadow-lg">0 T</div>
                     <div id="pendB" class="floating-chip">+0</div>
                 </div>
             </div>
         </div>
 
         <!-- CHIPS -->
-        <div class="px-2 pb-2 space-y-2">
-            <div class="flex gap-2 overflow-x-auto px-1 py-1 no-scrollbar justify-between">
-                <button class="chip-3d w-10 h-10 rounded-full bg-slate-300 border-2 border-dashed border-slate-500 flex items-center justify-center text-xs font-black text-slate-900 shadow-lg selected ring-2 ring-white" onclick="game.selectChip(1, this)">1</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-blue-500 border-2 border-dashed border-blue-200 flex items-center justify-center text-xs font-black text-white shadow-lg" onclick="game.selectChip(5, this)">5</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-green-500 border-2 border-dashed border-green-200 flex items-center justify-center text-xs font-black text-white shadow-lg" onclick="game.selectChip(10, this)">10</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-yellow-500 border-2 border-dashed border-yellow-200 flex items-center justify-center text-xs font-black text-white shadow-lg" onclick="game.selectChip(20, this)">20</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-purple-600 border-2 border-dashed border-purple-300 flex items-center justify-center text-xs font-black text-white shadow-lg" onclick="game.selectChip(50, this)">50</button>
-                <button class="chip-3d w-10 h-10 rounded-full bg-red-600 border-2 border-dashed border-red-300 flex items-center justify-center text-xs font-black text-white shadow-lg" onclick="game.selectChip(100, this)">100</button>
+        <div class="px-2 pb-2 space-y-1.5">
+            <div class="flex gap-1 overflow-x-auto px-1 py-1 no-scrollbar justify-between">
+                <button class="chip-3d w-8 h-8 rounded-full bg-slate-300 border-2 border-dashed border-slate-500 flex items-center justify-center text-[10px] font-black text-slate-900 shadow-lg selected ring-2 ring-white" onclick="game.selectChip(1, this)">1</button>
+                <button class="chip-3d w-8 h-8 rounded-full bg-blue-500 border-2 border-dashed border-blue-200 flex items-center justify-center text-[10px] font-black text-white shadow-lg" onclick="game.selectChip(5, this)">5</button>
+                <button class="chip-3d w-8 h-8 rounded-full bg-green-500 border-2 border-dashed border-green-200 flex items-center justify-center text-[10px] font-black text-white shadow-lg" onclick="game.selectChip(10, this)">10</button>
+                <button class="chip-3d w-8 h-8 rounded-full bg-yellow-500 border-2 border-dashed border-yellow-200 flex items-center justify-center text-[10px] font-black text-white shadow-lg" onclick="game.selectChip(20, this)">20</button>
+                <button class="chip-3d w-8 h-8 rounded-full bg-purple-600 border-2 border-dashed border-purple-300 flex items-center justify-center text-[10px] font-black text-white shadow-lg" onclick="game.selectChip(50, this)">50</button>
+                <button class="chip-3d w-8 h-8 rounded-full bg-red-600 border-2 border-dashed border-red-300 flex items-center justify-center text-[10px] font-black text-white shadow-lg" onclick="game.selectChip(100, this)">100</button>
             </div>
             <div class="flex gap-2">
-                <button onclick="game.clearBet()" id="btnCancel" class="flex-1 h-10 rounded-lg bg-slate-700 text-slate-300 font-bold uppercase text-xs shadow-[0_3px_0_#334155] active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Hủy</button>
-                <button onclick="game.confirmBet()" id="btnConfirm" class="flex-[2] h-10 rounded-lg bg-amber-500 text-slate-900 font-black uppercase text-xs shadow-[0_3px_0_#b45309] active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">Xác Nhận Cược</button>
+                <button onclick="game.clearBet()" id="btnCancel" class="flex-1 h-9 rounded-lg bg-slate-700 text-slate-300 font-bold uppercase text-[10px] shadow-[0_3px_0_#334155] active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Hủy</button>
+                <button onclick="game.confirmBet()" id="btnConfirm" class="flex-[2] h-9 rounded-lg bg-amber-500 text-slate-900 font-black uppercase text-[10px] shadow-[0_3px_0_#b45309] active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">Xác Nhận</button>
             </div>
         </div>
 
-        <div class="h-32 bg-white border-t border-slate-300 relative">
+        <div class="h-[18vh] min-h-[80px] max-h-[140px] bg-white border-t border-slate-300 relative shrink-0">
             <div class="roadmap-container" id="roadmapGrid"></div>
+        </div>
+    </div>
+
+    <!-- Chat Modal Overlay -->
+    <div id="chatModal" class="fixed inset-0 bg-black/60 z-[100] flex items-end justify-center pb-safe hidden backdrop-blur-sm transition-opacity">
+        <div class="w-full bg-slate-800 p-3 flex gap-2 border-t border-slate-600 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+            <input type="text" id="chatInput" class="flex-1 bg-slate-900 text-white rounded-lg px-4 py-3 text-sm border border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') game.sendChat()">
+            <button onclick="game.sendChat()" class="bg-blue-600 text-white px-5 rounded-lg font-bold"><i class="fa-solid fa-paper-plane"></i></button>
+            <button onclick="game.toggleChat()" class="bg-slate-700 text-white px-4 rounded-lg"><i class="fa-solid fa-chevron-down"></i></button>
         </div>
     </div>
 
@@ -231,7 +257,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc, addDoc, collection, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // COINPIGBTC CONFIG
@@ -266,7 +292,6 @@
             }
         }, {once: true});
 
-        // Local Storage cho Backup cược
         const RECOVERY_KEY = 'crownex_bcr_pending_bet_v2';
         const savePendingBet = (data) => localStorage.setItem(RECOVERY_KEY, JSON.stringify(data));
         const getPendingBet = () => {
@@ -275,7 +300,6 @@
         };
         const clearPendingBet = () => localStorage.removeItem(RECOVERY_KEY);
 
-        // Random cố định hạt giống
         function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
 
         class Card {
@@ -336,7 +360,7 @@
             balanceT: 0, 
             bet: { P:0, B:0, T:0, PP:0, BP:0 },
             pend: { P:0, B:0, T:0, PP:0, BP:0 },
-            chip: 1, // Default 1T
+            chip: 1,
             LIMITS: { PB_MIN: 10, PB_MAX: 100000, TIE_MIN: 10, TIE_MAX: 10000, PAIR_MIN: 5, PAIR_MAX: 10000 },
             history: [],
             isShuffling: false,
@@ -344,20 +368,41 @@
 
             init() {
                 onAuthStateChanged(auth, async (user) => {
-                    if (user) { currentUser = user; this.listenBalance(user.uid); }
-                    else await signInAnonymously(auth);
+                    if (user) { 
+                        currentUser = user; 
+                        this.listenBalance(user.uid); 
+                        this.listenChat();
+                    } else await signInAnonymously(auth);
                 });
                 this.loop();
             },
 
+            listenChat() {
+                const q = query(collection(db, "globalChat"), orderBy("timestamp", "desc"), limit(5));
+                let initialLoad = true;
+                onSnapshot(q, (snapshot) => {
+                    if (initialLoad) { initialLoad = false; return; }
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            const data = change.doc.data();
+                            if(data.text) window.game.showChatBubble(data.text);
+                        }
+                    });
+                });
+            },
+
+            sendChatMessage(text) {
+                addDoc(collection(db, "globalChat"), {
+                    text: text,
+                    timestamp: serverTimestamp(),
+                    uid: currentUser ? currentUser.uid : 'anon'
+                }).catch(e => console.error(e));
+            },
+
             listenBalance(uid) {
                 onSnapshot(doc(db, "users", uid), (s) => {
-                    if (s.exists()) {
-                        const data = s.data();
-                        this.balanceT = data.balance || 0;
-                    } else { 
-                        setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceT = 0; 
-                    }
+                    if (s.exists()) { this.balanceT = s.data().balance || 0; } 
+                    else { setDoc(doc(db, "users", uid), { balance: 0 }); this.balanceT = 0; }
                     game.updateBal();
                 });
             },
@@ -408,7 +453,6 @@
                 const timeInRound = now.getTime() % ROUND_DURATION;
                 
                 const y = now.getFullYear(); const m = String(now.getMonth()+1).padStart(2,'0'); const d = String(now.getDate()).padStart(2,'0'); const h = String(now.getHours()).padStart(2,'0'); const min = String(now.getMinutes()).padStart(2,'0');
-                // Mã ván không còn a hoặc b nữa vì mỗi ván bằng 1 phút
                 const str = `${y}${m}${d}${h}${min}`;
                 return { shoeId, roundInShoe, timeInRound, str };
             },
@@ -447,7 +491,7 @@
                 } else {
                     if (this.state === 'BETTING') {
                         this.state = 'DEALING';
-                        game.updateTimer('<i class="fa-solid fa-lock"></i>', true);
+                        game.updateTimer('<i class="fa-solid fa-lock text-sm"></i>', true);
                         this.resolveRound();
                     }
                 }
@@ -506,7 +550,6 @@
 
                     if (winT > 0) {
                         this.addWin(winT);
-                        // Show floating win text per zone
                         if (res.winner === 'P' && this.bet.P>0) game.showFloat(document.getElementById('zoneP'), `+${(this.bet.P*2).toLocaleString()} T`, 'win');
                         if (res.winner === 'B' && this.bet.B>0) game.showFloat(document.getElementById('zoneB'), `+${(this.bet.B*1.95).toLocaleString()} T`, 'win');
                         if (res.winner === 'T' && this.bet.T>0) game.showFloat(document.getElementById('zoneT'), `+${(this.bet.T*9).toLocaleString()} T`, 'win');
@@ -516,14 +559,10 @@
                     
                     this.saveHistory(activeBets, res.winner, isPP, isBP, this.currentRoundStr);
 
-                    // Setup Final Text for AI
                     let finalMsg = `Kết quả: ${winMsg}.`;
                     if(isPP && isBP) finalMsg += " Cả hai đôi.";
                     else if(isPP) finalMsg += " Đôi con.";
                     else if(isBP) finalMsg += " Đôi cái.";
-                    
-                    if (winT > 0) finalMsg += ` Bạn đã thắng ${winT.toLocaleString()} T.`;
-                    else if (totalBet > 0) finalMsg += " Bạn không trúng thưởng.";
                     
                     game.aiSpeak(finalMsg);
                     game.showResult(res.winner, profitT);
@@ -577,6 +616,44 @@
         };
 
         window.game = {
+            toggleChat() {
+                const modal = document.getElementById('chatModal');
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    document.getElementById('chatInput').focus();
+                } else {
+                    modal.classList.add('hidden');
+                    document.getElementById('chatInput').blur();
+                }
+            },
+            sendChat() {
+                const input = document.getElementById('chatInput');
+                const text = input.value.trim();
+                if (text) {
+                    app.sendChatMessage(text);
+                    input.value = '';
+                    this.toggleChat(); // Auto close on send for better mobile experience
+                }
+            },
+            showChatBubble(text) {
+                const stream = document.getElementById('chatStream');
+                const b = document.createElement('div');
+                b.className = 'bg-black/70 text-white text-[11px] px-2.5 py-1.5 rounded-xl w-max max-w-[200px] break-words border border-white/20 shadow-lg animate-fade-in-left backdrop-blur-md font-medium';
+                b.innerText = text;
+                stream.appendChild(b);
+                
+                // Keep max 3-4 chats
+                while(stream.children.length > 4) {
+                    stream.removeChild(stream.firstChild);
+                }
+                
+                // Disappear after ~2s
+                setTimeout(() => {
+                    b.style.opacity = '0';
+                    b.style.transition = 'opacity 0.4s ease';
+                    setTimeout(() => b.remove(), 400);
+                }, 2000);
+            },
             aiSpeak(text) {
                 const el = document.getElementById('aiSubtitles');
                 document.getElementById('aiText').innerText = text;
@@ -594,8 +671,6 @@
                 app.chip = v;
                 document.querySelectorAll('.chip-3d').forEach(c=>c.classList.remove('selected','ring-2','ring-white'));
                 el.classList.add('selected','ring-2','ring-white');
-                
-                // Kích hoạt audio nếu chưa
                 if(!app.audioUnlocked && window.speechSynthesis) {
                     window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
                     app.audioUnlocked = true;
@@ -637,7 +712,6 @@
                     return true;
                 };
 
-                // Validate minimums theo yêu cầu
                 if(!check('P','CON',app.LIMITS.PB_MIN)) return;
                 if(!check('B','CÁI',app.LIMITS.PB_MIN)) return;
                 if(!check('T','HÒA',app.LIMITS.TIE_MIN)) return;
@@ -695,8 +769,8 @@
             },
             updateTimer(v, lock) {
                 const el = document.getElementById('uiTimer'); el.innerHTML = v;
-                el.className = lock ? "absolute top-2 w-12 h-12 rounded-full border-2 border-red-500 flex items-center justify-center text-lg font-black text-white bg-red-900/80 backdrop-blur shadow-none z-30" : 
-                `absolute top-2 w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center text-lg font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all ${v<=5?'animate-pulse text-red-400':''}`;
+                el.className = lock ? "absolute top-2 w-9 h-9 rounded-full border-2 border-red-500 flex items-center justify-center text-sm font-black text-white bg-red-900/80 backdrop-blur shadow-none z-30" : 
+                `absolute top-2 w-10 h-10 rounded-full border-2 border-amber-500 flex items-center justify-center text-lg font-black text-white bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(245,158,11,0.3)] z-30 transition-all ${v<=5?'animate-pulse text-red-400':''}`;
             },
             updateStats() {
                 const h = app.history;
@@ -740,47 +814,68 @@
                     document.getElementById('hand'+z).appendChild(div);
                     void div.offsetWidth;
                     setTimeout(()=>div.classList.add('active'),50);
-                    // Tăng thời gian chờ lật thẻ để khớp với animation chậm
-                    setTimeout(()=>div.querySelector('.card-inner').classList.add('flipped'), 600);
+                    // Lật nhanh hơn một chút để mượt mạch đọc
+                    setTimeout(()=>div.querySelector('.card-inner').classList.add('flipped'), 300);
                 };
                 
-                // Hàm đọc chỉ còn đọc điểm (Rank), không đọc chất
-                const cardName = (c) => {
-                    const ranks = {'A':'Át', 'J':'Bồi', 'Q':'Đầm', 'K':'Già'};
-                    return ranks[c.r] || c.r;
+                // Quy tắc đọc điểm 1-9 bình thường, 10-K là 0
+                const getCardPoints = (c) => {
+                    if(['10','J','Q','K'].includes(c.r)) return '0';
+                    if(c.r === 'A') return '1';
+                    return c.r;
+                };
+
+                // Nếu tổng điểm là 0 thì đọc là Ba Ca Ra
+                const getScoreText = (side, score) => {
+                    const name = side === 'P' ? 'Nhà con' : 'Nhà cái';
+                    if (score === 0) return `${name} ba ca ra`;
+                    return `${name} ${score} điểm`;
                 };
 
                 const isPP = res.pHand[0].r === res.pHand[1].r;
                 const isBP = res.bHand[0].r === res.bHand[1].r;
 
                 this.aiSpeak('Bắt đầu chia bài');
-                await w(1500);
+                await w(1000);
 
-                // Tăng delay đọc lên 1.5s để AI kịp đọc rõ ràng và bài lật chậm hơn
-                c(res.pHand[0],0,'P'); this.aiSpeak(`Con ${cardName(res.pHand[0])}`); await w(1500); 
-                c(res.bHand[0],0,'B'); this.aiSpeak(`Cái ${cardName(res.bHand[0])}`); await w(1500);
+                c(res.pHand[0],0,'P'); this.aiSpeak(`Nhà con ${getCardPoints(res.pHand[0])} điểm`); await w(1000); 
+                c(res.bHand[0],0,'B'); this.aiSpeak(`Nhà cái ${getCardPoints(res.bHand[0])} điểm`); await w(1000);
                 
-                c(res.pHand[1],1,'P'); this.aiSpeak(`Con ${cardName(res.pHand[1])}`); await w(1500); 
-                c(res.bHand[1],1,'B'); this.aiSpeak(`Cái ${cardName(res.bHand[1])}`); await w(1500);
+                c(res.pHand[1],1,'P'); this.aiSpeak(`Nhà con ${getCardPoints(res.pHand[1])} điểm`); await w(1000); 
+                c(res.bHand[1],1,'B'); this.aiSpeak(`Nhà cái ${getCardPoints(res.bHand[1])} điểm`); await w(1000);
+
+                let pScore = (res.pHand[0].v+res.pHand[1].v)%10;
+                let bScore = (res.bHand[0].v+res.bHand[1].v)%10;
 
                 const upS = (id,s) => { const e=document.getElementById(id); e.innerText=`${id.includes('P')?'CON':'CÁI'}: ${s}`; e.classList.remove('opacity-0'); };
-                upS('scoreP',(res.pHand[0].v+res.pHand[1].v)%10); 
-                upS('scoreB',(res.bHand[0].v+res.bHand[1].v)%10);
+                upS('scoreP', pScore); 
+                upS('scoreB', bScore);
                 
-                this.aiSpeak(`Con ${(res.pHand[0].v+res.pHand[1].v)%10} điểm. Cái ${(res.bHand[0].v+res.bHand[1].v)%10} điểm.`);
-                await w(2000); // Cho AI đọc xong tổng điểm
+                // Đọc tổng điểm 2 lá đầu
+                this.aiSpeak(`${getScoreText('P', pScore)}.`);
+                await w(1200);
+                this.aiSpeak(`${getScoreText('B', bScore)}.`);
+                await w(1200);
 
                 if(res.pHand[2]) { 
                     c(res.pHand[2],2,'P'); 
-                    this.aiSpeak(`Con rút ${cardName(res.pHand[2])}`);
-                    await w(2000); 
+                    this.aiSpeak(`Nhà con rút thêm 1 lá.`);
+                    await w(1200); 
+                    this.aiSpeak(`${getCardPoints(res.pHand[2])} điểm.`);
+                    await w(1000);
                     upS('scoreP',res.pScore); 
+                    this.aiSpeak(`${getScoreText('P', res.pScore)}.`);
+                    await w(1200);
                 }
                 if(res.bHand[2]) { 
                     c(res.bHand[2],2,'B'); 
-                    this.aiSpeak(`Cái rút ${cardName(res.bHand[2])}`);
-                    await w(2000); 
+                    this.aiSpeak(`Nhà cái rút thêm 1 lá.`);
+                    await w(1200); 
+                    this.aiSpeak(`${getCardPoints(res.bHand[2])} điểm.`);
+                    await w(1000);
                     upS('scoreB',res.bScore); 
+                    this.aiSpeak(`${getScoreText('B', res.bScore)}.`);
+                    await w(1200);
                 }
 
                 await w(1000);
@@ -796,17 +891,17 @@
                 const t = document.getElementById('resTitle');
                 const m = document.getElementById('resMoney');
                 t.innerText = win==='P'?"NHÀ CON THẮNG":(win==='B'?"NHÀ CÁI THẮNG":"HÒA");
-                t.className = `text-3xl font-black uppercase tracking-widest drop-shadow-lg mb-2 ${win==='P'?'text-blue-500':(win==='B'?'text-red-500':'text-emerald-500')}`;
+                t.className = `text-2xl font-black uppercase tracking-widest drop-shadow-lg mb-1 ${win==='P'?'text-blue-500':(win==='B'?'text-red-500':'text-emerald-500')}`;
                 
                 if (profitT > 0) {
                     m.innerText = `+${profitT.toLocaleString()} T`;
-                    m.className = `text-2xl font-mono font-bold text-amber-400 drop-shadow-md`;
+                    m.className = `text-xl font-mono font-bold text-amber-400 drop-shadow-md`;
                 } else if (profitT < 0) {
                     m.innerText = `${profitT.toLocaleString()} T`;
-                    m.className = `text-xl font-mono font-bold text-slate-300`;
+                    m.className = `text-lg font-mono font-bold text-slate-300`;
                 } else {
                     m.innerText = `0 T`;
-                    m.className = `text-xl font-mono font-bold text-slate-400`;
+                    m.className = `text-lg font-mono font-bold text-slate-400`;
                 }
                 
                 ov.classList.remove('hidden');
