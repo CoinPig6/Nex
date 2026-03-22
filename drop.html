@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drop The Boss - Crownex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;700;900&display=swap');
+
+        :root {
+            --stake-green: #00E701;
+            --stake-green-hover: #1FFF20;
+            --stake-dark: #0F1923;
+            --stake-panel: rgba(31, 41, 55, 0.85);
+            --stake-input: #111827;
+            --stake-text: #E5E7EB;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #0f172a; 
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas { display: block; }
+        .bungee { font-family: 'Bungee', cursive; }
+
+        .panel-ui {
+            background: var(--stake-panel);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-ui {
+            background: var(--stake-input);
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.05);
+            transition: border 0.2s;
+        }
+        .input-ui:focus-within { border-color: var(--stake-green); }
+
+        .btn-bet {
+            background: linear-gradient(180deg, #00E701 0%, #00B301 100%);
+            color: #000;
+            transition: all 0.1s;
+            box-shadow: 0 4px 0 #008000;
+        }
+        .btn-bet:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #008000;
+        }
+        .btn-bet:disabled {
+            background: #374151; color: #9ca3af; box-shadow: 0 4px 0 #1f2937; pointer-events: none;
+        }
+        
+        .btn-stop-auto {
+            background: linear-gradient(180deg, #EF4444 0%, #B91C1C 100%);
+            color: #fff;
+            box-shadow: 0 4px 0 #7F1D1D;
+            transition: all 0.1s;
+        }
+        .btn-stop-auto:active { transform: translateY(4px); box-shadow: 0 0 0 #7F1D1D; }
+
+        .btn-action {
+            background: rgba(17, 24, 39, 0.8);
+            color: var(--stake-text);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        .btn-action:hover { background: #374151; color: #fff; }
+        .btn-action:active { transform: scale(0.95); }
+        .btn-action.active { background: rgba(0, 231, 1, 0.8); color: #000; border-color: var(--stake-green); animation: pulseAuto 2s infinite; }
+
+        /* QUICK SELECT CHIPS */
+        .chip { background: #1f2937; color: #9ca3af; padding: 6px 0; width: 16%; min-width: 45px; text-align: center; border-radius: 6px; font-size: 11px; font-weight: 900; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s; }
+        .chip.selected { background: var(--stake-green); color: black; border-color: var(--stake-green); box-shadow: 0 0 10px rgba(0,231,1,0.4); transform: scale(1.05); }
+        .chip:active { transform: scale(0.95); }
+
+        .custom-scroll::-webkit-scrollbar { width: 0px; height: 0px; display: none; }
+        .custom-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pulseAuto { 0% { box-shadow: 0 0 0 0 rgba(0, 231, 1, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 231, 1, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 231, 1, 0); } }
+        
+        .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        .animate-pop { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        .progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 12px; display: none; }
+        .progress-fill { height: 100%; background: var(--stake-green); width: 100%; transition: width 0.1s linear; }
+
+        .math-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
+        .math-label { color: rgba(255,255,255,0.7); }
+        .math-val { font-weight: bold; color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- LOADING SCREEN -->
+    <div id="pageLoader" class="fixed inset-0 bg-[#0f172a] z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-12 h-12 rounded bg-[#00E701] flex items-center justify-center text-black font-bold text-2xl animate-bounce rounded-bl-none shadow-[0_0_20px_rgba(0,231,1,0.5)]">T</div>
+        <div class="text-[#00E701] text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse mt-4">Đồng bộ ví tiền...</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- UI LAYER -->
+    <div class="absolute inset-0 pointer-events-none flex flex-col justify-between z-10">
+        
+        <!-- NÚT THOÁT VỀ GAME.HTML -->
+        <a href="game.html" class="absolute top-4 left-4 z-50 panel-ui w-10 h-10 flex items-center justify-center text-white pointer-events-auto hover:bg-gray-700 transition rounded-xl border border-white/10 shadow-lg active:scale-95">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+        </a>
+
+        <!-- TOP HUD -->
+        <div class="flex flex-col w-full p-4 pointer-events-none mt-12">
+            <div class="flex justify-between items-start w-full pointer-events-none">
+                
+                <!-- SỐ DƯ T -->
+                <div class="panel-ui px-4 py-2 flex flex-col pointer-events-auto shadow-lg relative">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest absolute -top-2 left-3 bg-[#1F2937] px-1 rounded">VÍ T</span>
+                    <div class="flex items-center gap-2 mb-0.5 mt-1">
+                        <span id="balance-val" class="text-[#00E701] font-bold text-xl leading-none tracking-wide drop-shadow">0.00</span>
+                        <span class="text-white font-black text-sm">T</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] text-gray-300 font-semibold uppercase tracking-wider">Độ sâu: <span id="depth-val" class="text-white text-xs font-bold ml-0.5">0m</span></span>
+                        <span id="depth-bonus" class="text-[10px] text-[var(--stake-green)] font-bold bg-[#064E3B]/80 px-1.5 rounded">+0.0x</span>
+                    </div>
+                </div>
+                
+                <!-- HỆ SỐ BAY -->
+                <div id="drop-hud" class="hidden panel-ui px-6 py-3 border-t-4 border-[var(--stake-green)] flex-col items-end shadow-2xl">
+                    <p class="text-[10px] text-[var(--stake-green)] font-bold uppercase tracking-widest mb-1">HỆ SỐ BẢN THÂN</p>
+                    <p id="multiplier-val" class="text-4xl text-white font-black bungee drop-shadow-md leading-none">1.00x</p>
+                </div>
+
+                <!-- RIGHT CONTROLS -->
+                <div class="flex flex-col gap-2 items-end pointer-events-auto absolute right-4 top-4">
+                    <button onclick="toggleRules()" class="panel-ui w-10 h-10 flex items-center justify-center text-white hover:bg-gray-700 transition rounded-full shadow-lg border border-white/10 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                    </button>
+                    
+                    <button onclick="toggleSpeed()" class="panel-ui h-9 px-3 flex items-center justify-center text-white font-bold text-[10px] hover:bg-gray-700 transition rounded-full shadow-lg border border-white/10 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3 mr-1"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" /></svg>
+                        <span id="speed-text">1X</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- HISTORY BAR -->
+            <div class="w-full mt-3 flex justify-start pointer-events-auto">
+                <div id="history-container" class="flex gap-2 overflow-x-auto custom-scroll max-w-[80vw] pb-2"></div>
+            </div>
+        </div>
+
+        <!-- POPUP KẾT QUẢ -->
+        <div id="result-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md pointer-events-auto z-40">
+            <div id="result-box" class="panel-ui p-6 w-[90%] max-w-sm text-center border-t-4 border-[var(--stake-green)] opacity-0 shadow-2xl">
+                <div class="flex justify-center mb-2" id="result-icon"></div>
+                <h2 id="result-title" class="text-[var(--stake-green)] font-bold uppercase text-sm mb-1 tracking-widest">Thắng Cược</h2>
+                <div class="flex justify-center items-end gap-2 mb-4">
+                    <p id="result-money" class="text-4xl text-white font-black bungee drop-shadow-[0_0_15px_rgba(0,231,1,0.5)]">0.00</p>
+                    <span class="text-xl font-bold text-white mb-1">T</span>
+                </div>
+                
+                <div class="input-ui p-4 mb-4 rounded-xl text-left shadow-inner">
+                    <div id="result-details"></div>
+                </div>
+                
+                <p id="end-reason" class="text-xs font-bold px-3 py-1.5 rounded-md inline-block mb-2"></p>
+                
+                <button onclick="closeResult()" class="mt-4 btn-action w-full py-3.5 rounded-lg font-bold uppercase tracking-wider text-white">Đóng Lại</button>
+                
+                <button id="btn-stop-auto" onclick="stopAutoMode()" class="hidden mt-4 btn-stop-auto w-full py-3.5 rounded-lg font-bold uppercase tracking-wider">
+                    🛑 Dừng Auto (<span id="auto-countdown">3</span>s)
+                </button>
+                <div id="auto-progress" class="progress-bar"><div id="auto-fill" class="progress-fill"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG ĐIỀU KHIỂN DƯỚI ĐÁY -->
+    <div id="control-panel" class="absolute bottom-0 left-0 w-full panel-ui rounded-b-none rounded-t-2xl p-5 flex flex-col gap-3 z-30 pointer-events-auto animate-slide-up pb-8 md:pb-5 border-t border-white/10">
+        
+        <div class="flex justify-between items-center gap-3 mb-1">
+            <button id="auto-btn" onclick="toggleAuto()" class="btn-action flex-1 py-3 rounded-xl text-[11px] font-bold flex justify-center items-center gap-2 uppercase tracking-wide border border-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M19.5 21a3 3 0 003-3V9a3 3 0 00-3-3h-5.379a.75.75 0 01-.53-.22L11.47 3.66A2.25 2.25 0 009.879 3H4.5a3 3 0 00-3 3v12a3 3 0 003 3h15zm-6.75-10.5a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V10.5z" clip-rule="evenodd" /></svg>
+                <span id="auto-text">Chơi Tự Động</span>
+            </button>
+        </div>
+
+        <div>
+            <!-- HÀNG CHIP CHỌN NHANH (MỚI) -->
+            <div class="flex items-center justify-between gap-1 mb-2 w-full overflow-x-auto custom-scroll">
+                <button onclick="setQuickBet(5, this)" class="chip selected">5</button>
+                <button onclick="setQuickBet(10, this)" class="chip">10</button>
+                <button onclick="setQuickBet(20, this)" class="chip">20</button>
+                <button onclick="setQuickBet(50, this)" class="chip">50</button>
+                <button onclick="setQuickBet(100, this)" class="chip">100</button>
+                <button onclick="setQuickAll(this)" class="chip !text-[var(--stake-green)] !border-[var(--stake-green)]">ALL</button>
+            </div>
+
+            <!-- Ô NHẬP TIỀN -->
+            <div class="input-ui flex items-center justify-between p-1.5 shadow-inner bg-black/50 rounded-xl">
+                <div class="flex items-center pl-4 w-full">
+                    <input type="number" id="bet-input" value="5" min="5" oninput="updateBetFromInput()" class="bg-transparent text-white font-bold w-full outline-none text-xl font-mono">
+                    <span class="text-gray-400 font-black mr-2 text-lg">T</span>
+                </div>
+            </div>
+            <div class="text-right mt-1 px-1">
+                <span id="est-win-val" class="text-[10px] text-[var(--stake-green)] font-bold uppercase tracking-widest">Bay: +0.00 T</span>
+            </div>
+        </div>
+
+        <button id="start-btn" onclick="handleStartGame()" class="btn-bet w-full py-4 rounded-xl font-black text-2xl tracking-widest mt-1 shadow-[0_4px_15px_rgba(0,231,1,0.2)]">
+            THẢ RƠI
+        </button>
+    </div>
+
+    <!-- MODAL LUẬT CHƠI -->
+    <div id="rules-modal" class="hidden absolute inset-0 bg-black/70 flex items-center justify-center z-50 pointer-events-auto backdrop-blur-md">
+        <div class="panel-ui w-[90%] max-w-md rounded-2xl overflow-hidden flex flex-col max-h-[85vh] animate-pop border border-white/20 shadow-2xl">
+            <div class="bg-gray-900/80 px-6 py-4 flex justify-between items-center border-b border-white/10">
+                <h3 class="text-white font-black text-lg tracking-wide flex items-center gap-2">LUẬT CHƠI (HARDCORE)</h3>
+                <button onclick="toggleRules()" class="text-gray-400 hover:text-white transition bg-gray-800 p-1.5 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll text-[13px] text-gray-200 space-y-5 bg-gray-800/50">
+                <div>
+                    <p class="font-bold text-white mb-2">Sét Đánh (40% Rủi ro):</p>
+                    <p class="bg-red-900/40 p-3 rounded-lg border border-red-500/30 text-red-100 shadow-inner">
+                        <span class="text-xl">⚡</span> Có đúng <strong>40% tỷ lệ</strong> thời tiết xấu khiến tia sét đánh trúng Boss ngay khi vừa nhảy ra cửa phi thuyền. Nếu bị đánh trúng, thua ngay lập tức!
+                    </p>
+                </div>
+                <div>
+                    <p class="font-bold text-white mb-2">Thu thập trên không (Hệ số Bay):</p>
+                    <ul class="space-y-2 bg-gray-900/50 p-3 rounded-lg border border-white/5">
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">☁️</span> <span>Mây Trắng: <strong class="text-white">Không nảy, trượt qua</strong>.</span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">📏</span> <span>Khoảng cách: <strong class="text-white">+0.1x</strong> / 1 mét</span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🔄</span> <span>Nhào lộn: <strong class="text-white">+0.1x</strong> / vòng</span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🧢</span> <span>Mũ Mega: <strong class="text-[var(--stake-green)]">+0.2x</strong></span></li>
+                        <li class="flex items-center gap-3"><span class="text-xl drop-shadow">🪙</span> <span>Xu Vàng: <strong class="text-yellow-400">+1.0x</strong></span></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-bold text-white mb-2">Chướng ngại vật:</p>
+                    <ul class="space-y-3 bg-gray-900/50 p-3 rounded-lg border border-white/5">
+                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🌩️</span> <span><strong>Mây giông:</strong> Nảy 1 lần, giật sét chia đôi hệ số <strong class="text-red-400">(÷2)</strong>.</span></li>
+                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🦅</span> <span><strong>Đại bàng:</strong> Quắp đi, <strong class="text-red-400">Thua ngay lập tức</strong>.</span></li>
+                        <li class="flex items-start gap-3"><span class="text-xl drop-shadow">🌌</span> <span><strong>K-Hole (Mini-game):</strong> Tên lửa lao vào Hố đen <strong class="text-purple-400">0.10x - 11.00x</strong> (Chỉ nhân tiền gốc).</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-bold text-white mb-2">Khu hạ cánh (Hệ số tỉ lệ nghịch với diện tích):</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🟫 Đất Trống</span> <span class="text-gray-400 font-bold">+0.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🚚 Truck</span> <span class="text-blue-400 font-bold">+2.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">🏢 Towers</span> <span class="text-[var(--stake-green)] font-bold">+10.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center"><span class="text-white block mb-1">⛳ Golden Tee</span> <span class="text-yellow-400 font-bold">+25.0x</span></div>
+                        <div class="bg-gray-900/50 p-2 rounded-lg border border-white/5 text-center col-span-2 flex flex-col items-center justify-center">
+                            <span class="text-white">🏛️ White House: <span class="text-yellow-400 font-bold text-sm ml-1">+100.0x</span></span> 
+                        </div>
+                        <div class="bg-pink-900/30 p-2 rounded-lg border border-pink-500/30 text-center col-span-2"><span class="text-pink-200">🐕 Chó:</span> <span class="text-pink-400 font-bold ml-2">Bình phương hệ số bay (x²)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="no-money-modal" class="hidden absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-[100] pointer-events-auto backdrop-blur-md">
+        <h2 class="text-4xl bungee text-red-500 mb-4 drop-shadow-lg">HẾT SỐ DƯ T!</h2>
+        <p class="text-white mb-6">Vui lòng nạp thêm T để tiếp tục chơi.</p>
+        <div class="flex gap-4">
+            <button onclick="document.getElementById('no-money-modal').classList.add('hidden')" class="bg-gray-700 text-white px-6 py-3 rounded-xl font-bold">ĐÓNG</button>
+            <a href="naprut.html" class="bg-[var(--stake-green)] text-black px-8 py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(0,231,1,0.4)]">NẠP T NGAY</a>
+        </div>
+    </div>
+
+    <!-- SCRIPT CHÍNH BAO GỒM FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, onSnapshot, increment, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // GLOBAL STATE
+        const state = { user: null, balance: 0, isGuest: true };
+
+        // CANVAS SETUP
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const WORLD_WIDTH = 2500; const GROUND_Y = 16000; const PIXELS_PER_METER = 100; 
+        const BLIMP_Y = 150; const START_Y = BLIMP_Y + 90;
+
+        let screenW = window.innerWidth; let screenH = window.innerHeight;
+        window.addEventListener('resize', () => { screenW = window.innerWidth; screenH = window.innerHeight; canvas.width = screenW; canvas.height = screenH; });
+        canvas.width = screenW; canvas.height = screenH;
+
+        // GAME STATE
+        let bet = 5; // Mặc định 5T
+        let airMultiplier = 1.0; 
+        let gameState = "MENU"; 
+        let gameHistory = [];
+        let cameraX = WORLD_WIDTH/2 - screenW/2; let cameraY = 0;
+        const GRAVITY = 0.35; const WALL_BOUNCE = 0.4; const CLOUD_BOUNCE = 0.4; 
+
+        // ENTITIES
+        let player = { x: 0, y: 0, vx: 0, vy: 0, r: 25, rotation: 0, totalRotation: 0, angularVelocity: 0, lastFlips: 0, maxDepthMeters: 0, isCharred: false };
+        let entities = [], floatingTexts = [], particles = [], bgClouds = [], currentZones = []; 
+        let checkTimer = 0, stuckSeconds = 0, lastCheckY = 0, lastCheckX = 0;
+        let jumpFailTimer = 0, isStruckByLightning = false;
+        let targetKholeMult = 0, currentKholeMult = 0, kHoleState = "FLYING", kHoleTimer = 0, rocketY = 0, rocketSpeed = 0, speedLines = [];
+
+        // UI ELEMENTS
+        const balanceEl = document.getElementById('balance-val');
+        const betInput = document.getElementById('bet-input');
+        const dropHud = document.getElementById('drop-hud');
+        const multEl = document.getElementById('multiplier-val');
+        const depthEl = document.getElementById('depth-val');
+        const depthBonusEl = document.getElementById('depth-bonus');
+        const estWinEl = document.getElementById('est-win-val');
+        const controlPanel = document.getElementById('control-panel');
+        const btnStart = document.getElementById('start-btn');
+        const resultOverlay = document.getElementById('result-overlay');
+
+        // AUTO MODE
+        let isAuto = false, autoTimeoutId = null, autoCountdownVal = 3, autoIntervalId = null;
+
+        // --- FIREBASE AUTH LISNTER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                state.user = user;
+                state.isGuest = user.isAnonymous;
+                
+                if(!state.isGuest) {
+                    onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                        if(docSnap.exists()) {
+                            state.balance = docSnap.data().balance || 0;
+                            updateUI();
+                        }
+                    });
+                } else {
+                    state.balance = 1000; updateUI(); 
+                }
+            } else {
+                signInAnonymously(auth); 
+            }
+            
+            setTimeout(() => {
+                document.getElementById('pageLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('pageLoader').style.display = 'none', 500);
+            }, 800);
+        });
+
+        // --- GLOBAL WINDOW FUNCTIONS ---
+        window.toggleRules = () => document.getElementById('rules-modal').classList.toggle('hidden');
+        
+        window.closeResult = () => {
+            resultOverlay.classList.add('hidden'); document.getElementById('result-box').classList.remove('animate-pop'); 
+            controlPanel.style.display = "flex";
+            if(autoTimeoutId) clearTimeout(autoTimeoutId); if(autoIntervalId) clearInterval(autoIntervalId);
+        }
+
+        window.updateBetFromInput = () => {
+            let val = parseFloat(betInput.value);
+            if (isNaN(val) || val < 5) val = 5; // Min 5T
+            if (val > state.balance && state.balance >= 5) val = Math.floor(state.balance);
+            bet = val; betInput.value = bet; updateUI();
+        }
+
+        window.setQuickBet = (val, el) => {
+            bet = val;
+            if (bet > state.balance && state.balance >= 5) bet = Math.floor(state.balance);
+            if (bet < 5) bet = 5;
+            betInput.value = bet; updateUI();
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        window.setQuickAll = (el) => {
+            bet = Math.floor(state.balance);
+            if (bet < 5) bet = 5;
+            betInput.value = bet; updateUI();
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        window.toggleSpeed = () => {
+            const SPEEDS = [{ label: "0.5X", val: 0.5, c: "text-blue-300" }, { label: "1X", val: 1, c: "text-white" }, { label: "2X", val: 2, c: "text-yellow-400" }];
+            let textEl = document.getElementById('speed-text');
+            let idx = SPEEDS.findIndex(s => s.label === textEl.innerText);
+            idx = (idx + 1) % SPEEDS.length;
+            textEl.innerText = SPEEDS[idx].label; textEl.className = SPEEDS[idx].c;
+            window.gameSpeed = SPEEDS[idx].val;
+        }
+        window.gameSpeed = 1;
+
+        window.toggleAuto = () => {
+            isAuto = !isAuto;
+            const autoBtn = document.getElementById('auto-btn');
+            if(isAuto) {
+                autoBtn.classList.add('active'); document.getElementById('auto-text').innerText = "ĐANG AUTO...";
+                if(gameState === "MENU" && resultOverlay.classList.contains('hidden')) window.handleStartGame();
+            } else {
+                autoBtn.classList.remove('active'); document.getElementById('auto-text').innerText = "Chơi Tự Động"; window.stopAutoMode();
+            }
+        }
+
+        window.stopAutoMode = () => {
+            isAuto = false; document.getElementById('auto-btn').classList.remove('active'); document.getElementById('auto-text').innerText = "Chơi Tự Động";
+            if(autoTimeoutId) clearTimeout(autoTimeoutId); if(autoIntervalId) clearInterval(autoIntervalId);
+            document.getElementById('btn-stop-auto').classList.add('hidden'); document.getElementById('auto-progress').style.display = "none"; document.getElementById('btn-close-result').classList.remove('hidden');
+        }
+
+        // --- BẮT ĐẦU GAME & GHI NHẬN VÒNG CƯỢC ---
+        window.handleStartGame = async () => {
+            window.updateBetFromInput(); 
+            if (state.balance < bet) {
+                if(isAuto) window.toggleAuto(); 
+                document.getElementById('no-money-modal').classList.remove('hidden'); return;
+            }
+            if (bet < 5) {
+                alert("Mức cược tối thiểu là 5 T!"); return;
+            }
+
+            btnStart.disabled = true; btnStart.innerText = "ĐANG TẢI...";
+
+            // Trừ tiền & Ghi nhận vòng cược Firebase
+            if(!state.isGuest && state.user) {
+                try {
+                    await updateDoc(doc(db, "users", state.user.uid), {
+                        balance: increment(-bet),
+                        betTurnover: increment(bet), // CỘNG VÒNG CƯỢC
+                        betToday: increment(bet)
+                    });
+                } catch(e) {
+                    alert("Lỗi kết nối máy chủ! Vui lòng thử lại.");
+                    btnStart.disabled = false; btnStart.innerText = "THẢ RƠI"; return;
+                }
+            }
+            
+            state.balance -= bet; updateUI();
+            
+            // Initialize Level
+            airMultiplier = 1.0; 
+            player.x = WORLD_WIDTH / 2; player.y = START_Y; 
+            player.vx = (Math.random() - 0.5) * 8; player.vy = 0; 
+            player.rotation = 0; player.totalRotation = 0; player.angularVelocity = (Math.random() - 0.5) * 0.1; 
+            player.lastFlips = 0; player.maxDepthMeters = 0; player.isCharred = false;
+            
+            cameraX = Math.max(0, Math.min(player.x - screenW/2, WORLD_WIDTH - screenW)); cameraY = 0; 
+            stuckSeconds = 0; checkTimer = 0; lastCheckY = player.y; lastCheckX = player.x;
+
+            particles = []; floatingTexts = []; generateLevel(); gameState = "PLAYING";
+            jumpFailTimer = 0; isStruckByLightning = false;
+            
+            if (Math.random() < 0.40) {
+                jumpFailTimer = 1; isStruckByLightning = true; player.isCharred = true; 
+                player.vx = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 10); 
+                player.vy = 15; player.angularVelocity = (Math.random() > 0.5 ? 1.5 : -1.5) * 3; 
+                createFloatingText(player.x, player.y - 30, "SÉT ĐÁNH!", "#FDE047");
+                for(let i=0; i<30; i++) particles.push({ x: player.x, y: player.y, vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20, life: 1.5, color: Math.random() > 0.5 ? "#FDE047" : "#000000", size: Math.random()*8+4 });
+            }
+            
+            controlPanel.style.display = "none"; 
+            dropHud.classList.remove('hidden'); resultOverlay.classList.add('hidden');
+            btnStart.disabled = false; btnStart.innerText = "THẢ RƠI";
+        }
+
+        // --- ENGINE KẾT QUẢ & GHI LỊCH SỬ CƯỢC ---
+        async function processGameEnd(reason, isWin, zoneObj = null, isKhole = false) {
+            gameState = "MENU";
+            dropHud.classList.add('hidden');
+            document.getElementById('drop-hud').classList.replace('border-purple-500', 'border-[var(--stake-green)]'); 
+            
+            let payout = 0; let finalTotalMult = 0; let detailsHtml = "";
+            let historyMultStr = "0.00x"; let historyColorClass = "bg-[#1F2937] text-gray-400 border-gray-600"; 
+            const resultTitle = document.getElementById('result-title');
+            const resultMoney = document.getElementById('result-money');
+            const endReason = document.getElementById('end-reason');
+            const resultIcon = document.getElementById('result-icon');
+
+            if(isWin) {
+                if (isKhole) {
+                    finalTotalMult = currentKholeMult; payout = bet * finalTotalMult;
+                    historyMultStr = finalTotalMult.toFixed(2) + "x"; historyColorClass = "bg-[#3B0764] text-purple-300 border-purple-500/50";
+                    detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hố đen:</span> <span class="text-purple-400 font-bold">${finalTotalMult.toFixed(2)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between"><span class="math-label text-xs">TỔNG HỆ SỐ:</span> <span class="text-purple-400 font-black text-xl">${finalTotalMult.toFixed(2)}x</span></div>`;
+                    resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">🚀</span>`;
+                    endReason.className = "text-xs text-purple-300 font-bold bg-[#2E1065] px-3 py-2 rounded-md inline-block border border-purple-500/50 mb-2";
+                } else if (zoneObj) {
+                    if(zoneObj.type === "add") {
+                        finalTotalMult = airMultiplier + zoneObj.add; payout = bet * finalTotalMult;
+                        detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div><div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-blue-400 font-bold">+${zoneObj.add.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG CỘNG:</span> <span class="text-[var(--stake-green)] font-black text-xl">${finalTotalMult.toFixed(1)}x</span></div>`;
+                    } else if (zoneObj.type === "square") {
+                        finalTotalMult = airMultiplier * airMultiplier; payout = bet * finalTotalMult;
+                        detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div><div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-pink-400 font-bold">Bình phương (x²)</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG (${airMultiplier.toFixed(1)}²):</span> <span class="text-[var(--stake-green)] font-black text-xl">${finalTotalMult.toFixed(2)}x</span></div>`;
+                    } else {
+                        finalTotalMult = airMultiplier; payout = bet * finalTotalMult;
+                        detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div><div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-gray-400 font-bold">x1</span></div><div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG:</span> <span class="text-[var(--stake-green)] font-black text-xl">${finalTotalMult.toFixed(1)}x</span></div>`;
+                    }
+                    
+                    historyMultStr = finalTotalMult.toFixed(2) + "x";
+                    if(finalTotalMult >= 10) historyColorClass = "bg-yellow-900/40 text-yellow-400 border-yellow-500/50";
+                    else if(finalTotalMult >= 2) historyColorClass = "bg-blue-900/40 text-blue-300 border-blue-500/50";
+                    else historyColorClass = "bg-[#064E3B]/60 text-[var(--stake-green)] border-[var(--stake-green)]/40";
+                    resultIcon.innerHTML = `<span class="text-6xl drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">${zoneObj.icon}</span>`;
+                    endReason.className = "text-xs text-[var(--stake-green)] font-bold bg-[#064E3B] px-3 py-2 rounded-md inline-block border border-[var(--stake-green)]/50 mb-2 shadow-inner";
+                }
+                
+                resultTitle.innerText = "THẮNG CƯỢC"; resultTitle.className = "text-[var(--stake-green)] font-bold uppercase text-sm mb-1 tracking-widest";
+                resultMoney.innerText = "+" + payout.toFixed(2); resultMoney.className = "text-4xl text-[var(--stake-green)] font-black bungee drop-shadow-[0_0_15px_rgba(0,231,1,0.5)]";
+                
+                // --- CỘNG TIỀN & GHI LỊCH SỬ THẮNG ---
+                if(!state.isGuest && state.user) {
+                    try {
+                        await updateDoc(doc(db, "users", state.user.uid), { balance: increment(payout) });
+                        await addDoc(collection(db, "users", state.user.uid, "betHistory"), { 
+                            game: "Drop The Boss", 
+                            amount: bet, 
+                            winAmount: payout, 
+                            profit: payout - bet,
+                            result: "win",
+                            multiplier: finalTotalMult, 
+                            detail: reason,
+                            timestamp: serverTimestamp() 
+                        });
+                    } catch(e) {}
+                }
+                state.balance += payout; 
+            } else {
+                let isLightningStr = reason.includes("sét đánh");
+                resultIcon.innerHTML = isLightningStr ? `<span class="text-6xl drop-shadow-[0_0_20px_rgba(253,224,71,0.8)]">⚡</span>` : `<span class="text-6xl opacity-50 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]">💀</span>`;
+                resultTitle.innerText = "THUA CƯỢC"; resultTitle.className = "text-red-500 font-bold uppercase text-sm mb-1 tracking-widest";
+                resultMoney.innerText = "-" + bet.toFixed(2); resultMoney.className = "text-4xl text-red-500 font-black bungee drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]";
+                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${bet} T</span></div><div class="math-row"><span class="math-label">Hệ số Bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold">Ván cược thất bại!</div>`;
+                endReason.className = "text-xs text-red-300 font-bold bg-[#7F1D1D] px-3 py-2 rounded-md inline-block border border-red-500/50 mb-2 shadow-inner";
+                historyColorClass = isLightningStr ? "bg-red-900/60 text-red-400 border-red-500/50" : "bg-[#1F2937] text-gray-400 border-gray-600";
+
+                // --- GHI LỊCH SỬ THUA ---
+                if(!state.isGuest && state.user) {
+                    try {
+                        await addDoc(collection(db, "users", state.user.uid, "betHistory"), { 
+                            game: "Drop The Boss", 
+                            amount: bet, 
+                            winAmount: 0, 
+                            profit: -bet,
+                            result: "lose",
+                            multiplier: 0, 
+                            detail: reason,
+                            timestamp: serverTimestamp() 
+                        });
+                    } catch(e) {}
+                }
+            }
+            
+            gameHistory.unshift({ text: historyMultStr, colorClass: historyColorClass });
+            if(gameHistory.length > 20) gameHistory.pop();
+            renderHistory(); updateUI(); document.getElementById('result-details').innerHTML = detailsHtml; endReason.innerText = reason;
+            resultOverlay.classList.remove('hidden'); resultOverlay.classList.add('animate-fade-in'); document.getElementById('result-box').classList.add('animate-pop');
+            
+            if(isAuto) {
+                document.getElementById('btn-close-result').classList.add('hidden'); document.getElementById('btn-stop-auto').classList.remove('hidden'); document.getElementById('auto-progress').style.display = "block";
+                autoCountdownVal = 3; document.getElementById('auto-countdown').innerText = autoCountdownVal; document.getElementById('auto-fill').style.width = "100%";
+                let startTime = Date.now();
+                autoIntervalId = setInterval(() => {
+                    let elapsed = Date.now() - startTime; let percentage = Math.max(0, 100 - (elapsed / 3000) * 100); document.getElementById('auto-fill').style.width = percentage + "%";
+                    let secondsLeft = Math.ceil(3 - elapsed/1000); if(secondsLeft !== autoCountdownVal && secondsLeft >= 0) { autoCountdownVal = secondsLeft; document.getElementById('auto-countdown').innerText = autoCountdownVal; }
+                }, 50);
+                autoTimeoutId = setTimeout(() => { clearInterval(autoIntervalId); if(isAuto && gameState === "MENU") { window.closeResult(); window.handleStartGame(); } }, 3000);
+            } else {
+                document.getElementById('btn-close-result').classList.remove('hidden'); document.getElementById('btn-stop-auto').classList.add('hidden'); document.getElementById('auto-progress').style.display = "none";
+            }
+        }
+
+        // --- CÁC HÀM TIỆN ÍCH GAMEPLAY ---
+        function formatMoney(amt) { return amt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+        function updateUI() {
+            balanceEl.innerText = formatMoney(state.balance);
+            if (gameState === "K_HOLE_MINIGAME") { multEl.innerText = currentKholeMult.toFixed(2) + "x"; multEl.className = "text-5xl text-purple-400 font-black bungee drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"; } 
+            else { multEl.innerText = airMultiplier.toFixed(2) + "x"; multEl.className = "text-4xl text-white font-black bungee drop-shadow-md leading-none"; }
+            depthEl.innerText = player.maxDepthMeters + "m"; depthBonusEl.innerText = "+" + (player.maxDepthMeters * 0.1).toFixed(1) + "x";
+            estWinEl.innerText = "Bay: +" + formatMoney(bet * airMultiplier) + " T";
+        }
+        function renderHistory() {
+            const hc = document.getElementById('history-container'); hc.innerHTML = '';
+            gameHistory.forEach(item => {
+                const el = document.createElement('div');
+                el.className = `px-3 py-1.5 rounded-lg text-xs font-black border flex-shrink-0 whitespace-nowrap shadow-sm transition-transform hover:scale-105 ${item.colorClass}`;
+                el.innerText = item.text; hc.appendChild(el);
+            }); hc.scrollLeft = 0;
+        }
+        
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
+        function generateZones() {
+            let templates = [
+                { name: "Đất Trống", icon: "🟫", add: 0, type: "neutral", color: "#3F2A1D", width: 600 }, { name: "Đất Trống", icon: "🟫", add: 0, type: "neutral", color: "#3F2A1D", width: 600 }, { name: "Đất Trống", icon: "🟫", add: 0, type: "neutral", color: "#3F2A1D", width: 500 },
+                { name: "Truck", icon: "🚚", add: 2.0, type: "add", color: "#1E3A8A", width: 360 }, { name: "Chó", icon: "🐕", add: 0, type: "square", color: "#831843", width: 200 },
+                { name: "Towers", icon: "🏢", add: 10.0, type: "add", color: "#4C1D95", width: 120 }, { name: "G. Tee", icon: "⛳", add: 25.0, type: "add", color: "#78350F", width: 80 }, { name: "W. House", icon: "🏛️", add: 100.0, type: "add", color: "#334155", width: 40 }
+            ];
+            shuffleArray(templates); currentZones = []; let currentX = 0;
+            for(let t of templates) { currentZones.push({...t, x1: currentX, x2: currentX + t.width}); currentX += t.width; }
+        }
+        function tryAddEntity(type, r, yMin, yMax, requireClearance) {
+            for (let i = 0; i < 15; i++) {
+                let x = Math.random() * (WORLD_WIDTH - r * 2) + r; let y = Math.random() * (yMax - yMin) + yMin; let valid = true;
+                if (requireClearance) { for (let e of entities) { if (Math.hypot(e.x - x, e.y - y) < e.r + r + 50) { valid = false; break; } } }
+                if (valid) { let ent = { x, y, r, type, active: true, hitCooldown: 0, hasStruck: false }; if (type === 'eagle') ent.vx = (Math.random() > 0.5 ? 3 : -3); entities.push(ent); return true; }
+            } return false; 
+        }
+        function generateLevel() {
+            entities = []; bgClouds = [];
+            for(let i=0; i<60; i++) bgClouds.push({ x: Math.random() * WORLD_WIDTH, y: Math.random() * (GROUND_Y - 1000), r: Math.random() * 60 + 50, speed: Math.random() * 0.5 + 0.1, isDark: Math.random() < 0.4 });
+            generateZones();
+            for (let y = 600; y < GROUND_Y - 500; y += 200) { 
+                if(Math.random() < 0.95) { let num = Math.floor(Math.random() * 4) + 4; for (let i = 0; i < num; i++) tryAddEntity('cloud', Math.random() * 30 + 40, y - 60, y + 60, false); }
+                if(Math.random() < 0.8) { let num = Math.floor(Math.random() * 3) + 1; for(let i=0; i < num; i++) tryAddEntity('storm_cloud', Math.random() * 15 + 40, y - 50, y + 150, true); }
+                if(Math.random() < 0.6) tryAddEntity(Math.random() < 0.4 ? 'coin' : 'hat', 24, y, y + 100, true);
+                if(Math.random() < 0.35 && y > 1000) tryAddEntity('eagle', 35, y, y + 100, true);
+                if(Math.random() < 0.03 && y > 2500) tryAddEntity('blackhole', 60, y, y + 100, true);
+            }
+        }
+        function triggerKholeMinigame() {
+            gameState = "K_HOLE_MINIGAME"; targetKholeMult = (Math.random() * 10.9) + 0.1; currentKholeMult = 0.1;
+            kHoleState = "FLYING"; kHoleTimer = 0; rocketY = screenH + 100; rocketSpeed = -2; speedLines = [];
+            for(let i=0; i<30; i++) speedLines.push({ x: Math.random() * screenW, y: Math.random() * screenH, len: Math.random() * 100 + 50, speed: Math.random() * 15 + 10 });
+            document.getElementById('drop-hud').classList.replace('border-[var(--stake-green)]', 'border-purple-500'); updateUI();
+        }
+        function createFloatingText(x, y, text, color) { floatingTexts.push({ x, y, text, color, life: 60, maxLife: 60 }); }
+        function createParticles(x, y, color) { for (let i=0; i<15; i++) particles.push({ x, y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 1, color, size: Math.random()*5+2 }); }
+        function resolveCollision(p, obj, bounceFactor) {
+            let dx = p.x - obj.x, dy = p.y - obj.y; let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < p.r + obj.r) {
+                let overlap = p.r + obj.r - dist; let nx = dx / dist, ny = dy / dist; p.x += nx * overlap; p.y += ny * overlap;
+                let dot = p.vx * nx + p.vy * ny;
+                if (dot < 0) { p.vx -= (1 + bounceFactor) * dot * nx; p.vy -= (1 + bounceFactor) * dot * ny; if (bounceFactor > 0) p.angularVelocity += (Math.random() - 0.5) * 0.15; else if (Math.abs(p.vx) < 0.5) p.vx += (Math.random() > 0.5 ? 0.5 : -0.5); }
+                return true; 
+            } return false;
+        }
+
+        // --- GAME LOOP LOGIC ---
+        let frameCount = 0;
+        function updateLogic(dt) {
+            frameCount += dt; 
+            if (gameState === "MENU") {
+                cameraX += ((WORLD_WIDTH / 2 - screenW / 2) - cameraX) * (0.1 * dt); cameraY += (0 - cameraY) * (0.1 * dt);
+                for(let bg of bgClouds) { bg.x += bg.speed * dt; if(bg.x > WORLD_WIDTH + bg.r) bg.x = -bg.r; }
+                return;
+            }
+            if (gameState === "K_HOLE_MINIGAME") {
+                if (kHoleState === "FLYING") {
+                    currentKholeMult += (0.01 * (currentKholeMult * 0.5 + 1)) * dt; rocketSpeed = Math.max(-25, rocketSpeed - 0.2 * dt); rocketY += rocketSpeed * dt;
+                    if(rocketY < screenH / 2) rocketY = screenH / 2; 
+                    for(let sl of speedLines) { sl.y += sl.speed * dt; if (sl.y > screenH) { sl.y = -sl.len; sl.x = Math.random() * screenW; } }
+                    updateUI(); 
+                    if (currentKholeMult >= targetKholeMult) { currentKholeMult = targetKholeMult; kHoleState = "CRASHED"; kHoleTimer = 0; updateUI(); for(let i=0; i<50; i++) particles.push({ x: screenW/2, y: rocketY, vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30, life: 2, color: Math.random() > 0.5 ? "#F97316" : "#EF4444", size: Math.random()*8+4 }); }
+                } else if (kHoleState === "CRASHED") { kHoleTimer += dt; if (kHoleTimer > 60) processGameEnd(`Nổ tại x${currentKholeMult.toFixed(2)}`, true, null, true); }
+                particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.5 * dt; p.life -= 0.05 * dt; }); particles = particles.filter(p => p.life > 0); return;
+            }
+            
+            if (jumpFailTimer > 0) {
+                jumpFailTimer += dt; player.vy = Math.min(player.vy + GRAVITY * 1.5 * dt, 40); player.x += player.vx * dt; player.y += player.vy * dt; player.rotation += player.angularVelocity * dt;
+                if(Math.random() < 0.3) particles.push({ x: player.x, y: player.y, vx: (Math.random()-0.5)*5, vy: -5, life: 1, color: "#111827", size: Math.random()*10+5 });
+                if (jumpFailTimer > 50) { processGameEnd("Bị sét đánh cháy đen khi cất cánh!", false); jumpFailTimer = 0; }
+                cameraX += (Math.max(0, Math.min(player.x - screenW / 2, WORLD_WIDTH - screenW)) - cameraX) * (0.1 * dt); cameraY += (Math.max(0, player.y - screenH * 0.35) - cameraY) * (0.15 * dt);
+                floatingTexts.forEach(f => f.life -= dt); floatingTexts = floatingTexts.filter(f => f.life > 0); particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.2 * dt; p.life -= 0.03 * dt; }); particles = particles.filter(p => p.life > 0); return;
+            }
+
+            for(let bg of bgClouds) { bg.x += bg.speed * dt; if(bg.x > WORLD_WIDTH + bg.r) bg.x = -bg.r; }
+            player.vy = Math.min(player.vy + GRAVITY * dt, 25); player.x += player.vx * dt; player.y += player.vy * dt; player.rotation += player.angularVelocity * dt; player.totalRotation += player.angularVelocity * dt; player.angularVelocity *= Math.pow(0.99, dt);
+
+            if (player.x < player.r) { player.x = player.r; player.vx *= -WALL_BOUNCE; if(player.vx > 1) player.angularVelocity += (Math.random()*0.05 + 0.05); } 
+            else if (player.x > WORLD_WIDTH - player.r) { player.x = WORLD_WIDTH - player.r; player.vx *= -WALL_BOUNCE; if(player.vx < -1) player.angularVelocity -= (Math.random()*0.05 + 0.05); }
+
+            let currentDepthMeters = Math.floor(Math.max(0, player.y - START_Y) / PIXELS_PER_METER);
+            if (currentDepthMeters > player.maxDepthMeters) { airMultiplier += (currentDepthMeters - player.maxDepthMeters) * 0.1; player.maxDepthMeters = currentDepthMeters; updateUI(); }
+            let currentFlips = Math.floor(Math.abs(player.totalRotation) / (2 * Math.PI));
+            if (currentFlips > player.lastFlips) { airMultiplier += (currentFlips - player.lastFlips) * 0.1; player.lastFlips = currentFlips; createFloatingText(player.x, player.y - 35, `+0.1x`, "#A78BFA"); updateUI(); }
+
+            for (let ent of entities) {
+                ent.hitCooldown -= dt;
+                if (!ent.active || Math.abs(player.y - ent.y) > 300 || Math.abs(player.x - ent.x) > 300) { if(ent.type === 'eagle') { ent.x += ent.vx * dt; if(ent.x < 0 || ent.x > WORLD_WIDTH) ent.vx *= -1; } continue; }
+                if (ent.type === 'cloud') { resolveCollision(player, ent, 0); } 
+                else if (ent.type === 'storm_cloud') {
+                    if (resolveCollision(player, ent, ent.hasStruck ? 0 : CLOUD_BOUNCE)) {
+                        if(!ent.hasStruck) { airMultiplier /= 2; updateUI(); createFloatingText(player.x, player.y - 45, "÷2", "#EF4444"); createParticles(ent.x, ent.y, "#FDE047"); ent.hasStruck = true; }
+                    }
+                } else {
+                    if (Math.hypot(player.x - ent.x, player.y - ent.y) < player.r + ent.r) {
+                        if (ent.type === 'hat') { ent.active = false; airMultiplier += 0.2; updateUI(); createFloatingText(ent.x, ent.y, "+0.2x", "#00E701"); createParticles(ent.x, ent.y, "#3B82F6"); }
+                        else if (ent.type === 'coin') { ent.active = false; airMultiplier += 1.0; updateUI(); createFloatingText(ent.x, ent.y, "+1.0x", "#FBBF24"); createParticles(ent.x, ent.y, "#FBBF24"); }
+                        else if (ent.type === 'eagle') { processGameEnd("Bị Đại bàng quắp đi!", false); return; }
+                        else if (ent.type === 'blackhole') { triggerKholeMinigame(); return; }
+                    }
+                }
+            }
+
+            cameraX += (Math.max(0, Math.min(player.x - screenW / 2, WORLD_WIDTH - screenW)) - cameraX) * (0.1 * dt); cameraY += (Math.max(0, player.y - screenH * 0.35) - cameraY) * (0.15 * dt);
+
+            checkTimer += dt;
+            if (checkTimer >= 60) {
+                if (Math.abs(player.y - lastCheckY) < 10 && Math.abs(player.x - lastCheckX) < 10) stuckSeconds++; else stuckSeconds = 0;
+                lastCheckY = player.y; lastCheckX = player.x; checkTimer = 0;
+                if (stuckSeconds >= 3) { processGameEnd("Kẹt lại trên mây", true, { name: "Mắc kẹt", icon: "☁️", type: "neutral", add: 0 }); return; }
+            }
+
+            if (player.y + player.r >= GROUND_Y) {
+                player.y = GROUND_Y - player.r; player.vy = 0; let landedZone = currentZones[0];
+                for(let z of currentZones) { if(player.x >= z.x1 && player.x < z.x2) { landedZone = z; break; } }
+                processGameEnd(`Hạ cánh: ${landedZone.name}`, true, landedZone);
+            }
+
+            floatingTexts.forEach(f => f.life -= dt); floatingTexts = floatingTexts.filter(f => f.life > 0);
+            particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.2 * dt; p.life -= 0.03 * dt; }); particles = particles.filter(p => p.life > 0);
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function drawBoss(x, y, r, rot) {
+            ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+            ctx.beginPath(); ctx.arc(0, 0, r*1.2, 0, Math.PI*2);
+            if(player.isCharred) { let a = ctx.createRadialGradient(0,0,r*0.5, 0,0,r*1.2); a.addColorStop(0, "rgba(0,0,0,0.8)"); a.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = a; ctx.fill(); } 
+            else { let a = ctx.createRadialGradient(0,0,r*0.8, 0,0,r*1.2); a.addColorStop(0, "rgba(0,231,1,0.4)"); a.addColorStop(1, "rgba(0,231,1,0)"); ctx.fillStyle = a; ctx.fill(); }
+            ctx.fillStyle = player.isCharred ? "#000" : "#111827"; ctx.beginPath(); ctx.roundRect(-12, -8, 24, 28, 4); ctx.fill();
+            if(!player.isCharred) { ctx.fillStyle = "#FFF"; ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(6, -8); ctx.lineTo(0, 5); ctx.fill(); ctx.fillStyle = "#EF4444"; ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.lineTo(0, 10); ctx.fill(); }
+            let sX = Math.sin(frameCount*0.2) * 8 * (Math.abs(player.vx)/8); let sY = Math.min(10, player.vy); if(player.isCharred) { sX = 0; sY = -5; } 
+            ctx.strokeStyle = player.isCharred ? "#111" : "#111827"; ctx.lineWidth = 6; ctx.lineCap = "round";
+            ctx.beginPath(); ctx.moveTo(-10, -5); ctx.lineTo(-20 + sX, -15 + sY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(10, -5); ctx.lineTo(20 - sX, -15 + sY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-6, 20); ctx.lineTo(-10 + sX, 35 - sY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(10 - sX, 35 - sY); ctx.stroke();
+            ctx.fillStyle = player.isCharred ? "#333" : "#FDBA74"; ctx.beginPath(); ctx.arc(0, -18, 12, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#000"; if(player.isCharred) { ctx.font = "14px Arial"; ctx.fillText("X", -6, -14); ctx.fillText("X", 6, -14); } else { ctx.beginPath(); ctx.roundRect(-10, -22, 9, 6, 2); ctx.roundRect(1, -22, 9, 6, 2); ctx.fill(); ctx.strokeStyle = "#000"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-1, -19); ctx.lineTo(1, -19); ctx.stroke(); }
+            ctx.restore();
+        }
+
+        function drawRocket(x, y) {
+            ctx.save(); ctx.translate(x, y);
+            if (kHoleState === "FLYING") { let fl = Math.random() * 40 + 40; ctx.fillStyle = "#EF4444"; ctx.beginPath(); ctx.moveTo(-15, 30); ctx.lineTo(0, 30 + fl); ctx.lineTo(15, 30); ctx.fill(); ctx.fillStyle = "#FBBF24"; ctx.beginPath(); ctx.moveTo(-8, 30); ctx.lineTo(0, 30 + fl*0.6); ctx.lineTo(8, 30); ctx.fill(); }
+            ctx.fillStyle = "#E2E8F0"; ctx.beginPath(); ctx.moveTo(0, -50); ctx.quadraticCurveTo(25, -20, 20, 30); ctx.lineTo(-20, 30); ctx.quadraticCurveTo(-25, -20, 0, -50); ctx.fill();
+            ctx.fillStyle = "#EF4444"; ctx.beginPath(); ctx.moveTo(20, 10); ctx.lineTo(35, 40); ctx.lineTo(18, 30); ctx.fill(); ctx.beginPath(); ctx.moveTo(-20, 10); ctx.lineTo(-35, 40); ctx.lineTo(-18, 30); ctx.fill();
+            ctx.fillStyle = "#38BDF8"; ctx.beginPath(); ctx.arc(0, -10, 12, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#FDBA74"; ctx.beginPath(); ctx.arc(0, -10, 6, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        }
+
+        function drawEntities(ent) {
+            ctx.save(); ctx.translate(ent.x, ent.y);
+            if(ent.type === 'coin') { ctx.beginPath(); ctx.arc(0, 0, ent.r, 0, Math.PI*2); ctx.fillStyle = "#B45309"; ctx.fill(); ctx.beginPath(); ctx.arc(0, 0, ent.r*0.8, 0, Math.PI*2); let g = ctx.createLinearGradient(-ent.r, -ent.r, ent.r, ent.r); g.addColorStop(0, '#FEF08A'); g.addColorStop(0.5, '#EAB308'); g.addColorStop(1, '#A16207'); ctx.fillStyle = g; ctx.fill(); ctx.fillStyle = "#713F12"; ctx.font = `900 ${ent.r*1.2}px Inter`; ctx.fillText("₮", 0, 1); }
+            else if(ent.type === 'hat') { ctx.beginPath(); ctx.arc(0, 0, ent.r*1.5, 0, Math.PI*2); let g = ctx.createRadialGradient(0,0,0,0,0,ent.r*1.5); g.addColorStop(0, 'rgba(0,231,1,0.4)'); g.addColorStop(1, 'rgba(0,231,1,0)'); ctx.fillStyle = g; ctx.fill(); ctx.fillStyle = "#3B82F6"; ctx.beginPath(); ctx.arc(0, 2, ent.r*0.7, Math.PI, 0); ctx.fill(); ctx.fillStyle = "#2563EB"; ctx.beginPath(); ctx.ellipse(-ent.r*0.2, 2, ent.r*0.9, ent.r*0.2, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#FFF"; ctx.font = `bold ${ent.r*0.7}px Arial`; ctx.fillText("S", 2, -3); }
+            else if(ent.type === 'eagle') { if(ent.vx<0) ctx.scale(-1, 1); let wF = Math.sin(frameCount * 0.3) * 15; ctx.fillStyle = "#1E293B"; ctx.beginPath(); ctx.moveTo(-ent.r, 0); ctx.lineTo(-ent.r*0.2, -ent.r*0.3); ctx.quadraticCurveTo(ent.r*0.5, -ent.r*1.5 + wF, ent.r, -ent.r*0.5); ctx.lineTo(ent.r*0.3, ent.r*0.2); ctx.lineTo(ent.r*1.2, 0); ctx.lineTo(ent.r, ent.r*0.5); ctx.quadraticCurveTo(0, ent.r + wF, -ent.r*0.5, ent.r*0.3); ctx.fill(); ctx.fillStyle = "#FBBF24"; ctx.beginPath(); ctx.moveTo(ent.r*1.2, 0); ctx.lineTo(ent.r*1.6, ent.r*0.2); ctx.lineTo(ent.r*1.1, ent.r*0.4); ctx.fill(); ctx.fillStyle = "#EF4444"; ctx.shadowColor = "#EF4444"; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(ent.r*0.9, ent.r*0.1, ent.r*0.15, 0, Math.PI*2); ctx.fill(); }
+            else if(ent.type === 'blackhole') { ctx.rotate(frameCount * 0.05); ctx.beginPath(); ctx.arc(0, 0, ent.r, 0, Math.PI*2); let g = ctx.createRadialGradient(0,0,0,0,0,ent.r); g.addColorStop(0, '#000'); g.addColorStop(0.3, '#3B0764'); g.addColorStop(0.7, '#7C3AED'); g.addColorStop(1, 'rgba(139,92,246,0)'); ctx.fillStyle = g; ctx.fill(); ctx.beginPath(); ctx.ellipse(0, 0, ent.r*1.1, ent.r*0.4, Math.PI/6, 0, Math.PI*2); ctx.strokeStyle = "rgba(167,139,250,0.6)"; ctx.lineWidth = 4; ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 0, ent.r*1.1, ent.r*0.4, -Math.PI/3, 0, Math.PI*2); ctx.strokeStyle = "rgba(139,92,246,0.6)"; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = "#FFF"; for(let i=0; i<3; i++) { let d = (frameCount * 2 + i*20) % ent.r; let a = i * Math.PI*2/3; ctx.beginPath(); ctx.arc(Math.cos(a)*d, Math.sin(a)*d, 2, 0, Math.PI*2); ctx.fill(); } ctx.rotate(-frameCount * 0.05); ctx.fillStyle = "#FFF"; ctx.font = `900 ${ent.r*0.4}px Inter`; ctx.shadowColor="#000"; ctx.shadowBlur=5; ctx.fillText("K-HOLE", 0, 0); }
+            else if(ent.type === 'cloud') { let g = ctx.createRadialGradient(0, -ent.r*0.3, 0, 0, 0, ent.r); g.addColorStop(0, '#FFF'); g.addColorStop(1, '#E2E8F0'); ctx.fillStyle = g; ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8; ctx.beginPath(); ctx.arc(0, 0, ent.r, 0, Math.PI*2); ctx.arc(-ent.r*0.6, ent.r*0.2, ent.r*0.7, 0, Math.PI*2); ctx.arc(ent.r*0.6, ent.r*0.2, ent.r*0.7, 0, Math.PI*2); ctx.fill(); }
+            else if(ent.type === 'storm_cloud') { let g = ctx.createRadialGradient(0, -ent.r*0.2, 0, 0, 0, ent.r); g.addColorStop(0, ent.hasStruck ? '#94A3B8' : '#64748B'); g.addColorStop(1, ent.hasStruck ? '#475569' : '#334155'); ctx.fillStyle = g; ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; ctx.beginPath(); ctx.arc(0, 0, ent.r, 0, Math.PI*2); ctx.arc(-ent.r*0.6, ent.r*0.2, ent.r*0.7, 0, Math.PI*2); ctx.arc(ent.r*0.6, ent.r*0.2, ent.r*0.7, 0, Math.PI*2); ctx.fill(); if(!ent.hasStruck && Math.random() < 0.15) { ctx.beginPath(); ctx.moveTo(-10, 10); ctx.lineTo(15, ent.r*0.6); ctx.lineTo(0, ent.r*0.6); ctx.lineTo(20, ent.r*1.3); ctx.strokeStyle = "#FEF08A"; ctx.lineWidth = 5; ctx.lineJoin = "miter"; ctx.shadowColor = "#FDE047"; ctx.shadowBlur = 15; ctx.stroke(); } }
+            ctx.restore();
+        }
+
+        function drawBlimp(x, y) {
+            ctx.save(); ctx.translate(x, y); let fY = Math.sin(frameCount * 0.02) * 10; ctx.translate(0, fY);
+            ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.ellipse(0, 160, 220, 60, 0, 0, Math.PI * 2); ctx.fill();
+            let hG = ctx.createLinearGradient(0, -100, 0, 100); hG.addColorStop(0, '#334155'); hG.addColorStop(0.5, '#0F172A'); hG.addColorStop(1, '#020617');
+            ctx.fillStyle = hG; ctx.beginPath(); ctx.ellipse(0, 0, 240, 100, 0, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#475569"; ctx.stroke();
+            ctx.fillStyle = "#1E293B"; ctx.beginPath(); ctx.rect(-235, -20, 470, 40); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = "var(--stake-green)"; ctx.font = "900 38px Bungee"; ctx.fillText("EL BOSS", 0, 2);
+            ctx.fillStyle = "#0F172A"; ctx.beginPath(); ctx.moveTo(220, 0); ctx.lineTo(300, -60); ctx.lineTo(280, 0); ctx.lineTo(300, 60); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = "#111827"; ctx.beginPath(); ctx.roundRect(-70, 85, 140, 50, [0, 0, 20, 20]); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#000"; ctx.fillRect(-25, 85, 50, 50);
+            ctx.fillStyle = "var(--stake-green)"; ctx.shadowColor = "var(--stake-green)"; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(-45, 110, 10, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(45, 110, 10, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState === "K_HOLE_MINIGAME") {
+                let g = ctx.createLinearGradient(0, 0, 0, screenH); g.addColorStop(0, '#020617'); g.addColorStop(1, '#3B0764'); ctx.fillStyle = g; ctx.fillRect(0, 0, screenW, screenH);
+                ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 2; ctx.beginPath(); for(let sl of speedLines) { ctx.moveTo(sl.x, sl.y); ctx.lineTo(sl.x, sl.y + sl.len); } ctx.stroke();
+                if (kHoleState === "FLYING") { drawRocket(screenW/2 + (Math.random()-0.5)*4, rocketY); }
+                particles.forEach(p => { ctx.globalAlpha = p.life/2; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); }); ctx.globalAlpha = 1;
+                ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "900 64px Bungee";
+                if (kHoleState === "CRASHED") { ctx.fillStyle = "#EF4444"; ctx.shadowColor = "#EF4444"; ctx.shadowBlur = 20; ctx.fillText("CRASHED", screenW/2, screenH/2 - 60); } 
+                else { ctx.fillStyle = "#FFF"; ctx.shadowColor = "#A855F7"; ctx.shadowBlur = 10; }
+                ctx.fillText(currentKholeMult.toFixed(2) + "x", screenW/2, screenH/2); ctx.shadowBlur = 0; return; 
+            }
+
+            let dR = Math.min(cameraY / GROUND_Y, 1); let sky = ctx.createLinearGradient(0, 0, 0, screenH);
+            sky.addColorStop(0, `rgb(${Math.max(15, 20 - 20*dR)}, ${Math.max(20, 100 - 80*dR)}, ${Math.max(30, 200 - 170*dR)})`); 
+            sky.addColorStop(1, `rgb(${Math.max(25, 100 - 75*dR)}, ${Math.max(35, 200 - 165*dR)}, ${Math.max(50, 255 - 205*dR)})`); 
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, screenW, screenH);
+
+            let sX = 0, sY = 0; if (jumpFailTimer > 0) { sX = (Math.random()-0.5)*15; sY = (Math.random()-0.5)*15; }
+            ctx.save(); ctx.translate(-cameraX + sX, -cameraY + sY);
+
+            if (isStruckByLightning && jumpFailTimer > 0 && jumpFailTimer < 20) {
+                ctx.save(); ctx.strokeStyle = "#FFF"; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.lineJoin = "miter"; ctx.shadowColor = "#FDE047"; ctx.shadowBlur = 30;
+                ctx.beginPath(); let sX = player.x + (Math.random()-0.5)*300; let sY = cameraY - 200; ctx.moveTo(sX, sY);
+                let seg = 6; let dx = (player.x - sX)/seg; let dy = (player.y - sY)/seg; let cx = sX, cy = sY;
+                for(let i=0; i<seg; i++) { cx += dx + (Math.random()-0.5)*150; cy += dy; ctx.lineTo(cx, cy); } ctx.lineTo(player.x, player.y); ctx.stroke();
+                ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - dx*2, cy - dy*2); ctx.lineTo(cx + 100, cy - 50); ctx.stroke(); ctx.restore();
+                ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,255,255,${0.8 * (1 - jumpFailTimer/20)})`; ctx.fillRect(0, 0, screenW, screenH); ctx.restore();
+            }
+
+            for(let bg of bgClouds) { ctx.save(); ctx.translate(bg.x, bg.y); ctx.globalAlpha = 0.3; ctx.fillStyle = bg.isDark ? "#475569" : "#FFF"; ctx.beginPath(); ctx.arc(0, 0, bg.r, 0, Math.PI*2); ctx.arc(-bg.r*0.6, bg.r*0.2, bg.r*0.7, 0, Math.PI*2); ctx.arc(bg.r*0.6, bg.r*0.2, bg.r*0.7, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+            ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(-100, 0, 100, GROUND_Y); ctx.fillRect(WORLD_WIDTH, 0, 100, GROUND_Y);
+
+            if (cameraY < 600) drawBlimp(WORLD_WIDTH / 2, BLIMP_Y);
+
+            if(cameraY + screenH > GROUND_Y - 800) {
+                for(let z of currentZones) {
+                    let zW = z.x2 - z.x1; ctx.fillStyle = z.color; ctx.fillRect(z.x1, GROUND_Y, zW, 500); ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 4; ctx.strokeRect(z.x1, GROUND_Y, zW, 500);
+                    ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.textAlign = "center"; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4;
+                    let txt = z.type==='square' ? `x²` : (z.type==='neutral' ? `x1` : `+${z.add}x`);
+                    if (zW > 130) { ctx.font = "bold 20px Inter"; ctx.fillText(`${z.icon} ${z.name}`, (z.x1+z.x2)/2, GROUND_Y + 40); ctx.fillStyle = z.type === 'add' ? "#00E701" : (z.type === 'square' ? "#F472B6" : "#9CA3AF"); ctx.font = "900 26px Bungee"; ctx.fillText(txt, (z.x1+z.x2)/2, GROUND_Y + 80); } 
+                    else { ctx.font = "bold 24px Inter"; ctx.fillText(z.icon, (z.x1+z.x2)/2, GROUND_Y + 35); ctx.fillStyle = z.type === 'add' ? "#00E701" : (z.type === 'square' ? "#F472B6" : "#9CA3AF"); ctx.font = "900 18px Bungee"; ctx.fillText(txt, (z.x1+z.x2)/2, GROUND_Y + 65); } ctx.shadowBlur = 0;
+                }
+            }
+
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            for (let ent of entities) { if (ent.active && ent.y > cameraY-100 && ent.y < cameraY+screenH+100 && ent.x > cameraX-100 && ent.x < cameraX+screenW+100) drawEntities(ent); }
+
+            if (gameState === "PLAYING") {
+                drawBoss(player.x, player.y, player.r, player.rotation);
+                if (player.vy > 12 && !player.isCharred) { ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(player.x - 15, player.y - 30); ctx.lineTo(player.x - 15 - player.vx*1.5, player.y - 30 - player.vy*1.5); ctx.moveTo(player.x + 15, player.y - 30); ctx.lineTo(player.x + 15 - player.vx*1.5, player.y - 30 - player.vy*1.5); ctx.stroke(); }
+            } else if (gameState === "MENU") { drawBoss(WORLD_WIDTH / 2, BLIMP_Y + 90 + Math.sin(frameCount * 0.02) * 10, player.r, 0); }
+
+            particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); }); ctx.globalAlpha = 1;
+            floatingTexts.forEach(f => { ctx.globalAlpha = f.life / f.maxLife; ctx.fillStyle = f.color; ctx.font = "900 24px Inter"; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 6; ctx.fillText(f.text, f.x, f.y - (f.maxLife - f.life)*2); ctx.shadowBlur = 0; }); ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function loop() {
+            let speed = window.gameSpeed || 1;
+            if (speed < 1) updateLogic(speed); else for(let i=0; i<speed; i++) updateLogic(1); 
+            draw(); requestAnimationFrame(loop);
+        }
+
+        updateUI(); loop();
+    </script>
+</body>
+</html>
+
+
