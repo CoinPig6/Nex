@@ -60,15 +60,15 @@
 
         .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* TICKER ANIMATION */
+        /* HIỆU ỨNG NGƯỜI THẮNG (TICKER) */
         .winner-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 8px;
-            font-size: 9px;
+            padding: 6px 8px;
+            font-size: 10px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            animation: slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideInTop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
             transform: translateY(-10px);
         }
@@ -132,12 +132,14 @@
         </div>
     </div>
 
-    <!-- BẢNG LỊCH SỬ KẾT QUẢ & NGƯỜI THẮNG -->
+    <!-- BẢNG LỊCH SỬ KẾT QUẢ & TICKER NGƯỜI THẮNG -->
     <div class="z-20 shrink-0 h-32 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.8)] bg-[#13161f]">
         <div class="flex items-center justify-between px-5 py-2 border-b border-[#232836] bg-black/40">
             <div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#FCD535] text-[10px]"></i><span class="text-[#9ca3af] text-[9px] font-black uppercase tracking-wider">Lịch sử kết quả</span></div>
             <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
+        
+        <!-- Khu vực chia đôi: Trái là Bóng, Phải là Người thắng -->
         <div class="flex-1 flex overflow-hidden">
             <!-- Left: Bóng Lịch Sử -->
             <div class="w-[68%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
@@ -147,9 +149,9 @@
             </div>
             <!-- Right: Cột Người Thắng (Ticker) -->
             <div class="w-[32%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
-                <div class="text-[8px] text-[#0ECB81] text-center font-black py-1 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
+                <div class="text-[8px] text-[#0ECB81] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
-                    <!-- Danh sách sẽ được thêm bằng JS ở đây -->
+                    <!-- Danh sách tự động thêm bằng JavaScript -->
                 </div>
             </div>
         </div>
@@ -161,7 +163,6 @@
             
             <!-- CHIPS CHỌN NHANH ĐỒNG BỘ -->
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
-                <!-- Mặc định chọn 10 T -->
                 <button onclick="window.setBetAmount(10)" class="chip selected">10</button>
                 <button onclick="window.setBetAmount(50)" class="chip">50</button>
                 <button onclick="window.setBetAmount(100)" class="chip">100</button>
@@ -290,7 +291,6 @@
             let val = parseFloat(document.getElementById('betInput').value);
             if (isNaN(val)) val = 0;
             
-            // Chặn cược vượt quá số dư nếu có đủ min bet
             if (state.balance >= 10 && val > state.balance) {
                 val = Math.floor(state.balance);
                 document.getElementById('betInput').value = val;
@@ -298,12 +298,10 @@
             
             window.updateProfit();
             
-            // Xóa hết trạng thái sáng
             document.querySelectorAll('.chip').forEach(c => {
                 c.classList.remove('selected');
                 let chipVal = c.innerText === '1K' ? 1000 : parseFloat(c.innerText);
                 
-                // Đồng bộ sáng đúng ô CHIP
                 if (c.innerText === "ALL" && val === Math.floor(state.balance) && state.balance > 0) {
                     c.classList.add('selected');
                 } else if (chipVal === val) {
@@ -350,7 +348,7 @@
             const amountEl = document.getElementById('popupAmount');
 
             popup.classList.remove('hidden');
-            void popup.offsetWidth; // Force reflow
+            void popup.offsetWidth; 
             
             popup.classList.remove('scale-90', 'opacity-0');
             popup.classList.add('scale-100', 'opacity-100');
@@ -358,7 +356,6 @@
             if (isWin) {
                 border.classList.remove('lose'); border.classList.add('win');
                 title.innerText = 'HÚP RỒI'; title.className = 'font-black text-2xl mb-1 uppercase tracking-widest text-[#0ECB81]';
-                // Chỉ hiển thị Lãi
                 amountEl.innerText = '+' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' T';
                 amountEl.className = 'font-mono font-black text-3xl drop-shadow-xl text-[#0ECB81]';
             } else {
@@ -375,25 +372,48 @@
             }, 2500);
         }
 
-        // HÀM HIỂN THỊ DANH SÁCH NGƯỜI THẮNG ẢO
-        function showFakeWinners() {
+        // HIỂN THỊ NGƯỜI THẮNG THẬT/ẢO LÊN TICKER
+        function showWinners(localWinData) {
             const ticker = document.getElementById('winnersTicker');
             ticker.innerHTML = '';
-            const fakes = ["Tran", "Ng", "Le", "Pham", "Hoang", "Vu", "Vo", "Do", "Bui", "Truong", "Ly", "Ngo"];
-            let numWinners = Math.floor(Math.random() * 3) + 4; // 4 to 6 người
+            let winners = [];
+
+            // Nếu người chơi thật sự thắng, gắn luôn thông tin thật lên top 1 bảng vinh danh
+            if (localWinData) {
+                winners.push({
+                    name: localWinData.name,
+                    amount: localWinData.amount,
+                    isLocal: true
+                });
+            }
+
+            // Chèn thêm một vài người chơi khác để tạo độ sôi động
+            const fakes = ["Tran", "Ng", "Le", "Pham", "Hoang", "Vu", "Vo", "Do", "Bui", "Truong", "Ly", "Ngo", "Alex", "David"];
+            let numOtherWinners = Math.floor(Math.random() * 3) + 3; // Thêm 3-5 người
             
-            for(let i=0; i < numWinners; i++) {
+            for(let i=0; i < numOtherWinners; i++) {
                 let name = fakes[Math.floor(Math.random() * fakes.length)] + "***";
-                let amt = (Math.random() * 800 + 50).toFixed(2);
+                let simBets = [10, 50, 100, 200, 500];
+                let amt = simBets[Math.floor(Math.random() * simBets.length)] * 0.96;
+                winners.push({ name: name, amount: amt, isLocal: false });
+            }
+
+            // Render danh sách trượt từ trên xuống
+            winners.forEach((w, index) => {
                 let el = document.createElement('div');
-                el.className = 'winner-item';
-                el.style.animationDelay = `${i * 0.15}s`; // Giãn cách rơi
+                // Highlight tên Local User (Chính mình)
+                el.className = 'winner-item' + (w.isLocal ? ' bg-[#0ECB81]/15 border-l-2 border-[#0ECB81]' : '');
+                el.style.animationDelay = `${index * 0.15}s`; 
+                
+                let nameColor = w.isLocal ? 'text-white font-black' : 'text-gray-400 font-bold';
+                let displayName = w.isLocal ? (w.name.substring(0, 10) + (w.name.length > 10 ? '...' : '')) : w.name;
+                
                 el.innerHTML = `
-                    <span class="text-gray-400 font-bold truncate max-w-[50%]">${name}</span>
-                    <span class="text-[#0ECB81] font-mono font-black">+${amt}</span>
+                    <span class="${nameColor} truncate">${displayName}</span>
+                    <span class="text-[#0ECB81] font-mono font-black shrink-0">+${w.amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 `;
                 ticker.appendChild(el);
-            }
+            });
         }
 
         window.selectSide = (type) => {
@@ -546,6 +566,7 @@
             regenerateHistory();
             requestAnimationFrame(gameLoop);
             setInterval(engineTimer, 100); 
+            showWinners(null); // Hiển thị ticker lúc đầu game
         }
 
         function engineTimer() {
@@ -564,23 +585,27 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // Chạy hiệu ứng danh sách Lãi
-            showFakeWinners();
-            
-            // Lấy kết quả từ cây nến vừa đóng (nến áp chót trong mảng)
             const finishedCandle = state.baseCandles[state.baseCandles.length - 2];
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
+            
+            let localWinData = null;
 
             if (state.currentBet) {
                 const b = state.currentBet; 
-                state.currentBet = null; // Xoá cược khỏi bộ nhớ để tránh kẹt logic
+                state.currentBet = null; 
                 const win = (b.type === res);
                 let profit = 0; let totalReturn = 0;
                 
                 if (win) {
                     totalReturn = b.amount * 1.96; profit = b.amount * 0.96; // Update RTP 96%
                     state.balance += totalReturn; 
-                    showPopup(true, profit); // Chỉ hiển thị lãi
+                    showPopup(true, profit); 
+                    
+                    // Nạp thông tin tài khoản thật vào để hiển thị trên bảng Ticker
+                    localWinData = {
+                        name: state.userData.username || "Bạn (Me)",
+                        amount: profit
+                    };
                 } else { 
                     showPopup(false, b.amount); 
                 }
@@ -598,6 +623,10 @@
                     } catch (e) { console.error(e); }
                 }
             }
+            
+            // Kích hoạt chạy hiệu ứng danh sách Lãi (có gài Local User nếu thắng)
+            showWinners(localWinData);
+
             setTimeout(() => { roundSettled = false; }, 2000);
         }
 
@@ -640,19 +669,27 @@
                         if(state.userData && state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
                     } catch(e) {}
                     
-                    finalizeRound(); // Bắt đầu trả thưởng ở phiên mới
+                    finalizeRound(); 
                 }
                 regenerateHistory(); 
             }
 
-            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN MƯỢT MÀ
+            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN MƯỢT MÀ, BIÊN ĐỘ LỚN
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
             const easeProgress = 1 - Math.pow(1 - progress, 2); 
             const tSec = now / 1000;
             
-            // Biến động giá bình thường nhưng mạnh hơn chút (tổng biên độ dao động khoảng 6-7)
-            // Sóng hoàn toàn trơn tru bằng tổng hợp hàm sin/cos, không có random để loại bỏ giật nháy
-            let currentWiggle = (Math.sin(tSec * 6) * 3.5 + Math.cos(tSec * 3.8) * 2.0 + Math.sin(tSec * 1.2) * 1.5) * (1 - progress);
+            const timeRemaining = 30 * (1 - progress); 
+            let currentWiggle = 0;
+            
+            if (timeRemaining <= 5.0 && timeRemaining > 0.1) {
+                // TẠO BIẾN ĐỘNG LỚN (VỌT CAO/SẬP SÂU) NHƯNG RẤT MƯỢT (KHÔNG RANDOM)
+                // Sóng sin kết hợp (Tần số thấp: 1.5 và 0.9), biên độ cực lớn (18 và 12)
+                currentWiggle = (Math.sin(tSec * 1.5) * 18 + Math.cos(tSec * 0.9) * 12) * (timeRemaining / 5.0);
+            } else {
+                // Nhịp thở bình thường của nến (biến động rất nhẹ nhàng, mượt)
+                currentWiggle = (Math.sin(tSec * 2) * 1.5 + Math.cos(tSec * 1.2) * 0.8) * (1 - progress);
+            }
             
             // Ép giá về mục tiêu đích của thuật toán
             state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
