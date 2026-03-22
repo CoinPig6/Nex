@@ -93,7 +93,6 @@
     <!-- HEADER: Nút Thoát Về Trang Chủ -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
         <div class="flex items-center gap-4">
-            <!-- NÚT THOÁT CHUYỂN VỀ GAME.HTML -->
             <a href="game.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
                 <i class="fa-solid fa-arrow-right-from-bracket text-[#9ca3af] rotate-180"></i>
             </a>
@@ -141,17 +140,15 @@
         
         <!-- Khu vực chia đôi: Trái là Bóng, Phải là Người thắng -->
         <div class="flex-1 flex overflow-hidden">
-            <!-- Left: Bóng Lịch Sử -->
             <div class="w-[68%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
                 <div class="history-wrapper hide-scroll" id="historyWrapper">
                     <div class="history-container" id="historyContainer"></div>
                 </div>
             </div>
-            <!-- Right: Cột Người Thắng (Ticker) -->
             <div class="w-[32%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
                 <div class="text-[8px] text-[#0ECB81] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">LÃI VỪA XONG</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
-                    <!-- Danh sách tự động thêm bằng JavaScript -->
+                    <!-- Ticker danh sách trượt xuống -->
                 </div>
             </div>
         </div>
@@ -188,21 +185,18 @@
         
         <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
         <div class="flex justify-between items-center gap-3 h-14 w-full max-w-sm mx-auto">
-            <!-- NÚT BÁN -->
             <button id="btnSell" onclick="window.selectSide('down')" class="relative flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-xl flex items-center justify-center shadow-lg">
                 <span class="font-black text-xl text-white tracking-wide z-10">BÁN</span>
                 <i class="fa-solid fa-arrow-trend-down absolute left-3 text-2xl text-white/30"></i>
                 <div id="badge-down" class="hidden absolute top-1 right-1 bg-[#FCD535] text-black text-[10px] font-black px-1.5 py-0.5 rounded shadow-md">0 T</div>
             </button>
             
-            <!-- TIMER -->
             <div class="w-20 shrink-0 h-full bg-[#050505] rounded-xl flex flex-col items-center justify-center border border-[#2d3442] relative overflow-hidden shadow-inner">
                 <div id="timerProgress" class="absolute bottom-0 left-0 h-1.5 bg-[#FCD535] w-full transition-all duration-1000 ease-linear"></div>
                 <span id="phaseText" class="text-[7px] text-[#6b7280] font-black uppercase z-10 tracking-widest mb-0.5">ĐẶT LỆNH</span>
                 <span id="timerText" class="text-white font-mono font-black text-2xl z-10 leading-none">30</span>
             </div>
             
-            <!-- NÚT MUA -->
             <button id="btnBuy" onclick="window.selectSide('up')" class="relative flex-1 h-full btn-trade bg-gradient-to-b from-[#0ECB81] to-[#059669] rounded-xl flex items-center justify-center shadow-lg">
                 <span class="font-black text-xl text-white tracking-wide z-10">MUA</span>
                 <i class="fa-solid fa-arrow-trend-up absolute right-3 text-2xl text-white/30"></i>
@@ -249,7 +243,6 @@
 
         let roundSettled = false;
 
-        // --- MATH & SEED LOGIC (ABSOLUTE SYNC 100%) ---
         function seededRandom(seed) {
             let t = seed += 0x6D2B79F5;
             t = Math.imul(t ^ t >>> 15, t | 1);
@@ -257,13 +250,11 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
 
-        // Trả về đúng kết quả xanh/đỏ cho một mốc Epoch thuần toán học
         function getDeterministicResult(epoch) {
             const rand = seededRandom(epoch * 12345 + 6789);
             return rand > 0.5 ? 'up' : 'down';
         }
 
-        // Tạo mảng Nến Lịch sử 100% trùng khớp với Lịch sử Bóng
         function buildBaseCandles() {
             const currentEpoch = Math.floor(Date.now() / 30000);
             let simPrice = 98100;
@@ -285,8 +276,7 @@
             return cands;
         }
 
-        // --- UI FUNCTIONS ---
-        // Xử lý Input & Chip thông minh
+        // --- CHIP VÀ INPUT ĐỒNG BỘ ---
         window.handleManualInput = () => {
             let val = parseFloat(document.getElementById('betInput').value);
             if (isNaN(val)) val = 0;
@@ -327,7 +317,7 @@
             window.handleManualInput();
         };
 
-        // RTP 96%
+        // --- HIỂN THỊ CẬP NHẬT 96% ---
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value) || 0;
             document.getElementById('profitDisplay').innerText = "+" + (val * 0.96).toFixed(2) + " T";
@@ -340,7 +330,7 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // HÀM HIỂN THỊ POPUP THẮNG THUA
+        // --- POPUP TRẢ THƯỞNG: CHỈ HIỂN THỊ TIỀN LÃI THUẦN ---
         function showPopup(isWin, amount) {
             const popup = document.getElementById('resultPopup');
             const border = document.getElementById('popupBorder');
@@ -372,13 +362,13 @@
             }, 2500);
         }
 
-        // HIỂN THỊ NGƯỜI THẮNG THẬT/ẢO LÊN TICKER
+        // --- BẢNG VINH DANH NGƯỜI THẮNG THẬT (TICKER) ---
         function showWinners(localWinData) {
             const ticker = document.getElementById('winnersTicker');
             ticker.innerHTML = '';
             let winners = [];
 
-            // Nếu người chơi thật sự thắng, gắn luôn thông tin thật lên top 1 bảng vinh danh
+            // Ưu tiên hiện người chơi thật (Mình) lên top 1 nếu thắng
             if (localWinData) {
                 winners.push({
                     name: localWinData.name,
@@ -387,9 +377,9 @@
                 });
             }
 
-            // Chèn thêm một vài người chơi khác để tạo độ sôi động
+            // Sinh random vài tài khoản ảo cho sống động
             const fakes = ["Tran", "Ng", "Le", "Pham", "Hoang", "Vu", "Vo", "Do", "Bui", "Truong", "Ly", "Ngo", "Alex", "David"];
-            let numOtherWinners = Math.floor(Math.random() * 3) + 3; // Thêm 3-5 người
+            let numOtherWinners = Math.floor(Math.random() * 3) + 3; 
             
             for(let i=0; i < numOtherWinners; i++) {
                 let name = fakes[Math.floor(Math.random() * fakes.length)] + "***";
@@ -398,10 +388,9 @@
                 winners.push({ name: name, amount: amt, isLocal: false });
             }
 
-            // Render danh sách trượt từ trên xuống
             winners.forEach((w, index) => {
                 let el = document.createElement('div');
-                // Highlight tên Local User (Chính mình)
+                // Nếu là mình thì highlight viền sáng hơn
                 el.className = 'winner-item' + (w.isLocal ? ' bg-[#0ECB81]/15 border-l-2 border-[#0ECB81]' : '');
                 el.style.animationDelay = `${index * 0.15}s`; 
                 
@@ -434,7 +423,7 @@
             
             document.getElementById('confirmBalance').innerText = state.balance.toLocaleString('en-US') + " T";
             document.getElementById('confirmAmount').innerText = amount + " T";
-            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; // Update RTP 96%
+            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; // Xác nhận RTP 96%
             document.getElementById('confirmBar').classList.add('active');
         };
 
@@ -566,7 +555,7 @@
             regenerateHistory();
             requestAnimationFrame(gameLoop);
             setInterval(engineTimer, 100); 
-            showWinners(null); // Hiển thị ticker lúc đầu game
+            showWinners(null); // Render ticker mồi lúc tải trang
         }
 
         function engineTimer() {
@@ -597,11 +586,11 @@
                 let profit = 0; let totalReturn = 0;
                 
                 if (win) {
-                    totalReturn = b.amount * 1.96; profit = b.amount * 0.96; // Update RTP 96%
+                    totalReturn = b.amount * 1.96; profit = b.amount * 0.96; // Lãi thuần 96%
                     state.balance += totalReturn; 
                     showPopup(true, profit); 
                     
-                    // Nạp thông tin tài khoản thật vào để hiển thị trên bảng Ticker
+                    // Đóng gói thông tin chiến thắng của mình để chèn vào Ticker
                     localWinData = {
                         name: state.userData.username || "Bạn (Me)",
                         amount: profit
@@ -624,7 +613,7 @@
                 }
             }
             
-            // Kích hoạt chạy hiệu ứng danh sách Lãi (có gài Local User nếu thắng)
+            // Kích hoạt chạy hiệu ứng danh sách người vừa thắng (Gài tk mình vào top 1 nếu thắng)
             showWinners(localWinData);
 
             setTimeout(() => { roundSettled = false; }, 2000);
@@ -639,7 +628,6 @@
             const isResultPhase = currentEpoch % 2 !== 0; 
             const progress = (now % 30000) / 30000;
 
-            // 1. Chuyển Phiên (Epoch mới)
             if (state.lastEpoch !== currentEpoch) {
                 state.baseCandles = buildBaseCandles(); 
                 state.lastEpoch = currentEpoch;
@@ -674,24 +662,23 @@
                 regenerateHistory(); 
             }
 
-            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN MƯỢT MÀ, BIÊN ĐỘ LỚN
+            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN SÓNG TỪ TỪ SIÊU MƯỢT
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
-            const easeProgress = 1 - Math.pow(1 - progress, 2); 
+            
+            // Dùng cubic ease-out: 1 - (1-p)^3 để giá trị đi từ từ và ổn định cực êm ở giây cuối
+            const easeProgress = 1 - Math.pow(1 - progress, 3); 
             const tSec = now / 1000;
             
-            const timeRemaining = 30 * (1 - progress); 
-            let currentWiggle = 0;
+            // BIẾN ĐỘNG LIÊN TỤC TOÀN BỘ PHIÊN (Không có if/else cắt ngang)
+            // Dùng sóng Sin/Cos Tần số RẤT thấp để nến bơi lên xuống RẤT CHẬM nhưng BIÊN ĐỘ CAO (không nhảy tưng tưng)
+            let wave1 = Math.sin(tSec * 0.4) * 25;  // Sóng cực dài, lên rất cao, sập rất sâu
+            let wave2 = Math.cos(tSec * 0.7) * 15;  // Sóng lượn vừa phải
+            let wave3 = Math.sin(tSec * 1.5) * 5;   // Nhấp nhô nhẹ tạo độ thở của live
             
-            if (timeRemaining <= 5.0 && timeRemaining > 0.1) {
-                // TẠO BIẾN ĐỘNG LỚN (VỌT CAO/SẬP SÂU) NHƯNG RẤT MƯỢT (KHÔNG RANDOM)
-                // Sóng sin kết hợp (Tần số thấp: 1.5 và 0.9), biên độ cực lớn (18 và 12)
-                currentWiggle = (Math.sin(tSec * 1.5) * 18 + Math.cos(tSec * 0.9) * 12) * (timeRemaining / 5.0);
-            } else {
-                // Nhịp thở bình thường của nến (biến động rất nhẹ nhàng, mượt)
-                currentWiggle = (Math.sin(tSec * 2) * 1.5 + Math.cos(tSec * 1.2) * 0.8) * (1 - progress);
-            }
+            // Tổng hợp các sóng. (1 - progress) là khóa an toàn: Khi thời gian lùi dần về 0 (hết 30 giây), độ nhiễu loạn tự động triệt tiêu từ từ về 0. Khớp kết quả hoàn hảo.
+            let currentWiggle = (wave1 + wave2 + wave3) * (1 - progress);
             
-            // Ép giá về mục tiêu đích của thuật toán
+            // Ép giá về mục tiêu đích
             state.visualPrice = liveCandle.open + (liveCandle.change * easeProgress) + currentWiggle;
 
             liveCandle.close = state.visualPrice;
