@@ -90,7 +90,7 @@
     <!-- TOAST -->
     <div id="toast"><i class="fa-solid fa-circle-check text-[#0ECB81] text-lg"></i><span class="text-xs font-bold text-white uppercase tracking-wide" id="toastMsg">...</span></div>
 
-    <!-- HEADER -->
+    <!-- HEADER: Nút Thoát Về Trang Chủ -->
     <header class="flex items-center justify-between px-4 h-16 bg-[#13161f]/90 backdrop-blur-md border-b border-white/5 z-20 shrink-0">
         <div class="flex items-center gap-4">
             <a href="game.html" class="w-10 h-10 bg-[#1e232e] rounded-xl flex items-center justify-center border border-[#2d3442] active:scale-95 transition-transform shadow-lg">
@@ -138,13 +138,16 @@
             <div class="flex gap-4 text-[10px] font-black"><span class="text-[#0ECB81]">XANH: <span id="count-up">0</span></span><span class="text-[#F6465D]">ĐỎ: <span id="count-down">0</span></span></div>
         </div>
         
+        <!-- Khu vực chia đôi -->
         <div class="flex-1 flex overflow-hidden">
-            <div class="w-[60%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
+            <!-- Left: Bóng Lịch Sử -->
+            <div class="w-[55%] bg-[#0b0f19] flex items-center justify-start border-r border-[#232836]">
                 <div class="history-wrapper hide-scroll" id="historyWrapper">
                     <div class="history-container" id="historyContainer"></div>
                 </div>
             </div>
-            <div class="w-[40%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
+            <!-- Right: Cột KẾT QUẢ PHIÊN (Real) -->
+            <div class="w-[45%] bg-[#0b0f19] flex flex-col overflow-hidden relative">
                 <div class="text-[8px] text-[#FCD535] text-center font-black py-1.5 border-b border-[#232836] bg-black/40 shadow-sm uppercase tracking-widest shrink-0">KẾT QUẢ PHIÊN VỪA RỒI</div>
                 <div class="flex-1 overflow-y-auto hide-scroll flex flex-col justify-start" id="winnersTicker">
                     <div class="text-gray-500 text-center text-[9px] mt-3 font-bold px-2">Đang chờ chốt phiên...</div>
@@ -156,6 +159,7 @@
     <!-- BẢNG ĐIỀU KHIỂN & CHIP CƯỢC -->
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
+            
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
                 <button onclick="window.setBetAmount(10)" class="chip selected">10</button>
                 <button onclick="window.setBetAmount(50)" class="chip">50</button>
@@ -165,6 +169,7 @@
                 <button onclick="window.setAllIn()" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
             </div>
 
+            <!-- Ô NHẬP TIỀN -->
             <div class="flex items-center justify-center gap-3 w-full">
                 <button onclick="window.adjustBet(-10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-minus"></i></button>
                 
@@ -179,6 +184,7 @@
             <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.60 T</span></div>
         </div>
         
+        <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC -->
         <div class="flex justify-between items-center gap-3 h-14 w-full max-w-sm mx-auto">
             <button id="btnSell" onclick="window.selectSide('down')" class="relative flex-1 h-full btn-trade bg-gradient-to-b from-[#F6465D] to-[#e11d48] rounded-xl flex items-center justify-center shadow-lg">
                 <span class="font-black text-xl text-white tracking-wide z-10">BÁN</span>
@@ -236,6 +242,7 @@
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, getDocs, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // APP CONFIG & GLOBAL VARIABLES
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'tpig-crypto-app';
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
@@ -290,12 +297,11 @@
                 let high = Math.max(open, close) + seededRandom(e*321) * 15 + 5;
                 let low = Math.min(open, close) - seededRandom(e*456) * 15 - 5;
                 
-                // NẾU CÂY NẾN NÀY VỪA ĐƯỢC CHẠY LIVE: KHÓA CHẶT ĐỈNH/ĐÁY THỰC TẾ
-                // Tránh tình trạng râu nến bị tụt ngắn lại khi tải lại mảng
+                // KHÓA CHẶT ĐỈNH/ĐÁY THỰC TẾ CỦA NẾN ĐÃ CHẠY QUA
                 const existing = existingCandles.find(c => c.epoch === e);
                 if (existing) {
-                    high = Math.max(high, existing.high);
-                    low = Math.min(low, existing.low);
+                    high = Math.max(high, existing.high, open, close);
+                    low = Math.min(low, existing.low, open, close);
                 }
                 
                 cands.push({ epoch: e, open, close, high, low, change });
@@ -327,6 +333,7 @@
 
         async function loadUserData(uid) {
             const userProfileRef = doc(db, "users", uid);
+            
             onSnapshot(userProfileRef, (docSnap) => {
                 if(docSnap.exists()) {
                     state.userData = docSnap.data();
@@ -338,7 +345,10 @@
                     setDoc(userProfileRef, state.userData);
                 }
                 updateBalanceUI();
-                if (!state.gameStarted) finishLoading();
+                
+                if (!state.gameStarted) {
+                    finishLoading();
+                }
             }, (err) => console.error("Balance listener error", err));
         }
         
@@ -430,7 +440,7 @@
         // TẢI KẾT QUẢ NGƯỜI CHƠI SAU MỖI PHIÊN
         async function fetchAndDisplaySessionResults(sessionId, correctResult) {
             const ticker = document.getElementById('winnersTicker');
-            ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Đang tải...</div>';
+            ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Đang tải dữ liệu...</div>';
             
             try {
                 const betsRef = collection(db, 'artifacts', appId, 'public', 'data', 'latestBets');
@@ -458,7 +468,7 @@
                 ticker.innerHTML = '';
                 
                 if (sessionResults.length === 0) {
-                    ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Phiên này không ai chơi</div>';
+                    ticker.innerHTML = '<div class="text-gray-500 text-center text-[9px] mt-3 font-bold uppercase px-2">Phiên này không ai cược</div>';
                     return;
                 }
                 
@@ -484,7 +494,7 @@
                     
                     el.innerHTML = `
                         <span class="${nameColor} truncate flex-1">${maskedName} ${typeBadge}</span>
-                        <span class="${textClass} font-mono font-black shrink-0">${sign}${w.profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        <span class="${textClass} font-mono font-black shrink-0">${sign}${Math.abs(w.profit).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     `;
                     ticker.appendChild(el);
                 });
@@ -712,50 +722,52 @@
                 regenerateHistory(); 
             }
 
-            // 2. THUẬT TOÁN SÓNG HỘI TỤ (Tự nhiên, không giật, chốt chuẩn)
+            // 2. THUẬT TOÁN SÓNG TỰ NHIÊN (Trơn tru hội tụ)
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
             const tSec = now / 1000;
             const t = progress; 
             
-            // Bước 1: Tính toán đường cơ sở (Base Trajectory) bằng SmoothStep
-            // t * t * (3 - 2 * t) giúp nến di chuyển chậm ở đầu, nhanh ở giữa, và dừng rất êm ở đích
+            // Tính Wave (sóng dao động) liên tục tại bất kỳ thời điểm nào
+            // Tần số vừa phải, dao động đủ mạnh để thấy được nến lên xuống liên tục
+            let wave1 = Math.sin(tSec * 1.2) * 12; 
+            let wave2 = Math.cos(tSec * 0.8) * 8;  
+            let wave3 = Math.sin(tSec * 2.5) * 4;  
+            let currentWiggle = wave1 + wave2 + wave3;
+            
+            // Tính trước vị trí của Wave ở đúng khoảnh khắc CHỐT NẾN (t=1.0 của phiên này)
+            const epochEndSec = (currentEpoch + 1) * 30; 
+            let endW1 = Math.sin(epochEndSec * 1.2) * 12;
+            let endW2 = Math.cos(epochEndSec * 0.8) * 8;
+            let endW3 = Math.sin(epochEndSec * 2.5) * 4;
+            let finalWiggle = endW1 + endW2 + endW3;
+            
+            // Tạo đường dẫn cơ sở (Base Trajectory) mượt mà bằng SmoothStep
             const startPrice = liveCandle.open;
-            const endPrice = liveCandle.open + liveCandle.change;
+            const targetChange = liveCandle.change;
             const smoothT = t * t * (3 - 2 * t);
-            let baseTrajectory = startPrice + (endPrice - startPrice) * smoothT;
             
-            // Bước 2: Tạo vỏ bọc biên độ (Envelope)
-            // Hàm Sin(t*PI) khởi đầu từ 0, phình to ở giữa, và tự động thu hẹp về 0 chính xác tại giây cuối cùng
-            let envelope = Math.sin(t * Math.PI);
+            // Ép đường cơ sở bù trừ cho finalWiggle để lúc t=1.0, tổng lại ra đúng kết quả Target
+            let baseTrajectory = startPrice + (targetChange - finalWiggle) * smoothT;
             
-            // Bước 3: Sóng nhiễu (Wiggle Waves)
-            // Sóng dài, chậm nhưng biên độ lớn (16) để tạo cảm giác giật mạnh nhưng trơn tru
-            let wave1 = Math.sin(tSec * 0.8) * 16; 
-            let wave2 = Math.cos(tSec * 1.5) * 8;  
-            let wave3 = Math.sin(tSec * 3.0) * 3;  
-            
-            // Áp dụng lớp bọc vào sóng để nó triệt tiêu dần về 0 khi hết phiên
-            let wiggle = (wave1 + wave2 + wave3) * envelope;
-            
-            // Cập nhật giá Live
-            state.visualPrice = baseTrajectory + wiggle;
+            // Giá trực tiếp: Sóng dao động + Đường cơ sở (Không bao giờ bị nén sóng)
+            state.visualPrice = baseTrajectory + currentWiggle;
 
+            // Lưu đỉnh và đáy thực tế vào nến live
             liveCandle.close = state.visualPrice;
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // Cập nhật chấm Live
+            // Cập nhật bóng
             const liveDot = document.getElementById('liveDot');
             if (liveDot) {
                 const isLiveUp = state.visualPrice >= liveCandle.open;
                 liveDot.className = isLiveUp ? 'dot new up' : 'dot new down';
             }
 
-            // 3. RENDER CANVAS (AUTO-SCALE CHỐNG MẤT RÂU)
+            // 3. RENDER CANVAS (AUTO-SCALE CHỐNG MẤT ĐỈNH/ĐÁY RÂU)
             const VISIBLE_CANDLES = 22; 
             const w = (cvs.width - CONFIG.chartPaddingRight) / VISIBLE_CANDLES; 
             
-            // Quét đỉnh và đáy của nến trên màn hình
             let highestVisible = state.visualPrice;
             let lowestVisible = state.visualPrice;
             const startIndex = Math.max(0, state.baseCandles.length - VISIBLE_CANDLES);
@@ -764,29 +776,27 @@
                 if (state.baseCandles[i].low < lowestVisible) lowestVisible = state.baseCandles[i].low;
             }
             
-            // Thêm 25px lề trên/dưới bất chấp giá để râu nến luôn lọt thỏm trong màn hình
+            // Thêm 40px lề trên/dưới bất chấp giá để râu nến luôn lọt thỏm trong màn hình
             let priceDiff = highestVisible - lowestVisible;
-            if (priceDiff < 40) { 
+            if (priceDiff < 60) { 
                 let mid = (highestVisible + lowestVisible) / 2;
-                highestVisible = mid + 20;
-                lowestVisible = mid - 20;
+                highestVisible = mid + 30;
+                lowestVisible = mid - 30;
             }
 
-            const pixelPadding = 25; 
+            const pixelPadding = 40; 
             const availableHeightRatio = 1 - (2 * pixelPadding / cvs.height);
             const r = (highestVisible - lowestVisible) / availableHeightRatio; 
             const min = lowestVisible - (pixelPadding / cvs.height) * r;
 
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             
-            // Vẽ đường nền
             for(let p = Math.floor(min / 10) * 10; p < min + r; p += 10) {
                 const y = cvs.height - ((p - min) / r * cvs.height);
                 ctx.strokeStyle = '#1e232e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
                 ctx.fillStyle = '#4b5563'; ctx.font = '10px IBM Plex Mono'; ctx.fillText(p, cvs.width - 50, y + 4);
             }
 
-            // Vẽ đường chờ kết quả
             if (isResultPhase) {
                 const yl = cvs.height - ((state.lockPrice - min) / r * cvs.height);
                 document.getElementById('lockLine').style.top = yl + 'px'; 
@@ -795,7 +805,6 @@
                 ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(cvs.width, yl); ctx.stroke(); ctx.setLineDash([]);
             }
 
-            // Vẽ nến
             const lastIdx = state.baseCandles.length - 1;
             for (let i = 0; i <= lastIdx; i++) {
                 const dist = lastIdx - i;
@@ -820,7 +829,6 @@
                 ctx.fillRect(x - (candleWidth/2), Math.min(yO, yC), candleWidth, bodyH);
             }
 
-            // Giá Live
             const yc = cvs.height - ((state.visualPrice - min) / r * cvs.height);
             ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(0, yc); ctx.lineTo(cvs.width, yc); ctx.stroke(); ctx.setLineDash([]);
             
