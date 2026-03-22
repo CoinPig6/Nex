@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tpig - Crypto Trading</title>
+    <title>Tpig - Crypto Trading Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -73,7 +73,7 @@
         <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce">
             <span class="text-black font-black text-2xl italic tracking-widest pl-1">T</span>
         </div>
-        <div class="text-[#FCD535] text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse">Kết nối sàn giao dịch...</div>
+        <div class="text-[#FCD535] text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse">Đồng bộ biểu đồ...</div>
     </div>
 
     <!-- TOAST -->
@@ -97,6 +97,12 @@
             <a href="https://t.me/ad_crownex" target="_blank" class="menu-item text-blue-400"><i class="fa-brands fa-telegram text-lg"></i> CSKH (Telegram)</a>
             <a href="#" onclick="window.logout()" class="menu-item text-red-400 mt-4"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </nav>
+        <div class="p-4 border-t border-[#232836] bg-[#12141c]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center font-bold text-xs shadow-lg text-white">U</div>
+                <div class="flex flex-col"><span class="text-xs font-bold text-white" id="sidebarUsername">Đang tải...</span><span class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</span></div>
+            </div>
+        </div>
     </div>
 
     <!-- HEADER -->
@@ -113,7 +119,7 @@
         </div>
         <div class="bg-black/30 pl-4 pr-1 py-1 rounded-full border border-white/5 flex items-center gap-3">
             <div class="text-right leading-tight">
-                <div class="text-[8px] text-gray-500 font-black uppercase mb-0.5 tracking-widest">SỐ DƯ</div>
+                <div class="text-[8px] text-gray-500 font-black uppercase mb-0.5 tracking-widest">SỐ DƯ T</div>
                 <div id="balanceDisplay" class="text-[#0ECB81] font-mono font-black text-[13px]">--- T</div>
             </div>
             <div class="w-7 h-7 bg-[#FCD535] rounded-full flex items-center justify-center text-xs text-[#111] shadow-lg"><i class="fa-solid fa-wallet"></i></div>
@@ -231,7 +237,6 @@
         import { getFirestore, doc, updateDoc, getDoc, onSnapshot, addDoc, collection, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // GLOBAL FLAGS
         let roundSettled = false;
 
         // --- MATH & SEED LOGIC (ABSOLUTE SYNC) ---
@@ -255,7 +260,6 @@
                 if (state.totalUp > state.totalDown) return 'down';
                 if (state.totalDown > state.totalUp) return 'up';
             }
-            // Seeded result ensures every player sees the same outcome for the same minute
             const rand = seededRandom(seed * 12345 + 6789);
             return rand > 0.5 ? 'up' : 'down';
         }
@@ -269,8 +273,8 @@
 
         window.logout = () => { 
             const auth = getAuth();
-            if(auth) { signOut(auth).then(() => { localStorage.clear(); window.location.reload(); }); } 
-            else { window.location.reload(); }
+            if(auth) { signOut(auth).then(() => { localStorage.clear(); window.location.href = "login.html"; }); } 
+            else { window.location.href = "login.html"; }
         };
 
         window.setBetAmount = (val) => { document.getElementById('betInput').value = val; window.updateProfit(); }
@@ -339,7 +343,7 @@
                 onSnapshot(doc(db, "games", "current"), (doc) => {
                     if(doc.exists()) { state.totalUp = doc.data().totalUp || 0; state.totalDown = doc.data().totalDown || 0; }
                 });
-            } else { signInAnonymously(auth); }
+            } else { window.location.href = "login.html"; } // Direct to login if completely unauthenticated
         });
 
         function finishLoading() {
@@ -386,7 +390,7 @@
             const amount = parseFloat(document.getElementById('betInput').value);
             if (!amount || amount <= 0) return;
             if (amount < 10) return showToast('error', "Mức cược tối thiểu là 10 T!");
-            if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư không đủ!");
+            if (amount + state.pendingBet.amount > state.balance) return showToast('error', "Số dư T không đủ!");
             
             state.pendingBet = { type, amount };
             
@@ -407,7 +411,7 @@
             if (state.isProcessing) return;
             const { amount, type } = state.pendingBet;
 
-            if (amount > state.balance) return showToast('error', "Số dư không đủ!");
+            if (amount > state.balance) return showToast('error', "Số dư T không đủ!");
             if (amount < 10) return showToast('error', "Mức cược tối thiểu là 10 T!");
 
             state.isProcessing = true;
@@ -547,7 +551,6 @@
             if (roundSettled) return;
             roundSettled = true;
             
-            // Result is absolutely determined by visual crossing of lockPrice
             let res = state.visualPrice > state.lockPrice ? 'up' : 'down';
 
             if (state.currentBet) {
@@ -695,4 +698,5 @@
     </script>
 </body>
 </html>
+
 
