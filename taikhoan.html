@@ -2,167 +2,296 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
-    <title>TPIG Support Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tpig - Tài khoản</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
-        
-        body { 
-            font-family: 'Roboto', sans-serif; 
+        /* CSS CORE & NGĂN CHẶN ZOOM/CUỘN THỪA */
+        html, body { 
+            touch-action: pan-y; 
+            overscroll-behavior-y: none; 
+            height: 100%; 
+            overflow: hidden; 
             background-color: #0b0f19; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            margin: 0; 
-            color: #d1d5db;
-            overscroll-behavior-y: contain;
+            -webkit-text-size-adjust: 100%;
         }
-
-        /* Chống phóng to trên di động: font-size tối thiểu 16px */
-        input, textarea, button { font-size: 16px !important; touch-action: manipulation; }
-
-        .message-bubble { max-width: 85%; word-wrap: break-word; line-height: 1.5; }
-        .chat-bg { background-color: #0b0f19; background-image: radial-gradient(#1e232e 0.5px, transparent 0.5px); background-size: 15px 15px; }
+        body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        
+        /* Cấm zoom khi double-tap vào các nút bấm */
+        a, button, input, select { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent;}
+        
+        /* Ẩn thanh cuộn nhưng vẫn cho phép cuộn */
         .hide-scroll::-webkit-scrollbar { display: none; }
-        
-        .gold-text { color: #FCD535; }
-        .gold-btn { background: linear-gradient(to right, #FCD535, #f59e0b); color: #000; font-weight: 900; }
-        .gold-btn:disabled { opacity: 0.5; filter: grayscale(1); }
-        
-        .admin-item-active { background-color: #1e232e; border-left: 4px solid #FCD535; }
-        
-        .quick-chat-btn {
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { background: rgba(19, 22, 31, 0.95); backdrop-filter: blur(10px); padding-bottom: env(safe-area-inset-bottom, 10px); }
+        .nav-item { transition: all 0.2s; text-decoration: none; cursor: pointer; }
+        .nav-item.active { color: #FCD535; }
+        .nav-item.active i { transform: translateY(-2px); }
+
+        /* PROFILE UI CARDS */
+        .tech-card {
             background: #1e232e;
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-size: 12px !important;
-            white-space: nowrap;
-            border: 1px solid #2d3442;
-            flex-shrink: 0;
-            color: #fff;
+            border: 1px solid #2d3442; 
+            border-radius: 16px; 
+            padding: 20px; 
+            position: relative; 
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            margin-bottom: 16px;
         }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .tech-list {
+            background: #1e232e; 
+            border: 1px solid #2d3442; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            margin-bottom: 16px;
+        }
+        .list-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px; border-bottom: 1px solid #2d3442; transition: 0.2s;
+        }
+        .list-item:last-child { border-bottom: none; }
+        
+        /* FIX LỖI ZOOM TRÊN IOS: font-size bắt buộc phải >= 16px đối với input */
+        .input-dark {
+            width: 100%; background: #0b0f19; border: 1px solid #2d3442;
+            color: #fff; padding: 12px; border-radius: 8px; 
+            font-size: 16px; 
+            margin-bottom: 12px; transition: 0.2s;
+            appearance: none; -webkit-appearance: none;
+        }
+        .input-dark:focus { border-color: #FCD535; outline: none; box-shadow: 0 0 0 1px #FCD535; }
+        .input-readonly { background: #13161f; color: #6b7280; border-color: #2d3442; cursor: not-allowed; }
+        
+        .btn-save {
+            width: 100%; background: #0ECB81; color: white; font-weight: bold;
+            padding: 12px; border-radius: 8px; font-size: 14px; text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(14, 203, 129, 0.3); transition: 0.2s;
+        }
+        .btn-save:active { transform: scale(0.98); }
+        .btn-save:disabled { background: #4b5563; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
+
+        .verified-badge {
+            background: rgba(14, 203, 129, 0.15); border: 1px solid rgba(14, 203, 129, 0.3);
+            color: #0ECB81; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;
+        }
     </style>
 </head>
-<body class="overflow-hidden">
+<body>
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP -->
-    <div id="login-container" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0f19] p-6">
-        <div class="bg-[#13161f] w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center border border-[#232836]">
-            <div class="w-20 h-20 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(252,213,53,0.3)]">
-                <span class="text-black text-3xl font-black italic">TP</span>
+    <!-- HEADER BAR TƯƠNG TỰ TRANG CHỦ -->
+    <header class="flex items-center justify-between px-4 h-16 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 sticky top-0">
+        <div class="flex items-center gap-3">
+            <a href="cskh.html" class="bg-[#1e232e] border border-[#2d3442] px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition-transform shadow-sm text-white">
+                <i class="fa-solid fa-headset text-blue-400"></i>
+                <span class="text-xs font-bold">CSKH</span>
+            </a>
+            <div class="font-black text-xl text-white tracking-widest italic flex items-center gap-1 ml-1">
+                <span class="text-[#FCD535]">T</span>PIG
             </div>
-            <h1 class="text-2xl font-black gold-text mb-1 tracking-widest uppercase">TPIG CENTER</h1>
-            <p class="text-gray-500 text-xs mb-8 font-bold uppercase tracking-tighter">Hỗ trợ người chơi trực tuyến</p>
+        </div>
+
+        <div class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner">
+            <div class="flex flex-col items-end leading-none">
+                <span class="text-[9px] text-[#6b7280] font-bold uppercase mb-0.5">SỐ DƯ</span>
+                <span id="balanceDisplayHeader" class="text-[#EAECEF] font-mono text-sm font-bold animate-pulse">...</span>
+            </div>
+            <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center text-[14px] font-black text-black shadow-lg">
+                T
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-24 relative bg-[#0b0f19]">
+        <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FCD535]/5 to-transparent pointer-events-none"></div>
+
+        <div class="relative z-10">
+            <!-- PROFILE INFO CARD -->
+            <div class="flex flex-col items-center mb-6 pt-2">
+                <div class="w-20 h-20 rounded-full p-[2px] bg-gradient-to-tr from-[#FCD535] to-[#f59e0b] mb-3 shadow-[0_0_20px_rgba(252,213,53,0.3)] relative">
+                    <div class="w-full h-full rounded-full bg-[#13161f] flex items-center justify-center border-2 border-[#1e232e]">
+                        <i class="fa-solid fa-user text-3xl text-gray-400"></i>
+                    </div>
+                    <div class="absolute bottom-0 right-0 w-6 h-6 bg-[#0ECB81] border-2 border-[#13161f] rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-check text-[10px] text-[#111] font-black"></i>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold text-white tracking-wide" id="displayFullname">Đang tải...</h2>
+                <p class="text-sm text-[#FCD535] font-mono mt-0.5" id="displayUsername">@username</p>
+            </div>
+
+            <!-- BALANCE BIG CARD -->
+            <div class="tech-card border-[#FCD535]/20">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-[#FCD535] rounded-full opacity-[0.05] blur-3xl pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Tổng Số Dư</span>
+                        <div class="w-8 h-8 shrink-0 rounded bg-[#FCD535]/10 flex items-center justify-center text-[#FCD535]"><i class="fa-solid fa-wallet text-sm"></i></div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-mono font-black text-white tracking-tight" id="displayBalanceMain">0.00</span>
+                        <span class="text-[#FCD535] font-black text-xl">T</span>
+                    </div>
+                    <div class="text-[11px] text-[#0ECB81] font-mono mt-1 font-medium bg-[#0ECB81]/10 w-fit px-2 py-0.5 rounded" id="displayBalanceVND">≈ 0 VNĐ</div>
+                    
+                    <div class="mt-5 flex gap-3">
+                        <a href="naprut.html?tab=deposit" class="flex-1 bg-gradient-to-r from-[#FCD535] to-[#f59e0b] text-[#111] font-black py-3 rounded-xl text-center text-sm shadow-[0_4px_15px_rgba(252,213,53,0.3)] hover:brightness-110 active:scale-95 transition-all">
+                            <i class="fa-solid fa-arrow-down mr-1"></i> NẠP T
+                        </a>
+                        <a href="naprut.html?tab=withdraw" class="flex-1 bg-[#2d3442] text-white border border-[#4b5563] font-bold py-3 rounded-xl text-center text-sm hover:bg-[#374151] active:scale-95 transition-all">
+                            <i class="fa-solid fa-arrow-up mr-1"></i> RÚT TIỀN
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BANK ACCOUNT SECTION -->
+            <div class="tech-card">
+                <div class="flex items-center justify-between mb-4 border-b border-[#2d3442] pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 shrink-0 rounded bg-[#0ECB81]/10 flex items-center justify-center text-[#0ECB81]">
+                            <i class="fa-solid fa-building-columns text-sm"></i>
+                        </div>
+                        <span class="font-bold text-sm text-white">THÔNG TIN THANH TOÁN</span>
+                    </div>
+                    <span id="bankStatusBadge" class="hidden verified-badge shadow-sm">ĐÃ LIÊN KẾT</span>
+                </div>
+
+                <div id="bankInputForm">
+                    <div class="mb-3">
+                        <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Chọn Ngân Hàng / Ví</label>
+                        <select id="bankName" class="input-dark" onchange="window.checkBankType(this)">
+                            <option value="">-- Chọn ngân hàng --</option>
+                            <option value="Momo" class="font-bold text-pink-500">Ví Điện Tử MoMo</option>
+                            <option value="Vietcombank">Vietcombank</option>
+                            <option value="Techcombank">Techcombank</option>
+                            <option value="MBBank">MB Bank</option>
+                            <option value="ACB">ACB</option>
+                            <option value="VietinBank">VietinBank</option>
+                            <option value="BIDV">BIDV</option>
+                            <option value="VPBank">VPBank</option>
+                            <option value="Agribank">Agribank</option>
+                            <option value="TPBank">TPBank</option>
+                            <option value="Sacombank">Sacombank</option>
+                            <option value="VIB">VIB</option>
+                            <option value="MSB">MSB</option>
+                            <option value="OCB">OCB</option>
+                            <option value="Eximbank">Eximbank</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label id="labelBankNumber" class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Số Tài Khoản</label>
+                        <input type="number" id="bankNumber" class="input-dark" placeholder="Nhập số tài khoản/ví" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div class="mb-5">
+                        <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Chủ Tài Khoản (Tự động)</label>
+                        <input type="text" id="bankOwner" class="input-dark input-readonly" readonly placeholder="HỌ VÀ TÊN">
+                    </div>
+                    <button onclick="window.saveBankInfo()" class="btn-save" id="btnSaveBank">
+                        <i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH
+                    </button>
+                    <p class="text-[10px] text-[#F6465D] mt-3 font-medium text-center bg-[#F6465D]/10 py-1.5 rounded">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Thông tin không thể thay đổi sau khi lưu.
+                    </p>
+                </div>
+
+                <div id="bankInfoDisplay" class="hidden space-y-4">
+                    <div class="flex justify-between items-center border-b border-[#2d3442] pb-3">
+                        <span class="text-xs text-gray-400">Ngân hàng / Ví</span>
+                        <span class="text-sm font-bold text-white bg-[#0b0f19] px-3 py-1 rounded border border-[#2d3442]" id="displayBankName">---</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-[#2d3442] pb-3">
+                        <span class="text-xs text-gray-400" id="labelDisplayNumber">Số tài khoản</span>
+                        <span class="text-sm font-bold text-[#FCD535] font-mono tracking-wider" id="displayBankNumber">---</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-400">Chủ tài khoản</span>
+                        <span class="text-sm font-bold text-white uppercase" id="displayBankOwner">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAIL LIST -->
+            <div class="tech-list shadow-lg">
+                <div class="list-item">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 shrink-0 rounded-full bg-[#0b0f19] border border-[#2d3442] flex items-center justify-center text-blue-400"><i class="fa-solid fa-id-card"></i></div>
+                        <span class="text-sm font-medium text-white">ID Tài khoản</span>
+                    </div>
+                    <span class="text-xs text-gray-400 font-mono break-all text-right w-1/2" id="infoID">...</span>
+                </div>
+                <div class="list-item">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 shrink-0 rounded-full bg-[#0b0f19] border border-[#2d3442] flex items-center justify-center text-[#FCD535]"><i class="fa-solid fa-phone"></i></div>
+                        <span class="text-sm font-medium text-white">Số điện thoại</span>
+                    </div>
+                    <span class="text-sm text-gray-400 font-mono" id="infoPhone">...</span>
+                </div>
+                <div class="list-item">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 shrink-0 rounded-full bg-[#0b0f19] border border-[#2d3442] flex items-center justify-center text-purple-400"><i class="fa-solid fa-calendar-days"></i></div>
+                        <span class="text-sm font-medium text-white">Ngày tham gia</span>
+                    </div>
+                    <span class="text-sm text-gray-400 font-mono" id="infoDate">...</span>
+                </div>
+            </div>
             
-            <div class="space-y-4">
-                <input type="text" id="login-input" placeholder="Nhập tên tài khoản..." 
-                    class="w-full bg-[#0b0f19] border-2 border-[#2d3442] rounded-2xl py-4 px-6 focus:border-[#FCD535] outline-none transition-all text-white placeholder-gray-600 font-bold">
-                
-                <button id="btn-login" disabled class="w-full gold-btn py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-widest text-sm italic">
-                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang kết nối...
-                </button>
+            <button onclick="window.logout()" class="w-full bg-[#1e232e] border border-[#F6465D]/40 text-[#F6465D] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 mt-2 mb-6 hover:bg-[#F6465D]/10 active:scale-95 transition-all shadow-lg">
+                <i class="fa-solid fa-right-from-bracket text-lg"></i> ĐĂNG XUẤT TÀI KHOẢN
+            </button>
 
-                <a href="game.html" class="block w-full bg-[#1e232e] text-gray-400 font-bold py-4 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-[10px] border border-[#2d3442]">
-                    Quay lại Trang chủ
-                </a>
-            </div>
+            <p class="text-center text-[10px] text-[#4b5563] mt-2 font-mono font-bold tracking-widest">TPIG APP V30.2.3 • BUID: <span id="appVersionID">...</span></p>
         </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[68px] border-t border-[#232836] flex items-center justify-around px-2 z-30">
+        <a href="game.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] font-bold">Trang chủ</span>
+        </a>
+        <a href="khuyenmai.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-gift text-xl"></i>
+            <span class="text-[10px] font-bold">Khuyến mãi</span>
+        </a>
+        <a href="naprut.html" class="relative -top-5 flex flex-col items-center justify-center w-16 text-decoration-none group">
+            <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_5px_20px_rgba(252,213,53,0.4)] border-4 border-[#0b0f19] group-active:scale-95 transition-transform">
+                <i class="fa-solid fa-plus text-2xl text-black"></i>
+            </div>
+            <span class="text-[10px] font-bold text-[#FCD535] mt-1">Nạp T</span>
+        </a>
+        <a href="lichsu.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
+            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+            <span class="text-[10px] font-bold">Lịch sử</span>
+        </a>
+        <a href="taikhoan.html" class="nav-item active flex flex-col items-center justify-center w-16 h-full gap-1">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-[10px] font-bold">Tài khoản</span>
+        </a>
     </div>
 
-    <!-- GIAO DIỆN NGƯỜI CHƠI (USER) -->
-    <div id="user-interface" class="hidden flex flex-col h-screen fade-in">
-        <header class="bg-[#13161f] border-b border-[#232836] p-4 flex items-center justify-between shrink-0 sticky top-0 z-20">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#FCD535] to-[#f59e0b] flex items-center justify-center text-black font-black italic shrink-0 shadow-lg">T</div>
-                <div>
-                    <h2 class="font-bold gold-text text-sm uppercase leading-none mb-1">Hỗ trợ TPIG</h2>
-                    <div id="queue-status" class="text-[10px] text-gray-500 font-bold uppercase tracking-tighter italic">Đang tải...</div>
-                </div>
-            </div>
-            <a href="game.html" class="bg-[#1e232e] text-gray-400 py-2 px-4 rounded-xl border border-[#2d3442] text-[10px] font-bold uppercase">Thoát</a>
-        </header>
-
-        <div id="user-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll"></div>
-
-        <div class="p-4 bg-[#13161f] border-t border-[#232836] shrink-0">
-            <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442]">
-                <input type="text" id="user-msg-input" placeholder="Bạn cần hỗ trợ gì?" class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white placeholder-gray-600 font-medium">
-                <button id="btn-send-user" class="gold-btn p-3 rounded-xl shadow-lg">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- GIAO DIỆN CSKH (ADMIN) -->
-    <div id="admin-interface" class="hidden flex h-screen overflow-hidden bg-[#0b0f19] fade-in">
-        <!-- Sidebar -->
-        <div class="w-20 md:w-72 border-r border-[#232836] flex flex-col bg-[#13161f] shrink-0">
-            <div class="p-4 border-b border-[#232836] flex justify-between items-center bg-[#13161f]">
-                <h3 class="font-black gold-text text-[10px] uppercase hidden md:block tracking-widest">HÀNG CHỜ</h3>
-                <button onclick="location.reload()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-rotate-right"></i></button>
-            </div>
-            <div id="admin-user-list" class="flex-grow overflow-y-auto hide-scroll"></div>
-        </div>
-
-        <!-- Khung Chat Admin -->
-        <div class="flex-grow flex flex-col relative bg-[#0b0f19]">
-            <div id="admin-chat-header" class="p-4 border-b border-[#232836] flex justify-between items-center shrink-0 min-h-[73px] bg-[#13161f]">
-                <div class="flex items-center gap-3">
-                    <div id="active-user-avatar" class="w-9 h-9 rounded-full bg-[#1e232e] flex items-center justify-center font-black text-[#FCD535] hidden border border-[#2d3442]">?</div>
-                    <div class="font-black text-gray-300 text-sm uppercase italic tracking-tighter" id="header-user-name">QUẢN LÝ CSKH</div>
-                </div>
-                <button id="btn-end-session" class="hidden bg-[#F6465D] hover:bg-red-700 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg">
-                    Kết thúc
-                </button>
-            </div>
-            
-            <div id="quick-chat-bar" class="bg-[#13161f] p-2 border-b border-[#232836] flex gap-2 overflow-x-auto hide-scroll hidden">
-                <button class="quick-chat-btn" data-txt="Chào bạn! Chuyên viên TPIG đã có mặt, tôi có thể giúp gì cho bạn?">CHÀO HỎI</button>
-                <button class="quick-chat-btn" data-txt="Vui lòng cung cấp chính xác Tên tài khoản Game của bạn.">HỎI TÊN TK</button>
-                <button class="quick-chat-btn" data-txt="Vấn đề của bạn đã được chuyển kỹ thuật, vui lòng đợi xử lý.">BÁO LỖI</button>
-                <button class="quick-chat-btn" data-txt="Đã hoàn tất xử lý. Chúc bạn chơi game vui vẻ nhé!">XONG</button>
-                <button class="quick-chat-btn" data-txt="Cảm ơn bạn đã liên hệ. Phiên hỗ trợ xin phép kết thúc tại đây!">TẠM BIỆT</button>
-            </div>
-
-            <div id="admin-messages" class="flex-grow overflow-y-auto p-4 space-y-4 chat-bg hide-scroll">
-                <div class="flex flex-col items-center justify-center h-full text-gray-600 opacity-50 text-center">
-                    <i class="fa-solid fa-comments text-5xl mb-4"></i>
-                    <p class="text-xs font-bold uppercase">Chọn người chơi để bắt đầu</p>
-                </div>
-            </div>
-
-            <div id="admin-input-container" class="p-4 bg-[#13161f] border-t border-[#232836] hidden shrink-0">
-                <div class="flex items-center gap-2 bg-[#0b0f19] p-2 rounded-2xl border border-[#2d3442]">
-                    <input type="text" id="admin-msg-input" placeholder="Trả lời người chơi..." class="flex-grow bg-transparent border-none px-3 py-2 text-base outline-none text-white font-medium">
-                    <button id="btn-send-admin" class="gold-btn px-6 py-2 rounded-xl text-sm italic font-black uppercase shadow-lg">GỬI</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Confirm Modal -->
-    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 hidden p-6 backdrop-blur-sm">
-        <div class="bg-[#13161f] border border-[#2d3442] p-8 rounded-3xl max-w-xs w-full text-center shadow-2xl">
-            <i class="fa-solid fa-circle-exclamation text-[#F6465D] text-4xl mb-4"></i>
-            <p id="modal-text" class="text-white mb-8 text-sm font-bold leading-relaxed uppercase"></p>
-            <div class="flex gap-3 justify-center">
-                <button id="modal-cancel" class="bg-[#1e232e] text-gray-400 flex-1 py-3 rounded-2xl text-[10px] font-black uppercase">Hủy</button>
-                <button id="modal-confirm" class="bg-[#F6465D] text-white flex-1 py-3 rounded-2xl text-[10px] font-black uppercase shadow-lg">Xác nhận</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- FIREBASE & LOGIC SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, deleteDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CẤU HÌNH FIREBASE GỐC CỦA BẠN (TỪ TÀI KHOẢN.HTML)
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
+
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                setTimeout(() => { document.body.scrollTop = 0; }, 50);
+            });
+        });
+
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
@@ -174,210 +303,156 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
-        
-        // Tên collection cố định để không bị lỗi rules
-        const ROOT_COLLECTION = "support_sessions";
+        const db = getFirestore(app);
+        let currentUserUID = null;
+        const EXCHANGE_RATE = 1000;
 
-        let currentFBUser = null;
-        let isAdmin = false;
-        let selectedUserId = null;
-        let myName = "";
-        let autoReplied = false;
-
-        // AUTH
-        onAuthStateChanged(auth, async (u) => {
-            if (u) {
-                currentFBUser = u;
-                const btn = document.getElementById('btn-login');
-                btn.disabled = false;
-                btn.innerHTML = 'BẮT ĐẦU CHAT';
+        window.checkBankType = (select) => {
+            const label = document.getElementById('labelBankNumber');
+            const input = document.getElementById('bankNumber');
+            if (select.value === 'Momo') {
+                label.innerText = 'SỐ ĐIỆN THOẠI VÍ MOMO';
+                input.placeholder = 'Nhập số điện thoại ví Momo';
             } else {
-                signInAnonymously(auth).catch(e => console.error("Auth fail", e));
+                label.innerText = 'SỐ TÀI KHOẢN';
+                input.placeholder = 'Nhập số tài khoản/ví';
             }
-        });
+        }
 
-        // UI MODAL
-        const showModal = (text, confirmCb) => {
-            const modal = document.getElementById('custom-modal');
-            document.getElementById('modal-text').innerText = text;
-            modal.classList.remove('hidden');
-            document.getElementById('modal-confirm').onclick = () => { modal.classList.add('hidden'); confirmCb(); };
-            document.getElementById('modal-cancel').onclick = () => { modal.classList.add('hidden'); };
-        };
-
-        // LOGIN
-        document.getElementById('btn-login').onclick = () => {
-            const val = document.getElementById('login-input').value.trim();
-            if (!val || !currentFBUser) return;
-
-            if (val === "cskhtpig123") {
-                isAdmin = true;
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('admin-interface').classList.remove('hidden');
-                initAdmin();
-            } else {
-                isAdmin = false;
-                myName = val;
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('user-interface').classList.remove('hidden');
-                initUser();
+        window.logout = () => {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                signOut(auth).then(() => {
+                    localStorage.removeItem('crownex_user_info');
+                    window.location.href = "index.html";
+                });
             }
         };
 
-        // --- USER SYSTEM ---
-        function initUser() {
-            const userDocRef = doc(db, ROOT_COLLECTION, currentFBUser.uid);
-            setDoc(userDocRef, { name: myName, created: serverTimestamp(), agentJoined: false, active: true }, { merge: true });
+        window.saveBankInfo = async () => {
+            const bankName = document.getElementById('bankName').value;
+            const bankNumber = document.getElementById('bankNumber').value.trim();
+            const bankOwner = document.getElementById('bankOwner').value.trim();
 
-            onSnapshot(collection(db, ROOT_COLLECTION), (snap) => {
-                const list = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    if (data.created && !data.agentJoined) list.push({ id: d.id, time: data.created.toMillis ? data.created.toMillis() : Date.now() });
-                });
-                list.sort((a,b) => a.time - b.time);
-                const rank = list.findIndex(u => u.id === currentFBUser.uid) + 1;
-                
-                getDoc(userDocRef).then(ds => {
-                    const status = document.getElementById('queue-status');
-                    if (ds.data()?.agentJoined) status.innerHTML = `<span class="text-[#0ECB81] font-black italic">● ĐANG TRÒ CHUYỆN</span>`;
-                    else status.innerText = rank > 0 ? `SỐ THỨ TỰ CỦA BẠN: ${rank}` : "ĐANG CHỜ KẾT NỐI...";
-                });
-            });
+            if (!bankName || !bankNumber) { alert("Vui lòng chọn ngân hàng/ví và nhập số tài khoản!"); return; }
+            if (!currentUserUID) return;
 
-            const qMsg = query(collection(db, ROOT_COLLECTION, currentFBUser.uid, 'messages'), orderBy('time', 'asc'));
-            onSnapshot(qMsg, (snap) => {
-                const box = document.getElementById('user-messages');
-                if (snap.empty && autoReplied) location.reload();
-                box.innerHTML = '';
-                snap.forEach(d => render(box, d.data().text, d.data().role === 'admin' ? 'left' : 'right'));
-                box.scrollTop = box.scrollHeight;
-            });
-        }
+            const btn = document.getElementById('btnSaveBank');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG KIỂM TRA...';
+            btn.disabled = true;
 
-        // --- ADMIN SYSTEM ---
-        function initAdmin() {
-            onSnapshot(collection(db, ROOT_COLLECTION), (snap) => {
-                const list = document.getElementById('admin-user-list');
-                list.innerHTML = '';
-                const uDatas = [];
-                snap.forEach(d => uDatas.push({ id: d.id, ...d.data() }));
-                uDatas.sort((a,b) => (a.agentJoined === b.agentJoined) ? 0 : a.agentJoined ? 1 : -1);
-
-                uDatas.forEach(data => {
-                    if(!data.name) return;
-                    const item = document.createElement('div');
-                    item.className = `p-4 border-b border-[#232836] cursor-pointer transition-all ${selectedUserId === data.id ? 'admin-item-active' : 'hover:bg-[#13161f]'}`;
-                    item.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div class="relative shrink-0">
-                                <div class="w-10 h-10 rounded-full bg-[#1e232e] text-[#FCD535] flex items-center justify-center font-black border border-[#2d3442]">${data.name.charAt(0).toUpperCase()}</div>
-                                ${!data.agentJoined ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-[#FCD535] rounded-full border-2 border-[#0b0f19] animate-pulse"></div>' : ''}
-                            </div>
-                            <div class="hidden md:block overflow-hidden flex-grow leading-tight">
-                                <p class="font-black text-[10px] text-gray-200 truncate uppercase">${data.name}</p>
-                                <p class="text-[9px] ${data.agentJoined ? 'text-gray-500' : 'text-[#FCD535] font-black'} uppercase mt-1">
-                                    ${data.agentJoined ? 'Đã tiếp nhận' : 'CHỜ HỖ TRỢ'}
-                                </p>
-                            </div>
-                        </div>`;
-                    item.onclick = () => selectUser(data.id, data.name, data.agentJoined);
-                    list.appendChild(item);
-                });
-            });
-        }
-
-        async function selectUser(uid, name, joined) {
-            selectedUserId = uid;
-            document.getElementById('header-user-name').innerText = name.toUpperCase();
-            document.getElementById('active-user-avatar').innerText = name.charAt(0).toUpperCase();
-            document.getElementById('active-user-avatar').classList.remove('hidden');
-            document.getElementById('admin-input-container').classList.remove('hidden');
-            document.getElementById('btn-end-session').classList.remove('hidden');
-            document.getElementById('quick-chat-bar').classList.remove('hidden');
-            
-            const chatRef = doc(db, ROOT_COLLECTION, uid);
-            const msgCol = collection(db, ROOT_COLLECTION, uid, 'messages');
-
-            if (!joined) {
-                await updateDoc(chatRef, { agentJoined: true });
-                await addDoc(msgCol, { 
-                    text: "Xin chào! Chuyên viên CSKH TPIG đã có mặt để hỗ trợ bạn đây. Bạn cần giúp gì ạ?", 
-                    role: 'admin', 
-                    time: serverTimestamp() 
-                });
-            }
-
-            const qMsg = query(msgCol, orderBy('time', 'asc'));
-            onSnapshot(qMsg, (snap) => {
-                const box = document.getElementById('admin-messages');
-                box.innerHTML = '';
-                snap.forEach(d => render(box, d.data().text, d.data().role === 'admin' ? 'right' : 'left'));
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        // --- SEND ---
-        const sendMessage = async (role, manualText = null) => {
-            const input = document.getElementById(role === 'admin' ? 'admin-msg-input' : 'user-msg-input');
-            const text = manualText || input.value.trim();
-            if (!text) return;
-            const targetId = role === 'admin' ? selectedUserId : currentFBUser.uid;
-            
             try {
-                const msgCol = collection(db, ROOT_COLLECTION, targetId, 'messages');
-                const chatDoc = doc(db, ROOT_COLLECTION, targetId);
-                await addDoc(msgCol, { text, role, time: serverTimestamp() });
-                await updateDoc(chatDoc, { lastMsg: text, updated: serverTimestamp() });
-
-                if (role === 'user' && !autoReplied) {
-                    const ds = await getDoc(chatDoc);
-                    if (!ds.data()?.agentJoined) {
-                        autoReplied = true;
-                        setTimeout(async () => {
-                            const botMsg = `Chào bạn ${myName}! Hệ thống đã nhận được yêu cầu. Vui lòng cung cấp Tên tài khoản Game và vấn đề của bạn, chuyên viên sẽ phản hồi ngay lập tức.`;
-                            await addDoc(msgCol, { text: botMsg, role: 'admin', time: serverTimestamp() });
-                        }, 1200);
-                    }
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("bankNumber", "==", bankNumber));
+                const querySnapshot = await getDocs(q);
+                let isDuplicate = false;
+                
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach((doc) => {
+                        if (doc.data().bankName === bankName && doc.id !== currentUserUID) { isDuplicate = true; }
+                    });
                 }
-                if (!manualText) input.value = '';
-            } catch (e) { console.error(e); }
+
+                if (isDuplicate) {
+                    alert("LỖI: Số tài khoản/ví này đã được liên kết bởi người dùng khác!");
+                    btn.innerHTML = '<i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH';
+                    btn.disabled = false;
+                    return; 
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG LƯU...';
+                await updateDoc(doc(db, "users", currentUserUID), {
+                    bankName: bankName,
+                    bankNumber: bankNumber,
+                    bankOwner: bankOwner,
+                    isBankVerified: true
+                });
+                alert("Đã liên kết thông tin thanh toán thành công!");
+
+            } catch (error) {
+                console.error(error);
+                alert("Lỗi hệ thống. Vui lòng thử lại.");
+                btn.innerHTML = '<i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH';
+                btn.disabled = false;
+            }
         };
 
-        document.getElementById('btn-send-user').onclick = () => sendMessage('user');
-        document.getElementById('btn-send-admin').onclick = () => sendMessage('admin');
-        document.querySelectorAll('.quick-chat-btn').forEach(b => {
-            b.onclick = () => sendMessage('admin', b.getAttribute('data-txt'));
-        });
+        document.getElementById('appVersionID').innerText = Math.floor(Math.random()*90000)+10000;
 
-        document.getElementById('btn-end-session').onclick = () => {
-            showModal("KẾT THÚC VÀ XÓA DỮ LIỆU PHIÊN CHAT NÀY?", async () => {
-                const col = collection(db, ROOT_COLLECTION, selectedUserId, 'messages');
-                const snap = await getDocs(col);
-                await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
-                await deleteDoc(doc(db, ROOT_COLLECTION, selectedUserId));
-                location.reload();
-            });
-        };
+        // KIỂM TRA ĐĂNG NHẬP & ĐỒNG BỘ DỮ LIỆU
+        onAuthStateChanged(auth, async (user) => {
+            if (user && !user.isAnonymous) {
+                currentUserUID = user.uid;
+                const userRef = doc(db, "users", user.uid);
+                
+                // 1. FIX: GỌI HÀM RENDER NGAY LẬP TỨC CHO LOCALSTORAGE ĐỂ KHÔNG BỊ TREO UI
+                const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
+                if(localData) {
+                    renderData(localData, user.uid);
+                }
 
-        function render(box, text, side) {
-            const div = document.createElement('div');
-            div.className = `flex ${side === 'right' ? 'justify-end' : 'justify-start'} fade-in`;
-            const color = side === 'right' ? 'bg-[#FCD535] text-black font-bold rounded-tr-none' : 'bg-[#1e232e] text-gray-200 border border-[#2d3442] rounded-tl-none';
-            div.innerHTML = `<div class="${color} message-bubble px-4 py-3 rounded-2xl shadow-lg text-[13px] tracking-tight">${text}</div>`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                if (!document.getElementById('user-interface').classList.contains('hidden')) sendMessage('user');
-                if (!document.getElementById('admin-interface').classList.contains('hidden')) sendMessage('admin');
+                // 2. Lắng nghe dữ liệu realtime từ Firestore
+                onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        renderData(data, user.uid);
+                        data.uid = user.uid;
+                        localStorage.setItem('crownex_user_info', JSON.stringify(data));
+                    } else {
+                        // 3. FIX: XỬ LÝ NẾU TÀI KHOẢN CHƯA CÓ DOCUMENT TRONG FIRESTORE
+                        console.warn("Chưa có document trên Firestore!");
+                        renderData({ balance: 0, fullName: "Player", username: "new_player" }, user.uid);
+                    }
+                }, (error) => {
+                    // 4. FIX: BẮT LỖI QUYỀN TRUY CẬP (RULES)
+                    console.error("Lỗi đồng bộ dữ liệu: ", error);
+                });
+            } else {
+                console.log("Chưa đăng nhập, quay về trang chủ");
+                window.location.href = "index.html";
             }
         });
+
+        // HÀM HIỂN THỊ DỮ LIỆU LÊN UI
+        function renderData(data, uid) {
+            document.getElementById('displayFullname').innerText = data.fullName || "Tpig Player";
+            document.getElementById('displayUsername').innerText = "@" + (data.username || "player");
+            
+            const bal = data.balance || 0;
+            const formattedBalance = bal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('displayBalanceMain').innerText = formattedBalance;
+            const headerBal = document.getElementById('balanceDisplayHeader');
+            headerBal.innerText = formattedBalance;
+            headerBal.classList.remove('animate-pulse');
+
+            document.getElementById('displayBalanceVND').innerText = "≈ " + (bal * EXCHANGE_RATE).toLocaleString('vi-VN') + " VNĐ";
+            
+            document.getElementById('infoPhone').innerText = data.phone || "Chưa cập nhật";
+            document.getElementById('infoID').innerText = uid;
+            const d = data.createdAt ? new Date(data.createdAt) : new Date();
+            document.getElementById('infoDate').innerText = d.toLocaleDateString('vi-VN');
+
+            if (data.bankNumber) {
+                document.getElementById('bankInputForm').classList.add('hidden');
+                document.getElementById('bankInfoDisplay').classList.remove('hidden');
+                document.getElementById('bankStatusBadge').classList.remove('hidden');
+                document.getElementById('displayBankName').innerText = data.bankName;
+                document.getElementById('displayBankNumber').innerText = "****" + data.bankNumber.slice(-4);
+                document.getElementById('displayBankOwner').innerText = data.bankOwner;
+                
+                if (data.bankName === 'Momo') {
+                    document.getElementById('labelDisplayNumber').innerText = "Số ví MoMo";
+                } else {
+                    document.getElementById('labelDisplayNumber').innerText = "Số tài khoản";
+                }
+            } else {
+                document.getElementById('bankInputForm').classList.remove('hidden');
+                document.getElementById('bankInfoDisplay').classList.add('hidden');
+                document.getElementById('bankStatusBadge').classList.add('hidden');
+                if(data.fullName) document.getElementById('bankOwner').value = data.fullName.toUpperCase();
+            }
+        }
     </script>
 </body>
 </html>
-
