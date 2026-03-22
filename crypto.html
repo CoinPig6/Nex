@@ -108,7 +108,7 @@
         <div id="lockLabel"><i class="fa-solid fa-lock text-[8px] mr-1 opacity-70"></i> <span id="lockPriceText"></span></div>
         
         <!-- POPUP THẮNG/THUA -->
-        <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0">
+        <div id="resultPopup" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-72 text-center transition-all duration-300 scale-90 opacity-0 pointer-events-none">
             <div id="popupBorder" class="tech-border p-8 relative">
                 <div id="popupTitle" class="font-black text-2xl mb-1 uppercase tracking-widest">HÚP RỒI</div>
                 <div id="popupAmount" class="font-mono font-black text-3xl drop-shadow-xl">+0 T</div>
@@ -134,15 +134,15 @@
     <div class="bg-[#13161f] p-4 border-t border-[#232836] pb-safe z-20 shrink-0 relative">
         <div class="flex flex-col items-center w-full max-w-sm mx-auto mb-4">
             
-            <!-- CHIPS CHỌN NHANH (Căn giữa tuyệt đối) -->
+            <!-- CHIPS CHỌN NHANH ĐỒNG BỘ -->
             <div class="flex items-center justify-between gap-1.5 mb-4 w-full">
                 <!-- Mặc định chọn 10 T -->
-                <button onclick="window.setBetAmount(10, this)" class="chip selected">10</button>
-                <button onclick="window.setBetAmount(50, this)" class="chip">50</button>
-                <button onclick="window.setBetAmount(100, this)" class="chip">100</button>
-                <button onclick="window.setBetAmount(500, this)" class="chip">500</button>
-                <button onclick="window.setBetAmount(1000, this)" class="chip">1K</button>
-                <button onclick="window.setAllIn(this)" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
+                <button onclick="window.setBetAmount(10)" class="chip selected">10</button>
+                <button onclick="window.setBetAmount(50)" class="chip">50</button>
+                <button onclick="window.setBetAmount(100)" class="chip">100</button>
+                <button onclick="window.setBetAmount(500)" class="chip">500</button>
+                <button onclick="window.setBetAmount(1000)" class="chip">1K</button>
+                <button onclick="window.setAllIn()" class="chip !text-[#FCD535] !border-[#FCD535]">ALL</button>
             </div>
 
             <!-- Ô NHẬP TIỀN -->
@@ -151,13 +151,13 @@
                 
                 <div class="flex-1 relative group h-12">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#FCD535] font-black text-base mt-0.5">T</span>
-                    <input type="number" id="betInput" value="10" min="10" class="w-full h-full bg-[#050505] border border-[#2d3442] text-white font-mono font-black text-xl rounded-xl text-center focus:outline-none focus:border-[#FCD535] shadow-inner" oninput="window.updateProfit()">
+                    <input type="number" id="betInput" value="10" min="10" class="w-full h-full bg-[#050505] border border-[#2d3442] text-white font-mono font-black text-xl rounded-xl text-center focus:outline-none focus:border-[#FCD535] shadow-inner" oninput="window.handleManualInput()" onchange="window.handleManualInput()">
                 </div>
                 
                 <button onclick="window.adjustBet(10)" class="w-12 h-12 bg-[#1e232e] rounded-xl text-[#9ca3af] text-xl font-bold border border-[#2d3442] active:bg-[#2d3442] shadow-sm flex items-center justify-center shrink-0"><i class="fa-solid fa-plus"></i></button>
             </div>
             
-            <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.50 T</span></div>
+            <div class="text-center text-[10px] text-[#6b7280] font-black uppercase mt-2 tracking-widest">Lợi nhuận dự kiến: <span class="text-[#0ECB81]" id="profitDisplay">+9.60 T</span></div>
         </div>
         
         <!-- NÚT MUA/BÁN & ĐẾM NGƯỢC (Bố cục chống vỡ) -->
@@ -243,47 +243,71 @@
             let simPrice = 98100;
             let cands = [];
             
-            // Render 60 cây nến quá khứ (tương đương 60 bóng)
             for (let e = currentEpoch - 60; e <= currentEpoch; e++) {
                 const rand = seededRandom(e * 123);
                 const dir = getDeterministicResult(e); 
                 
-                // Toán học khóa nến: Dù nhảy kiểu gì kết thúc vẫn phải đúng hướng của Lịch sử bóng
                 let change = dir === 'up' ? (rand * 6 + 2) : -(rand * 6 + 2);
-                
                 const open = simPrice;
                 const close = open + change;
                 const high = Math.max(open, close) + seededRandom(e*321) * 3;
                 const low = Math.min(open, close) - seededRandom(e*456) * 3;
                 
                 cands.push({ epoch: e, open, close, high, low, change });
-                simPrice = close; // Giá đóng của nến trước là mở của nến sau
+                simPrice = close; 
             }
             return cands;
         }
 
         // --- UI FUNCTIONS ---
-        window.setBetAmount = (val, el) => { 
-            document.getElementById('betInput').value = val; window.updateProfit(); 
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-            if(el) el.classList.add('selected');
+        // Xử lý Input & Chip thông minh
+        window.handleManualInput = () => {
+            let val = parseFloat(document.getElementById('betInput').value);
+            if (isNaN(val)) val = 0;
+            
+            // Chặn cược vượt quá số dư nếu có đủ min bet
+            if (state.balance >= 10 && val > state.balance) {
+                val = Math.floor(state.balance);
+                document.getElementById('betInput').value = val;
+            }
+            
+            window.updateProfit();
+            
+            // Xóa hết trạng thái sáng
+            document.querySelectorAll('.chip').forEach(c => {
+                c.classList.remove('selected');
+                let chipVal = c.innerText === '1K' ? 1000 : parseFloat(c.innerText);
+                
+                // Đồng bộ sáng đúng ô CHIP
+                if (c.innerText === "ALL" && val === Math.floor(state.balance) && state.balance > 0) {
+                    c.classList.add('selected');
+                } else if (chipVal === val) {
+                    c.classList.add('selected');
+                }
+            });
+        };
+        
+        window.setBetAmount = (val) => { 
+            document.getElementById('betInput').value = val; 
+            window.handleManualInput();
         }
-        window.setAllIn = (el) => { 
-            document.getElementById('betInput').value = Math.floor(state.balance); window.updateProfit(); 
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-            if(el) el.classList.add('selected');
+        window.setAllIn = () => { 
+            document.getElementById('betInput').value = Math.floor(state.balance); 
+            window.handleManualInput();
         }
         window.adjustBet = (val) => {
             const inp = document.getElementById('betInput');
             let current = parseFloat(inp.value) || 0;
             let nextVal = current + val;
             if (nextVal < 10) nextVal = 10; 
-            inp.value = nextVal; window.updateProfit();
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            inp.value = nextVal; 
+            window.handleManualInput();
         };
+
+        // RTP 96%
         window.updateProfit = () => {
             const val = parseFloat(document.getElementById('betInput').value) || 0;
-            document.getElementById('profitDisplay').innerText = "+" + (val * 0.95).toFixed(2) + " T";
+            document.getElementById('profitDisplay').innerText = "+" + (val * 0.96).toFixed(2) + " T";
         };
 
         function showToast(type, msg) {
@@ -291,6 +315,39 @@
             t.querySelector('i').className = type === 'error' ? 'fa-solid fa-circle-exclamation text-lg text-[#F6465D]' : 'fa-solid fa-circle-check text-lg text-[#0ECB81]';
             t.style.borderColor = type === 'error' ? '#F6465D' : '#0ECB81';
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // HÀM HIỂN THỊ POPUP THẮNG THUA
+        function showPopup(isWin, amount) {
+            const popup = document.getElementById('resultPopup');
+            const border = document.getElementById('popupBorder');
+            const title = document.getElementById('popupTitle');
+            const amountEl = document.getElementById('popupAmount');
+
+            popup.classList.remove('hidden');
+            void popup.offsetWidth; // Force reflow
+            
+            popup.classList.remove('scale-90', 'opacity-0');
+            popup.classList.add('scale-100', 'opacity-100');
+
+            if (isWin) {
+                border.classList.remove('lose'); border.classList.add('win');
+                title.innerText = 'HÚP RỒI'; title.className = 'font-black text-2xl mb-1 uppercase tracking-widest text-[#0ECB81]';
+                // Chỉ hiển thị Lãi
+                amountEl.innerText = '+' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' T';
+                amountEl.className = 'font-mono font-black text-3xl drop-shadow-xl text-[#0ECB81]';
+            } else {
+                border.classList.remove('win'); border.classList.add('lose');
+                title.innerText = 'GÃY RỒI'; title.className = 'font-black text-2xl mb-1 uppercase tracking-widest text-[#F6465D]';
+                amountEl.innerText = '-' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' T';
+                amountEl.className = 'font-mono font-black text-3xl drop-shadow-xl text-[#F6465D]';
+            }
+
+            setTimeout(() => {
+                popup.classList.remove('scale-100', 'opacity-100');
+                popup.classList.add('scale-90', 'opacity-0');
+                setTimeout(() => popup.classList.add('hidden'), 300);
+            }, 2500);
         }
 
         window.selectSide = (type) => {
@@ -311,7 +368,7 @@
             
             document.getElementById('confirmBalance').innerText = state.balance.toLocaleString('en-US') + " T";
             document.getElementById('confirmAmount').innerText = amount + " T";
-            document.getElementById('confirmWin').innerText = "+" + (amount * 0.95).toFixed(2) + " T";
+            document.getElementById('confirmWin').innerText = "+" + (amount * 0.96).toFixed(2) + " T"; // Update RTP 96%
             document.getElementById('confirmBar').classList.add('active');
         };
 
@@ -332,11 +389,11 @@
             state.balance -= amount; updateBalanceUI();
             state.pendingBet = { type: null, amount: 0 }; document.getElementById('confirmBar').classList.remove('active');
 
-            if(state.userData.uid && state.userData.uid !== "guest") {
+            if(state.userData && state.userData.uid && state.userData.uid !== "guest") {
                 try {
                     await updateDoc(doc(db, "users", state.userData.uid), { balance: increment(-amount), betTurnover: increment(amount), betToday: increment(amount) }); 
                     await setDoc(doc(db, "games", "current"), { [type === 'up' ? 'totalUp' : 'totalDown']: increment(amount) }, { merge: true });
-                } catch(e) {}
+                } catch(e) { console.error(e); }
             }
 
             if (!state.currentBet) state.currentBet = { type, amount }; else state.currentBet.amount += amount;
@@ -391,7 +448,7 @@
                     } catch (e) { state.userData = { uid: "guest", username: "Khách", balance: 1000 }; finishLoading(); }
                 }
                 if(!user.isAnonymous) {
-                    onSnapshot(doc(db, "users", user.uid), (doc) => { if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); } });
+                    onSnapshot(doc(db, "users", user.uid), (doc) => { if(doc.exists()) { state.balance = doc.data().balance; updateBalanceUI(); } }, (err) => console.error(err));
                 }
             } else { window.location.href = "login.html"; }
         });
@@ -410,7 +467,7 @@
             if (b.expires > Date.now()) { state.currentBet = { type: b.type, amount: b.amount }; updateBetUI(b.type, b.amount); }
         }
 
-        // --- HISTORY RENDER: ĐỒNG BỘ NẾN VÀ BÓNG CHÍNH XÁC ---
+        // --- HISTORY RENDER ---
         function regenerateHistory() {
             const c = document.getElementById('historyContainer'); c.innerHTML = '';
             let u = 0, dCount = 0;
@@ -419,16 +476,11 @@
                 const block = document.createElement('div'); block.className = 'history-block';
                 for(let i = 0; i < 20; i++) {
                     const slotIdx = b * 20 + i;
-                    
-                    // Khớp đúng bóng ở vị trí slotIdx với cây nến (Lấy 60 nến cuối)
                     const candle = state.baseCandles[slotIdx + 1]; 
-                    
                     const dot = document.createElement('div');
                     if (slotIdx === 59) {
-                        // Bóng đang chạy (chờ cập nhật real-time)
                         dot.id = 'liveDot'; dot.className = 'dot new'; 
                     } else {
-                        // Bóng đã chốt (dựa vào nến)
                         const isUp = candle.close >= candle.open;
                         dot.className = isUp ? 'dot up' : 'dot down';
                         if (isUp) u++; else dCount++;
@@ -439,7 +491,6 @@
             }
             document.getElementById('count-up').innerText = u; 
             document.getElementById('count-down').innerText = dCount;
-            // Tự cuộn bóng mới nhất
             const wrapper = document.getElementById('historyWrapper'); wrapper.scrollLeft = wrapper.scrollWidth;
         }
 
@@ -472,17 +523,22 @@
             let res = finishedCandle.close >= finishedCandle.open ? 'up' : 'down';
 
             if (state.currentBet) {
-                const b = state.currentBet; const win = (b.type === res);
+                const b = state.currentBet; 
+                state.currentBet = null; // Xoá cược khỏi bộ nhớ để tránh kẹt logic
+                const win = (b.type === res);
                 let profit = 0; let totalReturn = 0;
                 
                 if (win) {
-                    totalReturn = b.amount * 1.95; profit = b.amount * 0.95;
-                    state.balance += totalReturn; showPopup(true, profit);
-                } else { showPopup(false, b.amount); }
+                    totalReturn = b.amount * 1.96; profit = b.amount * 0.96; // Update RTP 96%
+                    state.balance += totalReturn; 
+                    showPopup(true, profit); // Chỉ hiển thị lãi
+                } else { 
+                    showPopup(false, b.amount); 
+                }
                 
                 updateBalanceUI(); localStorage.removeItem('crownex_active_bet');
 
-                if(state.userData.uid !== "guest") {
+                if(state.userData && state.userData.uid && state.userData.uid !== "guest") {
                     try {
                         const batch = [];
                         if (win) batch.push(updateDoc(doc(db, "users", state.userData.uid), { balance: increment(totalReturn) }));
@@ -490,7 +546,7 @@
                             type: b.type, amount: b.amount, result: win ? 'win' : 'lose', profit: win ? profit : -b.amount, timestamp: serverTimestamp(), sessionId: document.getElementById('sessionID').innerText
                         }));
                         await Promise.all(batch);
-                    } catch (e) {}
+                    } catch (e) { console.error(e); }
                 }
             }
             setTimeout(() => { roundSettled = false; }, 2000);
@@ -507,7 +563,7 @@
 
             // 1. Chuyển Phiên (Epoch mới)
             if (state.lastEpoch !== currentEpoch) {
-                state.baseCandles = buildBaseCandles(); // Load lại chuỗi nến toán học
+                state.baseCandles = buildBaseCandles(); 
                 state.lastEpoch = currentEpoch;
                 
                 if (isResultPhase) {
@@ -530,28 +586,32 @@
                     document.getElementById('candleStatusBadge').className = "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest bg-green-500/20 text-[#0ECB81] border border-green-500/50";
                     document.getElementById('badge-up').classList.add('hidden'); document.getElementById('badge-down').classList.add('hidden');
                     document.getElementById('btnBuy').classList.remove('dimmed', 'locked'); document.getElementById('btnSell').classList.remove('dimmed', 'locked');
-                    if(state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
-                    state.currentBet = null;
                     
-                    finalizeRound(); 
+                    try {
+                        if(state.userData && state.userData.uid !== "guest") setDoc(doc(db, "games", "current"), { totalUp: 0, totalDown: 0 }); 
+                    } catch(e) {}
+                    
+                    finalizeRound(); // Bắt đầu trả thưởng ở phiên mới
                 }
-                regenerateHistory(); // Kéo bóng mới
+                regenerateHistory(); 
             }
 
-            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN "KILL ZONE"
+            // 2. CHẠY NẾN LIVE VỚI THUẬT TOÁN "KILL ZONE" ĐÃ FIX LỖI GIẬT
             const liveCandle = state.baseCandles[state.baseCandles.length - 1];
             const easeProgress = 1 - Math.pow(1 - progress, 2); 
             const tSec = now / 1000;
             
-            // Trong 3.5 giây cuối nến sẽ "giật điện", ngoài 3.5s nến chạy êm
             const timeRemaining = 30 * (1 - progress); 
             let currentWiggle = 0;
-            if (timeRemaining <= 3.5 && timeRemaining > 0.1) {
-                // Rung lắc ngẫu nhiên cực mạnh tỷ lệ với thời gian còn lại (càng sát 0 càng giảm rung để chốt đúng số)
-                currentWiggle = (Math.random() - 0.5) * 15 * (timeRemaining / 3.5);
+            
+            if (timeRemaining <= 4.0 && timeRemaining > 0.1) {
+                // TẠO BIẾN ĐỘNG LỚN (SẬP/VỌT) NHƯNG RẤT MƯỢT
+                // Dùng sóng Sin (tSec * 5) => Chu kỳ quét dài khoảng hơn 1 giây.
+                // Không dùng random() => Khắc phục triệt để lỗi "giật lên xuống liên tục quá nhanh"
+                currentWiggle = Math.sin(tSec * 5) * 12 * (timeRemaining / 4.0);
             } else {
-                // Nhịp thở bình thường của nến
-                currentWiggle = (Math.sin(tSec * 5) * 1 + Math.cos(tSec * 8) * 0.5) * (1 - progress);
+                // Nhịp thở bình thường của nến (biến động rất nhẹ nhàng, mượt)
+                currentWiggle = (Math.sin(tSec * 4) * 1.5 + Math.cos(tSec * 2.5) * 0.8) * (1 - progress);
             }
             
             // Ép giá về mục tiêu đích của thuật toán
@@ -561,7 +621,7 @@
             liveCandle.high = Math.max(liveCandle.open, state.visualPrice, liveCandle.high);
             liveCandle.low = Math.min(liveCandle.open, state.visualPrice, liveCandle.low);
 
-            // Cập nhật bóng hiện tại (Sáng màu trùng với nến Live trên màn)
+            // Cập nhật bóng hiện tại
             const liveDot = document.getElementById('liveDot');
             if (liveDot) {
                 const isLiveUp = state.visualPrice >= liveCandle.open;
