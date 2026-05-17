@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- CẤM ZOOM TUYỆT ĐỐI TRÊN MOBILE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tpig - Kho Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,18 +31,18 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* BOTTOM NAV - GLASSMORPHISM */
+        /* BOTTOM NAV */
         .bottom-nav { background: rgba(5, 5, 7, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding-bottom: env(safe-area-inset-bottom, 10px); }
         .nav-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; cursor: pointer; }
         .nav-item.active { color: #FCD535; }
         .nav-item.active i { transform: translateY(-4px) scale(1.1); text-shadow: 0 4px 12px rgba(252,213,53,0.5); }
         .nav-item:not(.active):active { transform: scale(0.9); opacity: 0.7; }
 
-        /* TOAST THÔNG BÁO */
+        /* TOAST BẢO TRÌ */
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(20, 24, 34, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 100px; display: flex; align-items: center; gap: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); z-index: 9999; opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; width: max-content; max-width: 90vw;}
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        /* LIVE TRANSACTION TOAST (Thông báo Nạp/Rút giả) */
+        /* LIVE TRANSACTION TOAST */
         #live-toast { position: fixed; top: 75px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 100px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9998; opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; width: max-content; max-width: 90vw;}
         #live-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -112,6 +111,7 @@
     <main class="flex-1 flex overflow-hidden relative z-10">
         
         <!-- SIDEBAR (TABS BÊN TRÁI) -->
+        <!-- LƯU Ý: Bạn chỉ cần thay tên file HTML của bạn vào chữ href="..." bên dưới -->
         <nav class="w-[85px] bg-black/20 border-r border-white/5 flex flex-col gap-3 overflow-y-auto hide-scroll pb-28 pt-4 px-2 shrink-0 z-20">
             <a href="game.html" class="sidebar-tab active flex flex-col items-center justify-center py-3 px-1 rounded-2xl">
                 <i class="fa-solid fa-border-all text-[22px] mb-1.5 drop-shadow-sm"></i>
@@ -172,7 +172,6 @@
                             <span class="text-[#FCD535]">✨</span>
                             <span>🚀 Sự kiện Drop The Boss diệt quái nhận 50,000 T</span>
                             <span class="text-[#FCD535]">✨</span>
-                            <!-- Duplicate nội dung để Loop mượt mà -->
                             <span>🔥 HOT: Thưởng nạp đầu 100% lên đến 88,888 T</span>
                             <span class="text-[#FCD535]">✨</span>
                             <span>Hoàn trả cược mỗi ngày không giới hạn 1.5%</span>
@@ -352,7 +351,7 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // 3. ĐỒNG BỘ SỐ DƯ
+        // 3. ĐỒNG BỘ SỐ DƯ REAL-TIME
         const balanceDisplay = document.getElementById('balanceDisplay');
 
         function updateBalanceUI(balance) {
@@ -436,19 +435,42 @@
         }
 
         // ==========================================
-        // 6. HỆ THỐNG THÔNG BÁO NẠP RÚT LIVE NGẪU NHIÊN
+        // 6. HỆ THỐNG THÔNG BÁO NẠP RÚT LIVE (CẬP NHẬT)
         // ==========================================
         function triggerLiveNotification() {
-            const names = ['mix***92', 'ho***ng', 'ph***88', 'qu***anh', 'lo***99', 'vu***22', 'tr***an', 'ph***am'];
+            // Tên ngẫu nhiên nhiều hơn
+            const names = [
+                'mix***92', 'ho***ng', 'ph***88', 'qu***anh', 'lo***99', 'vu***22', 
+                'tr***an', 'ph***am', 'ki***ng', 'da***77', 'bo***ss', 'lin***h', 
+                'ng***uy', 'ha***in'
+            ];
             const actions = ['đã nạp', 'đã rút'];
             
             const name = names[Math.floor(Math.random() * names.length)];
             const action = actions[Math.floor(Math.random() * actions.length)];
-            
-            // Random số tiền từ 50k đến 5 Triệu VNĐ (Tính bằng đồng T, 1T = 1k, nên từ 50 T đến 5000 T)
-            // Lấy bước nhảy là 10. Ví dụ: 50, 60, 100, 250, 5000...
-            const amount = (Math.floor(Math.random() * 500) + 5) * 10; 
             const isDeposit = action === 'đã nạp';
+            
+            let amount = 0;
+
+            if (isDeposit) {
+                // NẠP TIỀN: 80% là số chẵn chục, 20% là số lẻ
+                if (Math.random() > 0.2) {
+                    // Số tròn chục từ 50 đến 5000 (bước nhảy 10)
+                    amount = (Math.floor(Math.random() * 500) + 5) * 10;
+                } else {
+                    // Số lẻ, thập phân (e.g. 155, 125.5)
+                    amount = Math.floor(Math.random() * 5000) + 50 + (Math.random() > 0.5 ? 0.5 : 0);
+                }
+            } else {
+                // RÚT TIỀN: Ngẫu nhiên từ 20 đến 3000, có thể có số thập phân
+                amount = Math.random() * (3000 - 20) + 20;
+            }
+
+            // Định dạng hiển thị tối đa 2 chữ số thập phân
+            const formattedAmount = amount.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
 
             // Lấy Element
             const t = document.getElementById('live-toast');
@@ -465,26 +487,26 @@
             }
 
             // Set nội dung
-            document.getElementById('liveToastMsg').innerHTML = `Người chơi <span class="text-[#FCD535] font-bold">${name}</span> ${action} thành công <b class="${isDeposit ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">${amount.toLocaleString('en-US')} T</b>`;
+            document.getElementById('liveToastMsg').innerHTML = `Người chơi <span class="text-[#FCD535] font-bold">${name}</span> ${action} thành công <b class="${isDeposit ? 'text-[#0ECB81]' : 'text-[#F6465D]'}">${formattedAmount} T</b>`;
 
             // Hiển thị (Slide down)
             t.classList.add('show');
             
-            // Ẩn sau 4.5 giây
-            setTimeout(() => { t.classList.remove('show'); }, 4500);
+            // Ẩn sau 3.5 giây
+            setTimeout(() => { t.classList.remove('show'); }, 3500);
 
-            // Lên lịch cho thông báo tiếp theo (Cách 3 đến 7 phút)
-            // 3 phút = 180,000 ms | 7 phút = 420,000 ms
-            const minTime = 180000;
-            const maxTime = 420000;
+            // Cập nhật chu kỳ: Random từ 4 phút đến 30 phút
+            // 4 phút = 240,000 ms | 30 phút = 1,800,000 ms
+            const minTime = 240000;
+            const maxTime = 1800000;
             const nextTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
             
             setTimeout(triggerLiveNotification, nextTime);
         }
 
-        // Bật thông báo đầu tiên sau 7 GIÂY (để bạn xem test ngay lập tức)
-        // Những thông báo sau sẽ tự động vào chu kỳ 3 - 7 phút.
-        setTimeout(triggerLiveNotification, 7000);
+        // Bật thông báo đầu tiên sau 5 GIÂY (để bạn xem test ngay lập tức)
+        // Những thông báo sau sẽ tự động vào chu kỳ 4 - 30 phút.
+        setTimeout(triggerLiveNotification, 5000);
 
     </script>
 </body>
