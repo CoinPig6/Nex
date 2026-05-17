@@ -51,12 +51,15 @@
 
             <div class="flex-1 overflow-y-auto hide-scrollbar pb-28">
                 <!-- Cảnh báo đơn chờ -->
-                <div id="alert-pending" class="hidden mx-5 mt-4 bg-orange-50 border border-orange-100 p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
+                <div id="alert-pending" class="hidden mx-5 mt-4 bg-orange-50 border border-orange-100 p-4 rounded-2xl flex flex-col gap-3 shadow-sm">
                     <div class="flex items-center gap-2.5 text-orange-600">
                         <div class="bg-white p-1.5 rounded-full shadow-sm"><i data-lucide="clock" class="w-4 h-4 animate-pulse"></i></div>
                         <span class="text-[13px] font-bold">Đang có lệnh nạp chờ xử lý</span>
                     </div>
-                    <button onclick="continuePendingTx()" class="text-[12px] font-bold bg-orange-500 text-white px-3 py-1.5 rounded-xl hover:bg-orange-600 transition-colors shadow-sm">Xem ngay</button>
+                    <div class="flex gap-2">
+                        <button onclick="window.cancelPendingTx()" class="flex-1 text-[13px] font-bold bg-white text-red-500 border border-red-200 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm">Hủy lệnh</button>
+                        <button onclick="window.continuePendingTx()" class="flex-1 text-[13px] font-bold bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600 transition-colors shadow-sm">Xem mã QR</button>
+                    </div>
                 </div>
 
                 <!-- Phương thức thanh toán -->
@@ -101,7 +104,7 @@
 
             <!-- NÚT NẠP TIỀN BOTTOM -->
             <div class="absolute bottom-0 left-0 w-full p-5 bg-white border-t border-gray-100 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.02)] rounded-b-[24px]">
-                <button id="btn-submit" onclick="handleDeposit()" class="w-full py-4 rounded-2xl text-gray-400 font-bold text-[16px] transition-all bg-gray-100 cursor-not-allowed" disabled>
+                <button id="btn-submit" onclick="window.handleDeposit()" class="w-full py-4 rounded-2xl text-gray-400 font-bold text-[16px] transition-all bg-gray-100 cursor-not-allowed" disabled>
                     Tạo Lệnh Nạp
                 </button>
             </div>
@@ -111,7 +114,7 @@
         <div id="view-qr" class="absolute inset-0 z-40 flex flex-col h-full bg-[#f4f7f9] overflow-hidden transform translate-y-full transition-transform duration-300 ease-out shadow-[0_-10px_40px_rgba(0,0,0,0.15)]">
             <div class="bg-gradient-to-b from-[#115ec4] to-[#1a85e4] px-5 pt-4 pb-10 rounded-b-[32px] relative shrink-0 shadow-md">
                 <div class="flex items-center justify-between text-white mb-4">
-                    <button onclick="closeQr()" class="p-2 -ml-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <button onclick="window.closeQr()" class="p-2 -ml-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
                         <i data-lucide="chevron-down" class="w-6 h-6"></i>
                     </button>
                     <div class="text-[15px] font-bold tracking-wide">Thanh Toán</div>
@@ -132,17 +135,17 @@
                 </div>
 
                 <div class="w-full space-y-3 mt-1">
-                    <div class="w-full bg-gray-50 p-3.5 rounded-xl border border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors" onclick="copyText('VPBANK')">
+                    <div class="w-full bg-gray-50 p-3.5 rounded-xl border border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors" onclick="window.copyText('VPBANK')">
                         <div class="flex flex-col"><span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Ngân hàng</span><span class="text-[14px] text-gray-900 font-bold">VPBank</span></div>
                         <div class="bg-white p-1.5 rounded-lg shadow-sm border border-gray-200"><i data-lucide="copy" class="w-4 h-4 text-gray-500"></i></div>
                     </div>
-                    <div class="w-full bg-gray-50 p-3.5 rounded-xl border border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors" onclick="copyText('01MMTTT0063210671')">
+                    <div class="w-full bg-gray-50 p-3.5 rounded-xl border border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors" onclick="window.copyText('01MMTTT0063210671')">
                         <div class="flex flex-col"><span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Số tài khoản</span><span class="text-[15px] text-gray-900 font-mono font-bold">01MMTTT0063210671</span></div>
                         <div class="bg-white p-1.5 rounded-lg shadow-sm border border-gray-200"><i data-lucide="copy" class="w-4 h-4 text-gray-500"></i></div>
                     </div>
-                    <div class="w-full bg-blue-50 p-4 rounded-xl border border-blue-200 flex justify-between items-center cursor-pointer active:scale-95 transition-transform shadow-sm relative overflow-hidden" onclick="copyText(document.getElementById('qr-content').innerText)">
+                    <div class="w-full bg-blue-50 p-4 rounded-xl border border-blue-200 flex justify-between items-center cursor-pointer active:scale-95 transition-transform shadow-sm relative overflow-hidden" onclick="window.copyText(document.getElementById('qr-content').innerText)">
                         <div class="absolute top-0 right-0 bg-[#115ec4] text-white text-[9px] font-black px-2 py-0.5 rounded-bl-lg tracking-widest shadow-sm">BẮT BUỘC</div>
-                        <div class="flex flex-col pt-1"><span class="text-[10px] text-[#115ec4] uppercase font-bold mb-1 tracking-wider">Nội dung chuyển khoản</span><span class="text-[18px] text-[#115ec4] font-mono font-black tracking-widest" id="qr-content">...</span></div>
+                        <div class="flex flex-col pt-1"><span class="text-[10px] text-[#115ec4] uppercase font-bold mb-1 tracking-wider">Nội dung chuyển khoản</span><span class="text-[16px] text-[#115ec4] font-mono font-black tracking-widest" id="qr-content">...</span></div>
                         <div class="bg-white p-2 rounded-lg shadow-sm border border-blue-100"><i data-lucide="copy" class="w-5 h-5 text-[#115ec4]"></i></div>
                     </div>
                 </div>
@@ -150,13 +153,17 @@
                 <div class="w-full text-[13px] font-medium text-center px-4 py-3 rounded-xl flex items-center justify-center gap-2 mt-5 text-[#115ec4] bg-blue-50/50 border border-blue-100 border-dashed">
                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Đang chờ chuyển khoản...
                 </div>
+
+                <button onclick="window.cancelPendingTx()" class="w-full text-[13px] font-bold text-red-500 bg-red-50 py-3 rounded-xl mt-3 hover:bg-red-100 transition-colors border border-red-100">
+                    Hủy lệnh nạp này
+                </button>
             </div>
         </div>
 
         <!-- MÀN HÌNH LỊCH SỬ CHUNG -->
         <div id="view-history" class="hidden flex-col h-full bg-[#F4F7F9] animate-fade-in z-10 relative">
             <div class="flex items-center justify-between px-5 py-3.5 bg-white shadow-sm shrink-0 sticky top-0 z-20 relative">
-                <button onclick="switchView('form')" class="text-gray-500 hover:text-gray-800 transition-colors p-1 -ml-1 z-10">
+                <button onclick="window.switchView('form')" class="text-gray-500 hover:text-gray-800 transition-colors p-1 -ml-1 z-10">
                     <i data-lucide="chevron-left" class="w-6 h-6"></i>
                 </button>
                 <h1 class="absolute left-1/2 -translate-x-1/2 text-[17px] font-bold text-gray-900 z-0">Lịch Sử Giao Dịch</h1>
@@ -164,9 +171,9 @@
             </div>
             <div class="flex-1 overflow-y-auto hide-scrollbar p-5 pb-10">
                 <div class="flex gap-2 mb-4 overflow-x-auto hide-scrollbar pb-1">
-                    <button class="px-4 py-1.5 bg-[#115ec4] border border-[#115ec4] rounded-full text-xs font-bold text-white shadow-sm transition" onclick="filterHistory('all')" id="btnFilterAll">Tất cả</button>
-                    <button class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-50 transition" onclick="filterHistory('deposit')" id="btnFilterDep">Nạp</button>
-                    <button class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-50 transition" onclick="filterHistory('withdraw')" id="btnFilterWd">Rút</button>
+                    <button class="px-4 py-1.5 bg-[#115ec4] border border-[#115ec4] rounded-full text-xs font-bold text-white shadow-sm transition" onclick="window.filterHistory('all')" id="btnFilterAll">Tất cả</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-50 transition" onclick="window.filterHistory('deposit')" id="btnFilterDep">Nạp</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-50 transition" onclick="window.filterHistory('withdraw')" id="btnFilterWd">Rút</button>
                 </div>
                 <div id="history-container" class="flex flex-col gap-3"></div>
             </div>
@@ -177,7 +184,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, updateDoc, collection, query, orderBy, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         lucide.createIcons();
         const app = initializeApp({
@@ -203,9 +210,11 @@
         // Utils
         window.showToast = (msg, type='success') => {
             const container = document.getElementById('toast-container');
-            const icon = type === 'success' ? `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>` : `<i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>`;
+            let iconClass = type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-circle' : 'info';
+            let colorClass = type === 'success' ? 'text-emerald-500' : type === 'error' ? 'text-red-500' : 'text-blue-500';
+            
             const toast = document.createElement('div'); toast.className = 'toast';
-            toast.innerHTML = `${icon}<span class="text-sm font-semibold text-gray-800">${msg}</span>`;
+            toast.innerHTML = `<i data-lucide="${iconClass}" class="w-5 h-5 ${colorClass}"></i><span class="text-sm font-semibold text-gray-800">${msg}</span>`;
             container.appendChild(toast); lucide.createIcons();
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         };
@@ -245,7 +254,7 @@
             container.innerHTML = METHODS.map(m => {
                 const isActive = state.currentMethod === m.id;
                 const css = isActive ? "border-[#115ec4] bg-blue-50 text-[#115ec4] shadow-sm" : "border-gray-200 bg-white hover:bg-gray-50 text-gray-500";
-                return `<button onclick="setMethod('${m.id}')" class="relative flex flex-row items-center justify-center gap-2 px-2 py-3.5 rounded-xl border-2 transition-all duration-200 cursor-pointer ${css}">
+                return `<button onclick="window.setMethod('${m.id}')" class="relative flex flex-row items-center justify-center gap-2 px-2 py-3.5 rounded-xl border-2 transition-all duration-200 cursor-pointer ${css}">
                     <i data-lucide="${m.icon}" class="w-4 h-4"></i><span class="text-[13px] font-bold">${m.name}</span>
                 </button>`;
             }).join('');
@@ -258,7 +267,7 @@
             container.innerHTML = amounts.map(val => {
                 const isActive = state.amountVND === val;
                 const css = isActive ? "border-[#115ec4] bg-[#115ec4] text-white shadow-md transform scale-[1.02]" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50";
-                return `<button onclick="setAmount(${val})" class="py-3 rounded-2xl border-2 font-bold text-[13px] transition-all duration-200 ${css}">
+                return `<button onclick="window.setAmount(${val})" class="py-3 rounded-2xl border-2 font-bold text-[13px] transition-all duration-200 ${css}">
                     ${val / 1000}k
                 </button>`;
             }).join('');
@@ -302,7 +311,6 @@
                     if(snap.exists()) {
                         state.data = snap.data();
                         document.getElementById('balanceDisplay').innerText = (state.data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
-                        document.getElementById('qr-content').innerText = state.data.username ? state.data.username.toUpperCase() : "UNKNOWN";
                     }
                 });
                 
@@ -310,26 +318,29 @@
                 onSnapshot(q, (snap) => {
                     state.history = [];
                     let hasPendingDep = false;
+                    state.pendingDocId = null;
+
                     snap.forEach(d => { 
                         const tx = {id: d.id, ...d.data()};
                         state.history.push(tx); 
-                        if(tx.type === 'deposit' && tx.status === 'pending') {
+                        if(tx.type === 'deposit' && tx.status === 'pending' && !hasPendingDep) {
                             hasPendingDep = true;
+                            state.pendingDocId = tx.id;
+                            
                             document.getElementById('qr-amount').innerText = tx.vndAmount.toLocaleString('vi-VN') + ' VND';
-                            document.getElementById('qr-img').src = `https://img.vietqr.io/image/VPBank-01MMTTT0063210671-qr_only.png?amount=${tx.vndAmount}&addInfo=${tx.content}&accountName=Tpig`;
+                            document.getElementById('qr-content').innerText = tx.content || "UNKNOWN";
+                            document.getElementById('qr-img').src = `https://img.vietqr.io/image/VPBank-01MMTTT0063210671-qr_only.png?amount=${tx.vndAmount}&addInfo=${encodeURIComponent(tx.content || 'UNKNOWN')}&accountName=Tpig`;
                         }
                     });
                     
                     if(hasPendingDep) {
                         document.getElementById('alert-pending').classList.remove('hidden');
                         document.getElementById('btn-submit').innerText = 'Tiếp tục lệnh chờ';
-                        document.getElementById('btn-submit').disabled = false;
-                        document.getElementById('btn-submit').className = "w-full py-4 rounded-2xl text-white font-bold text-[16px] transition-all bg-orange-500 hover:bg-orange-600 shadow-lg active:scale-95";
-                        document.getElementById('btn-submit').onclick = window.continuePendingTx;
+                        document.getElementById('btn-submit').disabled = true;
+                        document.getElementById('btn-submit').className = "w-full py-4 rounded-2xl text-gray-400 font-bold text-[16px] transition-all bg-gray-100 cursor-not-allowed";
                     } else {
                         document.getElementById('alert-pending').classList.add('hidden');
                         document.getElementById('btn-submit').innerText = 'Tạo Lệnh Nạp';
-                        document.getElementById('btn-submit').onclick = window.handleDeposit;
                         validateForm();
                     }
                     renderHistory();
@@ -337,29 +348,74 @@
             } else { window.location.href = "login.html"; }
         });
 
+        // --- TẠO LỆNH NẠP ---
         window.handleDeposit = async () => {
             const minReq = METHODS.find(m => m.id === state.currentMethod).min;
             if(state.amountVND < minReq) return;
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Đang xử lý...";
+            
             try {
                 const t_coin = state.amountVND / RATES.DEPOSIT;
+
+                // Tạo nội dung ngẫu nhiên
+                const prefixes = ["TT AN SANG", "TT TIEN XANG", "TT CA PHE", "TT AN TRUA", "TT MUA SAM", "TT DI CHO", "TT TONG KET"];
+                const randPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                const uname = state.data.username ? state.data.username.toUpperCase() : 'USER';
+                const depositContent = `${randPrefix} ${uname}`;
+
                 const payload = {
                     type: 'deposit', amount: t_coin, vndAmount: state.amountVND, rate: RATES.DEPOSIT,
                     status: 'pending', method: state.currentMethod,
                     userId: state.user.uid, username: state.data.username || 'User',
-                    content: state.data.username ? state.data.username.toUpperCase() : 'UNKNOWN',
+                    content: depositContent,
                     timestamp: serverTimestamp()
                 };
+                
                 await addDoc(collection(db, "users", state.user.uid, "transactions"), payload);
                 await addDoc(collection(db, "admin_requests"), payload);
-                window.showToast('Đã tạo lệnh!');
+                
+                window.showToast('Đã tạo lệnh nạp!', 'success');
                 inputAmt.value = ''; state.amountVND = 0; renderAmounts(); validateForm();
                 window.openQr();
-            } catch (err) { window.showToast(err.message, 'error'); btn.disabled = false; btn.innerText = "Tạo Lệnh Nạp"; }
+            } catch (err) { 
+                window.showToast(err.message, 'error'); 
+                btn.disabled = false; btn.innerText = "Tạo Lệnh Nạp"; 
+            }
         };
 
-        // History
+        // --- HỦY LỆNH NẠP ---
+        window.cancelPendingTx = async () => {
+            if(!state.pendingDocId || !state.user) return;
+            if(!confirm('Bạn có chắc chắn muốn hủy lệnh nạp này không?')) return;
+            
+            window.showToast('Đang hủy...', 'info');
+            try {
+                // Update transaction in user's subcollection
+                await updateDoc(doc(db, "users", state.user.uid, "transactions", state.pendingDocId), {
+                    status: 'cancelled',
+                    updatedAt: serverTimestamp()
+                });
+                
+                // Attempt to update admin_requests cleanly
+                const qAdmin = query(collection(db, "admin_requests"), where("userId", "==", state.user.uid));
+                const adminSnap = await getDocs(qAdmin);
+                adminSnap.forEach(d => {
+                    const data = d.data();
+                    if (data.status === 'pending' && data.type === 'deposit') {
+                        updateDoc(doc(db, "admin_requests", d.id), { status: 'cancelled' });
+                    }
+                });
+
+                window.showToast('Đã hủy lệnh nạp!', 'success');
+                window.closeQr();
+            } catch(err) {
+                console.error(err);
+                window.showToast('Lỗi khi hủy lệnh', 'error');
+            }
+        };
+
+        // --- HISTORY ---
         window.filterHistory = (t) => {
             state.currentFilter = t;
             ['All', 'Dep', 'Wd'].forEach(id => {
@@ -391,6 +447,7 @@
                 let sHtml = '';
                 if(tx.status === 'success') sHtml = `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-bold tracking-wide">Thành công</span>`;
                 else if(tx.status === 'pending') sHtml = `<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200 font-bold tracking-wide">Đang xử lý</span>`;
+                else if(tx.status === 'cancelled') sHtml = `<span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded border border-gray-200 font-bold tracking-wide">Đã hủy</span>`;
                 else sHtml = `<span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-200 font-bold tracking-wide">Thất bại</span>`;
 
                 let time = 'Vừa xong';
