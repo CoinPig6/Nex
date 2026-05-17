@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- CHẶN ZOOM TUYỆT ĐỐI TRÊN MOBILE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tpig - Portal</title>
+    <title>Tpig - Cổng Đăng Nhập</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -17,19 +17,13 @@
                         sans: ['Roboto', 'sans-serif'],
                         mono: ['IBM Plex Mono', 'monospace'],
                     },
-                    colors: {
-                        brand: '#FCD535',
-                        brandHover: '#f59e0b',
-                        dark: '#0b0f19',
-                        card: '#1e232e',
-                        border: '#2d3442'
-                    },
+                    colors: { brand: '#FCD535' },
                     animation: {
-                        'slide-down': 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     },
                     keyframes: {
-                        slideDown: {
-                            '0%': { opacity: '0', transform: 'translateY(-20px)' },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
                     }
@@ -39,157 +33,143 @@
     </script>
 
     <style>
-        /* --- CẤU HÌNH CỐT LÕI (CHO PHÉP CUỘN LÊN XUỐNG) --- */
+        /* --- CẤU HÌNH CỐT LÕI --- */
         html, body {
             min-height: 100dvh; 
             overflow-x: hidden; 
-            overflow-y: auto; /* Mở khóa cuộn dọc */
+            overflow-y: auto; 
             touch-action: pan-y; 
             -webkit-text-size-adjust: 100%;
-            background-color: #0b0f19;
+            background-color: #050507; /* Dark Premium */
             scroll-behavior: smooth;
+            background-image: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.6) 0%, transparent 80%);
         }
         
         /* BẮT BUỘC FONT-SIZE 16PX CHO INPUT ĐỂ CHỐNG ZOOM TRÊN IOS */
         input, select, textarea { font-size: 16px !important; appearance: none; -webkit-appearance: none; border-radius: 0; }
         button, a { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* NỀN ĐỘNG (AMBIENT GLOW) - Fixed để không lỗi khi cuộn */
-        .bg-animate {
-            background: radial-gradient(circle at 50% 0%, #1a1f2e 0%, #0b0f19 85%);
-            position: fixed; inset: 0; z-index: -1; pointer-events: none;
-        }
-        .orb {
-            position: fixed; width: 250px; height: 250px; background: #FCD535;
-            filter: blur(100px); opacity: 0.1; top: -50px; left: 50%; transform: translateX(-50%); pointer-events: none;
-        }
-
         /* CARD STYLE - KÍNH MỜ */
         .glass-panel {
-            background: #1e232e;
-            border: 1px solid #2d3442;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            border-radius: 24px;
-            width: 100%; max-width: 360px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            border-radius: 28px;
+            width: 100%; max-width: 380px;
             position: relative; overflow: hidden;
-            /* Transition height mượt mà để form không bị giật */
             transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        /* INPUT STYLE - CHUẨN TPIG */
-        .input-box { position: relative; margin-bottom: 14px; }
+        /* INPUT STYLE - DỄ NHÌN HƠN */
+        .input-box { position: relative; margin-bottom: 16px; }
         .input-control {
-            width: 100%; background: #0b0f19; border: 1px solid #2d3442;
-            color: #fff; padding: 14px 14px 14px 44px; border-radius: 12px;
-            transition: all 0.2s;
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 15px 16px 15px 48px; border-radius: 16px;
+            transition: all 0.3s ease;
         }
         .input-control:focus {
-            border-color: #FCD535; background: #13161f; outline: none; box-shadow: 0 0 0 1px #FCD535;
+            border-color: #FCD535; background: rgba(255,255,255,0.02); outline: none; box-shadow: 0 0 0 1px rgba(252,213,53,0.5), inset 0 2px 5px rgba(0,0,0,0.5);
         }
-        .input-control::placeholder { color: #6b7280; font-size: 14px; }
+        .input-control::placeholder { color: #6b7280; font-size: 15px; }
         
         .input-icon {
-            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-            color: #6b7280; font-size: 16px; transition: 0.2s;
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+            color: #6b7280; font-size: 18px; transition: 0.3s;
         }
-        .input-control:focus ~ .input-icon { color: #FCD535; }
+        .input-control:focus ~ .input-icon { color: #FCD535; drop-shadow: 0 0 5px rgba(252,213,53,0.5); }
 
         /* SMOOTH TABS */
         .tab-wrapper {
-            display: flex; position: relative; background: #0b0f19; border: 1px solid #2d3442;
-            border-radius: 12px; padding: 4px; margin-bottom: 24px;
+            display: flex; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px; padding: 5px; margin-bottom: 28px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
         }
         .tab-item {
-            flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 700;
-            color: #9ca3af; cursor: pointer; z-index: 10; transition: color 0.3s;
+            flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 800;
+            color: #9ca3af; cursor: pointer; z-index: 10; transition: color 0.3s; letter-spacing: 0.5px;
         }
         .tab-item.active { color: #111; }
         
         /* Sliding Pill Indicator */
         .tab-indicator {
-            position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px);
-            background: #FCD535; border-radius: 8px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            box-shadow: 0 2px 10px rgba(252, 213, 53, 0.3); z-index: 1;
+            position: absolute; top: 5px; left: 5px; bottom: 5px; width: calc(50% - 5px);
+            background: linear-gradient(135deg, #FCD535 0%, #f59e0b 100%); border-radius: 12px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 4px 15px rgba(252, 213, 53, 0.3); z-index: 1;
         }
 
         /* BUTTON */
         .btn-action {
-            width: 100%; background: linear-gradient(180deg, #FCD535 0%, #f59e0b 100%);
-            color: #111; font-weight: 900; padding: 14px; border-radius: 12px;
-            font-size: 14px; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;
-            box-shadow: 0 5px 15px rgba(252, 213, 53, 0.2); transition: all 0.1s;
+            width: 100%; background: linear-gradient(135deg, #FCD535 0%, #d97706 100%);
+            color: #111; font-weight: 900; padding: 16px; border-radius: 16px;
+            font-size: 15px; text-transform: uppercase; margin-top: 10px; letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(252, 213, 53, 0.3); transition: all 0.2s; border: none;
         }
-        .btn-action:active:not(:disabled) { transform: scale(0.97); }
-        .btn-action:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-action:active:not(:disabled) { transform: scale(0.96); box-shadow: 0 4px 10px rgba(252, 213, 53, 0.2); }
+        .btn-action:disabled { opacity: 0.7; cursor: not-allowed; filter: grayscale(50%); transform: none; box-shadow: none; }
 
         /* FORM SLIDING ANIMATION */
         .forms-container {
             position: relative;
-            height: 290px; /* Chiều cao mặc định Đăng nhập */
+            height: 295px; /* Chiều cao Đăng nhập */
             overflow: hidden;
-            transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: height 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .auth-form {
             position: absolute; top: 0; left: 0; width: 100%;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            opacity: 0; transform: translateX(50px); pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            opacity: 0; transform: translateX(40px); pointer-events: none;
         }
 
         .auth-form.active {
             opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 20;
         }
         
-        .auth-form.slide-left { transform: translateX(-50px); opacity: 0; }
-        .auth-form.slide-right { transform: translateX(50px); opacity: 0; }
+        .auth-form.slide-left { transform: translateX(-40px); opacity: 0; }
+        .auth-form.slide-right { transform: translateX(40px); opacity: 0; }
 
-        /* TOAST & LOADING */
+        /* TOAST - iOS STYLE */
         #toast-box {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 9999; width: max-content; max-width: 90vw;
+            z-index: 9999; width: max-content; max-width: 90vw; pointer-events: none;
         }
         .toast-msg {
-            background: #1e232e; border: 1px solid #2d3442;
-            padding: 12px 16px; border-radius: 50px; display: flex; align-items: center; gap: 10px;
-            margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            background: rgba(20, 24, 34, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 18px; border-radius: 100px; display: flex; align-items: center; gap: 12px;
+            margin-bottom: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; pointer-events: auto;
         }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-40px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Canvas Captcha */
+        .captcha-box {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; overflow: hidden; cursor: pointer; position: relative;
+        }
+        .captcha-box::after {
+            content: '\f021'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); color: white; opacity: 0; transition: 0.2s; font-size: 20px;
+        }
+        .captcha-box:hover::after { opacity: 1; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-start pt-[10vh] pb-[10vh] relative">
+<body class="flex flex-col items-center justify-center min-h-[100dvh] relative">
 
-    <div class="bg-animate"></div>
-    <div class="orb"></div>
     <div id="toast-box"></div>
 
-    <!-- LOADING SCREEN -->
-    <div id="loadingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0b0f19] transition-opacity duration-300">
-        <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.4)] mb-5 animate-bounce">
-            <span class="text-black font-black text-2xl italic tracking-widest pl-1">T</span>
-        </div>
-        <div class="flex items-center gap-1.5 mb-6">
-            <div class="w-2 h-2 bg-[#FCD535] rounded-full animate-ping" style="animation-delay: 0s;"></div>
-            <div class="w-2 h-2 bg-[#FCD535] rounded-full animate-ping" style="animation-delay: 0.2s;"></div>
-            <div class="w-2 h-2 bg-[#FCD535] rounded-full animate-ping" style="animation-delay: 0.4s;"></div>
-        </div>
-        <p id="loadingText" class="text-[#FCD535] font-bold text-[10px] uppercase tracking-widest font-mono">Đang kiểm tra kết nối...</p>
+    <!-- MAIN APP WRAPPER (ẨN MẶC ĐỊNH ĐỂ LOAD NGẦM) -->
+    <div id="appWrapper" class="opacity-0 transition-opacity duration-700 p-4 w-full flex flex-col items-center justify-center relative z-10 w-full max-w-[420px]">
         
-        <button onclick="window.forceLogout()" class="mt-10 px-5 py-2 border border-[#2d3442] rounded-full text-[10px] text-gray-500 hover:bg-[#1e232e] hover:text-white transition-colors font-bold uppercase tracking-wider">
-            Khởi động lại
-        </button>
-    </div>
-
-    <!-- MAIN INTERFACE -->
-    <div class="p-4 w-full flex justify-center animate-slide-down">
-        <div class="glass-panel p-6">
+        <div class="glass-panel p-7 w-full animate-slide-up">
             
             <!-- HEADER / LOGO -->
-            <div class="text-center mb-6">
-                <div class="font-black text-3xl text-white tracking-widest italic flex items-center justify-center gap-1 mb-1 drop-shadow-md">
-                    <span class="text-[#FCD535]">T</span>PIG
+            <div class="text-center mb-8">
+                <div class="font-black text-[38px] text-white tracking-widest italic flex items-center justify-center gap-1 mb-1 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)]">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FCD535] to-[#f59e0b]">T</span>PIG
                 </div>
-                <h1 class="text-xs font-bold text-gray-500 tracking-widest uppercase">Portal Access</h1>
+                <h1 class="text-[11px] font-bold text-gray-500 tracking-[0.3em] uppercase">Bùng Nổ Từng Khoảng Khắc Thăng Hoa</h1>
             </div>
 
             <!-- TABS -->
@@ -202,7 +182,7 @@
             <!-- FORMS CONTAINER -->
             <div class="forms-container" id="formsWrapper">
                 
-                <!-- LOGIN FORM (Chiều cao ~290px) -->
+                <!-- LOGIN FORM -->
                 <form id="formLogin" class="auth-form active">
                     <div class="input-box">
                         <input type="text" id="loginUser" class="input-control" placeholder="Tên đăng nhập" required autocomplete="off" autocorrect="off" spellcheck="false">
@@ -211,27 +191,26 @@
                     <div class="input-box">
                         <input type="password" id="loginPass" class="input-control" placeholder="Mật khẩu" required>
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <i class="fa-regular fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm hover:text-white transition" onclick="window.togglePass('loginPass')"></i>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/5 rounded-full transition" onclick="window.togglePass('loginPass', this)">
+                            <i class="fa-regular fa-eye text-gray-400"></i>
+                        </div>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-3 mb-5">
-                        <div class="col-span-2 relative">
-                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-widest text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:14px;">
+                    <div class="grid grid-cols-5 gap-3 mb-6">
+                        <div class="col-span-3 relative">
+                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-[0.2em] text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:16px;">
                         </div>
-                        <div class="bg-[#0b0f19] border border-[#2d3442] rounded-xl overflow-hidden cursor-pointer relative group" onclick="window.drawCaptcha('login')">
-                            <canvas id="canvasLogin" width="100" height="50" class="w-full h-full opacity-80 group-hover:opacity-100 transition"></canvas>
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
-                                <i class="fa-solid fa-rotate-right text-white"></i>
-                            </div>
+                        <div class="col-span-2 captcha-box" onclick="window.drawCaptcha('login')">
+                            <canvas id="canvasLogin" width="120" height="52" class="w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <button type="submit" id="btnLogin" class="btn-action">
-                        TRUY CẬP <i class="fa-solid fa-arrow-right ml-1"></i>
+                        TRUY CẬP HỆ THỐNG
                     </button>
                 </form>
 
-                <!-- REGISTER FORM (Chiều cao ~430px) -->
+                <!-- REGISTER FORM -->
                 <form id="formRegister" class="auth-form slide-right">
                     <div class="input-box">
                         <input type="text" id="regUser" class="input-control" placeholder="Tên đăng nhập (viết liền)" required autocomplete="off" autocorrect="off" spellcheck="false">
@@ -244,120 +223,118 @@
                     <div class="input-box">
                         <input type="password" id="regPass" class="input-control" placeholder="Mật khẩu (Tối thiểu 6 ký tự)" required minlength="6">
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <i class="fa-regular fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1 text-sm hover:text-white transition" onclick="window.togglePass('regPass')"></i>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/5 rounded-full transition" onclick="window.togglePass('regPass', this)">
+                            <i class="fa-regular fa-eye text-gray-400"></i>
+                        </div>
                     </div>
                     <div class="input-box">
                         <input type="text" id="regName" class="input-control" placeholder="Họ và tên hiển thị" required autocomplete="off">
-                        <i class="fa-solid fa-id-card input-icon"></i>
+                        <i class="fa-regular fa-id-card input-icon"></i>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3 mb-5">
-                        <div class="col-span-2 relative">
-                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-widest text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:14px;">
+                    <div class="grid grid-cols-5 gap-3 mb-6">
+                        <div class="col-span-3 relative">
+                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-[0.2em] text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:16px;">
                         </div>
-                        <div class="bg-[#0b0f19] border border-[#2d3442] rounded-xl overflow-hidden cursor-pointer relative group" onclick="window.drawCaptcha('reg')">
-                            <canvas id="canvasReg" width="100" height="50" class="w-full h-full opacity-80 group-hover:opacity-100 transition"></canvas>
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
-                                <i class="fa-solid fa-rotate-right text-white"></i>
-                            </div>
+                        <div class="col-span-2 captcha-box" onclick="window.drawCaptcha('reg')">
+                            <canvas id="canvasReg" width="120" height="52" class="w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <button type="submit" id="btnReg" class="btn-action">
-                        ĐĂNG KÝ NGAY
+                        MỞ TÀI KHOẢN NGAY
                     </button>
                 </form>
 
             </div>
+        </div>
 
-            <div class="text-center mt-5">
-                <p class="text-[9px] text-[#4b5563] font-mono tracking-widest">SECURED BY FIREBASE &copy; 2024</p>
+        <!-- TRUST BADGES (Bổ sung uy tín) -->
+        <div class="mt-8 flex items-center justify-center gap-5 w-full opacity-70">
+            <div class="flex flex-col items-center gap-1.5">
+                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid fa-shield-halved text-emerald-400 text-lg"></i></div>
+                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Bảo Mật SSL</span>
+            </div>
+            <div class="w-px h-8 bg-white/10"></div>
+            <div class="flex flex-col items-center gap-1.5">
+                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid fa-bolt text-[#FCD535] text-lg"></i></div>
+                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Rút Tốc Độ</span>
+            </div>
+            <div class="w-px h-8 bg-white/10"></div>
+            <div class="flex flex-col items-center gap-1.5">
+                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid fa-headset text-blue-400 text-lg"></i></div>
+                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Hỗ Trợ 24/7</span>
             </div>
         </div>
+
     </div>
 
-    <!-- SCRIPT LOGIC (GIỮ NGUYÊN 100% LOGIC CŨ CỦA BẠN) -->
+    <!-- SCRIPT LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CHẶN ZOOM THỦ CÔNG
+        // CHẶN ZOOM
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); });
 
-        // CONFIG CHUẨN CỦA BẠN
+        // CONFIG 
         const firebaseConfig = {
             apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
             authDomain: "btccoinbig.firebaseapp.com",
             projectId: "btccoinbig",
             storageBucket: "btccoinbig.firebasestorage.app",
             messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // TIỀN TỐ EMAIL CŨ GIỮ NGUYÊN ĐỂ KHÔNG MẤT TÀI KHOẢN CŨ
         const EMAIL_PREFIX = "@crownex.com";
-
         let captchaCodes = { login: '', reg: '' };
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingText = document.getElementById('loadingText');
-        
-        let isHandlingAuthForm = false; // Ngăn chặn vòng lặp quay khi submit
+        let isHandlingAuthForm = false; 
 
-        // --- AUTH LISTENER ---
+        // --- SILENT AUTH LISTENER ---
+        // Hoạt động ngầm, không hiện Popup tải.
         onAuthStateChanged(auth, async (user) => {
             if (user && !isHandlingAuthForm) {
-                loadingText.innerText = "ĐANG TẢI DỮ LIỆU...";
+                // Đã đăng nhập -> Chuyển hướng âm thầm
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         saveAndGo(docSnap.data(), user.uid);
                     } else {
-                        // Tạo data mồi nếu user cũ bị thiếu data
                         const fixData = {
-                            username: user.email.split('@')[0],
-                            phone: "0000000000",
-                            fullName: user.displayName || "Thành viên",
-                            balance: 0,
-                            createdAt: new Date().toISOString(),
-                            role: 'user',
-                            status: 'active'
+                            username: user.email.split('@')[0], phone: "0000000000", fullName: user.displayName || "Thành viên",
+                            balance: 0, createdAt: new Date().toISOString(), role: 'user', status: 'active'
                         };
                         await setDoc(docRef, fixData);
                         saveAndGo(fixData, user.uid);
                     }
                 } catch (e) {
-                    window.toast('error', 'Lỗi kết nối máy chủ!');
-                    loadingText.innerText = "MẤT KẾT NỐI MẠNG";
-                    // Thoát an toàn nếu bị nghẽn
-                    setTimeout(() => {
-                        loadingOverlay.classList.add('opacity-0');
-                        setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
-                    }, 2000);
-                    signOut(auth);
+                    // Nếu lỗi mạng, hiện form ra để ngta tự bấm
+                    document.getElementById('appWrapper').classList.remove('opacity-0');
                 }
             } else if (!isHandlingAuthForm) {
-                // Chưa đăng nhập -> Ẩn màn hình chờ mượt mà
-                loadingOverlay.classList.add('opacity-0');
-                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+                // Chưa đăng nhập -> Hiện Form lên
+                document.getElementById('appWrapper').classList.remove('opacity-0');
             }
         });
 
-        // LƯU CROWEX INFO THEO LOGIC CŨ
         function saveAndGo(data, uid) {
             data.uid = uid;
             localStorage.setItem('crownex_user_info', JSON.stringify(data));
-            window.location.href = "game.html"; // Chuyển thẳng sang Kho Game
+            window.location.href = "game.html"; // Redirect
         }
 
         // --- SMOOTH TAB LOGIC & CHỈNH CHIỀU CAO ---
+        const HEIGHT_LOGIN = '295px';
+        const HEIGHT_REG = '445px';
+
         window.switchTab = (tab) => {
             const loginForm = document.getElementById('formLogin');
             const regForm = document.getElementById('formRegister');
@@ -370,49 +347,37 @@
                 indicator.style.transform = 'translateX(0)';
                 btnLogin.classList.add('active'); btnReg.classList.remove('active');
                 
-                loginForm.classList.remove('slide-left', 'slide-right');
-                loginForm.classList.add('active');
-                
-                regForm.classList.remove('active', 'slide-left');
-                regForm.classList.add('slide-right');
+                loginForm.classList.remove('slide-left', 'slide-right'); loginForm.classList.add('active');
+                regForm.classList.remove('active', 'slide-left'); regForm.classList.add('slide-right');
 
-                wrapper.style.height = '290px'; // Chiều cao form Đăng nhập
+                wrapper.style.height = HEIGHT_LOGIN;
                 window.drawCaptcha('login');
             } else {
-                indicator.style.transform = 'translateX(calc(100% + 8px))';
+                indicator.style.transform = 'translateX(calc(100% + 10px))';
                 btnLogin.classList.remove('active'); btnReg.classList.add('active');
 
-                regForm.classList.remove('slide-right', 'slide-left');
-                regForm.classList.add('active');
+                regForm.classList.remove('slide-right', 'slide-left'); regForm.classList.add('active');
+                loginForm.classList.remove('active', 'slide-right'); loginForm.classList.add('slide-left');
 
-                loginForm.classList.remove('active', 'slide-right');
-                loginForm.classList.add('slide-left');
-
-                wrapper.style.height = '430px'; // Chiều cao form Đăng ký
+                wrapper.style.height = HEIGHT_REG;
                 window.drawCaptcha('reg');
             }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-             document.getElementById('formsWrapper').style.height = '290px';
+             document.getElementById('formsWrapper').style.height = HEIGHT_LOGIN;
         });
 
-        window.togglePass = (id) => {
+        window.togglePass = (id, btn) => {
             const el = document.getElementById(id);
-            const icon = el.nextElementSibling.nextElementSibling;
+            const icon = btn.querySelector('i');
             if (el.type === 'password') {
                 el.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                icon.classList.remove('fa-eye', 'text-gray-400'); icon.classList.add('fa-eye-slash', 'text-white');
             } else {
                 el.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                icon.classList.remove('fa-eye-slash', 'text-white'); icon.classList.add('fa-eye', 'text-gray-400');
             }
-        };
-
-        window.forceLogout = () => {
-            signOut(auth).then(() => { localStorage.clear(); location.reload(); });
         };
 
         // --- SUBMIT LOGIN ---
@@ -424,29 +389,24 @@
             const cap = document.getElementById('loginCaptcha').value.toUpperCase();
 
             if (cap !== captchaCodes.login) {
-                window.toast('error', 'Mã xác nhận sai!');
-                window.drawCaptcha('login');
-                document.getElementById('loginCaptcha').value = '';
-                return;
+                window.toast('error', 'Mã xác nhận không đúng!');
+                window.drawCaptcha('login'); document.getElementById('loginCaptcha').value = ''; return;
             }
 
             isHandlingAuthForm = true;
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG KIỂM TRA...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG XỬ LÝ...`;
             
             try {
                 await signInWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
-                btn.innerHTML = `<i class="fa-solid fa-check"></i> THÀNH CÔNG! ĐANG VÀO...`;
-                btn.classList.add('bg-green-500');
-                
-                setTimeout(() => {
-                    window.location.href = "game.html"; // Chuyển thẳng
-                }, 800);
+                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> THÀNH CÔNG!`;
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                btn.style.color = '#fff';
+                setTimeout(() => { window.location.href = "game.html"; }, 500);
             } catch (err) {
                 isHandlingAuthForm = false;
                 window.toast('error', 'Sai thông tin đăng nhập!');
-                btn.disabled = false; btn.innerHTML = `TRUY CẬP <i class="fa-solid fa-arrow-right ml-1"></i>`;
-                window.drawCaptcha('login');
-                document.getElementById('loginCaptcha').value = '';
+                btn.disabled = false; btn.innerHTML = `TRUY CẬP HỆ THỐNG`;
+                window.drawCaptcha('login'); document.getElementById('loginCaptcha').value = '';
             }
         });
 
@@ -461,19 +421,14 @@
             const cap = document.getElementById('regCaptcha').value.toUpperCase();
 
             if (cap !== captchaCodes.reg) {
-                window.toast('error', 'Mã xác nhận sai!');
-                window.drawCaptcha('reg');
-                document.getElementById('regCaptcha').value = '';
-                return;
+                window.toast('error', 'Mã xác nhận không đúng!');
+                window.drawCaptcha('reg'); document.getElementById('regCaptcha').value = ''; return;
             }
 
-            if (!/^[a-zA-Z0-9]+$/.test(user)) {
-                window.toast('error', 'Tên đăng nhập không chứa ký tự đặc biệt!');
-                return;
-            }
+            if (!/^[a-zA-Z0-9]+$/.test(user)) { window.toast('error', 'Tên đăng nhập không chứa ký tự đặc biệt!'); return; }
 
             isHandlingAuthForm = true;
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG TẠO DỮ LIỆU...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG TẠO...`;
             
             try {
                 const cred = await createUserWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
@@ -486,20 +441,18 @@
                 await setDoc(doc(db, "users", cred.user.uid), newData);
 
                 window.toast('success', 'Đăng ký thành công!');
-                btn.innerHTML = `<i class="fa-solid fa-check"></i> THÀNH CÔNG! ĐANG VÀO...`;
-                btn.classList.add('bg-green-500');
-                
-                setTimeout(() => {
-                    window.location.href = "game.html"; // Chuyển thẳng
-                }, 1000);
+                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> HOÀN TẤT!`;
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                btn.style.color = '#fff';
+                setTimeout(() => { window.location.href = "game.html"; }, 800);
             } catch (err) {
                 isHandlingAuthForm = false;
                 let msg = 'Lỗi đăng ký!';
                 if(err.code.includes('email-already-in-use')) msg = 'Tên tài khoản đã tồn tại!';
                 if(err.code.includes('weak-password')) msg = 'Mật khẩu quá ngắn!';
                 window.toast('error', msg);
-                btn.disabled = false; btn.innerHTML = `ĐĂNG KÝ NGAY`;
-                window.drawCaptcha('reg');
+                btn.disabled = false; btn.innerHTML = `MỞ TÀI KHOẢN NGAY`;
+                window.drawCaptcha('reg'); document.getElementById('regCaptcha').value = '';
             }
         });
 
@@ -509,31 +462,30 @@
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0,0,canvas.width,canvas.height);
             
-            // Vẽ nhiễu nền
-            for(let i=0; i<30; i++) {
-                ctx.fillStyle = `rgba(252, 213, 53, ${Math.random()*0.3})`;
-                ctx.beginPath();
-                ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*3, 0, Math.PI*2);
-                ctx.fill();
+            // Vẽ nhiễu nền sang trọng
+            for(let i=0; i<35; i++) {
+                ctx.fillStyle = `rgba(252, 213, 53, ${Math.random()*0.25})`;
+                ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*2+1, 0, Math.PI*2); ctx.fill();
             }
 
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             let code = ''; for(let i=0; i<4; i++) code += chars[Math.floor(Math.random()*chars.length)];
             captchaCodes[type] = code;
 
-            ctx.font = 'bold 22px IBM Plex Mono';
+            ctx.font = 'bold 24px IBM Plex Mono';
             ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
             for(let i=0; i<4; i++) {
                 ctx.save();
-                ctx.translate(20 + i*20, 25);
-                ctx.rotate((Math.random()-0.5)*0.6);
+                ctx.translate(22 + i*24, 26);
+                ctx.rotate((Math.random()-0.5)*0.5);
                 ctx.fillStyle = '#FCD535';
                 ctx.fillText(code[i], 0, 0);
                 ctx.restore();
             }
             
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 1;
+            // Đường gạch nhiễu
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, Math.random()*canvas.height); ctx.lineTo(canvas.width, Math.random()*canvas.height); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0, Math.random()*canvas.height); ctx.lineTo(canvas.width, Math.random()*canvas.height); ctx.stroke();
         };
 
@@ -541,32 +493,22 @@
             const box = document.getElementById('toast-box');
             const div = document.createElement('div');
             
-            let color, iconClass, bgIcon;
-            if(type === 'error') {
-                color = 'text-[#F6465D]'; let border = 'border-[#F6465D]'; 
-                iconClass = 'fa-triangle-exclamation'; bgIcon = 'bg-[#F6465D]/20';
-            } else {
-                color = 'text-[#0ECB81]'; let border = 'border-[#0ECB81]'; 
-                iconClass = 'fa-check'; bgIcon = 'bg-[#0ECB81]/20';
-            }
+            let colorCls = type === 'error' ? 'text-rose-400' : 'text-emerald-400';
+            let bgIcon = type === 'error' ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20';
+            let iconClass = type === 'error' ? 'fa-triangle-exclamation' : 'fa-check';
 
-            div.className = `toast-msg border ${type==='error'?'border-[#F6465D]':'border-[#0ECB81]'}`;
+            div.className = `toast-msg`;
             div.innerHTML = `
-                <div class="w-8 h-8 rounded-full ${bgIcon} flex items-center justify-center shrink-0">
-                    <i class="fa-solid ${iconClass} ${color} text-sm"></i>
+                <div class="w-8 h-8 rounded-full ${bgIcon} border flex items-center justify-center shrink-0">
+                    <i class="fa-solid ${iconClass} ${colorCls} text-sm"></i>
                 </div>
-                <span class="text-white font-bold text-sm leading-tight">${msg}</span>
+                <span class="text-white font-bold text-[13px] leading-tight">${msg}</span>
             `;
             box.appendChild(div);
-            setTimeout(() => { 
-                div.style.opacity = '0';
-                setTimeout(() => div.remove(), 300);
-            }, 2500);
+            setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 300); }, 2500);
         };
 
         window.drawCaptcha('login');
     </script>
 </body>
 </html>
-
-
