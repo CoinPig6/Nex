@@ -223,7 +223,6 @@
         let myNickName = "";
         let botReplied = false;
         let msgListener = null;
-        let localMessagesCount = 0;
 
         // AUTH
         onAuthStateChanged(auth, async (u) => {
@@ -284,14 +283,12 @@
             const qMsg = query(collection(db, HUB_PATH, currentFBUser.uid, 'messages'), orderBy('time', 'asc'));
             onSnapshot(qMsg, (snap) => {
                 const box = document.getElementById('user-messages');
-                // Chỉ xóa và vẽ lại nếu số lượng tin nhắn thay đổi hoặc bắt đầu
-                if (snap.size !== localMessagesCount) {
-                    if (snap.empty && botReplied) { location.reload(); return; }
-                    box.innerHTML = '';
-                    snap.forEach(d => renderBubble(box, d.data().text, d.data().role === 'admin' ? 'left' : 'right'));
-                    localMessagesCount = snap.size;
-                    box.scrollTop = box.scrollHeight;
-                }
+                if (snap.empty && botReplied) { location.reload(); return; }
+                
+                // Đảm bảo luôn xóa khung và render lại toàn bộ để tránh lỗi đồng bộ
+                box.innerHTML = ''; 
+                snap.forEach(d => renderBubble(box, d.data().text, d.data().role === 'admin' ? 'left' : 'right'));
+                box.scrollTop = box.scrollHeight;
             });
         }
 
@@ -337,14 +334,20 @@
             selectedUserId = uid;
             if (window.innerWidth <= 768) document.getElementById('admin-sidebar').classList.add('hide');
             
+            // Lập tức xóa sạch màn hình chat cũ để tránh lẫn nội dung
+            document.getElementById('admin-messages').innerHTML = ''; 
+
             document.getElementById('header-user-name').innerText = name.toUpperCase();
             document.getElementById('active-user-avatar').innerText = name.charAt(0).toUpperCase();
             document.getElementById('active-user-avatar').classList.remove('hidden');
-            document.getElementById('admin-welcome-msg').classList.add('hidden');
             document.getElementById('admin-input-container').classList.remove('hidden');
             document.getElementById('btn-end-session').classList.remove('hidden');
             document.getElementById('quick-chat-bar').classList.remove('hidden');
             
+            // Xóa highlight cũ và thêm highlight cho user mới trên thanh bên
+            document.querySelectorAll('#admin-user-list > div').forEach(el => el.classList.remove('user-item-active'));
+            event?.currentTarget?.classList.add('user-item-active');
+
             const userRef = doc(db, HUB_PATH, uid);
             const msgCol = collection(db, HUB_PATH, uid, 'messages');
 
@@ -353,17 +356,15 @@
                 await addDoc(msgCol, { text: "Chào bạn! CSKH TPIG xin nghe, mình hỗ trợ gì được cho bạn ạ?", role: 'admin', time: serverTimestamp() });
             }
 
-            if (msgListener) msgListener();
-            let adminLocalMsgCount = 0;
+            if (msgListener) msgListener(); // Ngắt lắng nghe tin nhắn của user cũ
+            
             const qMsg = query(msgCol, orderBy('time', 'asc'));
             msgListener = onSnapshot(qMsg, (snap) => {
                 const box = document.getElementById('admin-messages');
-                if (snap.size !== adminLocalMsgCount) {
-                    box.innerHTML = '';
-                    snap.forEach(d => renderBubble(box, d.data().text, d.data().role === 'admin' ? 'right' : 'left'));
-                    adminLocalMsgCount = snap.size;
-                    box.scrollTop = box.scrollHeight;
-                }
+                // Thay vì đếm số lượng tin nhắn, luôn Clear và Vẽ Lại từ Firebase để không bao giờ bị lệch dữ liệu
+                box.innerHTML = '';
+                snap.forEach(d => renderBubble(box, d.data().text, d.data().role === 'admin' ? 'right' : 'left'));
+                box.scrollTop = box.scrollHeight;
             });
         }
 
@@ -374,15 +375,13 @@
             if (!text || !currentFBUser) return;
             const targetId = role === 'admin' ? selectedUserId : currentFBUser.uid;
             
-            // Optimistic UI: Hiển thị ngay
-            const box = document.getElementById(role === 'admin' ? 'admin-messages' : 'user-messages');
-            renderBubble(box, text, role === 'admin' ? 'right' : 'right');
-            box.scrollTop = box.scrollHeight;
             if (!manualText) input.value = '';
 
             try {
                 const msgCol = collection(db, HUB_PATH, targetId, 'messages');
                 const chatDoc = doc(db, HUB_PATH, targetId);
+                
+                // Đẩy tin nhắn lên server (UI sẽ tự được update thông qua hàm onSnapshot phía trên)
                 await addDoc(msgCol, { text, role, time: serverTimestamp() });
                 await updateDoc(chatDoc, { lastMsg: text, lastUpdate: serverTimestamp() });
 
@@ -447,4 +446,3 @@
     </script>
 </body>
 </html>
-
