@@ -14,265 +14,279 @@
             overscroll-behavior-y: none; 
             height: 100%; 
             overflow: hidden; 
-            background-color: #0b0f19; 
+            background-color: #050507; 
             -webkit-text-size-adjust: 100%;
         }
-        body { color: #d1d5db; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; }
+        body { 
+            color: #d1d5db; 
+            font-family: 'Roboto', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            background-image: radial-gradient(circle at top, rgba(30, 41, 59, 0.4) 0%, transparent 70%);
+        }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
         
-        /* Cấm zoom khi double-tap vào các nút bấm */
-        a, button, input, select { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent;}
-        
-        /* Ẩn thanh cuộn nhưng vẫn cho phép cuộn */
+        a, button, input, select, textarea { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent;}
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
         /* BOTTOM NAV */
-        .bottom-nav { background: rgba(19, 22, 31, 0.95); backdrop-filter: blur(10px); padding-bottom: env(safe-area-inset-bottom, 10px); }
-        .nav-item { transition: all 0.2s; text-decoration: none; cursor: pointer; }
+        .bottom-nav { background: rgba(5, 5, 7, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding-bottom: env(safe-area-inset-bottom, 10px); }
+        .nav-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; cursor: pointer; }
         .nav-item.active { color: #FCD535; }
-        .nav-item.active i { transform: translateY(-2px); }
+        .nav-item.active i { transform: translateY(-4px) scale(1.1); text-shadow: 0 4px 12px rgba(252,213,53,0.5); }
+        .nav-item:not(.active):active { transform: scale(0.9); opacity: 0.7; }
 
-        /* PROFILE UI CARDS */
-        .tech-card {
-            background: #1e232e;
-            border: 1px solid #2d3442; 
-            border-radius: 16px; 
-            padding: 20px; 
-            position: relative; 
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            margin-bottom: 16px;
+        /* GLASSMORPHISM CARDS */
+        .glass-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 20px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); 
         }
-        .tech-list {
-            background: #1e232e; 
-            border: 1px solid #2d3442; 
-            border-radius: 16px; 
-            overflow: hidden; 
-            margin-bottom: 16px;
-        }
-        .list-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 16px; border-bottom: 1px solid #2d3442; transition: 0.2s;
-        }
-        .list-item:last-child { border-bottom: none; }
-        
-        /* FIX LỖI ZOOM TRÊN IOS: font-size bắt buộc phải >= 16px đối với input */
+
+        /* INPUTS - BẮT BUỘC 16PX ĐỂ CHỐNG ZOOM IOS */
         .input-dark {
-            width: 100%; background: #0b0f19; border: 1px solid #2d3442;
-            color: #fff; padding: 12px; border-radius: 8px; 
-            font-size: 16px; 
-            margin-bottom: 12px; transition: 0.2s;
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 14px 16px; border-radius: 14px; 
+            font-size: 16px !important; /* QUAN TRỌNG: Phải >= 16px */
+            transition: all 0.3s;
             appearance: none; -webkit-appearance: none;
+            backdrop-filter: blur(4px);
         }
-        .input-dark:focus { border-color: #FCD535; outline: none; box-shadow: 0 0 0 1px #FCD535; }
-        .input-readonly { background: #13161f; color: #6b7280; border-color: #2d3442; cursor: not-allowed; }
-        
-        .btn-save {
-            width: 100%; background: #0ECB81; color: white; font-weight: bold;
-            padding: 12px; border-radius: 8px; font-size: 14px; text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(14, 203, 129, 0.3); transition: 0.2s;
-        }
-        .btn-save:active { transform: scale(0.98); }
-        .btn-save:disabled { background: #4b5563; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
+        .input-dark:focus { border-color: #FCD535; outline: none; box-shadow: 0 0 0 1px #FCD535, inset 0 2px 5px rgba(0,0,0,0.5); background: rgba(255,255,255,0.02); }
+        .input-readonly { background: rgba(255,255,255,0.02); color: #6b7280; border-color: rgba(255,255,255,0.05); cursor: not-allowed; }
 
-        .verified-badge {
-            background: rgba(14, 203, 129, 0.15); border: 1px solid rgba(14, 203, 129, 0.3);
-            color: #0ECB81; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;
+        /* ACCORDION ANIMATION */
+        .accordion-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out;
         }
+        .accordion-content.open { grid-template-rows: 1fr; }
+        .accordion-inner { overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <!-- HEADER BAR TƯƠNG TỰ TRANG CHỦ -->
-    <header class="flex items-center justify-between px-4 h-16 bg-[#13161f] border-b border-[#232836] z-20 shrink-0 sticky top-0">
+    <!-- HEADER BAR -->
+    <header class="flex items-center justify-between px-4 h-16 bg-black/40 backdrop-blur-xl border-b border-white/[0.05] z-30 shrink-0 sticky top-0 shadow-lg shadow-black/20">
         <div class="flex items-center gap-3">
-            <a href="cskh.html" class="bg-[#1e232e] border border-[#2d3442] px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition-transform shadow-sm text-white">
-                <i class="fa-solid fa-headset text-blue-400"></i>
-                <span class="text-xs font-bold">CSKH</span>
+            <a href="cskh.html" class="bg-white/5 border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-90 transition-all shadow-sm hover:bg-white/10">
+                <i class="fa-solid fa-headset text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.5)]"></i>
+                <span class="text-xs font-bold text-gray-200">CSKH</span>
             </a>
-            <div class="font-black text-xl text-white tracking-widest italic flex items-center gap-1 ml-1">
-                <span class="text-[#FCD535]">T</span>PIG
+            <div class="font-black text-xl text-white tracking-widest italic flex items-center gap-1 ml-1 drop-shadow-md">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FCD535] to-[#f59e0b]">T</span>PIG
             </div>
         </div>
 
-        <div class="bg-[#1e232e] pl-3 pr-1 py-1 rounded-full border border-[#2d3442] flex items-center gap-2 shadow-inner">
+        <div class="bg-black/50 pl-3 pr-1 py-1 rounded-full border border-white/10 flex items-center gap-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] transition-all">
             <div class="flex flex-col items-end leading-none">
-                <span class="text-[9px] text-[#6b7280] font-bold uppercase mb-0.5">SỐ DƯ</span>
-                <span id="balanceDisplayHeader" class="text-[#EAECEF] font-mono text-sm font-bold animate-pulse">...</span>
+                <span class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-widest">SỐ DƯ</span>
+                <span id="balanceDisplayHeader" class="text-white font-mono text-sm font-bold tracking-tight animate-pulse">...</span>
             </div>
-            <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center text-[14px] font-black text-black shadow-lg">
+            <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#d97706] rounded-full flex items-center justify-center text-[13px] font-black text-black shadow-[0_0_10px_rgba(252,213,53,0.4)] border border-[#fff]/30">
                 T
             </div>
         </div>
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-24 relative bg-[#0b0f19]">
-        <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FCD535]/5 to-transparent pointer-events-none"></div>
+    <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-28 relative z-10" id="mainScrollArea">
+        <div class="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-[#FCD535]/5 via-purple-900/5 to-transparent pointer-events-none z-0"></div>
 
         <div class="relative z-10">
-            <!-- PROFILE INFO CARD -->
-            <div class="flex flex-col items-center mb-6 pt-2">
-                <div class="w-20 h-20 rounded-full p-[2px] bg-gradient-to-tr from-[#FCD535] to-[#f59e0b] mb-3 shadow-[0_0_20px_rgba(252,213,53,0.3)] relative">
-                    <div class="w-full h-full rounded-full bg-[#13161f] flex items-center justify-center border-2 border-[#1e232e]">
-                        <i class="fa-solid fa-user text-3xl text-gray-400"></i>
-                    </div>
-                    <div class="absolute bottom-0 right-0 w-6 h-6 bg-[#0ECB81] border-2 border-[#13161f] rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-check text-[10px] text-[#111] font-black"></i>
+            
+            <!-- PROFILE HEADER -->
+            <div class="flex items-center justify-between px-1 mb-6 mt-2">
+                <div class="flex items-center gap-3.5">
+                    <img src="https://i.pravatar.cc/150?img=47" class="w-[52px] h-[52px] rounded-full border-[3px] border-[#2d3442] object-cover shadow-lg" alt="Avatar">
+                    <div>
+                        <p class="text-[12px] text-gray-400 mb-0.5 font-medium tracking-wide">ID người chơi / <span id="displayFullname" class="text-gray-300 uppercase">...</span></p>
+                        <h2 class="text-[22px] font-bold text-[#4ade80] drop-shadow-md tracking-tight" id="displayUsername">...</h2>
                     </div>
                 </div>
-                <h2 class="text-xl font-bold text-white tracking-wide" id="displayFullname">Đang tải...</h2>
-                <p class="text-sm text-[#FCD535] font-mono mt-0.5" id="displayUsername">@username</p>
+                <div class="text-emerald-400 relative p-2 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors active:scale-95 cursor-pointer">
+                    <i class="fa-regular fa-envelope text-[22px]"></i>
+                    <span class="absolute -top-1.5 -right-1.5 bg-red-500 border-2 border-[#13161f] text-white text-[9px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center shadow-md">0</span>
+                </div>
             </div>
 
             <!-- BALANCE BIG CARD -->
-            <div class="tech-card border-[#FCD535]/20">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-[#FCD535] rounded-full opacity-[0.05] blur-3xl pointer-events-none"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Tổng Số Dư</span>
-                        <div class="w-8 h-8 shrink-0 rounded bg-[#FCD535]/10 flex items-center justify-center text-[#FCD535]"><i class="fa-solid fa-wallet text-sm"></i></div>
+            <div class="glass-card p-5 mb-5 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="flex items-center gap-3 mb-2 relative z-10">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                        <i class="fa-regular fa-credit-card text-emerald-400 text-sm"></i>
                     </div>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-3xl font-mono font-black text-white tracking-tight" id="displayBalanceMain">0.00</span>
-                        <span class="text-[#FCD535] font-black text-xl">T</span>
-                    </div>
-                    <div class="text-[11px] text-[#0ECB81] font-mono mt-1 font-medium bg-[#0ECB81]/10 w-fit px-2 py-0.5 rounded" id="displayBalanceVND">≈ 0 VNĐ</div>
-                    
-                    <div class="mt-5 flex gap-3">
-                        <a href="naprut.html?tab=deposit" class="flex-1 bg-gradient-to-r from-[#FCD535] to-[#f59e0b] text-[#111] font-black py-3 rounded-xl text-center text-sm shadow-[0_4px_15px_rgba(252,213,53,0.3)] hover:brightness-110 active:scale-95 transition-all">
-                            <i class="fa-solid fa-arrow-down mr-1"></i> NẠP T
-                        </a>
-                        <a href="naprut.html?tab=withdraw" class="flex-1 bg-[#2d3442] text-white border border-[#4b5563] font-bold py-3 rounded-xl text-center text-sm hover:bg-[#374151] active:scale-95 transition-all">
-                            <i class="fa-solid fa-arrow-up mr-1"></i> RÚT TIỀN
-                        </a>
-                    </div>
+                    <span class="text-[13px] text-gray-300 font-medium tracking-wide">Số dư tài khoản</span>
+                </div>
+                
+                <div class="flex items-baseline gap-2 mb-6 ml-11 relative z-10">
+                    <span class="text-[28px] font-mono font-black text-white tracking-tight drop-shadow-md" id="displayBalanceMain">0.00</span>
+                    <span class="text-gray-400 font-bold text-[15px]">T</span>
+                </div>
+                
+                <div class="flex gap-3 relative z-10">
+                    <a href="naprut.html" class="flex-1 bg-gradient-to-b from-[#86efac] to-[#4ade80] text-emerald-950 font-bold py-3.5 rounded-[14px] flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(74,222,128,0.25)] hover:brightness-110 active:scale-95 transition-all text-sm tracking-wide">
+                        <i class="fa-solid fa-circle-plus"></i> Nạp Tiền
+                    </a>
+                    <a href="ruttien.html" class="flex-1 bg-[#2a2f3a] text-gray-200 font-bold py-3.5 rounded-[14px] flex items-center justify-center gap-2 border border-[#3f4758] hover:bg-[#3f4758] active:scale-95 transition-all text-sm tracking-wide shadow-sm">
+                        Rút Tiền
+                    </a>
                 </div>
             </div>
 
-            <!-- BANK ACCOUNT SECTION -->
-            <div class="tech-card">
-                <div class="flex items-center justify-between mb-4 border-b border-[#2d3442] pb-3">
+            <!-- QUẢN LÝ NGÂN HÀNG (Accordion) -->
+            <div class="glass-card mb-6 p-0 overflow-hidden">
+                <button onclick="window.toggleBankSection()" class="w-full flex justify-between items-center p-4 bg-white/[0.02] hover:bg-white/[0.05] transition-colors border-b border-transparent" id="bankHeaderBtn">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 shrink-0 rounded bg-[#0ECB81]/10 flex items-center justify-center text-[#0ECB81]">
-                            <i class="fa-solid fa-building-columns text-sm"></i>
+                        <i class="fa-solid fa-building-columns text-[#FCD535] text-lg w-6 text-center drop-shadow-sm"></i>
+                        <span class="font-bold text-[15px] text-gray-200 tracking-wide">Ngân hàng của tôi</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span id="bankCountBadge" class="text-[11px] font-bold text-gray-400 bg-black/40 px-2.5 py-1 rounded-md border border-white/5 shadow-inner">0/2</span>
+                        <i class="fa-solid fa-chevron-down text-gray-500 text-sm transition-transform duration-300" id="bankChevron"></i>
+                    </div>
+                </button>
+                
+                <div id="bankContent" class="accordion-content border-t border-white/5 hidden-border">
+                    <div class="accordion-inner bg-black/20">
+                        
+                        <!-- Danh sách ngân hàng đã thêm -->
+                        <div id="bankListContainer" class="p-4 space-y-3 empty:hidden">
+                            <!-- Render by JS -->
                         </div>
-                        <span class="font-bold text-sm text-white">THÔNG TIN THANH TOÁN</span>
-                    </div>
-                    <span id="bankStatusBadge" class="hidden verified-badge shadow-sm">ĐÃ LIÊN KẾT</span>
-                </div>
 
-                <div id="bankInputForm">
-                    <div class="mb-3">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Chọn Ngân Hàng / Ví</label>
-                        <select id="bankName" class="input-dark" onchange="window.checkBankType(this)">
-                            <option value="">-- Chọn ngân hàng --</option>
-                            <option value="Momo" class="font-bold text-pink-500">Ví Điện Tử MoMo</option>
-                            <option value="Vietcombank">Vietcombank</option>
-                            <option value="Techcombank">Techcombank</option>
-                            <option value="MBBank">MB Bank</option>
-                            <option value="ACB">ACB</option>
-                            <option value="VietinBank">VietinBank</option>
-                            <option value="BIDV">BIDV</option>
-                            <option value="VPBank">VPBank</option>
-                            <option value="Agribank">Agribank</option>
-                            <option value="TPBank">TPBank</option>
-                            <option value="Sacombank">Sacombank</option>
-                            <option value="VIB">VIB</option>
-                            <option value="MSB">MSB</option>
-                            <option value="OCB">OCB</option>
-                            <option value="Eximbank">Eximbank</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label id="labelBankNumber" class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Số Tài Khoản</label>
-                        <input type="number" id="bankNumber" class="input-dark" placeholder="Nhập số tài khoản/ví" inputmode="numeric" pattern="[0-9]*">
-                    </div>
-                    <div class="mb-5">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5 pl-1">Chủ Tài Khoản (Tự động)</label>
-                        <input type="text" id="bankOwner" class="input-dark input-readonly" readonly placeholder="HỌ VÀ TÊN">
-                    </div>
-                    <button onclick="window.saveBankInfo()" class="btn-save" id="btnSaveBank">
-                        <i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH
-                    </button>
-                    <p class="text-[10px] text-[#F6465D] mt-3 font-medium text-center bg-[#F6465D]/10 py-1.5 rounded">
-                        <i class="fa-solid fa-circle-info mr-1"></i> Thông tin không thể thay đổi sau khi lưu.
-                    </p>
-                </div>
+                        <!-- Nút Thêm Ngân Hàng Mới -->
+                        <div id="btnAddBankWrap" class="p-4 pt-1">
+                            <button onclick="window.showAddBankForm()" class="w-full py-3.5 border border-dashed border-gray-600 text-gray-400 rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 hover:text-white hover:border-gray-400 transition font-medium text-sm">
+                                <i class="fa-solid fa-plus"></i> Thêm liên kết mới
+                            </button>
+                        </div>
 
-                <div id="bankInfoDisplay" class="hidden space-y-4">
-                    <div class="flex justify-between items-center border-b border-[#2d3442] pb-3">
-                        <span class="text-xs text-gray-400">Ngân hàng / Ví</span>
-                        <span class="text-sm font-bold text-white bg-[#0b0f19] px-3 py-1 rounded border border-[#2d3442]" id="displayBankName">---</span>
-                    </div>
-                    <div class="flex justify-between items-center border-b border-[#2d3442] pb-3">
-                        <span class="text-xs text-gray-400" id="labelDisplayNumber">Số tài khoản</span>
-                        <span class="text-sm font-bold text-[#FCD535] font-mono tracking-wider" id="displayBankNumber">---</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-400">Chủ tài khoản</span>
-                        <span class="text-sm font-bold text-white uppercase" id="displayBankOwner">---</span>
+                        <!-- Form Thêm Ngân Hàng (Tích hợp nhập & chọn) -->
+                        <div id="addBankFormContainer" class="hidden p-4 border-t border-white/5 bg-black/40 relative">
+                            <div class="space-y-4 relative z-10">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h4 class="text-[#0ECB81] font-bold text-sm tracking-wide">Thêm Ngân Hàng</h4>
+                                    <button onclick="window.hideAddBankForm()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                                </div>
+                                
+                                <!-- COMBO-BOX NGÂN HÀNG -->
+                                <div class="relative z-20">
+                                    <label class="text-[10px] text-gray-400 font-bold uppercase block mb-2 pl-1 tracking-widest">Ngân Hàng / Ví</label>
+                                    <div class="relative">
+                                        <input type="text" id="bankName" class="input-dark font-bold text-white pr-10" placeholder="Nhập hoặc chọn ngân hàng" autocomplete="off" onblur="window.formatBankName(this)">
+                                        <button type="button" onclick="window.toggleBankDropdown(event)" class="absolute right-0 top-0 h-full px-4 text-gray-400 hover:text-white transition-colors flex items-center justify-center">
+                                            <i class="fa-solid fa-chevron-down transition-transform duration-300" id="bankDropdownIcon"></i>
+                                        </button>
+                                        
+                                        <!-- Dropdown List -->
+                                        <div id="bankDropdown" class="hidden absolute top-[calc(100%+4px)] left-0 right-0 bg-[#1e232e] border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 max-h-[200px] overflow-y-auto custom-scroll">
+                                            <!-- Render by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="relative z-10">
+                                    <label id="labelBankNumber" class="text-[10px] text-gray-400 font-bold uppercase block mb-2 pl-1 tracking-widest">Số Tài Khoản</label>
+                                    <input type="number" id="bankNumber" class="input-dark font-mono text-[#FCD535] tracking-widest placeholder-gray-600" placeholder="Nhập số tài khoản/ví" inputmode="numeric" pattern="[0-9]*">
+                                </div>
+                                <div class="relative z-10">
+                                    <label class="text-[10px] text-gray-400 font-bold uppercase block mb-2 pl-1 tracking-widest">Chủ Tài Khoản</label>
+                                    <input type="text" id="bankOwner" class="input-dark uppercase font-bold input-readonly" readonly placeholder="HỌ VÀ TÊN">
+                                </div>
+                                
+                                <button onclick="window.saveBankInfo()" class="relative z-10 w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold py-3.5 rounded-xl text-sm shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:brightness-110 active:scale-95 transition-all tracking-wider mt-2" id="btnSaveBank">
+                                    LƯU LIÊN KẾT
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <!-- DETAIL LIST -->
-            <div class="tech-list shadow-lg">
-                <div class="list-item">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 shrink-0 rounded-full bg-[#0b0f19] border border-[#2d3442] flex items-center justify-center text-blue-400"><i class="fa-solid fa-id-card"></i></div>
-                        <span class="text-sm font-medium text-white">ID Tài khoản</span>
+            <!-- MENU LIST CÁ NHÂN -->
+            <div class="glass-card overflow-hidden p-0 mb-6 border border-white/10">
+                <div class="flex justify-between items-center p-4 border-b border-white/5 hover:bg-white/[0.02] transition">
+                    <div class="flex items-center gap-3.5">
+                        <i class="fa-regular fa-id-card text-gray-400 text-[18px] w-6 text-center"></i>
+                        <span class="text-gray-200 text-[14px] font-medium tracking-wide">ID Tài khoản</span>
                     </div>
-                    <span class="text-xs text-gray-400 font-mono break-all text-right w-1/2" id="infoID">...</span>
-                </div>
-                <div class="list-item">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 shrink-0 rounded-full bg-[#0b0f19] border border-[#2d3442] flex items-center justify-center text-[#FCD535]"><i class="fa-solid fa-phone"></i></div>
-                        <span class="text-sm font-medium text-white">Số điện thoại</span>
+                    <div class="flex items-center gap-2 text-gray-500">
+                        <span class="text-xs font-mono max-w-[120px] truncate" id="infoID">...</span>
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
                     </div>
-                    <span class="text-sm text-gray-400 font-mono" id="infoPhone">...</span>
                 </div>
-                <div class="list-item">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 shrink-0 rounded-full bg-[#0b0f19] border border-[#2d3442] flex items-center justify-center text-purple-400"><i class="fa-solid fa-calendar-days"></i></div>
-                        <span class="text-sm font-medium text-white">Ngày tham gia</span>
+                
+                <div class="flex justify-between items-center p-4 border-b border-white/5 hover:bg-white/[0.02] transition">
+                    <div class="flex items-center gap-3.5">
+                        <i class="fa-solid fa-mobile-screen text-gray-400 text-[18px] w-6 text-center"></i>
+                        <span class="text-gray-200 text-[14px] font-medium tracking-wide">Số điện thoại</span>
                     </div>
-                    <span class="text-sm text-gray-400 font-mono" id="infoDate">...</span>
+                    <div class="flex items-center gap-2 text-gray-500">
+                        <span class="text-xs font-mono" id="infoPhone">...</span>
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </div>
                 </div>
-            </div>
-            
-            <button onclick="window.logout()" class="w-full bg-[#1e232e] border border-[#F6465D]/40 text-[#F6465D] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 mt-2 mb-6 hover:bg-[#F6465D]/10 active:scale-95 transition-all shadow-lg">
-                <i class="fa-solid fa-right-from-bracket text-lg"></i> ĐĂNG XUẤT TÀI KHOẢN
-            </button>
 
-            <p class="text-center text-[10px] text-[#4b5563] mt-2 font-mono font-bold tracking-widest">TPIG APP V30.2.3 • BUID: <span id="appVersionID">...</span></p>
+                <div class="flex justify-between items-center p-4 border-b border-white/5 hover:bg-white/[0.02] transition">
+                    <div class="flex items-center gap-3.5">
+                        <i class="fa-regular fa-calendar-check text-gray-400 text-[18px] w-6 text-center"></i>
+                        <span class="text-gray-200 text-[14px] font-medium tracking-wide">Ngày tham gia</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-500">
+                        <span class="text-xs font-mono" id="infoDate">...</span>
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </div>
+                </div>
+
+                <button onclick="window.logout()" class="w-full flex justify-between items-center p-4 hover:bg-white/[0.02] transition active:scale-95 cursor-pointer bg-rose-500/5">
+                    <div class="flex items-center gap-3.5">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-rose-400 text-[18px] w-6 text-center"></i>
+                        <span class="text-rose-400 font-bold text-[14px] tracking-wide">Đăng xuất</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-gray-500"></i>
+                </button>
+            </div>
+
+            <p class="text-center text-[10px] text-gray-600 mt-2 font-mono font-bold tracking-widest pb-4">TPIG APP V30.2.3 • BUID: <span id="appVersionID">...</span></p>
         </div>
     </main>
 
     <!-- BOTTOM NAVIGATION -->
-    <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[68px] border-t border-[#232836] flex items-center justify-around px-2 z-30">
-        <a href="game.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
-            <i class="fa-solid fa-house text-xl"></i>
-            <span class="text-[10px] font-bold">Trang chủ</span>
+    <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[72px] border-t border-white/10 flex items-center justify-around px-2 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <a href="game.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1.5 text-gray-500">
+            <i class="fa-solid fa-house text-[22px]"></i>
+            <span class="text-[10px] font-bold tracking-wide">Trang chủ</span>
         </a>
-        <a href="khuyenmai.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
-            <i class="fa-solid fa-gift text-xl"></i>
-            <span class="text-[10px] font-bold">Khuyến mãi</span>
+        <a href="khuyenmai.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1.5 text-gray-500">
+            <i class="fa-solid fa-gift text-[22px]"></i>
+            <span class="text-[10px] font-bold tracking-wide">Khuyến mãi</span>
         </a>
-        <a href="naprut.html" class="relative -top-5 flex flex-col items-center justify-center w-16 text-decoration-none group">
-            <div class="w-14 h-14 bg-gradient-to-br from-[#FCD535] to-[#f59e0b] rounded-full flex items-center justify-center shadow-[0_5px_20px_rgba(252,213,53,0.4)] border-4 border-[#0b0f19] group-active:scale-95 transition-transform">
-                <i class="fa-solid fa-plus text-2xl text-black"></i>
+        <a href="naptien.html" class="relative -top-6 flex flex-col items-center justify-center w-16 text-decoration-none group">
+            <div class="absolute inset-0 bg-[#FCD535] rounded-full blur-md opacity-30 group-active:opacity-50 transition-opacity"></div>
+            <div class="w-[60px] h-[60px] bg-gradient-to-br from-[#FCD535] to-[#d97706] rounded-full flex items-center justify-center shadow-[0_5px_15px_rgba(252,213,53,0.4)] border-[5px] border-[#050507] group-active:scale-95 transition-transform z-10 relative">
+                <i class="fa-solid fa-plus text-2xl text-black drop-shadow-sm"></i>
             </div>
-            <span class="text-[10px] font-bold text-[#FCD535] mt-1">Nạp T</span>
+            <span class="text-[10px] font-bold text-[#FCD535] mt-1.5 tracking-wide drop-shadow-md">Nạp T</span>
         </a>
-        <a href="lichsu.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1 text-[#6b7280]">
-            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
-            <span class="text-[10px] font-bold">Lịch sử</span>
+        <a href="lichsu.html" class="nav-item flex flex-col items-center justify-center w-16 h-full gap-1.5 text-gray-500">
+            <i class="fa-solid fa-clock-rotate-left text-[22px]"></i>
+            <span class="text-[10px] font-bold tracking-wide">Lịch sử</span>
         </a>
-        <a href="taikhoan.html" class="nav-item active flex flex-col items-center justify-center w-16 h-full gap-1">
-            <i class="fa-solid fa-user text-xl"></i>
-            <span class="text-[10px] font-bold">Tài khoản</span>
+        <a href="taikhoan.html" class="nav-item active flex flex-col items-center justify-center w-16 h-full gap-1.5">
+            <i class="fa-solid fa-user text-[22px]"></i>
+            <span class="text-[10px] font-bold tracking-wide">Tài khoản</span>
         </a>
     </div>
 
@@ -285,10 +299,10 @@
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); });
 
-        const inputs = document.querySelectorAll('input, select');
+        const inputs = document.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('focus', function() {
-                setTimeout(() => { document.body.scrollTop = 0; }, 50);
+                setTimeout(() => { document.getElementById('mainScrollArea').scrollTop += 50; }, 200);
             });
         });
 
@@ -298,86 +312,214 @@
             projectId: "btccoinbig",
             storageBucket: "btccoinbig.firebasestorage.app",
             messagingSenderId: "116892525933",
-            appId: "1:116892525933:web:04b0da25f3f933ce162664",
-            measurementId: "G-7Q1GBFNQ37"
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
         let currentUserUID = null;
-        const EXCHANGE_RATE = 1000;
+        let globalUserBanks = [];
 
-        window.checkBankType = (select) => {
-            const label = document.getElementById('labelBankNumber');
-            const input = document.getElementById('bankNumber');
-            if (select.value === 'Momo') {
-                label.innerText = 'SỐ ĐIỆN THOẠI VÍ MOMO';
-                input.placeholder = 'Nhập số điện thoại ví Momo';
+        document.getElementById('appVersionID').innerText = Math.floor(Math.random()*90000)+10000;
+
+        // --- CẤU HÌNH NGÂN HÀNG & AUTO-CORRECT ---
+        const BANK_LIST = [
+            "Ví Điện Tử MoMo", "Vietcombank", "Techcombank", "MB Bank", "ACB",
+            "VietinBank", "BIDV", "VPBank", "Agribank", "TPBank", "Sacombank",
+            "VIB", "MSB", "OCB", "Eximbank"
+        ];
+
+        const BANK_ALIASES = {
+            'mb': 'MB Bank', 'mbbank': 'MB Bank',
+            'tech': 'Techcombank', 'techcom': 'Techcombank',
+            'vcb': 'Vietcombank', 'vietcom': 'Vietcombank',
+            'vietin': 'VietinBank', 'ctg': 'VietinBank',
+            'bidv': 'BIDV',
+            'vp': 'VPBank', 'vpbank': 'VPBank',
+            'agri': 'Agribank', 'agribank': 'Agribank',
+            'momo': 'Ví Điện Tử MoMo',
+            'tp': 'TPBank', 'tpbank': 'TPBank',
+            'sacom': 'Sacombank', 'vib': 'VIB', 'msb': 'MSB', 'ocb': 'OCB', 'exim': 'Eximbank'
+        };
+
+        // UI ACTIONS BANK
+        window.toggleBankSection = () => {
+            const content = document.getElementById('bankContent');
+            const icon = document.getElementById('bankChevron');
+            const header = document.getElementById('bankHeaderBtn');
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.style.transform = 'rotate(0deg)';
+                header.style.borderColor = 'transparent';
+                window.hideAddBankForm(); 
             } else {
-                label.innerText = 'SỐ TÀI KHOẢN';
-                input.placeholder = 'Nhập số tài khoản/ví';
+                content.classList.add('open');
+                icon.style.transform = 'rotate(180deg)';
+                header.style.borderColor = 'rgba(255,255,255,0.05)';
             }
+        };
+
+        window.showAddBankForm = () => {
+            document.getElementById('btnAddBankWrap').classList.add('hidden');
+            document.getElementById('addBankFormContainer').classList.remove('hidden');
+            document.getElementById('bankNumber').value = '';
+            document.getElementById('bankName').value = '';
+            window.checkBankType();
+            renderBankDropdown();
+        };
+
+        window.hideAddBankForm = () => {
+            if(globalUserBanks.length < 2) {
+                document.getElementById('btnAddBankWrap').classList.remove('hidden');
+            }
+            document.getElementById('addBankFormContainer').classList.add('hidden');
+            document.getElementById('bankDropdown').classList.add('hidden');
+        };
+
+        // --- COMBO-BOX LOGIC ---
+        function renderBankDropdown() {
+            const dropdown = document.getElementById('bankDropdown');
+            let html = '<div class="py-2">';
+            BANK_LIST.forEach(bank => {
+                const isMomo = bank.includes('MoMo');
+                const textColor = isMomo ? 'text-pink-500 font-bold' : 'text-gray-300 hover:text-white';
+                html += `<div class="px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors text-[16px] ${textColor}" onclick="window.selectBankFromDropdown('${bank}')">${bank}</div>`;
+            });
+            html += '</div>';
+            dropdown.innerHTML = html;
         }
 
+        window.toggleBankDropdown = (e) => {
+            if(e) e.stopPropagation();
+            const dropdown = document.getElementById('bankDropdown');
+            const icon = document.getElementById('bankDropdownIcon');
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        };
+
+        window.selectBankFromDropdown = (bankName) => {
+            const input = document.getElementById('bankName');
+            input.value = bankName;
+            window.toggleBankDropdown();
+            window.checkBankType();
+        };
+
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('bankDropdown');
+            const inputWrap = document.getElementById('bankName').parentElement;
+            if (!dropdown.classList.contains('hidden') && !inputWrap.contains(e.target)) {
+                dropdown.classList.add('hidden');
+                document.getElementById('bankDropdownIcon').style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // AUTO-CORRECT
+        window.formatBankName = (inputElem) => {
+            let val = inputElem.value.trim().toLowerCase();
+            if (val === '') return;
+
+            if (BANK_ALIASES[val]) {
+                inputElem.value = BANK_ALIASES[val];
+            } else {
+                inputElem.value = inputElem.value.replace(/\b\w/g, l => l.toUpperCase());
+            }
+            window.checkBankType();
+        };
+
+        window.checkBankType = () => {
+            const val = document.getElementById('bankName').value.toLowerCase();
+            const label = document.getElementById('labelBankNumber');
+            const inputNum = document.getElementById('bankNumber');
+
+            if (val.includes('momo')) {
+                label.innerText = 'SỐ ĐIỆN THOẠI VÍ MOMO';
+                inputNum.placeholder = 'Nhập số điện thoại ví Momo';
+            } else {
+                label.innerText = 'SỐ TÀI KHOẢN';
+                inputNum.placeholder = 'Nhập số tài khoản/ví';
+            }
+        };
+
         window.logout = () => {
-            if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất tài khoản?')) {
                 signOut(auth).then(() => {
                     localStorage.removeItem('crownex_user_info');
-                    window.location.href = "index.html";
+                    window.location.href = "login.html";
                 });
             }
         };
 
+        // LƯU NGÂN HÀNG MỚI
         window.saveBankInfo = async () => {
-            const bankName = document.getElementById('bankName').value;
+            const inputElem = document.getElementById('bankName');
+            window.formatBankName(inputElem); 
+            
+            const bankName = inputElem.value;
             const bankNumber = document.getElementById('bankNumber').value.trim();
             const bankOwner = document.getElementById('bankOwner').value.trim();
 
-            if (!bankName || !bankNumber) { alert("Vui lòng chọn ngân hàng/ví và nhập số tài khoản!"); return; }
+            if (!bankName || !bankNumber) { alert("Vui lòng nhập/chọn ngân hàng và nhập số tài khoản!"); return; }
             if (!currentUserUID) return;
+            if (globalUserBanks.length >= 2) { alert("Bạn chỉ được liên kết tối đa 2 ngân hàng!"); return; }
 
             const btn = document.getElementById('btnSaveBank');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG KIỂM TRA...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG KIỂM TRA...';
             btn.disabled = true;
 
             try {
                 const usersRef = collection(db, "users");
-                const q = query(usersRef, where("bankNumber", "==", bankNumber));
-                const querySnapshot = await getDocs(q);
+                const q1 = query(usersRef, where("bankNumber", "==", bankNumber));
+                const snap1 = await getDocs(q1);
+                const q2 = query(usersRef, where("bankNumbers", "array-contains", bankNumber));
+                const snap2 = await getDocs(q2);
+
                 let isDuplicate = false;
-                
-                if (!querySnapshot.empty) {
-                    querySnapshot.forEach((doc) => {
-                        if (doc.data().bankName === bankName && doc.id !== currentUserUID) { isDuplicate = true; }
-                    });
-                }
+                snap1.forEach(doc => { if (doc.id !== currentUserUID) isDuplicate = true; });
+                snap2.forEach(doc => { if (doc.id !== currentUserUID) isDuplicate = true; });
 
                 if (isDuplicate) {
                     alert("LỖI: Số tài khoản/ví này đã được liên kết bởi người dùng khác!");
-                    btn.innerHTML = '<i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH';
+                    btn.innerHTML = 'LƯU LIÊN KẾT';
                     btn.disabled = false;
                     return; 
                 }
 
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ĐANG LƯU...';
-                await updateDoc(doc(db, "users", currentUserUID), {
-                    bankName: bankName,
-                    bankNumber: bankNumber,
-                    bankOwner: bankOwner,
-                    isBankVerified: true
-                });
-                alert("Đã liên kết thông tin thanh toán thành công!");
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG LƯU...';
+                
+                const newBank = { bankName, bankNumber, bankOwner };
+                const updatedBanks = [...globalUserBanks, newBank];
+                const updatedBankNumbers = updatedBanks.map(b => b.bankNumber);
+
+                let updateData = { banks: updatedBanks, bankNumbers: updatedBankNumbers, isBankVerified: true };
+
+                if (globalUserBanks.length === 0) {
+                    updateData.bankName = bankName;
+                    updateData.bankNumber = bankNumber;
+                    updateData.bankOwner = bankOwner;
+                }
+
+                await updateDoc(doc(db, "users", currentUserUID), updateData);
+                
+                alert("Liên kết thành công!");
+                window.hideAddBankForm();
+                btn.innerHTML = 'LƯU LIÊN KẾT';
+                btn.disabled = false;
 
             } catch (error) {
                 console.error(error);
                 alert("Lỗi hệ thống. Vui lòng thử lại.");
-                btn.innerHTML = '<i class="fa-solid fa-shield-check mr-1"></i> LƯU XÁC MINH';
+                btn.innerHTML = 'LƯU LIÊN KẾT';
                 btn.disabled = false;
             }
         };
-
-        document.getElementById('appVersionID').innerText = Math.floor(Math.random()*90000)+10000;
 
         // KIỂM TRA ĐĂNG NHẬP & ĐỒNG BỘ DỮ LIỆU
         onAuthStateChanged(auth, async (user) => {
@@ -385,13 +527,9 @@
                 currentUserUID = user.uid;
                 const userRef = doc(db, "users", user.uid);
                 
-                // 1. FIX: GỌI HÀM RENDER NGAY LẬP TỨC CHO LOCALSTORAGE ĐỂ KHÔNG BỊ TREO UI
                 const localData = JSON.parse(localStorage.getItem('crownex_user_info'));
-                if(localData) {
-                    renderData(localData, user.uid);
-                }
+                if(localData) renderData(localData, user.uid);
 
-                // 2. Lắng nghe dữ liệu realtime từ Firestore
                 onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
@@ -399,58 +537,74 @@
                         data.uid = user.uid;
                         localStorage.setItem('crownex_user_info', JSON.stringify(data));
                     } else {
-                        // 3. FIX: XỬ LÝ NẾU TÀI KHOẢN CHƯA CÓ DOCUMENT TRONG FIRESTORE
-                        console.warn("Chưa có document trên Firestore!");
                         renderData({ balance: 0, fullName: "Player", username: "new_player" }, user.uid);
                     }
                 }, (error) => {
-                    // 4. FIX: BẮT LỖI QUYỀN TRUY CẬP (RULES)
                     console.error("Lỗi đồng bộ dữ liệu: ", error);
                 });
             } else {
-                console.log("Chưa đăng nhập, quay về trang chủ");
-                window.location.href = "index.html";
+                window.location.href = "login.html";
             }
         });
 
-        // HÀM HIỂN THỊ DỮ LIỆU LÊN UI
+        // HÀM HIỂN THỊ DỮ LIỆU
         function renderData(data, uid) {
-            document.getElementById('displayFullname').innerText = data.fullName || "Tpig Player";
-            document.getElementById('displayUsername').innerText = "@" + (data.username || "player");
+            document.getElementById('displayFullname').innerText = data.fullName ? data.fullName.toUpperCase() : "TPIG PLAYER";
+            document.getElementById('displayUsername').innerText = data.username || "player";
+            document.getElementById('bankOwner').value = data.fullName ? data.fullName.toUpperCase() : "CHƯA CẬP NHẬT TÊN";
             
             const bal = data.balance || 0;
             const formattedBalance = bal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            
             document.getElementById('displayBalanceMain').innerText = formattedBalance;
             const headerBal = document.getElementById('balanceDisplayHeader');
             headerBal.innerText = formattedBalance;
             headerBal.classList.remove('animate-pulse');
-
-            document.getElementById('displayBalanceVND').innerText = "≈ " + (bal * EXCHANGE_RATE).toLocaleString('vi-VN') + " VNĐ";
             
             document.getElementById('infoPhone').innerText = data.phone || "Chưa cập nhật";
             document.getElementById('infoID').innerText = uid;
             const d = data.createdAt ? new Date(data.createdAt) : new Date();
             document.getElementById('infoDate').innerText = d.toLocaleDateString('vi-VN');
 
-            if (data.bankNumber) {
-                document.getElementById('bankInputForm').classList.add('hidden');
-                document.getElementById('bankInfoDisplay').classList.remove('hidden');
-                document.getElementById('bankStatusBadge').classList.remove('hidden');
-                document.getElementById('displayBankName').innerText = data.bankName;
-                document.getElementById('displayBankNumber').innerText = "****" + data.bankNumber.slice(-4);
-                document.getElementById('displayBankOwner').innerText = data.bankOwner;
-                
-                if (data.bankName === 'Momo') {
-                    document.getElementById('labelDisplayNumber').innerText = "Số ví MoMo";
-                } else {
-                    document.getElementById('labelDisplayNumber').innerText = "Số tài khoản";
-                }
+            let banks = [];
+            if (data.banks && Array.isArray(data.banks)) {
+                banks = data.banks;
+            } else if (data.bankNumber) {
+                banks = [{ bankName: data.bankName, bankNumber: data.bankNumber, bankOwner: data.bankOwner }];
+            }
+            globalUserBanks = banks;
+            
+            document.getElementById('bankCountBadge').innerText = `${banks.length}/2`;
+
+            const listContainer = document.getElementById('bankListContainer');
+            if (banks.length > 0) {
+                let html = '';
+                banks.forEach((b, index) => {
+                    const maskedNum = b.bankNumber.length > 4 ? "****" + b.bankNumber.slice(-4) : b.bankNumber;
+                    html += `
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center shadow-inner">
+                                    <i class="fa-solid fa-building-columns text-gray-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[14px] font-bold text-white mb-0.5">${b.bankName}</p>
+                                    <p class="text-[12px] text-[#FCD535] font-mono tracking-widest">${maskedNum}</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm">Đã LK</span>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
             } else {
-                document.getElementById('bankInputForm').classList.remove('hidden');
-                document.getElementById('bankInfoDisplay').classList.add('hidden');
-                document.getElementById('bankStatusBadge').classList.add('hidden');
-                if(data.fullName) document.getElementById('bankOwner').value = data.fullName.toUpperCase();
+                listContainer.innerHTML = `<div class="text-center py-4 text-gray-500 text-[13px] italic">Chưa có ngân hàng nào được liên kết.</div>`;
+            }
+
+            if (banks.length >= 2) {
+                document.getElementById('btnAddBankWrap').classList.add('hidden');
+                document.getElementById('addBankFormContainer').classList.add('hidden');
+            } else if (!document.getElementById('bankContent').classList.contains('open') || document.getElementById('addBankFormContainer').classList.contains('hidden')) {
+                document.getElementById('btnAddBankWrap').classList.remove('hidden');
             }
         }
     </script>
