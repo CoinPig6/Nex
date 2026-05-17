@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tpig - Sảnh Cripto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* CSS CORE & NGĂN CHẶN ZOOM/CUỘN THỪA */
+        html, body { 
+            touch-action: pan-y; 
+            overscroll-behavior-y: none; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: #050507; 
+            -webkit-text-size-adjust: 100%;
+        }
+        body { 
+            color: #d1d5db; 
+            font-family: 'Roboto', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            background-image: radial-gradient(circle at top, rgba(30, 41, 59, 0.4) 0%, transparent 70%);
+        }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        
+        a, button { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent;}
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* TOAST BẢO TRÌ */
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(20, 24, 34, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 100px; display: flex; align-items: center; gap: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); z-index: 9999; opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; width: max-content; max-width: 90vw;}
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- TOAST HỆ THỐNG -->
+    <div id="toast">
+        <div class="w-8 h-8 rounded-full bg-[#FCD535]/10 flex items-center justify-center shrink-0 border border-[#FCD535]/30">
+            <i class="fa-solid fa-gamepad text-[#FCD535] text-sm drop-shadow-[0_0_5px_rgba(252,213,53,0.5)]" id="toastIcon"></i>
+        </div>
+        <span class="text-sm font-semibold text-white tracking-wide" id="toastMsg">...</span>
+    </div>
+
+    <!-- HEADER BAR -->
+    <header class="flex items-center justify-between px-4 h-16 bg-black/40 backdrop-blur-xl border-b border-white/[0.05] z-30 shrink-0 sticky top-0 shadow-lg shadow-black/20">
+        
+        <!-- NÚT BACK VỀ SẢNH TRANG CHỦ -->
+        <a href="game.html" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white active:scale-90 transition-transform shadow-sm hover:bg-white/10">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+
+        <!-- TITLE DANH MỤC -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+            <h1 class="font-black text-[15px] md:text-[17px] text-[#FCD535] tracking-widest uppercase drop-shadow-md flex items-center gap-2">
+                <i class="fa-brands fa-bitcoin"></i> SẢNH CRIPTO
+            </h1>
+        </div>
+
+        <a href="taikhoan.html" class="bg-black/50 pl-3 pr-1 py-1 rounded-full border border-white/10 flex items-center gap-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] transition-all active:scale-95 hover:bg-white/5">
+            <div class="flex flex-col items-end leading-none">
+                <span class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-widest">SỐ DƯ</span>
+                <span id="balanceDisplay" class="text-white font-mono text-sm font-bold tracking-tight animate-pulse">...</span>
+            </div>
+            <div class="w-7 h-7 bg-gradient-to-br from-[#FCD535] to-[#d97706] rounded-full flex items-center justify-center text-[13px] font-black text-black shadow-[0_0_10px_rgba(252,213,53,0.4)] border border-[#fff]/30">
+                T
+            </div>
+        </a>
+    </header>
+
+    <!-- KHUNG DANH SÁCH GAME -->
+    <main class="flex-1 overflow-y-auto hide-scroll pb-10 pt-5 px-4 relative z-10">
+        
+        <!-- TOP DECORATION GLOW -->
+        <div class="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-[#FCD535]/10 to-transparent pointer-events-none z-0"></div>
+
+        <div class="relative z-10">
+
+            <!-- LƯỚI DANH SÁCH GAME: 4 CỘT TRÊN MOBILE -->
+            <div class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+                
+                <!-- GAME 1 -->
+                <a href="crypto.html" class="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-[14px] p-1.5 border border-white/10 flex flex-col gap-1.5 shadow-lg backdrop-blur-sm active:scale-95 transition-transform hover:bg-white/[0.05]">
+                    <div class="w-full aspect-square rounded-[10px] bg-gradient-to-br from-gray-900 to-black relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center group">
+                        <i class="fa-brands fa-bitcoin text-4xl text-white/5 group-hover:scale-110 transition-transform duration-500"></i>
+                        <i class="fa-brands fa-btc absolute bottom-1 right-1 text-lg text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"></i>
+                    </div>
+                    <div class="px-0.5 pb-1 flex flex-col items-center">
+                        <h4 class="text-white font-black text-[10px] truncate w-full text-center tracking-tight">BTC</h4>
+                        <p class="text-emerald-400 text-[8px] uppercase font-bold tracking-widest mt-[2px]">Trade</p>
+                    </div>
+                </a>
+
+                <!-- GAME 2 -->
+                <a href="javascript:void(0)" onclick="window.showMaintenanceToast('ETH Trade')" class="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-[14px] p-1.5 border border-white/10 flex flex-col gap-1.5 shadow-lg backdrop-blur-sm active:scale-95 transition-transform hover:bg-white/[0.05]">
+                    <div class="w-full aspect-square rounded-[10px] bg-gradient-to-br from-indigo-950 to-black relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center group">
+                        <i class="fa-brands fa-ethereum text-4xl text-white/5 group-hover:scale-110 transition-transform duration-500"></i>
+                        <i class="fa-brands fa-ethereum absolute bottom-1 right-1 text-lg text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]"></i>
+                    </div>
+                    <div class="px-0.5 pb-1 flex flex-col items-center">
+                        <h4 class="text-white font-black text-[10px] truncate w-full text-center tracking-tight">ETH</h4>
+                        <p class="text-emerald-400 text-[8px] uppercase font-bold tracking-widest mt-[2px]">Trade</p>
+                    </div>
+                </a>
+
+                <!-- GAME 3 -->
+                <a href="javascript:void(0)" onclick="window.showMaintenanceToast('BNB Trade')" class="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-[14px] p-1.5 border border-white/10 flex flex-col gap-1.5 shadow-lg backdrop-blur-sm active:scale-95 transition-transform hover:bg-white/[0.05]">
+                    <div class="w-full aspect-square rounded-[10px] bg-gradient-to-br from-yellow-900 to-black relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center group">
+                        <i class="fa-solid fa-coins text-4xl text-white/5 group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="absolute bottom-1 right-1 w-5 h-5 opacity-90 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">
+                    </div>
+                    <div class="px-0.5 pb-1 flex flex-col items-center">
+                        <h4 class="text-white font-black text-[10px] truncate w-full text-center tracking-tight">BNB</h4>
+                        <p class="text-emerald-400 text-[8px] uppercase font-bold tracking-widest mt-[2px]">Trade</p>
+                    </div>
+                </a>
+
+                <!-- GAME 4 -->
+                <a href="javascript:void(0)" onclick="window.showMaintenanceToast('DOGE Trade')" class="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-[14px] p-1.5 border border-white/10 flex flex-col gap-1.5 shadow-lg backdrop-blur-sm active:scale-95 transition-transform hover:bg-white/[0.05]">
+                    <div class="w-full aspect-square rounded-[10px] bg-gradient-to-br from-amber-950 to-black relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center group">
+                        <i class="fa-solid fa-dog text-4xl text-white/5 group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="https://cryptologos.cc/logos/dogecoin-doge-logo.png" class="absolute bottom-1 right-1 w-5 h-5 opacity-90 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
+                    </div>
+                    <div class="px-0.5 pb-1 flex flex-col items-center">
+                        <h4 class="text-white font-black text-[10px] truncate w-full text-center tracking-tight">DOGE</h4>
+                        <p class="text-emerald-400 text-[8px] uppercase font-bold tracking-widest mt-[2px]">Trade</p>
+                    </div>
+                </a>
+
+                <!-- GAME 5 -->
+                <a href="javascript:void(0)" onclick="window.showMaintenanceToast('SOL Trade')" class="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-[14px] p-1.5 border border-white/10 flex flex-col gap-1.5 shadow-lg backdrop-blur-sm active:scale-95 transition-transform hover:bg-white/[0.05]">
+                    <div class="w-full aspect-square rounded-[10px] bg-gradient-to-br from-purple-950 to-black relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center group">
+                        <i class="fa-brands fa-monero text-4xl text-white/5 group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="absolute bottom-1 right-1 w-5 h-5 opacity-90 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
+                    </div>
+                    <div class="px-0.5 pb-1 flex flex-col items-center">
+                        <h4 class="text-white font-black text-[10px] truncate w-full text-center tracking-tight">SOL</h4>
+                        <p class="text-emerald-400 text-[8px] uppercase font-bold tracking-widest mt-[2px]">Trade</p>
+                    </div>
+                </a>
+                
+                 <!-- GAME 6 -->
+                 <a href="javascript:void(0)" onclick="window.showMaintenanceToast('XRP Trade')" class="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-[14px] p-1.5 border border-white/10 flex flex-col gap-1.5 shadow-lg backdrop-blur-sm active:scale-95 transition-transform hover:bg-white/[0.05]">
+                    <div class="w-full aspect-square rounded-[10px] bg-gradient-to-br from-cyan-950 to-black relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center group">
+                        <i class="fa-brands fa-xing text-4xl text-white/5 group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" class="absolute bottom-1 right-1 w-5 h-5 opacity-90 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
+                    </div>
+                    <div class="px-0.5 pb-1 flex flex-col items-center">
+                        <h4 class="text-white font-black text-[10px] truncate w-full text-center tracking-tight">XRP</h4>
+                        <p class="text-emerald-400 text-[8px] uppercase font-bold tracking-widest mt-[2px]">Trade</p>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FIREBASE & LOGIC SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // NGĂN CHẶN ZOOM
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
+
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyYO8ZhxVvOImOZveUJULkK8tdcSxo7pU",
+            authDomain: "btccoinbig.firebaseapp.com",
+            projectId: "btccoinbig",
+            storageBucket: "btccoinbig.firebasestorage.app",
+            messagingSenderId: "116892525933",
+            appId: "1:116892525933:web:04b0da25f3f933ce162664"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // ĐỒNG BỘ SỐ DƯ
+        const balanceDisplay = document.getElementById('balanceDisplay');
+
+        function updateBalanceUI(balance) {
+            balanceDisplay.innerText = balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            balanceDisplay.classList.remove('animate-pulse');
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (!user.isAnonymous) {
+                    onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            updateBalanceUI(data.balance || 0);
+                        } else {
+                            updateBalanceUI(0);
+                        }
+                    }, (error) => {
+                        console.log("Lỗi đồng bộ số dư:", error);
+                        balanceDisplay.innerText = "Lỗi tải";
+                    });
+                } else {
+                    let userStr = localStorage.getItem('crownex_user_info');
+                    if (userStr) {
+                         const userData = JSON.parse(userStr);
+                         updateBalanceUI(userData.balance || 1000); 
+                    } else {
+                         updateBalanceUI(1000); 
+                    }
+                }
+            } else {
+                signInAnonymously(auth).catch(e => console.error(e));
+                updateBalanceUI(0);
+            }
+        });
+
+        // TOAST BẢO TRÌ
+        let toastTimeout;
+        window.showMaintenanceToast = function(gameName) {
+            const t = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            
+            icon.className = 'fa-solid fa-triangle-exclamation text-[#F6465D] text-sm drop-shadow-[0_0_5px_rgba(246,70,93,0.5)]';
+            t.querySelector('div').className = 'w-8 h-8 rounded-full bg-[#F6465D]/10 flex items-center justify-center shrink-0 border border-[#F6465D]/30';
+            document.getElementById('toastMsg').innerText = `Tựa game đang bảo trì, vui lòng quay lại sau!`;
+            
+            t.classList.add('show');
+            
+            if(toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { t.classList.remove('show'); }, 3000);
+        }
+    </script>
+</body>
+</html>
