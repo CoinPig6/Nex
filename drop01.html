@@ -578,10 +578,10 @@
                     }
                 }
                 
-                // Làm tròn hệ số 2 chữ số thập phân
-                let rtpMult = Math.floor(finalTotalMult * 0.96 * 100) / 100;
+                // Đã loại bỏ *0.96 ẩn để làm minh bạch hóa các phép tính cộng/nhân trên màn hình của người chơi
+                let rtpMult = Math.round(finalTotalMult * 100) / 100;
                 
-                // Công thức chuẩn: Payout = Vốn * Hệ số. Làm tròn tránh lỗi floating point
+                // Công thức chuẩn: Payout = Vốn * Hệ số. 
                 payout = Math.round((activeBet * rtpMult) * 100) / 100;
                 
                 // Lãi = Payout - Vốn đã cược
@@ -595,33 +595,39 @@
                 if (isKhole) {
                     detailsHtml = `
                         <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div>
-                        <div class="math-row"><span class="math-label">Hố đen:</span> <span class="text-purple-400 font-bold">${finalTotalMult.toFixed(2)}x</span></div>
-                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between"><span class="math-label text-xs">TỔNG HỆ SỐ:</span> <span class="text-purple-400 font-black text-lg drop-shadow">${rtpMult.toFixed(2)}x</span></div>`;
+                        <div class="math-row"><span class="math-label">Hố đen:</span> <span class="text-purple-400 font-bold">x${finalTotalMult.toFixed(2)}</span></div>
+                        <div class="mt-1 pt-1 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG HỆ SỐ:</span> <span class="text-purple-400 font-black text-base drop-shadow">${rtpMult.toFixed(2)}x</span></div>
+                        <div class="math-row mt-1"><span class="math-label text-xs text-yellow-400">Thu về (Cược x Tổng):</span> <span class="text-yellow-400 font-black">${payout.toFixed(2)} T</span></div>`;
                     resultIcon.innerHTML = `<span class="text-5xl drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">🚀</span>`;
                     endReason.className = "text-[10px] text-purple-200 font-bold bg-purple-900/80 px-3 py-1.5 rounded-lg inline-block border border-purple-500/50 mb-2";
                 } else {
                     let zoneMath = "";
-                    if(zoneObj.type === "add") zoneMath = `+${zoneObj.add.toFixed(1)}x`;
+                    if(zoneObj.type === "add") zoneMath = `+${zoneObj.add.toFixed(2)}x`;
                     else if(zoneObj.type === "square") zoneMath = `x²`;
-                    else zoneMath = `x1`;
+                    else zoneMath = `+0.00x`; // Rõ ràng là đất trống ko được cộng thêm hệ số
                     
                     detailsHtml = `
                         <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div>
-                        <div class="math-row"><span class="math-label">Bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(1)}x</span></div>
-                        <div class="math-row"><span class="math-label">Khu vực:</span> <span class="text-blue-400 font-bold">${zoneMath}</span></div>
-                        <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG HỆ SỐ:</span> <span class="text-[var(--stake-green)] font-black text-lg drop-shadow">${rtpMult.toFixed(2)}x</span></div>`;
+                        <div class="math-row"><span class="math-label">Đang bay:</span> <span class="text-white font-bold">${airMultiplier.toFixed(2)}x</span></div>
+                        <div class="math-row"><span class="math-label">Hạ cánh:</span> <span class="text-blue-400 font-bold">${zoneMath}</span></div>
+                        <div class="mt-1 pt-1 border-t border-white/10 flex justify-between items-center"><span class="math-label text-xs">TỔNG HỆ SỐ:</span> <span class="text-[var(--stake-green)] font-black text-base drop-shadow">${rtpMult.toFixed(2)}x</span></div>
+                        <div class="math-row mt-1"><span class="math-label text-xs text-yellow-400">Thu về (Cược x Tổng):</span> <span class="text-yellow-400 font-black">${payout.toFixed(2)} T</span></div>`;
                     
                     resultIcon.innerHTML = `<span class="text-5xl drop-shadow-[0_5px_10px_rgba(0,0,0,0.6)]">${zoneObj.icon}</span>`;
                     endReason.className = "text-[10px] text-[#00E701] font-bold bg-green-900/60 px-3 py-1.5 rounded-lg inline-block border border-green-500/40 mb-2 shadow-inner";
                 }
                 
-                // Cập nhật UI theo Lãi (Profit có thể là âm nếu rtpMult < 1)
-                if (profit >= 0) {
+                // Cập nhật UI phân định rõ Húp, Hòa vốn, Lỗ
+                if (profit > 0) {
                     resultTitle.innerText = "HÚP RỒI"; resultTitle.className = "text-[#00E701] font-black uppercase text-sm mb-1 tracking-widest";
                     resultMoney.innerText = "+" + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); 
                     resultMoney.className = "text-3xl text-[#00E701] font-black bungee drop-shadow-[0_0_15px_rgba(0,231,1,0.5)]";
+                } else if (profit === 0) {
+                    resultTitle.innerText = "HÒA VỐN"; resultTitle.className = "text-yellow-400 font-black uppercase text-sm mb-1 tracking-widest";
+                    resultMoney.innerText = "0.00"; 
+                    resultMoney.className = "text-3xl text-yellow-400 font-black bungee drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]";
                 } else {
-                    resultTitle.innerText = "HÒA / LỖ CHÚT"; resultTitle.className = "text-gray-400 font-black uppercase text-sm mb-1 tracking-widest";
+                    resultTitle.innerText = "LỖ CHÚT"; resultTitle.className = "text-gray-400 font-black uppercase text-sm mb-1 tracking-widest";
                     resultMoney.innerText = profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); // Tự có dấu trừ
                     resultMoney.className = "text-3xl text-gray-300 font-black bungee drop-shadow-sm";
                 }
@@ -645,7 +651,7 @@
                 resultMoney.innerText = "-" + activeBet.toFixed(2); 
                 resultMoney.className = "text-3xl text-red-500 font-black bungee drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]";
                 
-                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div><div class="math-row"><span class="math-label">Bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(1)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold text-xs">Thử lại nhé sếp!</div>`;
+                detailsHtml = `<div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div><div class="math-row"><span class="math-label">Đang bay:</span> <span class="text-white font-bold line-through opacity-50">${airMultiplier.toFixed(2)}x</span></div><div class="mt-2 pt-2 border-t border-white/10 text-center text-red-400 font-bold text-xs">Thử lại nhé sếp!</div>`;
                 endReason.className = "text-[10px] text-red-200 font-bold bg-red-900/60 px-3 py-1.5 rounded-lg inline-block border border-red-500/40 mb-2 shadow-inner";
                 historyColorClass = isLightningStr ? "bg-red-900/60 text-red-400 border-red-500/50" : "bg-gray-800 text-gray-400 border-gray-600";
 
