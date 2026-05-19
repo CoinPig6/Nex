@@ -361,16 +361,16 @@
         // AUTO MODE
         let isAuto = false, autoTimeoutId = null, autoCountdownVal = 3, autoIntervalId = null;
 
-        // --- FIREBASE AUTH LISNTER ---
+        // --- FIREBASE AUTH LISTENER ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 state.user = user;
                 state.isGuest = user.isAnonymous;
                 
                 if(!state.isGuest) {
+                    // Firebase tự động quản lý cập nhật giao diện (Ngăn chặn lỗi tiền nhảy đúp / ảo)
                     onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                         if(docSnap.exists()) {
-                            // Cập nhật ví, không cho âm
                             state.balance = Math.max(0, docSnap.data().balance || 0);
                             updateUI();
                         }
@@ -497,7 +497,7 @@
             btnStart.disabled = true; 
             btnStart.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> ĐANG TẢI...';
 
-            // Trừ tiền Firebase
+            // CHỈ PHÓ THÁC CHO FIREBASE NẾU LÀ NGƯỜI CHƠI ĐĂNG NHẬP (KHẮC PHỤC LỖI NẨY TIỀN)
             if(!state.isGuest && state.user) {
                 try {
                     await updateDoc(doc(db, "users", state.user.uid), {
@@ -505,17 +505,19 @@
                         betTurnover: increment(activeBet), 
                         betToday: increment(activeBet)
                     });
+                    // Lưu ý: Firebase's onSnapshot sẽ tự động nhảy số dư ngay lập tức,
+                    // Không cần gõ state.balance -= activeBet nữa để tránh trừ 2 lần!
                 } catch(e) {
                     alert("Lỗi kết nối máy chủ! Vui lòng thử lại.");
                     btnStart.disabled = false; btnStart.innerText = "THẢ RƠI"; btnStart.classList.add('ready');
                     gameState = "MENU";
                     return;
                 }
+            } else {
+                // Nếu là Guest chơi thử thì mới phải tự trừ tiền ảo trên máy 
+                state.balance -= activeBet; 
+                updateUI();
             }
-            
-            // Trừ tiền ở client tạm thời
-            state.balance -= activeBet; 
-            updateUI();
             
             controlPanel.style.display = "none"; 
             dropHud.classList.remove('hidden'); 
@@ -578,13 +580,9 @@
                     }
                 }
                 
-                // Đã loại bỏ *0.96 ẩn để làm minh bạch hóa các phép tính cộng/nhân trên màn hình của người chơi
                 let rtpMult = Math.round(finalTotalMult * 100) / 100;
                 
-                // Công thức chuẩn: Payout = Vốn * Hệ số. 
                 payout = Math.round((activeBet * rtpMult) * 100) / 100;
-                
-                // Lãi = Payout - Vốn đã cược
                 let profit = Math.round((payout - activeBet) * 100) / 100;
                 
                 historyMultStr = rtpMult.toFixed(2) + "x";
@@ -604,7 +602,7 @@
                     let zoneMath = "";
                     if(zoneObj.type === "add") zoneMath = `+${zoneObj.add.toFixed(2)}x`;
                     else if(zoneObj.type === "square") zoneMath = `x²`;
-                    else zoneMath = `+0.00x`; // Rõ ràng là đất trống ko được cộng thêm hệ số
+                    else zoneMath = `+0.00x`;
                     
                     detailsHtml = `
                         <div class="math-row"><span class="math-label">Cược gốc:</span> <span class="math-val">${activeBet} T</span></div>
@@ -617,7 +615,6 @@
                     endReason.className = "text-[10px] text-[#00E701] font-bold bg-green-900/60 px-3 py-1.5 rounded-lg inline-block border border-green-500/40 mb-2 shadow-inner";
                 }
                 
-                // Cập nhật UI phân định rõ Húp, Hòa vốn, Lỗ
                 if (profit > 0) {
                     resultTitle.innerText = "HÚP RỒI"; resultTitle.className = "text-[#00E701] font-black uppercase text-sm mb-1 tracking-widest";
                     resultMoney.innerText = "+" + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); 
@@ -628,20 +625,24 @@
                     resultMoney.className = "text-3xl text-yellow-400 font-black bungee drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]";
                 } else {
                     resultTitle.innerText = "LỖ CHÚT"; resultTitle.className = "text-gray-400 font-black uppercase text-sm mb-1 tracking-widest";
-                    resultMoney.innerText = profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); // Tự có dấu trừ
+                    resultMoney.innerText = profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); 
                     resultMoney.className = "text-3xl text-gray-300 font-black bungee drop-shadow-sm";
                 }
                 
+                // NGĂN TIỀN NHẢY ĐÚP KHI CỘNG: CHỈ DÙNG FIREBASE CỘNG TIỀN
                 if(!state.isGuest && state.user) {
                     try {
-                        // Cộng Payout (Đã trừ vốn lúc StartGame)
                         await updateDoc(doc(db, "users", state.user.uid), { balance: increment(payout) });
                         await addDoc(collection(db, "users", state.user.uid, "betHistory"), { 
                             game: "Drop The Boss", amount: activeBet, winAmount: payout, profit: profit, result: profit >= 0 ? "win" : "lose", multiplier: rtpMult, detail: reason, timestamp: serverTimestamp() 
                         });
+                        // Tránh dòng state.balance += payout ở đây.
                     } catch(e) {}
+                } else {
+                    // Nếu là người chơi ẩn danh thì mới tự cộng cục bộ
+                    state.balance += payout; 
                 }
-                state.balance += payout; 
+                
             } else {
                 // Rớt máy bay / Sét đánh
                 let isLightningStr = reason.includes("sét đánh");
