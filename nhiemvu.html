@@ -76,6 +76,12 @@
         }
         .btn-action:active:not(:disabled) { transform: scale(0.97); box-shadow: 0 4px 10px rgba(0, 119, 255, 0.3); }
         .btn-action:disabled { background: rgba(255,255,255,0.05); color: #64748b; box-shadow: none; border: 1px solid rgba(255,255,255,0.05); cursor: not-allowed; text-shadow: none;}
+        
+        /* WARNING/INFO STATE FOR BUTTON */
+        .btn-action.btn-warning {
+            background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);
+            text-shadow: none; font-size: 11px; padding: 12px;
+        }
 
         .btn-claim { 
             background: rgba(255, 255, 255, 0.08); color: white; border: 1px solid rgba(255, 255, 255, 0.15);
@@ -86,6 +92,12 @@
         .btn-claim:active:not(:disabled) { transform: scale(0.92); background: rgba(255, 255, 255, 0.15); }
         .btn-claim.pending { background: rgba(0, 229, 255, 0.15); color: #00E5FF; border-color: rgba(0, 229, 255, 0.4); cursor: wait; box-shadow: 0 0 15px rgba(0,229,255,0.1); }
         .btn-claim.received { background: rgba(255, 255, 255, 0.02); color: #64748b; border-color: transparent; cursor: not-allowed; }
+
+        /* TICK XANH CHO ĐIỂM DANH */
+        .tick-overlay {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(2px);
+            border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; z-index: 20;
+        }
 
         /* BOTTOM NAV */
         .bottom-nav { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-top: 1px solid rgba(255,255,255,0.08); padding-bottom: env(safe-area-inset-bottom, 10px); }
@@ -140,7 +152,7 @@
 
     <div class="flex border-b border-white/[0.05] bg-slate-900/50 backdrop-blur-xl z-20 sticky top-[68px] shadow-md shadow-black/20">
         <button onclick="window.switchPromoTab('tasks')" id="btnTabTasks" class="relative flex-1 py-3.5 text-sm font-bold text-[#00E5FF] transition-colors">
-            NHIỆM VỤ
+            NHIỆM VỤ HẰNG NGÀY
             <div id="lineTasks" class="absolute bottom-0 left-1/4 right-1/4 h-[3px] bg-gradient-to-r from-[#00E5FF] to-[#0077FF] rounded-t-md shadow-[0_0_10px_rgba(0,229,255,0.8)] transition-all duration-300"></div>
         </button>
         <button onclick="window.switchPromoTab('promos')" id="btnTabPromos" class="relative flex-1 py-3.5 text-sm font-bold text-[#64748b] transition-colors">
@@ -153,7 +165,7 @@
     <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-28 relative z-10 w-full max-w-[600px] mx-auto">
         <div class="relative z-10">
 
-            <!-- ================= TAB 1: NHIỆM VỤ ================= -->
+            <!-- ================= TAB 1: NHIỆM VỤ HẰNG NGÀY ================= -->
             <div id="tabContentTasks" class="space-y-5 animate-fade-in">
 
                 <!-- Nhiệm vụ 1: Đăng nhập 7 Ngày -->
@@ -164,62 +176,62 @@
                             <i class="fa-solid fa-calendar-check text-[#00E5FF] text-xl drop-shadow-[0_0_5px_rgba(0,229,255,0.6)]"></i>
                         </div>
                         <div class="flex-1">
-                            <h4 class="text-white font-bold text-[15px] tracking-tight">Điểm Danh 7 Ngày</h4>
-                            <p class="text-[10px] text-gray-400 mt-1 leading-tight">Yêu cầu: Nạp ≥ <span class="text-[#00E5FF] font-bold">50 T</span> Cược ≥ <span class="text-[#00E5FF] font-bold">200 T</span><br>(Phần thưởng rút cần x3 Vòng cược)</p>
+                            <h4 class="text-white font-bold text-[15px] tracking-tight">Điểm Danh Hằng Ngày</h4>
+                            <p class="text-[10px] text-gray-400 mt-1 leading-tight">Mỗi ngày: Nạp ≥ <span class="text-[#00E5FF] font-bold">50.00 T</span> | Cược ≥ <span class="text-[#00E5FF] font-bold">200.00 T</span><br>(Mất chuỗi sẽ bị tính lại từ Ngày 1)</p>
                         </div>
                     </div>
 
                     <!-- 7 Days Timeline -->
-                    <div class="flex gap-2.5 overflow-x-auto hide-scroll mt-2 pb-2 relative z-10 snap-x">
-                        <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
+                    <div class="flex gap-2.5 overflow-x-auto hide-scroll mt-2 pb-2 relative z-10 snap-x" id="streakTimeline">
+                        <div id="streak_1" class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 1</span>
                             <i class="fa-solid fa-coins text-[#00E5FF]/50 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+3T</span>
                         </div>
-                        <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
+                        <div id="streak_2" class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 2</span>
                             <i class="fa-solid fa-coins text-[#00E5FF]/60 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+5T</span>
                         </div>
-                        <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
+                        <div id="streak_3" class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 3</span>
                             <i class="fa-solid fa-coins text-[#00E5FF]/70 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+8T</span>
                         </div>
-                        <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
+                        <div id="streak_4" class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 4</span>
                             <i class="fa-solid fa-gem text-[#00E5FF]/80 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+15T</span>
                         </div>
-                        <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
+                        <div id="streak_5" class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 5</span>
                             <i class="fa-solid fa-gem text-[#00E5FF]/90 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+15T</span>
                         </div>
-                        <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
+                        <div id="streak_6" class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 6</span>
                             <i class="fa-solid fa-gem text-[#00E5FF] text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-[#00E5FF] font-black text-[12px]">+20T</span>
                         </div>
-                        <div class="min-w-[70px] bg-gradient-to-b from-[#00E5FF]/20 to-[#0077FF]/20 rounded-xl flex flex-col items-center justify-center p-2.5 border border-[#00E5FF]/50 snap-start relative shadow-[inset_0_0_15px_rgba(0,229,255,0.2)]">
+                        <div id="streak_7" class="min-w-[70px] bg-gradient-to-b from-[#00E5FF]/20 to-[#0077FF]/20 rounded-xl flex flex-col items-center justify-center p-2.5 border border-[#00E5FF]/50 snap-start relative shadow-[inset_0_0_15px_rgba(0,229,255,0.2)]">
                             <span class="text-[9px] text-[#00E5FF] font-black uppercase tracking-wider mb-1">Ngày 7</span>
                             <i class="fa-solid fa-gift text-white text-lg mb-1 drop-shadow-[0_0_8px_rgba(0,229,255,0.8)] animate-pulse"></i>
                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-[#00E5FF] font-black text-[14px] drop-shadow-md">+88T</span>
                         </div>
                     </div>
 
-                    <button class="btn-action w-full mt-2 relative z-10" id="btn_login_day" onclick="window.claimLoginReward()">ĐIỂM DANH HÔM NAY</button>
+                    <button class="btn-action w-full mt-2 relative z-10" id="btn_login_day" onclick="window.claimLoginReward()">ĐANG TẢI...</button>
                 </div>
 
-                <!-- Nhiệm vụ 2: Nạp tích lũy -->
+                <!-- Nhiệm vụ 2: Nạp Hằng Ngày -->
                 <div class="glass-panel p-5 flex flex-col gap-4 relative overflow-hidden">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-400/30 flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-wallet text-indigo-400 text-lg drop-shadow-[0_0_5px_rgba(129,140,248,0.6)]"></i>
                         </div>
                         <div class="flex-1">
-                            <h4 class="text-white font-bold text-[15px] tracking-tight">Nhiệm Vụ Nạp Tiền</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy nạp đạt mốc để nhận thưởng tự động.</p>
+                            <h4 class="text-white font-bold text-[15px] tracking-tight">Nạp Tiền Hằng Ngày</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy nạp trong ngày.</p>
                         </div>
                     </div>
 
@@ -263,15 +275,15 @@
                     </div>
                 </div>
 
-                <!-- Nhiệm vụ 3: Cược tích lũy -->
+                <!-- Nhiệm vụ 3: Cược Hằng Ngày -->
                 <div class="glass-panel p-5 flex flex-col gap-4 relative overflow-hidden">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-dice text-emerald-400 text-lg drop-shadow-[0_0_5px_rgba(52,211,153,0.6)]"></i>
                         </div>
                         <div class="flex-1">
-                            <h4 class="text-white font-bold text-[15px] tracking-tight">Nhiệm Vụ Cược</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy cược đạt mốc để nhận thưởng tự động.</p>
+                            <h4 class="text-white font-bold text-[15px] tracking-tight">Cược Hằng Ngày</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy cược trong ngày.</p>
                         </div>
                     </div>
 
@@ -344,7 +356,7 @@
                             </div>
                         </div>
 
-                        <button id="btnRefund" onclick="window.claimRefund()" class="btn-action w-full relative z-10 !py-3.5" disabled>CHƯA ĐỦ MỐC 1 T</button>
+                        <button id="btnRefund" onclick="window.claimRefund()" class="btn-action w-full relative z-10 !py-3.5" disabled>CHƯA ĐỦ MỐC 1.00 T</button>
                     </div>
                 </div>
 
@@ -440,8 +452,13 @@
             });
         });
 
-        // TIỆN ÍCH FORMAT TIỀN (ĐỒNG BỘ HIỂN THỊ)
-        // Luôn hiển thị 2 chữ số thập phân cho đồng bộ với game
+        // LẤY NGÀY HIỆN TẠI THEO ĐỊNH DẠNG YYYY-MM-DD (Tính theo múi giờ Local của User)
+        const getTodayStr = () => {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        };
+
+        // TIỆN ÍCH FORMAT TIỀN (ĐỒNG BỘ HIỂN THỊ 1,000.00)
         const formatMoney = (val) => Number(val || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
         // LOGIC ĐỔI TAB MƯỢT MÀ
@@ -486,23 +503,21 @@
         let currentUser = null;
         let userData = null;
 
-        // CẤU HÌNH NHIỆM VỤ TỰ ĐỘNG XÉT DUYỆT
+        // CẤU HÌNH NHIỆM VỤ HẰNG NGÀY (Sử dụng dailyDeposit và dailyBet)
         const TASKS_CONFIG = {
-            'dep_50': { type: 'totalDeposit', target: 50, reward: 1, name: 'Mốc nạp 50 T' },
-            'dep_100': { type: 'totalDeposit', target: 100, reward: 2, name: 'Mốc nạp 100 T' },
-            'dep_200': { type: 'totalDeposit', target: 200, reward: 5, name: 'Mốc nạp 200 T' },
-            'dep_500': { type: 'totalDeposit', target: 500, reward: 20, name: 'Mốc nạp 500 T' },
-            'dep_1000': { type: 'totalDeposit', target: 1000, reward: 88, name: 'Mốc nạp 1000 T' },
-            'bet_500': { type: 'betTurnover', target: 500, reward: 3, name: 'Tổng cược 500 T' },
-            'bet_1000': { type: 'betTurnover', target: 1000, reward: 8, name: 'Tổng cược 1000 T' },
-            'bet_2000': { type: 'betTurnover', target: 2000, reward: 15, name: 'Tổng cược 2000 T' },
-            'bet_5000': { type: 'betTurnover', target: 5000, reward: 88, name: 'Tổng cược 5000 T' }
+            'dep_50': { type: 'dailyDeposit', target: 50, reward: 1, name: 'Mốc nạp ngày 50 T' },
+            'dep_100': { type: 'dailyDeposit', target: 100, reward: 2, name: 'Mốc nạp ngày 100 T' },
+            'dep_200': { type: 'dailyDeposit', target: 200, reward: 5, name: 'Mốc nạp ngày 200 T' },
+            'dep_500': { type: 'dailyDeposit', target: 500, reward: 20, name: 'Mốc nạp ngày 500 T' },
+            'dep_1000': { type: 'dailyDeposit', target: 1000, reward: 88, name: 'Mốc nạp ngày 1000 T' },
+            'bet_500': { type: 'dailyBet', target: 500, reward: 3, name: 'Cược ngày 500 T' },
+            'bet_1000': { type: 'dailyBet', target: 1000, reward: 8, name: 'Cược ngày 1000 T' },
+            'bet_2000': { type: 'dailyBet', target: 2000, reward: 15, name: 'Cược ngày 2000 T' },
+            'bet_5000': { type: 'dailyBet', target: 5000, reward: 88, name: 'Cược ngày 5000 T' }
         };
 
-        const BTN_MAP = {
-            'deposit_1': 'btnDep1',
-            'deposit_2': 'btnDep2'
-        };
+        const STREAK_REWARDS = [3, 5, 8, 15, 15, 20, 88]; // Thưởng 7 ngày
+        const BTN_MAP = { 'deposit_1': 'btnDep1', 'deposit_2': 'btnDep2' };
 
         // UI UTILS
         function showToast(msg, type) {
@@ -524,19 +539,30 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // ĐỒNG BỘ UI CÁC NHIỆM VỤ DỰA TRÊN DỮ LIỆU USER
-        function syncTasksUI(data) {
-            const claimed = data.claimedTasks || [];
-            const totalDeposit = data.totalDeposit || 0;
-            const totalBet = data.betTurnover || 0;
+        // TÍNH TOÁN DỮ LIỆU HIỆN TẠI (Tự động reset UI nếu lệch ngày)
+        function getDailyData(data) {
+            const today = getTodayStr();
+            const isSameDay = data.dailyDate === today;
 
+            return {
+                dailyDeposit: isSameDay ? (data.dailyDeposit || 0) : 0,
+                dailyBet: isSameDay ? (data.dailyBet || 0) : 0,
+                claimedTasks: isSameDay ? (data.dailyClaimedTasks || []) : []
+            };
+        }
+
+        // ĐỒNG BỘ UI CÁC NHIỆM VỤ HẰNG NGÀY
+        function syncTasksUI(data) {
+            const daily = getDailyData(data);
+
+            // 1. CẬP NHẬT DANH SÁCH NHIỆM VỤ NẠP & CƯỢC
             Object.keys(TASKS_CONFIG).forEach(taskId => {
                 const btn = document.getElementById(`btn_${taskId}`);
                 if(!btn) return;
 
                 const config = TASKS_CONFIG[taskId];
-                const currentValue = config.type === 'totalDeposit' ? totalDeposit : totalBet;
-                const isClaimed = claimed.includes(taskId);
+                const currentValue = config.type === 'dailyDeposit' ? daily.dailyDeposit : daily.dailyBet;
+                const isClaimed = daily.claimedTasks.includes(taskId);
                 const isEligible = currentValue >= config.target;
 
                 if (isClaimed) {
@@ -554,9 +580,71 @@
                     btn.disabled = true;
                 }
             });
+
+            // 2. CẬP NHẬT UI ĐIỂM DANH CHUỖI 7 NGÀY
+            updateStreakUI(data, daily);
         }
 
-        // XỬ LÝ NHẬN THƯỞNG TỰ ĐỘNG BẰNG TRANSACTION (KHÔNG CẦN DUYỆT)
+        // CẬP NHẬT CHUỖI ĐIỂM DANH
+        function updateStreakUI(data, daily) {
+            const today = getTodayStr();
+            let currentStreak = data.loginStreak || 0;
+            const lastLoginDate = data.lastLoginDate || '';
+
+            // Tính toán gãy chuỗi ở Client (Để render UI chính xác)
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            const yesterday = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+            
+            if (lastLoginDate !== today && lastLoginDate !== yesterday) {
+                currentStreak = 0; // Gãy chuỗi, reset hiển thị về 0 để chuẩn bị nhận ngày 1
+            }
+
+            // A. Cập nhật Timeline Tick Xanh
+            for(let i = 1; i <= 7; i++) {
+                const dayEl = document.getElementById(`streak_${i}`);
+                if(!dayEl) continue;
+
+                // Xoá tick cũ nếu có
+                const oldTick = dayEl.querySelector('.tick-overlay');
+                if(oldTick) oldTick.remove();
+                dayEl.classList.remove('opacity-40');
+
+                if (i <= currentStreak) {
+                    // Nếu đã nhận thì add tick overlay
+                    const tick = document.createElement('div');
+                    tick.className = 'tick-overlay';
+                    tick.innerHTML = '<i class="fa-solid fa-circle-check text-[#00E5FF] text-2xl drop-shadow-[0_0_8px_rgba(0,229,255,0.8)] animate-fade-in"></i>';
+                    dayEl.appendChild(tick);
+                } else if (i > currentStreak + 1) {
+                    // Các ngày sau ngày tiếp theo, làm mờ đi một chút
+                    dayEl.classList.add('opacity-40');
+                }
+            }
+
+            // B. Cập nhật Nút Điểm Danh
+            const btnLogin = document.getElementById('btn_login_day');
+            const reqDep = 50;
+            const reqBet = 200;
+
+            if (lastLoginDate === today) {
+                btnLogin.innerText = "ĐÃ ĐIỂM DANH HÔM NAY";
+                btnLogin.className = "btn-action w-full mt-2 relative z-10 !bg-white/5 !text-gray-500 !shadow-none !border !border-white/10";
+                btnLogin.disabled = true;
+            } else if (daily.dailyDeposit < reqDep || daily.dailyBet < reqBet) {
+                const formatD = formatMoney(daily.dailyDeposit);
+                const formatB = formatMoney(daily.dailyBet);
+                btnLogin.innerText = `CHƯA ĐỦ: NẠP ${formatD}/50.00 | CƯỢC ${formatB}/200.00`;
+                btnLogin.className = "btn-action btn-warning w-full mt-2 relative z-10";
+                btnLogin.disabled = true;
+            } else {
+                btnLogin.innerText = "ĐIỂM DANH NGAY";
+                btnLogin.className = "btn-action w-full mt-2 relative z-10 animate-pulse shadow-[0_0_20px_rgba(0,229,255,0.5)]";
+                btnLogin.disabled = false;
+            }
+        }
+
+        // XỬ LÝ NHẬN NHIỆM VỤ HẰNG NGÀY BẰNG TRANSACTION (CHẶN CLICK ĐÚP & CHECK NGÀY)
         window.claimTask = async (taskId) => {
             if (!currentUser) return showToast("Vui lòng đăng nhập!", "error");
             
@@ -564,19 +652,25 @@
             if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
 
             const userRef = doc(db, "users", currentUser.uid);
+            const today = getTodayStr();
 
             try {
                 await runTransaction(db, async (transaction) => {
                     const userDoc = await transaction.get(userRef);
-                    if (!userDoc.exists()) throw "Không tìm thấy người dùng!";
+                    if (!userDoc.exists()) throw "Không tìm thấy dữ liệu người dùng!";
 
                     const data = userDoc.data();
-                    const claimed = data.claimedTasks || [];
                     
-                    if (claimed.includes(taskId)) throw "Bạn đã nhận phần thưởng này rồi!";
+                    // Reset biến nội bộ trong transaction nếu lệch ngày (trường hợp user chưa F5)
+                    let dailyDate = data.dailyDate || '';
+                    let dailyDeposit = dailyDate === today ? (data.dailyDeposit || 0) : 0;
+                    let dailyBet = dailyDate === today ? (data.dailyBet || 0) : 0;
+                    let claimed = dailyDate === today ? (data.dailyClaimedTasks || []) : [];
+                    
+                    if (claimed.includes(taskId)) throw "Bạn đã nhận phần thưởng này hôm nay rồi!";
 
                     const config = TASKS_CONFIG[taskId];
-                    const currentValue = config.type === 'totalDeposit' ? (data.totalDeposit || 0) : (data.betTurnover || 0);
+                    const currentValue = config.type === 'dailyDeposit' ? dailyDeposit : dailyBet;
 
                     if (currentValue < config.target) throw "Chưa đủ điều kiện nhận thưởng!";
 
@@ -586,7 +680,8 @@
 
                     transaction.update(userRef, {
                         balance: newBalance,
-                        claimedTasks: claimed
+                        dailyDate: today, 
+                        dailyClaimedTasks: claimed
                     });
 
                     // Ghi log giao dịch trực tiếp trong transaction
@@ -594,7 +689,7 @@
                     transaction.set(txRef, {
                         type: 'task_reward',
                         amount: config.reward,
-                        note: `Thưởng tự động: ${config.name}`,
+                        note: `Thưởng ngày: ${config.name}`,
                         status: 'success',
                         timestamp: Date.now()
                     });
@@ -604,18 +699,81 @@
             } catch (error) {
                 console.error("Lỗi nhận nhiệm vụ:", error);
                 showToast(typeof error === 'string' ? error : "Lỗi hệ thống khi nhận!", "error");
-                // Reset button UI if failed, otherwise onSnapshot will handle success state
-                if(btn) { btn.disabled = false; btn.innerText = "NHẬN"; } 
+                // UI sẽ tự reset state chuẩn qua onSnapshot
             }
         };
 
-        // ĐIỂM DANH HÔM NAY (Ví dụ logic cơ bản)
+        // ĐIỂM DANH CHUỖI 7 NGÀY CÓ KIỂM TRA BẰNG TRANSACTION
         window.claimLoginReward = async () => {
             if (!currentUser) return showToast("Vui lòng đăng nhập!", "error");
-            showToast("Chức năng đang được cập nhật thêm điều kiện!", "error");
+            
+            const btn = document.getElementById('btn_login_day');
+            if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+            const userRef = doc(db, "users", currentUser.uid);
+            const today = getTodayStr();
+
+            // Tính ngày hôm qua
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            const yesterday = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    if (!userDoc.exists()) throw "Không tìm thấy dữ liệu!";
+                    const data = userDoc.data();
+
+                    if (data.lastLoginDate === today) throw "Bạn đã điểm danh hôm nay rồi!";
+
+                    // Kiểm tra xem dữ liệu nạp/cược hôm nay có đủ không
+                    let dailyDeposit = data.dailyDate === today ? (data.dailyDeposit || 0) : 0;
+                    let dailyBet = data.dailyDate === today ? (data.dailyBet || 0) : 0;
+
+                    if (dailyDeposit < 50 || dailyBet < 200) throw "Chưa đủ điều kiện Nạp 50 T & Cược 200 T hôm nay!";
+
+                    // Tính chuỗi hiện tại
+                    let currentStreak = data.loginStreak || 0;
+                    if (data.lastLoginDate !== yesterday) {
+                        currentStreak = 0; // Gãy chuỗi, làm lại từ đầu
+                    }
+                    
+                    // Nếu đã đủ 7 ngày thì cũng reset về 0 để nhận vòng mới
+                    if (currentStreak >= 7) currentStreak = 0;
+
+                    let newStreak = currentStreak + 1;
+                    let reward = STREAK_REWARDS[newStreak - 1] || 0;
+
+                    const newBalance = (data.balance || 0) + reward;
+
+                    // Cập nhật Database
+                    transaction.update(userRef, {
+                        balance: newBalance,
+                        loginStreak: newStreak,
+                        lastLoginDate: today
+                    });
+
+                    // Log lịch sử
+                    const txRef = doc(collection(db, "users", currentUser.uid, "transactions"));
+                    transaction.set(txRef, {
+                        type: 'login_reward',
+                        amount: reward,
+                        note: `Điểm danh Ngày ${newStreak}`,
+                        status: 'success',
+                        timestamp: Date.now()
+                    });
+                });
+
+                // Tìm lại streak để show toast đúng
+                const streakToToast = ((userData?.loginStreak || 0) % 7) + 1;
+                showToast(`Điểm danh thành công! Nhận ${formatMoney(STREAK_REWARDS[streakToToast - 1] || 3)} T`, "success");
+            } catch (error) {
+                console.error("Lỗi điểm danh:", error);
+                showToast(typeof error === 'string' ? error : "Lỗi xử lý điểm danh!", "error");
+            }
         };
 
-        // AUTH & SYNC
+        // AUTH & SYNC THỜI GIAN THỰC
         onAuthStateChanged(auth, async (user) => {
             if (user && !user.isAnonymous) {
                 currentUser = user;
@@ -629,23 +787,23 @@
                         balDisplay.innerText = formatMoney(userData.balance);
                         balDisplay.classList.remove('animate-pulse');
 
-                        // Cập nhật UI Nhiệm vụ tự động
+                        // Cập nhật UI Nhiệm vụ hằng ngày tự động
                         syncTasksUI(userData);
 
-                        // Cập nhật Hoàn trả
+                        // Cập nhật Hoàn trả (Giữ nguyên logic cũ theo tổng cược)
                         renderRefund(userData);
                     }
                 });
 
                 checkPromoRequests(user.uid);
             } else {
-                // FALLBACK NẾU CHƯA ĐĂNG NHẬP
+                // FALLBACK NẾU CHƯA ĐĂNG NHẬP (Lấy từ Local)
                 let userStr = localStorage.getItem('crownex_user_info');
                 if (userStr) {
                     userData = JSON.parse(userStr);
                     document.getElementById('balanceDisplayHeader').innerText = formatMoney(userData.balance || 1000);
                     document.getElementById('balanceDisplayHeader').classList.remove('animate-pulse');
-                    syncTasksUI(userData); // Thử sync nếu có data local
+                    syncTasksUI(userData); 
                 }
             }
         });
@@ -668,7 +826,7 @@
                 btnRefund.classList.remove('opacity-50');
             } else {
                 btnRefund.disabled = true;
-                btnRefund.innerText = "CHƯA ĐỦ MỐC 1 T";
+                btnRefund.innerText = `CHƯA ĐỦ MỐC ${formatMoney(1)} T`;
                 btnRefund.classList.add('opacity-50');
             }
         }
@@ -696,7 +854,7 @@
             } catch (e) { console.error(e); }
         };
 
-        // KHUYẾN MÃI NẠP (Cái này vẫn gửi chờ duyệt vì admin có thể cần kiểm tra vòng cược phức tạp hơn)
+        // KHUYẾN MÃI NẠP (Chờ duyệt)
         function getStatusPriority(status) {
             if (status === 'success') return 3;
             if (status === 'pending') return 2;
@@ -721,7 +879,7 @@
                         const priA = getStatusPriority(a.status);
                         const priB = getStatusPriority(b.status);
                         if (priA !== priB) return priB - priA; 
-                        return b.timestamp - a.timestamp;      
+                        return b.timestamp - a.timestamp;    
                     });
                     const topReq = requests.length > 0 ? requests[0] : null;
                     const finalStatus = topReq ? topReq.status : null;
@@ -784,7 +942,7 @@
                     status: 'pending',
                     timestamp: Date.now()
                 });
-                showToast("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.", "success");
+                showToast("Đã gửi yêu cầu!", "success");
             } catch (e) {
                 console.error(e);
                 showToast("Lỗi hệ thống: " + e.message, "error");
