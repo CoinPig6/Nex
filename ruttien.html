@@ -46,7 +46,7 @@
             <div class="p-5 overflow-y-auto hide-scrollbar flex-1 bg-gray-50/50">
                 <div class="text-[12px] text-[#115ec4] font-medium mb-5 flex items-start gap-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
                     <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                    <span>Mỗi lệnh nạp, thưởng hoặc khuyến mãi đều tính vòng cược riêng dựa trên lịch sử cược từ thời điểm phát sinh lệnh đó trở đi. Danh sách phải hoàn thành theo thứ tự.</span>
+                    <span>Mỗi lệnh nạp, khuyến mãi, mã code hay thưởng đều tính vòng cược riêng từ thời điểm phát sinh lệnh đó trở đi. Danh sách phải hoàn thành theo thứ tự thời gian.</span>
                 </div>
                 
                 <div id="depositTurnoverList">
@@ -195,7 +195,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, updateDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, updateDoc, collection, query, orderBy, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         lucide.createIcons();
         const app = initializeApp({
@@ -209,7 +209,7 @@
         const auth = getAuth(app); const db = getFirestore(app);
 
         const RATES = { WITHDRAW: 1000 }; const RULES = { MIN_WITHDRAW: 20, MAX_DAILY_WITHDRAW: 5 };
-        let state = { user: null, data: null, history: [], currentFilter: 'all' };
+        let state = { user: null, data: null, history: [], allBets: [], currentFilter: 'all' };
 
         // Utils
         window.showToast = (msg, type='success') => {
@@ -228,38 +228,43 @@
             document.getElementById(`view-${v}`).classList.remove('hidden');
         };
 
-        // Turnover Logic - Strict time-based per event (deposit, bonus, promotion)
-        function calculateActiveTurnover(data, history) {
-            // 1. Lọc các lệnh cần hoàn thành vòng cược: nạp, thưởng, khuyến mãi thành công, sắp xếp theo thời gian tăng dần
-            let turnoverEvents = history.filter(h => 
-                (h.type === 'deposit' || h.type === 'bonus' || h.type === 'promotion') && h.status === 'success'
-            ).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        // Turnover Modal
+        window.openTurnoverModal = () => { document.getElementById('turnoverModal').classList.remove('hidden'); renderTurnoverDetails(); };
+        window.closeTurnoverModal = () => { document.getElementById('turnoverModal').classList.add('hidden'); };
 
-            if(data.lastSettledTime) {
-                const settled = data.lastSettledTime.seconds || 0;
-                turnoverEvents = turnoverEvents.filter(d => (d.timestamp?.seconds || 0) > settled);
+        // Tiện ích lấy timestamp số (ms)
+        function getTimestamp(obj) {
+            if (!obj) return 0;
+            if (typeof obj.toMillis === 'function') return obj.toMillis();
+            if (obj.seconds) return obj.seconds * 1000;
+            if (typeof obj.timestamp === 'number') return obj.timestamp;
+            return 0;
+        }
+
+        // THUẬT TOÁN TÍNH VÒNG CƯỢC TIME-WINDOW & FIFO (Nạp, Khuyến mãi, Mã code, Thưởng)
+        async function calculateActiveTurnover(userData, history, bets) {
+            // 1. Lọc các sự kiện phát sinh vòng cược thành công: deposit, promotion, code, bonus
+            let turnoverEvents = history.filter(h => 
+                ['deposit', 'promotion', 'code', 'bonus'].includes(h.type) && h.status === 'success'
+            ).sort((a, b) => getTimestamp(a) - getTimestamp(b));
+
+            if(userData && userData.lastSettledTime) {
+                const settled = getTimestamp(userData.lastSettledTime);
+                turnoverEvents = turnoverEvents.filter(e => getTimestamp(e) > settled);
             }
 
-            // 2. Lấy danh sách lịch sử cược (các giao dịch cược có timestamp từ hệ thống, ví dụ type: 'bet', 'turnover', 'game', 'spin')
-            let betTxs = history.filter(h => 
-                h.type === 'bet' || h.type === 'turnover' || h.type === 'game' || h.type === 'spin' || h.type === 'play'
-            ).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-
+            // 2. Sắp xếp danh sách cược theo thời gian tăng dần
+            let sortedBets = [...bets].sort((a, b) => a.timestamp - b.timestamp);
             let activeEvents = [];
 
             turnoverEvents.forEach((ev, index) => {
-                const evTime = ev.timestamp?.seconds || 0;
-                const req = parseFloat(ev.amount || 0); // Yêu cầu vòng cược bằng số tiền của lệnh
+                const evTime = getTimestamp(ev);
+                const req = parseFloat(ev.amount || ev.targetAmount || 0);
                 
-                // Mốc thời gian kết thúc khoảng tính cược của lệnh này (đến thời điểm lệnh tiếp theo hoặc vô cực)
-                const nextEvTime = (index < turnoverEvents.length - 1) ? (turnoverEvents[index + 1].timestamp?.seconds || Infinity) : Infinity;
+                // Khoảng thời gian tính cược từ evTime đến lệnh tiếp theo
+                const nextEvTime = (index < turnoverEvents.length - 1) ? getTimestamp(turnoverEvents[index + 1]) : Infinity;
                 
-                // Chỉ tính các cược diễn ra TỪ THỜI ĐIỂM evTime TRỞ ĐI (và trước lệnh tiếp theo)
-                const relevantBets = betTxs.filter(b => {
-                    const bTime = b.timestamp?.seconds || 0;
-                    return bTime >= evTime && bTime < nextEvTime;
-                });
-
+                const relevantBets = sortedBets.filter(b => b.timestamp >= evTime && b.timestamp < nextEvTime);
                 const filled = relevantBets.reduce((sum, b) => sum + parseFloat(b.amount || 0), 0);
 
                 ev.filled = filled;
@@ -272,26 +277,29 @@
 
             const totalRemainingReq = activeEvents.reduce((sum, e) => sum + e.remaining, 0);
             const currentValidBet = activeEvents.length > 0 ? activeEvents[0].filled : 0;
-            return { activeDeposits: activeEvents, totalRemainingReq, currentValidBet };
+            return { activeEvents, totalRemainingReq, currentValidBet };
         }
 
-        function renderTurnoverDetails() {
+        async function renderTurnoverDetails() {
             if(!state.data) return;
-            const { activeDeposits } = calculateActiveTurnover(state.data, state.history);
+            const { activeEvents } = await calculateActiveTurnover(state.data, state.history, state.allBets);
             const list = document.getElementById('depositTurnoverList');
-            if(activeDeposits.length === 0) {
+            if(activeEvents.length === 0) {
                 list.innerHTML = `<div class="flex flex-col items-center py-8"><div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mb-3"><i data-lucide="check" class="w-8 h-8 text-emerald-500"></i></div><span class="text-[15px] font-bold text-emerald-600">Đã hoàn thành mọi vòng cược</span></div>`;
                 lucide.createIcons(); return;
             }
             let html = '';
-            activeDeposits.forEach((dep, index) => {
-                const reqAmount = parseFloat(dep.amount); const filled = dep.filled || 0;
+            activeEvents.forEach((ev, index) => {
+                const reqAmount = parseFloat(ev.amount || ev.targetAmount || 0); 
+                const filled = ev.filled || 0;
                 const percent = Math.min((filled / reqAmount) * 100, 100);
-                const dateStr = dep.timestamp ? (dep.timestamp.toDate ? dep.timestamp.toDate() : new Date(dep.timestamp.seconds * 1000)).toLocaleString('vi-VN') : 'Unknown';
+                const ts = getTimestamp(ev);
+                const dateStr = ts ? new Date(ts).toLocaleString('vi-VN') : 'Unknown';
                 
-                let titleName = 'Nạp';
-                if(dep.type === 'bonus') titleName = 'Thưởng';
-                else if(dep.type === 'promotion') titleName = 'Khuyến Mãi';
+                let titleName = 'Nạp Tiền';
+                if(ev.type === 'bonus') titleName = 'Thưởng';
+                else if(ev.type === 'promotion') titleName = 'Khuyến Mãi';
+                else if(ev.type === 'code') titleName = 'Mã Code';
 
                 let sTxt = index === 0 ? "Đang xử lý" : "Chờ tới lượt";
                 let sCol = index === 0 ? "bg-[#115ec4]" : "bg-gray-300";
@@ -322,6 +330,7 @@
                 </div>`;
             });
             list.innerHTML = html;
+            lucide.createIcons();
         }
 
         // Form Logic
@@ -342,7 +351,7 @@
             input.dispatchEvent(new Event('input'));
         };
 
-        function updateUI(data) {
+        async function updateUI(data) {
             document.getElementById('balanceDisplay').innerText = (data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
             if(data.bankNumber) {
@@ -359,9 +368,9 @@
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const wdCount = state.history.filter(i => {
                 if(i.type !== 'withdraw') return false;
-                if(!i.timestamp) return true;
-                const iDate = i.timestamp.toDate ? i.timestamp.toDate() : new Date(i.timestamp.seconds * 1000);
-                return iDate >= today;
+                const ts = getTimestamp(i);
+                if(!ts) return true;
+                return new Date(ts) >= today;
             }).length;
             
             const lHint = document.getElementById('dailyWithdrawalLimitHint');
@@ -370,26 +379,27 @@
             else { lHint.classList.remove('text-red-500', 'bg-red-50', 'border-red-100'); lHint.classList.add('text-gray-500', 'bg-gray-100', 'border-gray-200'); }
 
             // Turnover Viz
-            const { activeDeposits, currentValidBet } = calculateActiveTurnover(data, state.history);
+            const { activeEvents, currentValidBet } = await calculateActiveTurnover(data, state.history, state.allBets);
             const btnWd = document.getElementById('btnWithdraw');
             const bar = document.getElementById('turnoverBar');
             const note = document.getElementById('turnoverNote');
             const lock = document.getElementById('turnoverLock');
 
-            if (activeDeposits.length === 0) {
+            if (activeEvents.length === 0) {
                 document.getElementById('currentTurnover').innerText = "0"; document.getElementById('requiredTurnover').innerText = "0";
                 bar.style.width = '100%'; bar.style.background = '#10b981';
                 note.innerHTML = '<span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Hợp lệ rút tiền</span>';
                 btnWd.disabled = false; btnWd.className = "w-full py-4 rounded-2xl text-white font-bold text-[16px] transition-all bg-red-500 hover:bg-red-600 shadow-[0_6px_20px_rgba(239,68,68,0.3)] active:scale-95";
                 lock.classList.add('hidden');
             } else {
-                const req = parseFloat(activeDeposits[0].amount); const fill = activeDeposits[0].filled;
+                const req = parseFloat(activeEvents[0].amount || activeEvents[0].targetAmount || 0); 
+                const fill = activeEvents[0].filled;
                 document.getElementById('currentTurnover').innerText = currentValidBet.toLocaleString('en-US', {maximumFractionDigits: 2});
                 document.getElementById('requiredTurnover').innerText = req.toLocaleString('en-US', {maximumFractionDigits: 2});
                 let pct = Math.min((fill / req) * 100, 100);
                 bar.style.width = `${pct}%`; bar.style.background = '#115ec4';
                 
-                if(activeDeposits.length > 1) note.innerHTML = `<span class="text-red-500 font-bold flex items-center gap-1"><i data-lucide="list" class="w-4 h-4"></i> Đang nợ ${activeDeposits.length} lệnh cược</span>`;
+                if(activeEvents.length > 1) note.innerHTML = `<span class="text-red-500 font-bold flex items-center gap-1"><i data-lucide="list" class="w-4 h-4"></i> Đang nợ ${activeEvents.length} lệnh cược</span>`;
                 else note.innerHTML = `<span class="text-[#115ec4] font-bold">Đang cược</span>`;
                 
                 btnWd.disabled = true; btnWd.className = "w-full py-4 rounded-2xl text-gray-400 font-bold text-[16px] transition-all bg-gray-200 cursor-not-allowed";
@@ -398,35 +408,64 @@
             lucide.createIcons();
         }
 
+        // Fetch all bets from betHistory & baccaratHistory
+        async function fetchAllBets(uid) {
+            let bets = [];
+            try {
+                const criptoSnap = await getDocs(collection(db, "users", uid, "betHistory"));
+                criptoSnap.forEach(d => {
+                    const data = d.data();
+                    bets.push({ timestamp: getTimestamp(data), amount: parseFloat(data.amount || 0) });
+                });
+
+                const casinoSnap = await getDocs(collection(db, "users", uid, "baccaratHistory"));
+                casinoSnap.forEach(d => {
+                    const data = d.data();
+                    bets.push({ timestamp: getTimestamp(data), amount: parseFloat(data.amount || 0) });
+                });
+            } catch (e) {
+                console.error("Lỗi tải lịch sử cược trò chơi:", e);
+            }
+            state.allBets = bets;
+        }
+
         // Firebase Sync
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user && !user.isAnonymous) {
                 state.user = user;
-                onSnapshot(doc(db, "users", user.uid), (snap) => {
+                await fetchAllBets(user.uid);
+
+                onSnapshot(doc(db, "users", user.uid), async (snap) => {
                     if(snap.exists()) {
-                        state.data = snap.data(); updateUI(state.data);
+                        state.data = snap.data(); 
+                        await updateUI(state.data);
                         if(!document.getElementById('turnoverModal').classList.contains('hidden')) renderTurnoverDetails();
                     }
                 });
+
                 const q = query(collection(db, "users", user.uid, "transactions"), orderBy("timestamp", "desc"));
-                onSnapshot(q, (snap) => {
-                    state.history = []; snap.forEach(d => state.history.push({id: d.id, ...d.data()}));
-                    updateUI(state.data); renderHistory();
+                onSnapshot(q, async (snap) => {
+                    state.history = []; 
+                    snap.forEach(d => state.history.push({id: d.id, ...d.data()}));
+                    await updateUI(state.data); 
+                    renderHistory();
                     if(!document.getElementById('turnoverModal').classList.contains('hidden')) renderTurnoverDetails();
                 });
-            } else { window.location.href = "login.html"; }
+            } else { 
+                window.location.href = "login.html"; 
+            }
         });
 
         window.handleWithdraw = async () => {
-            const { activeDeposits } = calculateActiveTurnover(state.data, state.history);
-            if(activeDeposits.length > 0) return window.showToast('Vẫn còn vòng cược chưa hoàn thành!', 'error');
+            const { activeEvents } = await calculateActiveTurnover(state.data, state.history, state.allBets);
+            if(activeEvents.length > 0) return window.showToast('Vẫn còn vòng cược chưa hoàn thành!', 'error');
             
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const wdCount = state.history.filter(i => {
                 if(i.type !== 'withdraw') return false;
-                if(!i.timestamp) return true;
-                const iDate = i.timestamp.toDate ? i.timestamp.toDate() : new Date(i.timestamp.seconds * 1000);
-                return iDate >= today;
+                const ts = getTimestamp(i);
+                if(!ts) return true;
+                return new Date(ts) >= today;
             }).length;
             if (wdCount >= RULES.MAX_DAILY_WITHDRAW) return window.showToast(`Bạn đã đạt giới hạn rút ${RULES.MAX_DAILY_WITHDRAW} lần/ngày!`, 'error');
 
@@ -479,8 +518,9 @@
                 switch(tx.type) {
                     case 'deposit': color = 'bg-emerald-50 border-emerald-100 text-emerald-600'; amtColor = 'text-emerald-600'; icon = 'arrow-down'; sign = '+'; title = 'Nạp Tiền'; break;
                     case 'withdraw': color = 'bg-rose-50 border-rose-100 text-rose-600'; amtColor = 'text-rose-600'; icon = 'arrow-up'; sign = '-'; title = 'Rút Tiền'; break;
-                    case 'bonus': color = 'bg-amber-50 border-amber-100 text-amber-600'; amtColor = 'text-amber-600'; icon = 'gift'; sign = '+'; title = 'Thưởng'; break;
                     case 'promotion': color = 'bg-purple-50 border-purple-100 text-purple-600'; amtColor = 'text-purple-600'; icon = 'gift'; sign = '+'; title = 'Khuyến Mãi'; break;
+                    case 'code': color = 'bg-indigo-50 border-indigo-100 text-indigo-600'; amtColor = 'text-indigo-600'; icon = 'ticket'; sign = '+'; title = 'Mã Code'; break;
+                    case 'bonus': color = 'bg-amber-50 border-amber-100 text-amber-600'; amtColor = 'text-amber-600'; icon = 'gift'; sign = '+'; title = 'Thưởng'; break;
                     default: color = 'bg-blue-50 border-blue-100 text-[#115ec4]'; amtColor = 'text-[#115ec4]'; icon = 'gift'; sign = '+'; title = 'Giao Dịch Khác';
                 }
                 
@@ -490,8 +530,9 @@
                 else sHtml = `<span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-200 font-bold tracking-wide">Thất bại</span>`;
 
                 let time = 'Vừa xong';
-                if(tx.timestamp) {
-                    const date = tx.timestamp.toDate ? tx.timestamp.toDate() : new Date(tx.timestamp.seconds * 1000);
+                const ts = getTimestamp(tx);
+                if(ts) {
+                    const date = new Date(ts);
                     time = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')} - ${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}`;
                 }
 
@@ -505,7 +546,7 @@
                         </div>
                     </div>
                     <div class="text-right flex flex-col items-end">
-                        <div class="font-bold text-[15px] ${amtColor} mb-1">${sign}${parseFloat(tx.amount).toLocaleString('en-US', {maximumFractionDigits:2})} T</div>
+                        <div class="font-bold text-[15px] ${amtColor} mb-1">${sign}${parseFloat(tx.amount || 0).toLocaleString('en-US', {maximumFractionDigits:2})} T</div>
                         ${sHtml}
                     </div>
                 </div>`;
