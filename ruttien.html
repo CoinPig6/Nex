@@ -46,7 +46,7 @@
             <div class="p-5 overflow-y-auto hide-scrollbar flex-1 bg-gray-50/50">
                 <div class="text-[12px] text-[#115ec4] font-medium mb-5 flex items-start gap-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
                     <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                    <span>Bạn cần hoàn thành doanh thu cược của các lệnh nạp để rút tiền. Danh sách yêu cầu phải hoàn thành theo thứ tự.</span>
+                    <span>Mỗi lệnh nạp, thưởng hoặc khuyến mãi đều tính vòng cược riêng dựa trên lịch sử cược từ thời điểm phát sinh lệnh đó trở đi. Danh sách phải hoàn thành theo thứ tự.</span>
                 </div>
                 
                 <div id="depositTurnoverList">
@@ -228,26 +228,51 @@
             document.getElementById(`view-${v}`).classList.remove('hidden');
         };
 
-        // Turnover Logic
-        window.openTurnoverModal = () => { document.getElementById('turnoverModal').classList.remove('hidden'); renderTurnoverDetails(); };
-        window.closeTurnoverModal = () => { document.getElementById('turnoverModal').classList.add('hidden'); };
-
+        // Turnover Logic - Strict time-based per event (deposit, bonus, promotion)
         function calculateActiveTurnover(data, history) {
-            let validDeposits = history.filter(h => h.type === 'deposit' && h.status === 'success')
-                                       .sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+            // 1. Lọc các lệnh cần hoàn thành vòng cược: nạp, thưởng, khuyến mãi thành công, sắp xếp theo thời gian tăng dần
+            let turnoverEvents = history.filter(h => 
+                (h.type === 'deposit' || h.type === 'bonus' || h.type === 'promotion') && h.status === 'success'
+            ).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+
             if(data.lastSettledTime) {
                 const settled = data.lastSettledTime.seconds || 0;
-                validDeposits = validDeposits.filter(d => (d.timestamp?.seconds || 0) > settled);
+                turnoverEvents = turnoverEvents.filter(d => (d.timestamp?.seconds || 0) > settled);
             }
-            let globalBet = data.betTurnover || 0; let activeDeposits = [];
-            validDeposits.forEach(dep => {
-                let req = parseFloat(dep.amount);
-                if (globalBet >= req) { globalBet -= req; } 
-                else { dep.filled = globalBet; dep.remaining = req - globalBet; activeDeposits.push(dep); globalBet = 0; }
+
+            // 2. Lấy danh sách lịch sử cược (các giao dịch cược có timestamp từ hệ thống, ví dụ type: 'bet', 'turnover', 'game', 'spin')
+            let betTxs = history.filter(h => 
+                h.type === 'bet' || h.type === 'turnover' || h.type === 'game' || h.type === 'spin' || h.type === 'play'
+            ).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+
+            let activeEvents = [];
+
+            turnoverEvents.forEach((ev, index) => {
+                const evTime = ev.timestamp?.seconds || 0;
+                const req = parseFloat(ev.amount || 0); // Yêu cầu vòng cược bằng số tiền của lệnh
+                
+                // Mốc thời gian kết thúc khoảng tính cược của lệnh này (đến thời điểm lệnh tiếp theo hoặc vô cực)
+                const nextEvTime = (index < turnoverEvents.length - 1) ? (turnoverEvents[index + 1].timestamp?.seconds || Infinity) : Infinity;
+                
+                // Chỉ tính các cược diễn ra TỪ THỜI ĐIỂM evTime TRỞ ĐI (và trước lệnh tiếp theo)
+                const relevantBets = betTxs.filter(b => {
+                    const bTime = b.timestamp?.seconds || 0;
+                    return bTime >= evTime && bTime < nextEvTime;
+                });
+
+                const filled = relevantBets.reduce((sum, b) => sum + parseFloat(b.amount || 0), 0);
+
+                ev.filled = filled;
+                ev.remaining = Math.max(0, req - filled);
+
+                if (ev.filled < req) {
+                    activeEvents.push(ev);
+                }
             });
-            const totalRemainingReq = activeDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0);
-            const currentValidBet = activeDeposits.length > 0 ? activeDeposits[0].filled : 0;
-            return { activeDeposits, totalRemainingReq, currentValidBet };
+
+            const totalRemainingReq = activeEvents.reduce((sum, e) => sum + e.remaining, 0);
+            const currentValidBet = activeEvents.length > 0 ? activeEvents[0].filled : 0;
+            return { activeDeposits: activeEvents, totalRemainingReq, currentValidBet };
         }
 
         function renderTurnoverDetails() {
@@ -264,6 +289,10 @@
                 const percent = Math.min((filled / reqAmount) * 100, 100);
                 const dateStr = dep.timestamp ? (dep.timestamp.toDate ? dep.timestamp.toDate() : new Date(dep.timestamp.seconds * 1000)).toLocaleString('vi-VN') : 'Unknown';
                 
+                let titleName = 'Nạp';
+                if(dep.type === 'bonus') titleName = 'Thưởng';
+                else if(dep.type === 'promotion') titleName = 'Khuyến Mãi';
+
                 let sTxt = index === 0 ? "Đang xử lý" : "Chờ tới lượt";
                 let sCol = index === 0 ? "bg-[#115ec4]" : "bg-gray-300";
                 let dotClass = index === 0 ? "timeline-dot" : "timeline-dot waiting";
@@ -274,7 +303,7 @@
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm ml-2">
                         <div class="flex justify-between items-start mb-3">
                             <div>
-                                <div class="text-[14px] font-bold text-gray-900">Nạp ${reqAmount.toLocaleString('en-US')} T</div>
+                                <div class="text-[14px] font-bold text-gray-900">${titleName} ${reqAmount.toLocaleString('en-US')} T</div>
                                 <div class="text-[11px] text-gray-400 font-medium">${dateStr}</div>
                             </div>
                             <div class="text-right">
@@ -360,7 +389,7 @@
                 let pct = Math.min((fill / req) * 100, 100);
                 bar.style.width = `${pct}%`; bar.style.background = '#115ec4';
                 
-                if(activeDeposits.length > 1) note.innerHTML = `<span class="text-red-500 font-bold flex items-center gap-1"><i data-lucide="list" class="w-4 h-4"></i> Đang nợ ${activeDeposits.length} lệnh nạp</span>`;
+                if(activeDeposits.length > 1) note.innerHTML = `<span class="text-red-500 font-bold flex items-center gap-1"><i data-lucide="list" class="w-4 h-4"></i> Đang nợ ${activeDeposits.length} lệnh cược</span>`;
                 else note.innerHTML = `<span class="text-[#115ec4] font-bold">Đang cược</span>`;
                 
                 btnWd.disabled = true; btnWd.className = "w-full py-4 rounded-2xl text-gray-400 font-bold text-[16px] transition-all bg-gray-200 cursor-not-allowed";
@@ -429,11 +458,11 @@
             state.currentFilter = t;
             ['All', 'Dep', 'Wd'].forEach(id => {
                 const b = document.getElementById(`btnFilter${id}`);
-                b.className = 'px-4 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-50 transition';
+                if(b) b.className = 'px-4 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-50 transition';
             });
             const activeMap = { 'all': 'All', 'deposit': 'Dep', 'withdraw': 'Wd' };
             const ab = document.getElementById(`btnFilter${activeMap[t]}`);
-            ab.className = 'px-4 py-1.5 bg-[#115ec4] border border-[#115ec4] rounded-full text-xs font-bold text-white shadow-sm transition';
+            if(ab) ab.className = 'px-4 py-1.5 bg-[#115ec4] border border-[#115ec4] rounded-full text-xs font-bold text-white shadow-sm transition';
             renderHistory();
         };
 
@@ -450,7 +479,9 @@
                 switch(tx.type) {
                     case 'deposit': color = 'bg-emerald-50 border-emerald-100 text-emerald-600'; amtColor = 'text-emerald-600'; icon = 'arrow-down'; sign = '+'; title = 'Nạp Tiền'; break;
                     case 'withdraw': color = 'bg-rose-50 border-rose-100 text-rose-600'; amtColor = 'text-rose-600'; icon = 'arrow-up'; sign = '-'; title = 'Rút Tiền'; break;
-                    default: color = 'bg-blue-50 border-blue-100 text-[#115ec4]'; amtColor = 'text-[#115ec4]'; icon = 'gift'; sign = '+'; title = 'Thưởng/Khác';
+                    case 'bonus': color = 'bg-amber-50 border-amber-100 text-amber-600'; amtColor = 'text-amber-600'; icon = 'gift'; sign = '+'; title = 'Thưởng'; break;
+                    case 'promotion': color = 'bg-purple-50 border-purple-100 text-purple-600'; amtColor = 'text-purple-600'; icon = 'gift'; sign = '+'; title = 'Khuyến Mãi'; break;
+                    default: color = 'bg-blue-50 border-blue-100 text-[#115ec4]'; amtColor = 'text-[#115ec4]'; icon = 'gift'; sign = '+'; title = 'Giao Dịch Khác';
                 }
                 
                 let sHtml = '';
