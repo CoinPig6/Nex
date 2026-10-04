@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tpig - Nhiệm Vụ & Khuyến Mãi</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -94,10 +94,6 @@
         .nav-item.active i { transform: translateY(-4px) scale(1.1); }
         .nav-item:not(.active):active { transform: scale(0.9); opacity: 0.7; }
 
-        /* PROGRESS BAR CUSTOM */
-        .progress-track { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #00E5FF, #0077FF); border-radius: 10px; transition: width 0.5s ease-out; box-shadow: 0 0 10px rgba(0,229,255,0.5); }
-
         /* TOAST */
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 9999; opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; width: max-content; max-width: 90vw;}
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -148,7 +144,7 @@
             <div id="lineTasks" class="absolute bottom-0 left-1/4 right-1/4 h-[3px] bg-gradient-to-r from-[#00E5FF] to-[#0077FF] rounded-t-md shadow-[0_0_10px_rgba(0,229,255,0.8)] transition-all duration-300"></div>
         </button>
         <button onclick="window.switchPromoTab('promos')" id="btnTabPromos" class="relative flex-1 py-3.5 text-sm font-bold text-[#64748b] transition-colors">
-            KHUYẾN MÃI & QUÀ
+            KHUYẾN MÃI
             <div id="linePromos" class="absolute bottom-0 left-1/2 right-1/2 h-[3px] bg-transparent rounded-t-md transition-all duration-300"></div>
         </button>
     </div>
@@ -156,10 +152,10 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 overflow-y-auto hide-scroll p-4 pb-28 relative z-10 w-full max-w-[600px] mx-auto">
         <div class="relative z-10">
-            
+
             <!-- ================= TAB 1: NHIỆM VỤ ================= -->
             <div id="tabContentTasks" class="space-y-5 animate-fade-in">
-                
+
                 <!-- Nhiệm vụ 1: Đăng nhập 7 Ngày -->
                 <div class="glass-panel p-5 flex flex-col gap-3 relative overflow-hidden">
                     <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#00E5FF] opacity-10 rounded-full blur-3xl pointer-events-none"></div>
@@ -169,57 +165,50 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="text-white font-bold text-[15px] tracking-tight">Điểm Danh 7 Ngày</h4>
-                            <p class="text-[10px] text-gray-400 mt-1 leading-tight">Yêu cầu: Nạp ≥ <span class="text-[#00E5FF] font-bold">50 T</span> & Cược ≥ <span class="text-[#00E5FF] font-bold">200 T</span><br>(Phần thưởng rút cần x3 Vòng cược)</p>
+                            <p class="text-[10px] text-gray-400 mt-1 leading-tight">Yêu cầu: Nạp ≥ <span class="text-[#00E5FF] font-bold">50 T</span> Cược ≥ <span class="text-[#00E5FF] font-bold">200 T</span><br>(Phần thưởng rút cần x3 Vòng cược)</p>
                         </div>
                     </div>
-                    
+
                     <!-- 7 Days Timeline -->
                     <div class="flex gap-2.5 overflow-x-auto hide-scroll mt-2 pb-2 relative z-10 snap-x">
-                        <!-- Ngày 1 -->
                         <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 1</span>
                             <i class="fa-solid fa-coins text-[#00E5FF]/50 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+3T</span>
                         </div>
-                        <!-- Ngày 2 -->
                         <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 2</span>
                             <i class="fa-solid fa-coins text-[#00E5FF]/60 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+5T</span>
                         </div>
-                        <!-- Ngày 3 -->
                         <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 3</span>
                             <i class="fa-solid fa-coins text-[#00E5FF]/70 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+8T</span>
                         </div>
-                        <!-- Ngày 4 -->
                         <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 4</span>
                             <i class="fa-solid fa-gem text-[#00E5FF]/80 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+15T</span>
                         </div>
-                        <!-- Ngày 5 -->
                         <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 5</span>
                             <i class="fa-solid fa-gem text-[#00E5FF]/90 text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-gray-300 font-black text-[12px]">+15T</span>
                         </div>
-                        <!-- Ngày 6 -->
                         <div class="min-w-[65px] bg-black/40 rounded-xl flex flex-col items-center justify-center p-2.5 border border-white/5 snap-start relative">
                             <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">Ngày 6</span>
                             <i class="fa-solid fa-gem text-[#00E5FF] text-base mb-1.5 drop-shadow-sm"></i>
                             <span class="text-[#00E5FF] font-black text-[12px]">+20T</span>
                         </div>
-                        <!-- Ngày 7 (Hot) -->
                         <div class="min-w-[70px] bg-gradient-to-b from-[#00E5FF]/20 to-[#0077FF]/20 rounded-xl flex flex-col items-center justify-center p-2.5 border border-[#00E5FF]/50 snap-start relative shadow-[inset_0_0_15px_rgba(0,229,255,0.2)]">
                             <span class="text-[9px] text-[#00E5FF] font-black uppercase tracking-wider mb-1">Ngày 7</span>
                             <i class="fa-solid fa-gift text-white text-lg mb-1 drop-shadow-[0_0_8px_rgba(0,229,255,0.8)] animate-pulse"></i>
                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-[#00E5FF] font-black text-[14px] drop-shadow-md">+88T</span>
                         </div>
                     </div>
-                    
-                    <button class="btn-action w-full mt-2 relative z-10" onclick="window.claimReward('login_day', this)">ĐIỂM DANH HÔM NAY</button>
+
+                    <button class="btn-action w-full mt-2 relative z-10" id="btn_login_day" onclick="window.claimLoginReward()">ĐIỂM DANH HÔM NAY</button>
                 </div>
 
                 <!-- Nhiệm vụ 2: Nạp tích lũy -->
@@ -230,51 +219,46 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="text-white font-bold text-[15px] tracking-tight">Nhiệm Vụ Nạp Tiền</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy nạp đạt mốc nhận thưởng (x3 vòng cược).</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy nạp đạt mốc để nhận thưởng tự động.</p>
                         </div>
                     </div>
-                    
+
                     <!-- Milestones List -->
                     <div class="space-y-2.5">
-                        <!-- Mốc 50 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-indigo-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">50 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+1 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">50.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+1.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('dep_50', this)">NHẬN</button>
+                            <button id="btn_dep_50" class="btn-claim" onclick="window.claimTask('dep_50')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 100 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-indigo-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">100 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+2 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">100.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+2.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('dep_100', this)">NHẬN</button>
+                            <button id="btn_dep_100" class="btn-claim" onclick="window.claimTask('dep_100')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 200 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-indigo-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">200 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+5 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">200.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+5.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('dep_200', this)">NHẬN</button>
+                            <button id="btn_dep_200" class="btn-claim" onclick="window.claimTask('dep_200')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 500 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-indigo-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">500 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+20 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">500.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+20.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('dep_500', this)">NHẬN</button>
+                            <button id="btn_dep_500" class="btn-claim" onclick="window.claimTask('dep_500')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 1000 -->
                         <div class="bg-indigo-900/20 rounded-xl p-3 border border-indigo-500/40 flex justify-between items-center shadow-[inset_0_0_15px_rgba(99,102,241,0.15)]">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">1,000 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng lớn <span class="text-[#00E5FF] font-black text-xs drop-shadow-sm">+88 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Mốc nạp <span class="text-indigo-400">1,000.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng lớn <span class="text-[#00E5FF] font-black text-xs drop-shadow-sm">+88.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('dep_1000', this)">NHẬN</button>
+                            <button id="btn_dep_1000" class="btn-claim" onclick="window.claimTask('dep_1000')">ĐANG TẢI</button>
                         </div>
                     </div>
                 </div>
@@ -287,43 +271,39 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="text-white font-bold text-[15px] tracking-tight">Nhiệm Vụ Cược</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy cược đạt mốc nhận thưởng (x3 vòng cược).</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Tích lũy cược đạt mốc để nhận thưởng tự động.</p>
                         </div>
                     </div>
-                    
+
                     <!-- Milestones List -->
                     <div class="space-y-2.5">
-                        <!-- Mốc 500 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-emerald-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">500 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+3 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">500.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+3.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('bet_500', this)">NHẬN</button>
+                            <button id="btn_bet_500" class="btn-claim" onclick="window.claimTask('bet_500')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 1000 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-emerald-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">1,000 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+8 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">1,000.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+8.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('bet_1000', this)">NHẬN</button>
+                            <button id="btn_bet_1000" class="btn-claim" onclick="window.claimTask('bet_1000')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 2000 -->
                         <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex justify-between items-center hover:border-emerald-500/30 transition-colors">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">2,000 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+15 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">2,000.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng <span class="text-[#00E5FF] font-bold">+15.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('bet_2000', this)">NHẬN</button>
+                            <button id="btn_bet_2000" class="btn-claim" onclick="window.claimTask('bet_2000')">ĐANG TẢI</button>
                         </div>
-                        <!-- Mốc 5000 -->
                         <div class="bg-emerald-900/20 rounded-xl p-3 border border-emerald-500/40 flex justify-between items-center shadow-[inset_0_0_15px_rgba(16,185,129,0.15)]">
                             <div>
-                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">5,000 T</span></div>
-                                <div class="text-[10px] text-gray-400">Thưởng lớn <span class="text-[#00E5FF] font-black text-xs drop-shadow-sm">+88 T</span></div>
+                                <div class="text-[13px] font-bold text-white mb-0.5">Tổng cược <span class="text-emerald-400">5,000.00 T</span></div>
+                                <div class="text-[10px] text-gray-400">Thưởng lớn <span class="text-[#00E5FF] font-black text-xs drop-shadow-sm">+88.00 T</span></div>
                             </div>
-                            <button class="btn-claim" onclick="window.claimReward('bet_5000', this)">NHẬN</button>
+                            <button id="btn_bet_5000" class="btn-claim" onclick="window.claimTask('bet_5000')">ĐANG TẢI</button>
                         </div>
                     </div>
                 </div>
@@ -331,12 +311,12 @@
 
             <!-- ================= TAB 2: KHUYẾN MÃI & QUÀ ================= -->
             <div id="tabContentPromos" class="space-y-5 hidden pt-2 animate-fade-in">
-                
-                <!-- 1. HOÀN TRẢ VIP (Redesigned) -->
+
+                <!-- 1. HOÀN TRẢ VIP -->
                 <div class="glass-panel p-[1px] bg-gradient-to-br from-[#00E5FF]/40 to-[#0077FF]/10 shadow-[0_10px_30px_rgba(0,229,255,0.15)] relative overflow-hidden group">
                     <div class="bg-[#030712]/90 backdrop-blur-3xl rounded-[23px] p-6 h-full relative z-10">
                         <div class="absolute -right-16 -top-16 w-48 h-48 bg-[#00E5FF] opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-opacity pointer-events-none"></div>
-                        
+
                         <div class="flex justify-between items-start mb-5 relative z-10">
                             <div>
                                 <h3 class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#0077FF] tracking-tight drop-shadow-sm">HOÀN TRẢ VIP <span class="bg-[#00E5FF] text-black px-1.5 py-0.5 rounded text-[11px] ml-1 align-middle">0.15%</span></h3>
@@ -346,7 +326,7 @@
                                 <i class="fa-solid fa-gem text-xl text-[#00E5FF] drop-shadow-[0_0_5px_rgba(0,229,255,0.6)]"></i>
                             </div>
                         </div>
-                        
+
                         <div class="grid grid-cols-2 gap-3 mb-5 relative z-10">
                             <div class="bg-black/40 rounded-xl p-3 border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
                                 <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1.5">Cược Tích Lũy</div>
@@ -363,50 +343,50 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <button id="btnRefund" onclick="window.claimRefund()" class="btn-action w-full relative z-10 !py-3.5" disabled>CHƯA ĐỦ MỐC 1 T</button>
                     </div>
                 </div>
 
-                <!-- 2. KHUYẾN MÃI NẠP ĐẦU (Redesigned Banner Style) -->
+                <!-- 2. KHUYẾN MÃI NẠP ĐẦU -->
                 <div class="glass-panel p-[1px] bg-gradient-to-r from-rose-500/50 to-red-700/30 overflow-hidden relative group">
                     <div class="bg-[#030712]/95 backdrop-blur-2xl rounded-[23px] p-5 h-full relative z-10">
                         <div class="promo-tag !bg-gradient-to-r !from-rose-500 !to-red-600 !shadow-[0_2px_10px_rgba(244,63,94,0.4)]">HOT DEAL</div>
-                        
+
                         <div class="flex items-center gap-4">
                             <div class="flex flex-col items-center justify-center shrink-0 w-[72px]">
                                 <span class="text-[32px] font-black text-transparent bg-clip-text bg-gradient-to-b from-rose-400 to-red-600 tracking-tighter drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none">100</span>
                                 <span class="text-rose-500 font-black text-sm -mt-1">%</span>
                             </div>
-                            
+
                             <div class="flex-1 border-l border-white/10 pl-4 py-1">
                                 <h4 class="text-white font-bold text-[15px] mb-1.5 tracking-tight">Thưởng Nạp Lần Đầu</h4>
                                 <p class="text-gray-400 text-[10px] leading-relaxed">Nhận tối đa: <span class="text-rose-400 font-bold">88,888 T</span><br>Yêu cầu hoàn thành <span class="text-white">x3 Vòng cược</span></p>
                             </div>
                         </div>
-                        
+
                         <button id="btnDep1" onclick="window.requestPromo('deposit_1')" class="btn-action w-full mt-4 !bg-gradient-to-r !from-rose-500 !to-red-600 !shadow-[0_5px_20px_rgba(244,63,94,0.3)] !py-3.5 hover:!brightness-110 text-xs">
                             ĐĂNG KÝ THAM GIA
                         </button>
                     </div>
                 </div>
 
-                <!-- 3. KHUYẾN MÃI NẠP LẦN 2 (Redesigned Banner Style) -->
+                <!-- 3. KHUYẾN MÃI NẠP LẦN 2 -->
                 <div class="glass-panel p-[1px] bg-gradient-to-r from-purple-500/40 to-indigo-700/20 overflow-hidden relative group">
                     <div class="bg-[#030712]/95 backdrop-blur-2xl rounded-[23px] p-5 h-full relative z-10">
-                        
+
                         <div class="flex items-center gap-4">
                             <div class="flex flex-col items-center justify-center shrink-0 w-[72px]">
                                 <span class="text-[32px] font-black text-transparent bg-clip-text bg-gradient-to-b from-purple-400 to-indigo-500 tracking-tighter drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none">50</span>
                                 <span class="text-purple-400 font-black text-sm -mt-1">%</span>
                             </div>
-                            
+
                             <div class="flex-1 border-l border-white/10 pl-4 py-1">
                                 <h4 class="text-white font-bold text-[15px] mb-1.5 tracking-tight">Thưởng Nạp Lần Hai</h4>
                                 <p class="text-gray-400 text-[10px] leading-relaxed">Nhận tối đa: <span class="text-purple-400 font-bold">8,888 T</span><br>Yêu cầu hoàn thành <span class="text-white">x3 Vòng cược</span></p>
                             </div>
                         </div>
-                        
+
                         <button id="btnDep2" onclick="window.requestPromo('deposit_2')" class="btn-action w-full mt-4 !bg-gradient-to-r !from-purple-500 !to-indigo-600 !shadow-[0_5px_20px_rgba(168,85,247,0.3)] !py-3.5 hover:!brightness-110 text-xs">
                             ĐĂNG KÝ THAM GIA
                         </button>
@@ -419,17 +399,14 @@
     </main>
 
     <div class="bottom-nav fixed bottom-0 left-0 right-0 h-[76px] flex items-center justify-around px-2 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
-        
         <a href="game.html" class="nav-item flex flex-col items-center justify-center w-[70px] h-full gap-1.5">
             <i class="fa-solid fa-gamepad text-[22px]"></i>
             <span class="text-[10px] font-bold tracking-wide">Trò chơi</span>
         </a>
-        
         <a href="nhiemvu.html" class="nav-item active flex flex-col items-center justify-center w-[70px] h-full gap-1.5">
             <i class="fa-solid fa-list-check text-[22px]"></i>
             <span class="text-[10px] font-bold tracking-wide">Nhiệm vụ</span>
         </a>
-        
         <a href="naprut.html" class="relative -top-7 flex flex-col items-center justify-center w-[70px] group">
             <div class="absolute inset-0 bg-[#00E5FF] rounded-full blur-lg opacity-40 group-active:opacity-60 transition-opacity"></div>
             <div class="w-[64px] h-[64px] bg-gradient-to-br from-[#00E5FF] to-[#0077FF] rounded-full flex items-center justify-center shadow-[0_5px_20px_rgba(0,119,255,0.5)] border-[6px] border-[#030712] group-active:scale-95 transition-transform z-10 relative">
@@ -437,12 +414,10 @@
             </div>
             <span class="text-[10px] font-extrabold text-[#00E5FF] mt-1.5 tracking-wide drop-shadow-md">Giao Dịch</span>
         </a>
-        
         <a href="lichsu.html" class="nav-item flex flex-col items-center justify-center w-[70px] h-full gap-1.5">
             <i class="fa-solid fa-clock-rotate-left text-[22px]"></i>
             <span class="text-[10px] font-bold tracking-wide">Lịch sử</span>
         </a>
-        
         <a href="taikhoan.html" class="nav-item flex flex-col items-center justify-center w-[70px] h-full gap-1.5">
             <i class="fa-solid fa-user text-[22px]"></i>
             <span class="text-[10px] font-bold tracking-wide">Tài khoản</span>
@@ -465,7 +440,11 @@
             });
         });
 
-        // LOGIC ĐỔI TAB (NHIỆM VỤ & KHUYẾN MÃI) MƯỢT MÀ
+        // TIỆN ÍCH FORMAT TIỀN (ĐỒNG BỘ HIỂN THỊ)
+        // Luôn hiển thị 2 chữ số thập phân cho đồng bộ với game
+        const formatMoney = (val) => Number(val || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        // LOGIC ĐỔI TAB MƯỢT MÀ
         window.switchPromoTab = function(tabName) {
             const tabTasks = document.getElementById('tabContentTasks');
             const tabPromos = document.getElementById('tabContentPromos');
@@ -477,19 +456,15 @@
             if (tabName === 'tasks') {
                 tabTasks.classList.remove('hidden');
                 tabPromos.classList.add('hidden');
-                
                 btnTasks.classList.add('text-[#00E5FF]'); btnTasks.classList.remove('text-[#64748b]');
                 lineTasks.className = 'absolute bottom-0 left-1/4 right-1/4 h-[3px] bg-gradient-to-r from-[#00E5FF] to-[#0077FF] rounded-t-md shadow-[0_0_10px_rgba(0,229,255,0.8)] transition-all duration-300';
-                
                 btnPromos.classList.remove('text-[#00E5FF]'); btnPromos.classList.add('text-[#64748b]');
                 linePromos.className = 'absolute bottom-0 left-1/2 right-1/2 h-[3px] bg-transparent rounded-t-md transition-all duration-300';
             } else {
                 tabTasks.classList.add('hidden');
                 tabPromos.classList.remove('hidden');
-                
                 btnPromos.classList.add('text-[#00E5FF]'); btnPromos.classList.remove('text-[#64748b]');
                 linePromos.className = 'absolute bottom-0 left-1/4 right-1/4 h-[3px] bg-gradient-to-r from-[#00E5FF] to-[#0077FF] rounded-t-md shadow-[0_0_10px_rgba(0,229,255,0.8)] transition-all duration-300';
-                
                 btnTasks.classList.remove('text-[#00E5FF]'); btnTasks.classList.add('text-[#64748b]');
                 lineTasks.className = 'absolute bottom-0 left-1/2 right-1/2 h-[3px] bg-transparent rounded-t-md transition-all duration-300';
             }
@@ -511,6 +486,19 @@
         let currentUser = null;
         let userData = null;
 
+        // CẤU HÌNH NHIỆM VỤ TỰ ĐỘNG XÉT DUYỆT
+        const TASKS_CONFIG = {
+            'dep_50': { type: 'totalDeposit', target: 50, reward: 1, name: 'Mốc nạp 50 T' },
+            'dep_100': { type: 'totalDeposit', target: 100, reward: 2, name: 'Mốc nạp 100 T' },
+            'dep_200': { type: 'totalDeposit', target: 200, reward: 5, name: 'Mốc nạp 200 T' },
+            'dep_500': { type: 'totalDeposit', target: 500, reward: 20, name: 'Mốc nạp 500 T' },
+            'dep_1000': { type: 'totalDeposit', target: 1000, reward: 88, name: 'Mốc nạp 1000 T' },
+            'bet_500': { type: 'betTurnover', target: 500, reward: 3, name: 'Tổng cược 500 T' },
+            'bet_1000': { type: 'betTurnover', target: 1000, reward: 8, name: 'Tổng cược 1000 T' },
+            'bet_2000': { type: 'betTurnover', target: 2000, reward: 15, name: 'Tổng cược 2000 T' },
+            'bet_5000': { type: 'betTurnover', target: 5000, reward: 88, name: 'Tổng cược 5000 T' }
+        };
+
         const BTN_MAP = {
             'deposit_1': 'btnDep1',
             'deposit_2': 'btnDep2'
@@ -522,7 +510,7 @@
             document.getElementById('toastMsg').innerText = msg;
             const icon = document.getElementById('toastIcon');
             const iconBg = document.getElementById('toastIconBg');
-            
+
             if(type === 'error') { 
                 icon.className = 'fa-solid fa-triangle-exclamation text-[#f43f5e] text-sm drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]'; 
                 iconBg.className = 'w-8 h-8 rounded-xl bg-[#f43f5e]/10 border border-[#f43f5e]/30 flex items-center justify-center shrink-0';
@@ -536,63 +524,147 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // XỬ LÝ NHẬN THƯỞNG NHIỆM VỤ (UI DEMO LOGIC)
-        window.claimReward = (taskId, btnEl) => {
-            btnEl.disabled = true;
-            btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ...';
+        // ĐỒNG BỘ UI CÁC NHIỆM VỤ DỰA TRÊN DỮ LIỆU USER
+        function syncTasksUI(data) {
+            const claimed = data.claimedTasks || [];
+            const totalDeposit = data.totalDeposit || 0;
+            const totalBet = data.betTurnover || 0;
+
+            Object.keys(TASKS_CONFIG).forEach(taskId => {
+                const btn = document.getElementById(`btn_${taskId}`);
+                if(!btn) return;
+
+                const config = TASKS_CONFIG[taskId];
+                const currentValue = config.type === 'totalDeposit' ? totalDeposit : totalBet;
+                const isClaimed = claimed.includes(taskId);
+                const isEligible = currentValue >= config.target;
+
+                if (isClaimed) {
+                    btn.innerText = "ĐÃ NHẬN";
+                    btn.className = "bg-white/5 text-gray-500 border border-white/10 rounded-full px-4 py-1.5 text-[10px] font-bold uppercase min-w-[75px] text-center opacity-50 cursor-not-allowed";
+                    btn.disabled = true;
+                } else if (isEligible) {
+                    btn.innerText = "NHẬN";
+                    btn.className = "btn-claim !bg-[#00E5FF]/20 !text-[#00E5FF] !border-[#00E5FF]/40 shadow-[0_0_10px_rgba(0,229,255,0.2)] animate-pulse cursor-pointer";
+                    btn.disabled = false;
+                } else {
+                    const percent = Math.min(100, Math.floor((currentValue / config.target) * 100));
+                    btn.innerText = `${percent}%`;
+                    btn.className = "bg-white/5 text-gray-400 border border-white/10 rounded-full px-4 py-1.5 text-[10px] font-bold uppercase min-w-[75px] text-center cursor-not-allowed";
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        // XỬ LÝ NHẬN THƯỞNG TỰ ĐỘNG BẰNG TRANSACTION (KHÔNG CẦN DUYỆT)
+        window.claimTask = async (taskId) => {
+            if (!currentUser) return showToast("Vui lòng đăng nhập!", "error");
             
-            setTimeout(() => {
-                showToast("Đã gửi yêu cầu nhận thưởng, chờ hệ thống duyệt!", "success");
-                btnEl.innerHTML = 'ĐÃ NHẬN';
-                btnEl.classList.remove('btn-action');
-                btnEl.classList.add('bg-white/10', 'text-gray-500', 'border', 'border-white/10');
-            }, 800);
+            const btn = document.getElementById(`btn_${taskId}`);
+            if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+            const userRef = doc(db, "users", currentUser.uid);
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    if (!userDoc.exists()) throw "Không tìm thấy người dùng!";
+
+                    const data = userDoc.data();
+                    const claimed = data.claimedTasks || [];
+                    
+                    if (claimed.includes(taskId)) throw "Bạn đã nhận phần thưởng này rồi!";
+
+                    const config = TASKS_CONFIG[taskId];
+                    const currentValue = config.type === 'totalDeposit' ? (data.totalDeposit || 0) : (data.betTurnover || 0);
+
+                    if (currentValue < config.target) throw "Chưa đủ điều kiện nhận thưởng!";
+
+                    // Nếu đủ điều kiện, tiến hành cập nhật nguyên tử
+                    claimed.push(taskId);
+                    const newBalance = (data.balance || 0) + config.reward;
+
+                    transaction.update(userRef, {
+                        balance: newBalance,
+                        claimedTasks: claimed
+                    });
+
+                    // Ghi log giao dịch trực tiếp trong transaction
+                    const txRef = doc(collection(db, "users", currentUser.uid, "transactions"));
+                    transaction.set(txRef, {
+                        type: 'task_reward',
+                        amount: config.reward,
+                        note: `Thưởng tự động: ${config.name}`,
+                        status: 'success',
+                        timestamp: Date.now()
+                    });
+                });
+
+                showToast(`Nhận thành công ${formatMoney(TASKS_CONFIG[taskId].reward)} T!`, "success");
+            } catch (error) {
+                console.error("Lỗi nhận nhiệm vụ:", error);
+                showToast(typeof error === 'string' ? error : "Lỗi hệ thống khi nhận!", "error");
+                // Reset button UI if failed, otherwise onSnapshot will handle success state
+                if(btn) { btn.disabled = false; btn.innerText = "NHẬN"; } 
+            }
+        };
+
+        // ĐIỂM DANH HÔM NAY (Ví dụ logic cơ bản)
+        window.claimLoginReward = async () => {
+            if (!currentUser) return showToast("Vui lòng đăng nhập!", "error");
+            showToast("Chức năng đang được cập nhật thêm điều kiện!", "error");
         };
 
         // AUTH & SYNC
         onAuthStateChanged(auth, async (user) => {
             if (user && !user.isAnonymous) {
                 currentUser = user;
-                
+
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         userData = docSnap.data();
-                        
-                        // Cập nhật Số dư Header
+
+                        // Cập nhật Số dư Header đồng bộ định dạng
                         const balDisplay = document.getElementById('balanceDisplayHeader');
-                        balDisplay.innerText = (userData.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                        balDisplay.innerText = formatMoney(userData.balance);
                         balDisplay.classList.remove('animate-pulse');
 
+                        // Cập nhật UI Nhiệm vụ tự động
+                        syncTasksUI(userData);
+
+                        // Cập nhật Hoàn trả
                         renderRefund(userData);
                     }
                 });
 
                 checkPromoRequests(user.uid);
             } else {
-                // FALLBACK NẾU CHƯA ĐĂNG NHẬP (Chỉ để demo, thực tế sẽ tự redirect)
+                // FALLBACK NẾU CHƯA ĐĂNG NHẬP
                 let userStr = localStorage.getItem('crownex_user_info');
                 if (userStr) {
                     userData = JSON.parse(userStr);
-                    document.getElementById('balanceDisplayHeader').innerText = (userData.balance || 1000).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    document.getElementById('balanceDisplayHeader').innerText = formatMoney(userData.balance || 1000);
                     document.getElementById('balanceDisplayHeader').classList.remove('animate-pulse');
+                    syncTasksUI(userData); // Thử sync nếu có data local
                 }
             }
         });
 
-        // HOÀN TRẢ VIP
+        // HOÀN TRẢ VIP ĐỒNG BỘ HIỂN THỊ TIỀN
         function renderRefund(data) {
             const currentTurnover = data.betTurnover || 0;
             const lastTurnover = data.lastRefundTurnover || 0;
             const pendingTurnover = Math.max(0, currentTurnover - lastTurnover);
             const refundAmt = pendingTurnover * 0.0015;
 
-            document.getElementById('refundTurnover').innerText = currentTurnover.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('refundAmount').innerText = refundAmt.toFixed(4);
+            // Dùng formatMoney để đồng bộ định dạng
+            document.getElementById('refundTurnover').innerText = formatMoney(currentTurnover);
+            document.getElementById('refundAmount').innerText = formatMoney(refundAmt);
 
             const btnRefund = document.getElementById('btnRefund');
             if (refundAmt >= 1.0) {
                 btnRefund.disabled = false;
-                btnRefund.innerText = `RÚT NGAY ${refundAmt.toFixed(2)} T`;
+                btnRefund.innerText = `RÚT NGAY ${formatMoney(refundAmt)} T`;
                 btnRefund.classList.remove('opacity-50');
             } else {
                 btnRefund.disabled = true;
@@ -620,11 +692,11 @@
                 await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
                     type: 'refund', amount: refundAmt, note: 'Hoàn trả 0.15%', status: 'success', timestamp: Date.now()
                 });
-                showToast(`Đã nhận hoàn trả ${refundAmt.toFixed(2)} T`, "success");
+                showToast(`Đã nhận hoàn trả ${formatMoney(refundAmt)} T`, "success");
             } catch (e) { console.error(e); }
         };
 
-        // KHUYẾN MÃI NẠP (Chờ Duyệt)
+        // KHUYẾN MÃI NẠP (Cái này vẫn gửi chờ duyệt vì admin có thể cần kiểm tra vòng cược phức tạp hơn)
         function getStatusPriority(status) {
             if (status === 'success') return 3;
             if (status === 'pending') return 2;
@@ -633,7 +705,7 @@
 
         async function checkPromoRequests(uid) {
             const q = query(collection(db, "promo_requests"), where("userId", "==", uid));
-            
+
             onSnapshot(q, (snap) => {
                 let requestsByType = {};
                 snap.forEach(doc => {
@@ -691,7 +763,7 @@
                     where("userId", "==", currentUser.uid),
                     where("type", "==", type)
                 );
-                
+
                 const querySnap = await getDocs(q);
                 let isDuplicate = false;
                 querySnap.forEach((doc) => {
