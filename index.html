@@ -5,26 +5,38 @@
     <!-- CHẶN ZOOM TUYỆT ĐỐI TRÊN MOBILE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tpig - Cổng Đăng Nhập</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Sử dụng font Plus Jakarta Sans cho cảm giác hiện đại, công nghệ -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Roboto', 'sans-serif'],
-                        mono: ['IBM Plex Mono', 'monospace'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
                     },
-                    colors: { brand: '#FCD535' },
+                    colors: {
+                        brand: '#00E5FF', // Cyan sáng
+                        brandDark: '#0077FF', // Xanh dương đậm
+                    },
                     animation: {
-                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'blob': 'blob 7s infinite',
                     },
                     keyframes: {
                         slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(30px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                            '0%': { opacity: '0', transform: 'translateY(40px) scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
                         }
                     }
                 }
@@ -40,136 +52,166 @@
             overflow-y: auto; 
             touch-action: pan-y; 
             -webkit-text-size-adjust: 100%;
-            background-color: #050507; /* Dark Premium */
+            background-color: #030712; /* Rất tối, gần đen */
             scroll-behavior: smooth;
-            background-image: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.6) 0%, transparent 80%);
+            color: #f3f4f6;
         }
         
         /* BẮT BUỘC FONT-SIZE 16PX CHO INPUT ĐỂ CHỐNG ZOOM TRÊN IOS */
         input, select, textarea { font-size: 16px !important; appearance: none; -webkit-appearance: none; border-radius: 0; }
         button, a { touch-action: manipulation; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* CARD STYLE - KÍNH MỜ */
+        /* AURORA BACKGROUND EFFECT */
+        .ambient-bg {
+            position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+        }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
+            animation: blob 10s infinite alternate;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(0, 229, 255, 0.3); animation-delay: 0s; }
+        .orb-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: rgba(111, 0, 255, 0.25); animation-delay: 2s; }
+        .orb-3 { top: 40%; left: 30%; width: 40vw; height: 40vw; background: rgba(0, 119, 255, 0.2); animation-delay: 4s; }
+
+        /* CARD STYLE - KÍNH MỜ SIÊU CẤP */
         .glass-panel {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-            border-radius: 28px;
-            width: 100%; max-width: 380px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
+            border-radius: 32px;
+            width: 100%; max-width: 400px;
             position: relative; overflow: hidden;
-            transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bounce nhẹ */
+            z-index: 10;
         }
 
-        /* INPUT STYLE - DỄ NHÌN HƠN */
-        .input-box { position: relative; margin-bottom: 16px; }
+        /* INPUT STYLE - TƯƠNG LAI */
+        .input-box { position: relative; margin-bottom: 18px; }
         .input-control {
-            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 15px 16px 15px 48px; border-radius: 16px;
-            transition: all 0.3s ease;
+            width: 100%; background: rgba(15, 23, 42, 0.6); 
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #fff; padding: 16px 16px 16px 52px; border-radius: 18px;
+            transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: 500;
         }
         .input-control:focus {
-            border-color: #FCD535; background: rgba(255,255,255,0.02); outline: none; box-shadow: 0 0 0 1px rgba(252,213,53,0.5), inset 0 2px 5px rgba(0,0,0,0.5);
+            border-color: #00E5FF; background: rgba(0, 229, 255, 0.03); 
+            outline: none; box-shadow: 0 0 0 1px rgba(0,229,255,0.4), inset 0 2px 4px rgba(0,0,0,0.2);
         }
-        .input-control::placeholder { color: #6b7280; font-size: 15px; }
+        .input-control::placeholder { color: #64748b; font-size: 15px; font-weight: 400; }
         
         .input-icon {
-            position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
-            color: #6b7280; font-size: 18px; transition: 0.3s;
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+            color: #64748b; font-size: 18px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .input-control:focus ~ .input-icon { color: #FCD535; drop-shadow: 0 0 5px rgba(252,213,53,0.5); }
+        .input-control:focus ~ .input-icon { 
+            color: #00E5FF; drop-shadow: 0 0 8px rgba(0,229,255,0.6); transform: translateY(-50%) scale(1.1); 
+        }
 
         /* SMOOTH TABS */
         .tab-wrapper {
-            display: flex; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px; padding: 5px; margin-bottom: 28px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+            display: flex; position: relative; background: rgba(15, 23, 42, 0.8); 
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 20px; padding: 6px; margin-bottom: 32px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
         }
         .tab-item {
-            flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 800;
-            color: #9ca3af; cursor: pointer; z-index: 10; transition: color 0.3s; letter-spacing: 0.5px;
+            flex: 1; text-align: center; padding: 14px; font-size: 14px; font-weight: 700;
+            color: #64748b; cursor: pointer; z-index: 10; transition: color 0.3s; letter-spacing: 0.5px;
         }
-        .tab-item.active { color: #111; }
+        .tab-item.active { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
         
         /* Sliding Pill Indicator */
         .tab-indicator {
-            position: absolute; top: 5px; left: 5px; bottom: 5px; width: calc(50% - 5px);
-            background: linear-gradient(135deg, #FCD535 0%, #f59e0b 100%); border-radius: 12px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            box-shadow: 0 4px 15px rgba(252, 213, 53, 0.3); z-index: 1;
+            position: absolute; top: 6px; left: 6px; bottom: 6px; width: calc(50% - 6px);
+            background: linear-gradient(135deg, #00E5FF 0%, #0077FF 100%); 
+            border-radius: 16px; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.2); z-index: 1;
         }
 
         /* BUTTON */
         .btn-action {
-            width: 100%; background: linear-gradient(135deg, #FCD535 0%, #d97706 100%);
-            color: #111; font-weight: 900; padding: 16px; border-radius: 16px;
-            font-size: 15px; text-transform: uppercase; margin-top: 10px; letter-spacing: 1px;
-            box-shadow: 0 8px 25px rgba(252, 213, 53, 0.3); transition: all 0.2s; border: none;
+            width: 100%; background: linear-gradient(135deg, #00E5FF 0%, #0077FF 100%);
+            color: #fff; font-weight: 800; padding: 18px; border-radius: 18px;
+            font-size: 15px; text-transform: uppercase; margin-top: 12px; letter-spacing: 1.5px;
+            box-shadow: 0 8px 25px rgba(0, 119, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.3); 
+            transition: all 0.2s; border: none; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .btn-action:active:not(:disabled) { transform: scale(0.96); box-shadow: 0 4px 10px rgba(252, 213, 53, 0.2); }
-        .btn-action:disabled { opacity: 0.7; cursor: not-allowed; filter: grayscale(50%); transform: none; box-shadow: none; }
+        .btn-action:active:not(:disabled) { transform: scale(0.97); box-shadow: 0 4px 10px rgba(0, 119, 255, 0.3); }
+        .btn-action:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(60%); transform: none; box-shadow: none; }
 
         /* FORM SLIDING ANIMATION */
         .forms-container {
             position: relative;
-            height: 295px; /* Chiều cao Đăng nhập */
+            height: 310px; /* Chiều cao Đăng nhập điều chỉnh */
             overflow: hidden;
-            transition: height 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .auth-form {
             position: absolute; top: 0; left: 0; width: 100%;
-            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-            opacity: 0; transform: translateX(40px); pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0; transform: translateX(50px); pointer-events: none;
         }
 
         .auth-form.active {
             opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 20;
         }
         
-        .auth-form.slide-left { transform: translateX(-40px); opacity: 0; }
-        .auth-form.slide-right { transform: translateX(40px); opacity: 0; }
+        .auth-form.slide-left { transform: translateX(-50px); opacity: 0; }
+        .auth-form.slide-right { transform: translateX(50px); opacity: 0; }
 
-        /* TOAST - iOS STYLE */
+        /* TOAST - SẮC SẢO, HIỆN ĐẠI */
         #toast-box {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 9999; width: max-content; max-width: 90vw; pointer-events: none;
         }
         .toast-msg {
-            background: rgba(20, 24, 34, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px 18px; border-radius: 100px; display: flex; align-items: center; gap: 12px;
-            margin-bottom: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; pointer-events: auto;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid #00E5FF;
+            padding: 14px 20px; border-radius: 12px; display: flex; align-items: center; gap: 14px;
+            margin-bottom: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            animation: slideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; pointer-events: auto;
         }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-40px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-50px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }
 
         /* Canvas Captcha */
         .captcha-box {
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px; overflow: hidden; cursor: pointer; position: relative;
+            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px; overflow: hidden; cursor: pointer; position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
         .captcha-box::after {
             content: '\f021'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.6); color: white; opacity: 0; transition: 0.2s; font-size: 20px;
+            background: rgba(0, 119, 255, 0.8); color: white; opacity: 0; transition: 0.3s; font-size: 22px;
+            backdrop-filter: blur(2px);
         }
         .captcha-box:hover::after { opacity: 1; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-[100dvh] relative">
 
+    <!-- Hiệu ứng nền Aurora -->
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
     <div id="toast-box"></div>
 
     <!-- MAIN APP WRAPPER (ẨN MẶC ĐỊNH ĐỂ LOAD NGẦM) -->
-    <div id="appWrapper" class="opacity-0 transition-opacity duration-700 p-4 w-full flex flex-col items-center justify-center relative z-10 w-full max-w-[420px]">
+    <div id="appWrapper" class="opacity-0 transition-opacity duration-700 p-5 w-full flex flex-col items-center justify-center relative z-10 max-w-[440px]">
         
-        <div class="glass-panel p-7 w-full animate-slide-up">
+        <div class="glass-panel p-8 w-full animate-slide-up">
             
-            <!-- HEADER / LOGO -->
+            <!-- HEADER / LOGO MỚI -->
             <div class="text-center mb-8">
-                <div class="font-black text-[38px] text-white tracking-widest italic flex items-center justify-center gap-1 mb-1 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)]">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FCD535] to-[#f59e0b]">T</span>PIG
+                <div class="font-extrabold text-[42px] tracking-tight flex items-center justify-center gap-1 mb-2 drop-shadow-[0_0_20px_rgba(0,229,255,0.4)]">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-br from-[#00E5FF] to-[#0077FF]">T</span>PIG
                 </div>
-                <h1 class="text-[11px] font-bold text-gray-500 tracking-[0.3em] uppercase">Bùng Nổ Từng Khoảng Khắc Thăng Hoa</h1>
+                <h1 class="text-[11px] font-bold text-[#64748b] tracking-[0.35em] uppercase">Mở Khoá Giới Hạn Không Gian</h1>
             </div>
 
             <!-- TABS -->
@@ -189,80 +231,80 @@
                         <i class="fa-regular fa-user input-icon"></i>
                     </div>
                     <div class="input-box">
-                        <input type="password" id="loginPass" class="input-control" placeholder="Mật khẩu" required>
+                        <input type="password" id="loginPass" class="input-control" placeholder="Mật khẩu bảo mật" required>
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/5 rounded-full transition" onclick="window.togglePass('loginPass', this)">
-                            <i class="fa-regular fa-eye text-gray-400"></i>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/10 rounded-full transition-colors" onclick="window.togglePass('loginPass', this)">
+                            <i class="fa-regular fa-eye text-gray-500"></i>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-5 gap-3 mb-6">
+                    <div class="grid grid-cols-5 gap-3 mb-7">
                         <div class="col-span-3 relative">
-                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-[0.2em] text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:16px;">
+                            <input type="text" id="loginCaptcha" class="input-control font-mono uppercase tracking-[0.25em] text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:16px;">
                         </div>
                         <div class="col-span-2 captcha-box" onclick="window.drawCaptcha('login')">
-                            <canvas id="canvasLogin" width="120" height="52" class="w-full h-full opacity-90"></canvas>
+                            <canvas id="canvasLogin" width="120" height="54" class="w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <button type="submit" id="btnLogin" class="btn-action">
-                        TRUY CẬP HỆ THỐNG
+                        KẾT NỐI HỆ THỐNG
                     </button>
                 </form>
 
                 <!-- REGISTER FORM -->
                 <form id="formRegister" class="auth-form slide-right">
                     <div class="input-box">
-                        <input type="text" id="regUser" class="input-control" placeholder="Tên đăng nhập (viết liền)" required autocomplete="off" autocorrect="off" spellcheck="false">
-                        <i class="fa-solid fa-user-tag input-icon"></i>
+                        <input type="text" id="regUser" class="input-control" placeholder="Tên đăng nhập" required autocomplete="off" autocorrect="off" spellcheck="false">
+                        <i class="fa-solid fa-at input-icon"></i>
                     </div>
                     <div class="input-box">
-                        <input type="tel" id="regPhone" class="input-control" placeholder="Số điện thoại" required pattern="[0-9]*" inputmode="numeric">
-                        <i class="fa-solid fa-phone input-icon"></i>
+                        <input type="tel" id="regPhone" class="input-control" placeholder="Số điện thoại liên lạc" required pattern="[0-9]*" inputmode="numeric">
+                        <i class="fa-solid fa-mobile-screen input-icon"></i>
                     </div>
                     <div class="input-box">
                         <input type="password" id="regPass" class="input-control" placeholder="Mật khẩu (Tối thiểu 6 ký tự)" required minlength="6">
-                        <i class="fa-solid fa-lock input-icon"></i>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/5 rounded-full transition" onclick="window.togglePass('regPass', this)">
-                            <i class="fa-regular fa-eye text-gray-400"></i>
+                        <i class="fa-solid fa-key input-icon"></i>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/10 rounded-full transition-colors" onclick="window.togglePass('regPass', this)">
+                            <i class="fa-regular fa-eye text-gray-500"></i>
                         </div>
                     </div>
                     <div class="input-box">
-                        <input type="text" id="regName" class="input-control" placeholder="Họ và tên hiển thị" required autocomplete="off">
-                        <i class="fa-regular fa-id-card input-icon"></i>
+                        <input type="text" id="regName" class="input-control" placeholder="Tên hiển thị công khai" required autocomplete="off">
+                        <i class="fa-regular fa-id-badge input-icon"></i>
                     </div>
 
-                    <div class="grid grid-cols-5 gap-3 mb-6">
+                    <div class="grid grid-cols-5 gap-3 mb-7">
                         <div class="col-span-3 relative">
-                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-[0.2em] text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:16px;">
+                            <input type="text" id="regCaptcha" class="input-control font-mono uppercase tracking-[0.25em] text-center" placeholder="MÃ XÁC NHẬN" required maxlength="4" style="padding-left:16px;">
                         </div>
                         <div class="col-span-2 captcha-box" onclick="window.drawCaptcha('reg')">
-                            <canvas id="canvasReg" width="120" height="52" class="w-full h-full opacity-90"></canvas>
+                            <canvas id="canvasReg" width="120" height="54" class="w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <button type="submit" id="btnReg" class="btn-action">
-                        MỞ TÀI KHOẢN NGAY
+                        KHỞI TẠO TÀI KHOẢN
                     </button>
                 </form>
 
             </div>
         </div>
 
-        <!-- TRUST BADGES (Bổ sung uy tín) -->
-        <div class="mt-8 flex items-center justify-center gap-5 w-full opacity-70">
-            <div class="flex flex-col items-center gap-1.5">
-                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid fa-shield-halved text-emerald-400 text-lg"></i></div>
-                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Bảo Mật SSL</span>
+        <!-- TRUST BADGES -->
+        <div class="mt-8 flex items-center justify-center gap-6 w-full opacity-60 hover:opacity-100 transition-opacity duration-300">
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md"><i class="fa-solid fa-shield-halved text-[#00E5FF] text-lg drop-shadow-[0_0_5px_rgba(0,229,255,0.5)]"></i></div>
+                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Mã Hoá RSA</span>
             </div>
             <div class="w-px h-8 bg-white/10"></div>
-            <div class="flex flex-col items-center gap-1.5">
-                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid fa-bolt text-[#FCD535] text-lg"></i></div>
-                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Rút Tốc Độ</span>
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md"><i class="fa-solid fa-bolt text-[#0077FF] text-lg drop-shadow-[0_0_5px_rgba(0,119,255,0.5)]"></i></div>
+                <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Tốc Độ Cao</span>
             </div>
             <div class="w-px h-8 bg-white/10"></div>
-            <div class="flex flex-col items-center gap-1.5">
-                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid fa-headset text-blue-400 text-lg"></i></div>
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md"><i class="fa-solid fa-headset text-indigo-400 text-lg drop-shadow-[0_0_5px_rgba(129,140,248,0.5)]"></i></div>
                 <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Hỗ Trợ 24/7</span>
             </div>
         </div>
@@ -298,10 +340,8 @@
         let isHandlingAuthForm = false; 
 
         // --- SILENT AUTH LISTENER ---
-        // Hoạt động ngầm, không hiện Popup tải.
         onAuthStateChanged(auth, async (user) => {
             if (user && !isHandlingAuthForm) {
-                // Đã đăng nhập -> Chuyển hướng âm thầm
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
@@ -316,11 +356,9 @@
                         saveAndGo(fixData, user.uid);
                     }
                 } catch (e) {
-                    // Nếu lỗi mạng, hiện form ra để ngta tự bấm
                     document.getElementById('appWrapper').classList.remove('opacity-0');
                 }
             } else if (!isHandlingAuthForm) {
-                // Chưa đăng nhập -> Hiện Form lên
                 document.getElementById('appWrapper').classList.remove('opacity-0');
             }
         });
@@ -328,12 +366,13 @@
         function saveAndGo(data, uid) {
             data.uid = uid;
             localStorage.setItem('crownex_user_info', JSON.stringify(data));
-            window.location.href = "game.html"; // Redirect
+            window.location.href = "game.html";
         }
 
         // --- SMOOTH TAB LOGIC & CHỈNH CHIỀU CAO ---
-        const HEIGHT_LOGIN = '295px';
-        const HEIGHT_REG = '445px';
+        // Điều chỉnh chiều cao cho phù hợp với font mới và padding
+        const HEIGHT_LOGIN = '315px'; 
+        const HEIGHT_REG = '470px';
 
         window.switchTab = (tab) => {
             const loginForm = document.getElementById('formLogin');
@@ -353,7 +392,7 @@
                 wrapper.style.height = HEIGHT_LOGIN;
                 window.drawCaptcha('login');
             } else {
-                indicator.style.transform = 'translateX(calc(100% + 10px))';
+                indicator.style.transform = 'translateX(calc(100% + 12px))'; // Bù trừ padding
                 btnLogin.classList.remove('active'); btnReg.classList.add('active');
 
                 regForm.classList.remove('slide-right', 'slide-left'); regForm.classList.add('active');
@@ -373,10 +412,10 @@
             const icon = btn.querySelector('i');
             if (el.type === 'password') {
                 el.type = 'text';
-                icon.classList.remove('fa-eye', 'text-gray-400'); icon.classList.add('fa-eye-slash', 'text-white');
+                icon.classList.remove('fa-eye', 'text-gray-500'); icon.classList.add('fa-eye-slash', 'text-[#00E5FF]');
             } else {
                 el.type = 'password';
-                icon.classList.remove('fa-eye-slash', 'text-white'); icon.classList.add('fa-eye', 'text-gray-400');
+                icon.classList.remove('fa-eye-slash', 'text-[#00E5FF]'); icon.classList.add('fa-eye', 'text-gray-500');
             }
         };
 
@@ -398,14 +437,14 @@
             
             try {
                 await signInWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
-                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> THÀNH CÔNG!`;
+                btn.innerHTML = `<i class="fa-solid fa-check-double mr-2"></i> THÀNH CÔNG!`;
                 btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                btn.style.color = '#fff';
-                setTimeout(() => { window.location.href = "game.html"; }, 500);
+                btn.style.color = '#fff'; btn.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.4)';
+                setTimeout(() => { window.location.href = "game.html"; }, 600);
             } catch (err) {
                 isHandlingAuthForm = false;
-                window.toast('error', 'Sai thông tin đăng nhập!');
-                btn.disabled = false; btn.innerHTML = `TRUY CẬP HỆ THỐNG`;
+                window.toast('error', 'Sai thông tin định danh hoặc mật khẩu!');
+                btn.disabled = false; btn.innerHTML = `KẾT NỐI HỆ THỐNG`;
                 window.drawCaptcha('login'); document.getElementById('loginCaptcha').value = '';
             }
         });
@@ -425,10 +464,10 @@
                 window.drawCaptcha('reg'); document.getElementById('regCaptcha').value = ''; return;
             }
 
-            if (!/^[a-zA-Z0-9]+$/.test(user)) { window.toast('error', 'Tên đăng nhập không chứa ký tự đặc biệt!'); return; }
+            if (!/^[a-zA-Z0-9]+$/.test(user)) { window.toast('error', 'Định danh không chứa ký tự đặc biệt!'); return; }
 
             isHandlingAuthForm = true;
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG TẠO...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ĐANG KHỞI TẠO...`;
             
             try {
                 const cred = await createUserWithEmailAndPassword(auth, user + EMAIL_PREFIX, pass);
@@ -440,31 +479,31 @@
                 };
                 await setDoc(doc(db, "users", cred.user.uid), newData);
 
-                window.toast('success', 'Đăng ký thành công!');
-                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> HOÀN TẤT!`;
+                window.toast('success', 'Khởi tạo tài khoản thành công!');
+                btn.innerHTML = `<i class="fa-solid fa-check-double mr-2"></i> HOÀN TẤT!`;
                 btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                btn.style.color = '#fff';
+                btn.style.color = '#fff'; btn.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.4)';
                 setTimeout(() => { window.location.href = "game.html"; }, 800);
             } catch (err) {
                 isHandlingAuthForm = false;
-                let msg = 'Lỗi đăng ký!';
-                if(err.code.includes('email-already-in-use')) msg = 'Tên tài khoản đã tồn tại!';
-                if(err.code.includes('weak-password')) msg = 'Mật khẩu quá ngắn!';
+                let msg = 'Lỗi hệ thống khởi tạo!';
+                if(err.code.includes('email-already-in-use')) msg = 'Định danh này đã tồn tại trong hệ thống!';
+                if(err.code.includes('weak-password')) msg = 'Mật khẩu quá yếu!';
                 window.toast('error', msg);
-                btn.disabled = false; btn.innerHTML = `MỞ TÀI KHOẢN NGAY`;
+                btn.disabled = false; btn.innerHTML = `KHỞI TẠO TÀI KHOẢN`;
                 window.drawCaptcha('reg'); document.getElementById('regCaptcha').value = '';
             }
         });
 
-        // --- UTILS: CAPTCHA & TOAST ---
+        // --- UTILS: CAPTCHA (CYAN THEME) & TOAST ---
         window.drawCaptcha = (type) => {
             const canvas = document.getElementById(type === 'login' ? 'canvasLogin' : 'canvasReg');
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0,0,canvas.width,canvas.height);
             
-            // Vẽ nhiễu nền sang trọng
-            for(let i=0; i<35; i++) {
-                ctx.fillStyle = `rgba(252, 213, 53, ${Math.random()*0.25})`;
+            // Vẽ nhiễu nền tone xanh dương/cyan
+            for(let i=0; i<40; i++) {
+                ctx.fillStyle = `rgba(0, 229, 255, ${Math.random()*0.3})`;
                 ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*2+1, 0, Math.PI*2); ctx.fill();
             }
 
@@ -472,20 +511,24 @@
             let code = ''; for(let i=0; i<4; i++) code += chars[Math.floor(Math.random()*chars.length)];
             captchaCodes[type] = code;
 
-            ctx.font = 'bold 24px IBM Plex Mono';
+            ctx.font = 'bold 26px "IBM Plex Mono"';
             ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
             for(let i=0; i<4; i++) {
                 ctx.save();
-                ctx.translate(22 + i*24, 26);
-                ctx.rotate((Math.random()-0.5)*0.5);
-                ctx.fillStyle = '#FCD535';
+                ctx.translate(24 + i*24, 27);
+                ctx.rotate((Math.random()-0.5)*0.6); // Xoay gắt hơn chút
+                // Chuyển màu text sang Cyan sáng
+                ctx.fillStyle = '#00E5FF';
+                ctx.shadowColor = 'rgba(0, 229, 255, 0.5)';
+                ctx.shadowBlur = 4;
                 ctx.fillText(code[i], 0, 0);
                 ctx.restore();
             }
             
             // Đường gạch nhiễu
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(0, Math.random()*canvas.height); ctx.lineTo(canvas.width, Math.random()*canvas.height); ctx.stroke();
+            ctx.strokeStyle = 'rgba(0,119,255,0.4)';
             ctx.beginPath(); ctx.moveTo(0, Math.random()*canvas.height); ctx.lineTo(canvas.width, Math.random()*canvas.height); ctx.stroke();
         };
 
@@ -493,19 +536,26 @@
             const box = document.getElementById('toast-box');
             const div = document.createElement('div');
             
-            let colorCls = type === 'error' ? 'text-rose-400' : 'text-emerald-400';
-            let bgIcon = type === 'error' ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20';
-            let iconClass = type === 'error' ? 'fa-triangle-exclamation' : 'fa-check';
+            let colorCls = type === 'error' ? 'text-rose-400' : 'text-[#00E5FF]';
+            let bgIcon = type === 'error' ? 'bg-rose-500/10 border-rose-500/20' : 'bg-[#00E5FF]/10 border-[#00E5FF]/20';
+            let iconClass = type === 'error' ? 'fa-triangle-exclamation' : 'fa-check-double';
+            let bColor = type === 'error' ? '#f43f5e' : '#00E5FF';
 
             div.className = `toast-msg`;
+            div.style.borderLeftColor = bColor;
             div.innerHTML = `
-                <div class="w-8 h-8 rounded-full ${bgIcon} border flex items-center justify-center shrink-0">
+                <div class="w-9 h-9 rounded-xl ${bgIcon} border flex items-center justify-center shrink-0">
                     <i class="fa-solid ${iconClass} ${colorCls} text-sm"></i>
                 </div>
-                <span class="text-white font-bold text-[13px] leading-tight">${msg}</span>
+                <span class="text-white font-medium text-[14px] leading-tight">${msg}</span>
             `;
             box.appendChild(div);
-            setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 300); }, 2500);
+            setTimeout(() => { 
+                div.style.transition = 'all 0.3s ease';
+                div.style.opacity = '0'; 
+                div.style.transform = 'translateY(-20px) scale(0.9)';
+                setTimeout(() => div.remove(), 300); 
+            }, 3000);
         };
 
         window.drawCaptcha('login');
